@@ -1,26 +1,61 @@
 @import "tailwindcss";
 
+/* Baron Neue Font - using a similar display font as fallback */
+@font-face {
+  font-family: 'Baron Neue';
+  src: local('Baron Neue'), local('BaronNeue');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --gold: #d4af37;
+  --gold-light: #f7be03;
+  --dark-green: #132019;
+  --cream: #f5f2e9;
+  --font-montserrat: 'Montserrat', sans-serif;
+  --font-baron: 'Baron Neue', 'Cinzel', 'Playfair Display', serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-dark-green: var(--dark-green);
+  --color-cream: var(--cream);
+  --font-sans: var(--font-montserrat);
+  --font-display: var(--font-baron);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-montserrat);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Text shadow utility */
+.text-shadow-gold {
+  text-shadow: 3px 2px 0px rgba(0, 0, 0, 0.5);
+}
+
+/* Backdrop blur utilities */
+.backdrop-blur-custom {
+  backdrop-filter: blur(2.259px);
+  -webkit-backdrop-filter: blur(2.259px);
+}
+
+/* Font utilities */
+.font-baron {
+  font-family: 'Baron Neue', 'Cinzel', 'Playfair Display', serif;
+}
+
+.font-montserrat {
+  font-family: var(--font-montserrat);
 }
