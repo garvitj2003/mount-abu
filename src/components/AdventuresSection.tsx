@@ -2,9 +2,17 @@
 
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
-import { motion, useMotionValue, useMotionTemplate, animate } from "motion/react";
+// If you haven't installed 'motion' v12, change this import to "framer-motion"
+import { 
+  motion, 
+  useMotionValue, 
+  useMotionTemplate, 
+  animate, 
+  AnimatePresence, 
+  Variants 
+} from "motion/react";
 
-// Trek data (kept the same)
+// Trek data
 const treks = [
   {
     id: 1,
@@ -60,39 +68,80 @@ const treks = [
   },
 ];
 
+// --- ANIMATION VARIANTS (Typed explicitly) ---
+
+// 1. Initial Load Stagger (Left Side)
+const staggerContainerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.8,
+      delayChildren: 0.5,
+    },
+  },
+};
+
+// 2. Initial Load Item Reveal (Left Side Items)
+const itemRevealVariants: Variants = {
+  hidden: { y: 20, opacity: 0, filter: "blur(5px)" },
+  visible: { 
+    y: 0, 
+    opacity: 1, 
+    filter: "blur(0px)",
+    transition: { ease: "easeInOut" } 
+  },
+};
+
+// 3. Tab Change Text Transition (Only for Text)
+const textTabChangeVariants: Variants = {
+  initial: { opacity: 0, y: 25, filter: "blur(8px)" },
+  animate: { 
+    opacity: 1, 
+    y: 0, 
+    filter: "blur(0px)",
+    transition: { duration: 0.5, ease: [0.25, 1, 0.5, 1] } 
+  },
+  exit: { 
+    opacity: 0, 
+    y: -15, 
+    filter: "blur(8px)", 
+    transition: { duration: 0.3, ease: "easeIn" } 
+  },
+};
+
+// 4. Right Column Initial Entry (Slide from Right - Happens once)
+const rightColEntryVariants: Variants = {
+  hidden: { x: 100, opacity: 0 },
+  visible: { 
+    x: 0, 
+    opacity: 1,
+    transition: { type: "spring", stiffness: 80, damping: 20, delay: 0.4 }
+  }
+};
+
 export default function AdventuresSection() {
   const [activeTrek, setActiveTrek] = useState(0);
   const currentTrek = treks[activeTrek];
 
-  // 1. Create a MotionValue to store the pixel position of the "Highlight"
+  // --- LINE ANIMATION LOGIC ---
   const highlightX = useMotionValue(0);
-
-  // 2. Create refs to track the button positions
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  // 3. Update the highlight position whenever activeTrek changes
   useEffect(() => {
     const activeTab = tabRefs.current[activeTrek];
     if (activeTab) {
-      // Find the center of the active tab's DOT relative to the button
-      // The dot is roughly at the vertical center, and left aligned in the flex col.
-      // But visually in your design, the dot is the anchor.
-      // Let's calculate the center of the BUTTON element for simplicity, 
-      // or specifically target the dot if we needed extreme precision.
-      // Here, offsetLeft gets us the start of the button. + 10px centers it on the dot (width 20px).
-      const newX = activeTab.offsetLeft + 10; 
-      
-      // Animate the value smoothly
+      // Calculate position relative to the parent container if possible, 
+      // or just use offsetLeft if the layout is stable.
+      const newX = activeTab.offsetLeft + 10;
       animate(highlightX, newX, {
         type: "spring",
         stiffness: 200,
         damping: 30,
       });
     }
-  }, [activeTrek]);
+  }, [activeTrek, highlightX]);
 
-  // 4. Construct the dynamic gradient string
-  // We use `calc` to create a gradient that fades out 150px to the left and right of the center point.
   const backgroundGradient = useMotionTemplate`
     linear-gradient(
       90deg, 
@@ -106,7 +155,7 @@ export default function AdventuresSection() {
 
   return (
     <section className="relative w-full min-h-[900px] bg-[#17261e] overflow-hidden">
-      {/* --- Background Assets (Image & Gradients) --- */}
+      {/* --- Background Assets --- */}
       <div className="absolute inset-0 mix-blend-overlay opacity-[0.54]">
         <Image src="/images/adventures-bg.png" alt="" fill className="object-cover" />
       </div>
@@ -125,33 +174,44 @@ export default function AdventuresSection() {
           </h2>
         </div>
 
-        {/* Grid */}
+        {/* Grid Container */}
         <div className="flex justify-between items-start gap-[60px]">
-          {/* Left Side */}
-          <div className="flex flex-col gap-[24px] max-w-[652px]">
-            <div className="flex flex-col gap-[20px]">
-              <p className="font-montserrat font-medium text-[20px] text-[#f5f2e9] capitalize">{currentTrek.subtitle}</p>
-              <p className="font-baron text-[32px] text-[#d4af37]">{currentTrek.name}</p>
-            </div>
-            <p className="font-montserrat font-medium text-[20px] text-[#f5f2e9] leading-[28px]">{currentTrek.description}</p>
-            <p className="font-montserrat font-medium text-[20px] text-[#d4af37] capitalize">Official Guides- {currentTrek.guide}</p>
+          
+          {/* --- LEFT SIDE (Text & Navigation) --- */}
+          <motion.div 
+            className="flex flex-col gap-[24px] max-w-[652px]"
+            variants={staggerContainerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+          >
+            
+            {/* DYNAMIC TEXT AREA (Animates on tab change) */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentTrek.id} 
+                variants={textTabChangeVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="flex flex-col gap-[24px]"
+              >
+                <div className="flex flex-col gap-[20px]">
+                  <motion.p variants={itemRevealVariants} className="font-montserrat font-medium text-[20px] text-[#f5f2e9] capitalize">{currentTrek.subtitle}</motion.p>
+                  <motion.p variants={itemRevealVariants} className="font-baron text-[32px] text-[#d4af37]">{currentTrek.name}</motion.p>
+                </div>
+                <motion.p variants={itemRevealVariants} className="font-montserrat font-medium text-[20px] text-[#f5f2e9] leading-[28px]">{currentTrek.description}</motion.p>
+                <motion.p variants={itemRevealVariants} className="font-montserrat font-medium text-[20px] text-[#d4af37] capitalize">Official Guides- {currentTrek.guide}</motion.p>
+              </motion.div>
+            </AnimatePresence>
 
-            {/* Trek Navigation Area */}
-            <div className="relative mt-[20px]">
-              
-              {/* THE STATIC LINE WITH MOVING COLORS 
-                  - It spans the full width of this container.
-                  - It sits behind the buttons (absolute).
-                  - The background gradient moves via the `style` prop.
-              */}
+            {/* Navigation Tabs (Static relative to tab changes, animates once on load) */}
+            <motion.div variants={itemRevealVariants} className="relative mt-[20px]">
               <motion.div
                 className="absolute top-[42px] left-0 w-full h-[3px]"
-                style={{
-                  background: backgroundGradient,
-                }}
+                style={{ background: backgroundGradient }}
               />
 
-              {/* Tabs */}
               <div className="flex gap-[72px] items-center relative">
                 {treks.map((trek, index) => (
                   <button
@@ -179,28 +239,37 @@ export default function AdventuresSection() {
                   </button>
                 ))}
               </div>
-            </div>
+            </motion.div>
 
-            <button className="mt-[40px] px-[24px] py-[12px] rounded-[6px] w-fit bg-[#d4af37]/40 backdrop-blur-[2px]">
+            <motion.button variants={itemRevealVariants} className="mt-[40px] px-[24px] py-[12px] rounded-[6px] w-fit bg-[#d4af37]/40 backdrop-blur-[2px]">
               <span className="font-poppins text-[16px] text-white underline">Look For Details</span>
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
 
-          {/* Right Side (Images) - Preserved */}
-          <div className="relative w-[483px] h-[373px]">
-            <div className="absolute left-0 top-0 w-[300px] h-[373px] rounded-[13px] overflow-hidden">
-              <Image src={currentTrek.images.main} alt={currentTrek.name} fill className="object-cover" />
-            </div>
-            <div className="absolute right-0 top-0 w-[167px] h-[144px] rounded-[13px] overflow-hidden">
-              <Image src={currentTrek.images.small1} alt="" fill className="object-cover" />
-            </div>
-            <div className="absolute right-0 bottom-0 w-[167px] h-[212px] rounded-[13px] overflow-hidden">
-              <Image src={currentTrek.images.small2} alt="" fill className="object-cover" />
-            </div>
-          </div>
+          {/* --- RIGHT SIDE (Images) --- */}
+          {/* Animates IN from right ONCE, but stays static on tab change */}
+          <motion.div 
+             className="relative w-[483px] h-[373px]"
+             variants={rightColEntryVariants}
+             initial="hidden"
+             whileInView="visible"
+             viewport={{ once: true, amount: 0.3 }}
+          >
+             {/* No AnimatePresence, no Motion wrapper with Keys here. 
+                 This ensures images update instantly without animation effects. */}
+              <div className="absolute left-0 top-0 w-[300px] h-[373px] rounded-[13px] overflow-hidden shadow-xl">
+                <Image src={currentTrek.images.main} alt={currentTrek.name} fill className="object-cover" priority />
+              </div>
+              <div className="absolute right-0 top-0 w-[167px] h-[144px] rounded-[13px] overflow-hidden shadow-lg">
+                <Image src={currentTrek.images.small1} alt="" fill className="object-cover" />
+              </div>
+              <div className="absolute right-0 bottom-0 w-[167px] h-[212px] rounded-[13px] overflow-hidden shadow-lg">
+                <Image src={currentTrek.images.small2} alt="" fill className="object-cover" />
+              </div>
+          </motion.div>
         </div>
 
-        {/* Navigation Arrows - Preserved */}
+        {/* Navigation Arrows */}
         <div className="absolute bottom-[100px] right-[112px] flex gap-[12px] items-center">
           <button
             className="w-[44px] h-[44px] opacity-40 hover:opacity-60 transition-opacity"
