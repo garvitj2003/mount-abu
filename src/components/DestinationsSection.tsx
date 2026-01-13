@@ -57,7 +57,7 @@ export default function DestinationsSection() {
     );
   };
 
-  const getPosition = (index) => {
+  const getPosition = (index: number) => {
     const total = destinations.length;
     let offset = (index - activeIndex + total) % total;
 
