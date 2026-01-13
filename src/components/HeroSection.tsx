@@ -3,7 +3,68 @@
 import Image from "next/image";
 import OverlappingFrames from "./overLappingFrames";
 import HeroCarousel from "./heroCaraousel";
+import { motion } from "motion/react";
 
+const RunningBorderButton = () => {
+    return (
+      <div className="flex  w-full items-center justify-center">
+            
+            <button className="relative flex items-center justify-center overflow-hidden rounded-full px-6 py-2 font-montserrat font-medium text-white transition-colors hover:bg-white/10">
+              
+              {/* 1. THE ANIMATED BORDER LAYER 
+                - We place this absolutely so it sits behind the text.
+                - We use 'inset-0' to fill the button.
+                - We use a CSS Mask to cut out the center, leaving only a border.
+              */}
+              <motion.div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  // The padding creates the border thickness (2px here)
+                  padding: "2px", 
+                  
+                  // This mask magic cuts out the center content-box from the border-box
+                  maskImage: "linear-gradient(#fff 0 0), linear-gradient(#fff 0 0)",
+                  maskClip: "content-box, border-box",
+                  maskComposite: "exclude", 
+                  WebkitMaskComposite: "xor", // Needed for Chrome/Safari
+                }}
+              >
+                {/* The Spinning Gradient 
+                   - It needs to be much larger than the button to cover corners when spinning.
+                   - We center it and spin it.
+                */}
+                <motion.div
+                  className="absolute inset-[-100%]"
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: 4,
+                    ease: "linear",
+                    repeat: Infinity,
+                  }}
+                  style={{
+                    // This creates the "Tail" effect. 
+                    // Using your requested color #09090b (which is very dark).
+                    // Note: On a dark blue bg, #09090b might look like a shadow. 
+                    background: `conic-gradient(from 0deg, transparent 0%, transparent 70%, #09090b 100%)`,
+                    
+                    // If you want the white/bright look from your image reference, use this instead:
+                    // background: `conic-gradient(from 0deg, transparent 0%, transparent 70%, #ffffff 100%)`,
+                  }}
+                />
+              </motion.div>
+      
+              {/* 2. THE CONTENT LAYER 
+                - Relative positioning keeps it clickable and above the background (though bg is transparent).
+              */}
+              <span className="relative z-10">हिन्दी</span>
+              
+              {/* Optional: Static Border overlay if you want a faint outline always visible 
+                  (Remove this if you want ONLY the moving light) */}
+              <div className="absolute inset-0 rounded-full border border-white/20" />
+            </button>
+          </div>
+    );
+};
 // Minister Card Component (Unchanged)
 function MinisterCard({
     imageSrc,
@@ -20,7 +81,7 @@ function MinisterCard({
     return (
         <div className="flex items-center shrink-0 w-[183px]">
             <div
-                className="flex flex-col gap-5 items-center justify-center p-[18px] rounded-[12.8px] border border-[#d4af37] border-solid grow"
+                className="flex flex-col gap-4 items-center justify-center p-[18px] rounded-[12.8px] border border-[#d4af37] border-solid grow"
                 style={{
                     background: "rgba(19, 32, 25, 0.2)",
                     backdropFilter: "blur(2.259px)",
@@ -54,7 +115,7 @@ function MinisterCard({
 
                 {/* Name and Title */}
                 <div className="flex items-center justify-center w-full">
-                    <div className="flex flex-col gap-[14px] items-center justify-center text-[#f5f2e9] text-center grow">
+                    <div className="flex flex-col gap-2 items-center justify-center text-[#f5f2e9] text-center grow">
                         <div className="font-montserrat font-bold text-[18px] leading-normal capitalize w-full">
                             {nameArray.map((line, i) => (
                                 <p
@@ -89,9 +150,7 @@ function MinisterCard({
 // Navigation Header Component (Unchanged)
 function NavigationHeader() {
     return (
-        <header
-            className="absolute top-0 left-0 right-0 z-50 h-[70px] flex items-center justify-between px-8 border-b border-white/80"
-        >
+        <header className="absolute top-0 left-0 right-0 z-50 backdrop-blur-md h-[70px] flex items-center justify-between px-8 border-b border-white/80">
             {/* Logo and Title */}
             <div className="flex items-center gap-3">
                 <div className="relative w-[45px] h-[45px] rounded-full overflow-hidden bg-white flex items-center justify-center">
@@ -118,9 +177,7 @@ function NavigationHeader() {
 
             {/* Right side - Language and Menu */}
             <div className="flex items-center gap-6">
-                <button className="px-4 py-2 border border-white rounded-full text-white font-montserrat font-medium text-sm hover:bg-white/10 transition-colors">
-                    हिन्दी
-                </button>
+                <RunningBorderButton />
                 <button className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors">
                     <svg
                         width="24"
@@ -145,7 +202,7 @@ function NavigationHeader() {
 export default function HeroSection() {
     return (
         <>
-            <div className="relative w-full h-screen min-h-[900px] overflow-hidden">
+            <div className="relative w-full h-screen min-h-[800px] overflow-hidden">
                 {/* CLOUD LAYER:
                   z-[100] ensures it is on top of everything (Nav, Text, Images).
                   pointer-events-none ensures clicks pass through to the page
@@ -159,7 +216,7 @@ export default function HeroSection() {
                 <NavigationHeader />
 
                 {/* Full-page Background Image - Hero */}
-                <HeroCarousel/>
+                <HeroCarousel />
 
                 {/* Bottom Gradient Overlay - Dark green fade */}
                 <div
@@ -179,7 +236,6 @@ export default function HeroSection() {
                     }}
                 />
 
-
                 {/* Explore Text - Centered at bottom */}
                 <div className="absolute bottom-[40px] left-1/2 -translate-x-1/2 flex flex-col items-center">
                     <p className="font-baron text-[20px] text-[#d4af37] leading-normal tracking-[0.2em] uppercase">
@@ -188,7 +244,7 @@ export default function HeroSection() {
                 </div>
 
                 {/* Minister Cards - Bottom right */}
-                <div className="absolute bottom-[80px] right-[50px] flex gap-[21px] items-center">
+                <div className="absolute bottom-14 right-[50px] flex gap-[21px] items-center">
                     <MinisterCard
                         imageSrc="/images/minister2.png"
                         name={["Shri Bhajan", "Lal Sharma"]}
