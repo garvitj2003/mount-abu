@@ -143,16 +143,16 @@ export default function DestinationsSection() {
               zIndex = 30;
               scale = 0.9;
               rotateY = position === -1 ? 15 : -15;
-              opacity = 0.8;
-              brightness = 1;
+              opacity = 1;
+              brightness = 0.8;
             } else if (position === -2 || position === 2) {
               // Far Neighbors
               xOffset = position * 220;
               zIndex = 10;
               scale = 0.85;
               rotateY = position === -2 ? 25 : -25;
-              opacity = 0.75;
-              brightness = 1;
+              opacity = 0.9;
+              brightness = 0.6;
             } else {
               // HIDDEN (Any card beyond the 5 visible slots)
               // We keep it in the DOM but hide it so it can animate in/out smoothly
