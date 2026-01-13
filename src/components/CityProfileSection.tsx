@@ -1,6 +1,8 @@
 "use client";
 
-// Area statistics data
+import { motion } from "motion/react";
+
+// --- Data Constants ---
 const areaStats = [
   { label: "Area In Sq. km.", value: "21.64 sq. km" },
   { label: "No. of wards", value: "25" },
@@ -13,20 +15,91 @@ const areaStats = [
   { label: "No. of employee in the municipal board", value: "135" },
 ];
 
-// House holds data
 const houseHoldsStats = [
   { label: "Residential", value: "4500" },
   { label: "Shops & Offices", value: "550" },
   { label: "Open Plots", value: "0" },
 ];
 
-// Birth/Death data
 const birthDeathStats = [
   { label: "Registration per year", value: "800" },
   { label: "Certificate per year", value: "900" },
 ];
 
-// Stat row component
+// --- Helper: Individual Slot Digit ---
+function SlotDigit({  value, delay }: { place: number; value: string; delay: number }) {
+  const target = parseInt(value);
+  if (isNaN(target)) return <span>{value}</span>;
+
+  const slots = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+  const landingIndex = 10 + target;
+  const height = 30;
+
+  return (
+    <div className="relative inline-block h-[30px] overflow-hidden align-bottom">
+      <motion.div
+        initial={{ y: 0 }}
+        whileInView={{ y: -1 * landingIndex * height }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{
+          duration: 1.2,
+          ease: [0.25, 1, 0.5, 1],
+          delay: delay,
+        }}
+        className="flex flex-col items-center"
+      >
+        {slots.map((num, i) => (
+          <span
+            key={i}
+            className="flex items-center justify-center h-[30px] leading-[30px]"
+          >
+            {num}
+          </span>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+// --- Helper: Slot Counter Wrapper ---
+function SlotCounter({ value }: { value: string }) {
+  const match = value.match(/^([\d,.]+)(.*)$/);
+
+  if (!match) return <span>{value}</span>;
+
+  const numericPart = match[1];
+  const suffix = match[2];
+  const chars = numericPart.split("");
+
+  return (
+    // Changed from <span> to <div> with inline-flex to be valid parent for div children
+    <div className="inline-flex items-baseline overflow-hidden">
+      {chars.map((char, index) => {
+        const isDigit = /\d/.test(char);
+        
+        if (!isDigit) {
+          return (
+            <span key={index} className="h-[30px] flex items-center">
+              {char}
+            </span>
+          );
+        }
+
+        return (
+            <SlotDigit 
+                key={index} 
+                place={index} 
+                value={char} 
+                delay={index * 0.2} 
+            />
+        );
+      })}
+      <span className="h-[30px] flex items-center">{suffix}</span>
+    </div>
+  );
+}
+
+// --- Stat Row Component ---
 function StatRow({
   label,
   value,
@@ -40,17 +113,21 @@ function StatRow({
     <div className="flex items-center justify-between w-full font-poppins text-[24px] text-[#f5f2e9]">
       <p className="leading-normal whitespace-nowrap">{label}</p>
       {isLink ? (
-        <p className="leading-[20px] whitespace-nowrap text-[#d4af37] underline cursor-pointer">
+        // Links stay as p or div, strictly speaking anchor or button is better but per your design:
+        <div className="leading-[30px] whitespace-nowrap text-[#d4af37] underline cursor-pointer">
           {value}
-        </p>
+        </div>
       ) : (
-        <p className="leading-[20px] whitespace-nowrap">{value}</p>
+        // FIX: Changed from <p> to <div> to allow nesting of other divs (SlotCounter)
+        <div className="leading-[30px] whitespace-nowrap font-medium">
+          <SlotCounter value={value} />
+        </div>
       )}
     </div>
   );
 }
 
-// Card component
+// --- Card Component ---
 function StatCard({
   title,
   children,
@@ -84,7 +161,7 @@ function StatCard({
 export default function CityProfileSection() {
   return (
     <section className="relative w-full min-h-[800px] bg-[#17261e] overflow-hidden">
-      {/* Background Image - Brahma Kumari */}
+      {/* Background Image */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-[rgba(81,73,51,0.6)]" />
         <div
