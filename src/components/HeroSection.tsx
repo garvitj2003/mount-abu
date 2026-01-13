@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import OverlappingFrames from "./overLappingFrames";
+import HeroCarousel from "./heroCaraousel";
 
 // Minister Card Component (Unchanged)
 function MinisterCard({
@@ -89,10 +90,7 @@ function MinisterCard({
 function NavigationHeader() {
     return (
         <header
-            className="absolute top-0 left-0 right-0 z-50 h-[70px] flex items-center justify-between px-8"
-            style={{
-                background: "linear-gradient(to right, #1197ff, #3d96f0)",
-            }}
+            className="absolute top-0 left-0 right-0 z-50 h-[70px] flex items-center justify-between px-8 border-b border-white/80"
         >
             {/* Logo and Title */}
             <div className="flex items-center gap-3">
@@ -120,7 +118,7 @@ function NavigationHeader() {
 
             {/* Right side - Language and Menu */}
             <div className="flex items-center gap-6">
-                <button className="px-4 py-2 border border-white rounded-lg text-white font-montserrat font-medium text-sm hover:bg-white/10 transition-colors">
+                <button className="px-4 py-2 border border-white rounded-full text-white font-montserrat font-medium text-sm hover:bg-white/10 transition-colors">
                     हिन्दी
                 </button>
                 <button className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors">
@@ -161,14 +159,7 @@ export default function HeroSection() {
                 <NavigationHeader />
 
                 {/* Full-page Background Image - Hero */}
-                <div className="absolute inset-0 w-full h-full">
-                    <Image
-                        src="/images/hero-bg.png"
-                        alt="Mount Abu"
-                        fill
-                        className="object-cover object-center"
-                    />
-                </div>
+                <HeroCarousel/>
 
                 {/* Bottom Gradient Overlay - Dark green fade */}
                 <div
@@ -188,38 +179,6 @@ export default function HeroSection() {
                     }}
                 />
 
-                {/* Hero Title Content */}
-                <div className="absolute inset-0 flex flex-col justify-center items-start px-[100px] pt-[70px]">
-                    {/* Majestic Text */}
-                    <p
-                        className="font-montserrat font-medium italic text-[84px] text-[#f7be03] leading-none mb-[-20px]"
-                        style={{
-                            textShadow: "3px 2px 0px rgba(0, 0, 0, 0.5)",
-                        }}
-                    >
-                        Majestic
-                    </p>
-
-                    {/* Mount Abu Text */}
-                    <h1
-                        className="font-baron text-[160px] text-white font-bold leading-none tracking-tight"
-                        style={{
-                            textShadow: "4px 4px 8px rgba(0, 0, 0, 0.4)",
-                        }}
-                    >
-                        Mount Abu
-                    </h1>
-
-                    {/* Guru Shikhar Text */}
-                    <p
-                        className="font-montserrat font-bold text-[40px] text-[#f7be03] leading-none mt-2 ml-[500px]"
-                        style={{
-                            textShadow: "3px 2px 0px rgba(0, 0, 0, 0.5)",
-                        }}
-                    >
-                        Guru Shikhar
-                    </p>
-                </div>
 
                 {/* Explore Text - Centered at bottom */}
                 <div className="absolute bottom-[40px] left-1/2 -translate-x-1/2 flex flex-col items-center">

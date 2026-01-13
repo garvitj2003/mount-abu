@@ -1,230 +1,235 @@
 "use client";
 
+import { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
 
 // Destination data
 const destinations = [
   {
     id: 1,
-    image: "/images/dest-card-1.png",
+    color: "#E74C3C", // Red
     title: "Nakki Lake",
-    description: "A serene lake surrounded by hills, perfect for boating and enjoying nature.",
+    description: "A serene lake surrounded by hills, perfect for boating.",
   },
   {
     id: 2,
-    image: "/images/dest-card-2.png",
+    color: "#3498DB", // Blue
     title: "Sunset Point",
-    description: "One of the highest peaks offering breathtaking views of the sunset.",
+    description: "One of the highest peaks offering breathtaking views.",
   },
   {
     id: 3,
-    image: "/images/dest-card-3.png",
-    title: "Guru Shikhar",
-    description: "The highest peak of the Aravalli Range with panoramic views.",
+    color: "#F1C40F", // Yellow
+    title: "Dilwara Temples",
+    description: "Celebrated for their exquisite white marble carvings.",
   },
   {
     id: 4,
-    image: "/images/dest-center-1.png",
-    title: "Dilwara Temples",
-    description: "The Dilwara Temples are celebrated for their exquisite white marble carvings and architectural brilliance.",
-    featured: true,
+    color: "#2ECC71", // Green
+    title: "Guru Shikhar",
+    description: "The highest peak of the Aravalli Range.",
   },
   {
     id: 5,
-    image: "/images/dest-card-4.png",
+    color: "#9B59B6", // Purple
     title: "Achalgarh Fort",
-    description: "An ancient fort with historical significance and stunning architecture.",
+    description: "An ancient fort with historical significance.",
   },
 ];
 
 export default function DestinationsSection() {
+  const [activeIndex, setActiveIndex] = useState(2);
+
+  const handleNext = () => {
+    setActiveIndex((prev) => (prev + 1) % destinations.length);
+  };
+
+  const handlePrev = () => {
+    setActiveIndex(
+      (prev) => (prev - 1 + destinations.length) % destinations.length
+    );
+  };
+
+  const getPosition = (index) => {
+    const total = destinations.length;
+    let offset = (index - activeIndex + total) % total;
+    if (offset > 2) offset -= total;
+    return offset;
+  };
+
   return (
-    <section className="relative w-full min-h-[900px] bg-[#132019] overflow-hidden">
-      {/* Background Image with opacity */}
-      <div className="absolute inset-0 opacity-40">
-        <Image
-          src="/images/destination-bg.png"
-          alt=""
-          fill
-          className="object-cover"
-        />
+    <section className="relative w-full min-h-[900px] bg-[#132019] overflow-hidden flex flex-col items-center">
+      {/* --- Background Gradients --- */}
+      <div
+        className="absolute top-0 left-0 w-full h-[484px] pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(to bottom, #132019 0%, rgba(108, 100, 73, 0) 100%)",
+        }}
+      />
+      <div
+        className="absolute bottom-0 left-0 w-full h-[212px] pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0) 100%)",
+        }}
+      />
+
+      {/* --- Header Content --- */}
+      <div className="relative z-10 flex flex-col items-center pt-[85px] mb-[60px]">
+        <p className="font-baron text-[24px] text-[#d4af37] leading-normal tracking-wide mb-4">
+          Destinations
+        </p>
+        <h2 className="text-[#f5f2e9] text-center capitalize">
+          <span className="font-montserrat font-medium text-[40px] block md:inline mr-2 drop-shadow-lg">
+            Top Destinations to visit
+          </span>
+          <span className="font-montserrat font-semibold text-[48px] drop-shadow-lg">
+            Mount Abu
+          </span>
+        </h2>
       </div>
 
-      {/* Top gradient overlay */}
+      {/* --- 3D Carousel Container --- */}
       <div
-        className="absolute top-0 left-0 w-full h-[484px]"
-        style={{
-          background: "linear-gradient(to bottom, #132019 0%, rgba(108, 100, 73, 0) 100%)",
-        }}
-      />
+        className="relative w-full max-w-[1224px] h-[450px] flex items-center justify-center"
+        style={{ perspective: "1000px" }}
+      >
+        <div className="relative w-full h-full flex items-center justify-center">
+          {destinations.map((dest, index) => {
+            const position = getPosition(index);
+            const isCenter = position === 0;
 
-      {/* Second top gradient */}
-      <div
-        className="absolute top-0 left-0 w-full h-[433px]"
-        style={{
-          background: "linear-gradient(to bottom, #132019 0%, rgba(19, 32, 25, 0) 100%)",
-        }}
-      />
+            let xOffset = 0;
+            let zIndex = 0;
+            let scale = 1;
+            let rotateY = 0;
+            let opacity = 1;
+            let brightness = 1;
 
-      {/* Bottom gradient overlay */}
-      <div
-        className="absolute bottom-0 left-0 w-full h-[212px]"
-        style={{
-          background: "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0) 100%)",
-        }}
-      />
+            if (position === 0) {
+              zIndex = 50;
+              scale = 1.15;
+              opacity = 1;
+            } else if (position === -1 || position === 1) {
+              xOffset = position * 260;
+              zIndex = 30;
+              scale = 0.9;
+              rotateY = position === -1 ? 15 : -15;
+              opacity = 0.8;
+              brightness = 0.7;
+            } else {
+              xOffset = position * 220;
+              zIndex = 10;
+              scale = 0.75;
+              rotateY = position === -2 ? 25 : -25;
+              opacity = 0.5;
+              brightness = 0.5;
+            }
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center pt-[85px]">
-        {/* Title */}
-        <div className="flex flex-col items-center gap-[40px] text-center">
-          <p className="font-baron text-[24px] text-[#d4af37] leading-normal tracking-wide">
-            Destinations
-          </p>
-          <h2 className="text-[#f5f2e9] capitalize">
-            <span
-              className="font-montserrat font-medium text-[40px] leading-[54px]"
-              style={{ textShadow: "3px 2px 0px rgba(0, 0, 0, 0.5)" }}
-            >
-              Top Destinations to visit{" "}
-            </span>
-            <span
-              className="font-montserrat font-semibold text-[48px] leading-[54px]"
-              style={{ textShadow: "3px 2px 0px rgba(0, 0, 0, 0.5)" }}
-            >
-              Mount Abu
-            </span>
-          </h2>
-        </div>
-
-        {/* Carousel */}
-        <div className="relative w-full max-w-[1224px] h-[520px] mt-[60px] mx-auto">
-          {/* Side cards container */}
-          <div className="absolute inset-0 flex items-center justify-between px-4">
-            {/* Left outer card */}
-            <div className="relative w-[331px] h-[408px] rounded-[13px] overflow-hidden opacity-70">
-              <Image
-                src="/images/dest-card-1.png"
-                alt="Nakki Lake"
-                fill
-                className="object-cover"
-              />
-            </div>
-
-            {/* Right outer card */}
-            <div className="relative w-[331px] h-[408px] rounded-[13px] overflow-hidden opacity-70">
-              <Image
-                src="/images/dest-card-2.png"
-                alt="Sunset Point"
-                fill
-                className="object-cover"
-              />
-            </div>
-          </div>
-
-          {/* Inner cards container */}
-          <div className="absolute inset-0 flex items-center justify-center gap-[220px]">
-            {/* Left inner card */}
-            <div className="relative w-[331px] h-[408px] rounded-[13px] overflow-hidden">
-              <Image
-                src="/images/dest-card-3.png"
-                alt="Guru Shikhar"
-                fill
-                className="object-cover"
-              />
-            </div>
-
-            {/* Right inner card */}
-            <div className="relative w-[331px] h-[408px] rounded-[13px] overflow-hidden">
-              <Image
-                src="/images/dest-card-4.png"
-                alt="Achalgarh Fort"
-                fill
-                className="object-cover"
-              />
-            </div>
-          </div>
-
-          {/* Center featured card */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[419px] h-[482px] rounded-[13px] overflow-hidden border-4 border-[#122018] z-20">
-            {/* Card image */}
-            <Image
-              src="/images/dest-center-1.png"
-              alt="Dilwara Temples"
-              fill
-              className="object-cover"
-            />
-
-            {/* Gradient overlay */}
-            <div
-              className="absolute bottom-0 left-0 w-full h-[242px]"
-              style={{
-                background: "linear-gradient(to top, black 0%, rgba(0, 0, 0, 0) 100%)",
-                backdropFilter: "blur(2.2px)",
-                WebkitBackdropFilter: "blur(2.2px)",
-              }}
-            />
-
-            {/* Arrow button */}
-            <div className="absolute top-[11px] right-[11px] w-[63px] h-[63px] bg-black rounded-full flex items-center justify-center">
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
+            return (
+              <motion.div
+                key={dest.id}
+                initial={false}
+                animate={{
+                  x: xOffset,
+                  scale: scale,
+                  zIndex: zIndex,
+                  rotateY: rotateY,
+                  opacity: opacity,
+                  filter: `brightness(${brightness})`,
+                }}
+                transition={{
+                  duration: 0.6,
+                  ease: [0.25, 1, 0.5, 1],
+                }}
+                className="absolute w-[331px] h-[408px] rounded-[13px]"
+                style={{
+                  transformStyle: "preserve-3d",
+                }}
               >
-                <path
-                  d="M7 17L17 7M17 7H7M17 7V17"
-                  stroke="white"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
+                {/* Color Card Container */}
+                {/* Added 'group' class here so children can use group-hover */}
+                <div
+                  className={`relative w-full h-full rounded-[13px] overflow-hidden shadow-2xl transition-all duration-500 group ${
+                    isCenter ? "border-4 border-[#122018] hover:scale-102" : ""
+                  }`}
+                  style={{ backgroundColor: dest.color }}
+                >
+                  {/* Overlay for depth on non-center cards */}
+                  {!isCenter && (
+                    <div className="absolute inset-0 bg-black/30" />
+                  )}
 
-            {/* Card content */}
-            <div className="absolute bottom-[30px] left-[27px] right-[27px] text-[#f5f2e9]">
-              <h3 className="font-montserrat font-bold text-[22px] capitalize leading-[66px]">
-                Dilwara Temples
-              </h3>
-              <p className="font-montserrat font-medium text-[17.6px] leading-[31px]">
-                The Dilwara Temples are celebrated for their exquisite white marble carvings and architectural brilliance.
-              </p>
-            </div>
-          </div>
+                  {/* --- HOVER EFFECT (Only for center card) --- */}
+                  {isCenter && (
+                    <div className="absolute inset-4 bg-gradient-to-r  from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-[200%] transition-transform duration-1000 ease-out rotate-12 pointer-events-none" />
+                  )}
+                </div>
+
+                {/* Content - Only Visible for Center Card */}
+                <AnimatePresence>
+                  {isCenter && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{
+                        opacity: 0,
+                        transition: { duration: 0.2 },
+                      }}
+                      transition={{
+                        delay: 0.2,
+                        duration: 0.4,
+                      }}
+                      className="absolute bottom-0 left-0 w-full p-6 text-center z-50 "
+                    >
+                      {/* Dark Gradient */}
+                      <div className="absolute bottom-0 left-0 w-full h-[250px] bg-gradient-to-t from-black via-black/70 to-transparent -z-10 rounded-b-[13px]" />
+
+                      <h3 className="font-montserrat font-bold text-[24px] text-[#f5f2e9] mb-2 drop-shadow-md">
+                        {dest.title}
+                      </h3>
+                      <p className="font-montserrat text-[14px] text-gray-200 leading-relaxed drop-shadow-sm">
+                        {dest.description}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            );
+          })}
         </div>
+      </div>
 
-        {/* Navigation buttons */}
-        <div className="flex items-center gap-[12px] mt-[40px]">
-          {/* Previous button */}
-          <button
-            className="w-[44px] h-[44px] rounded-full opacity-40 hover:opacity-60 transition-opacity"
-            aria-label="Previous slide"
-          >
-            <Image
-              src="/images/nav-prev.svg"
-              alt="Previous"
-              width={44}
-              height={44}
-              className="rotate-180"
-            />
-          </button>
+      {/* --- Navigation Controls --- */}
+      <div className="flex items-center gap-[20px] relative z-20 mt-[40px]">
+        <button
+          className="w-[44px] h-[44px] rounded-full opacity-40 hover:opacity-60 transition-opacity"
+          aria-label="Previous slide"
+          onClick={handlePrev}
+        >
+          <Image
+            src="/images/nav-prev.svg"
+            alt="Previous"
+            width={44}
+            height={44}
+            className="rotate-180"
+          />
+        </button>
 
-          {/* Next button */}
-          <button
-            className="w-[44px] h-[44px] rounded-full hover:opacity-80 transition-opacity"
-            aria-label="Next slide"
-          >
-            <Image
-              src="/images/nav-next.svg"
-              alt="Next"
-              width={44}
-              height={44}
-            />
-          </button>
-        </div>
+        <button
+          className="w-[44px] h-[44px] rounded-full hover:opacity-80 transition-opacity"
+          aria-label="Next slide"
+          onClick={handleNext}
+        >
+          <Image
+            src="/images/nav-next.svg"
+            alt="Next"
+            width={44}
+            height={44}
+          />
+        </button>
       </div>
     </section>
   );

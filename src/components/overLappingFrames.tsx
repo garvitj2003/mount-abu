@@ -4,7 +4,7 @@ import { motion, easeInOut } from "motion/react";
 
 export default function OverlappingFrames() {
     // Configuration for the immediate exit animation
-    const exitTransition = { duration: 1.5, ease: easeInOut, delay: 0.2 };
+    const exitTransition = { duration: 3, ease: easeInOut, delay: 0.5 };
 
     return (
         <div className="relative w-screen h-screen overflow-hidden">
