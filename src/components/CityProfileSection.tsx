@@ -195,7 +195,7 @@ export default function CityProfileSection() {
                 className="absolute bottom-0 left-0 w-full h-[200px]"
                 style={{
                     background:
-                        "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0) 100%)",
+                        "linear-gradient(to top, #7F6D54 0%, rgba(19, 32, 25, 0) 100%)",
                 }}
             />
 

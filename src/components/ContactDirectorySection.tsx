@@ -138,7 +138,7 @@ export default function ContactDirectorySection() {
             {/* Background Image */}
             <div className="absolute inset-0">
                 <Image
-                    src="/images/contact-directory-bg.png"
+                    src="/images/sections/ContactDiary.png"
                     alt=""
                     fill
                     className="object-cover"
@@ -168,7 +168,8 @@ export default function ContactDirectorySection() {
                         Contact Diary
                     </p>
                     <h2 className="font-montserrat font-medium text-[40px] text-white capitalize leading-[54px] max-w-[800px]">
-                        Find The Right Municipal Officer And Contact Number In One Place.
+                        Find The Right Municipal Officer And Contact Number In
+                        One Place.
                     </h2>
                 </motion.div>
 

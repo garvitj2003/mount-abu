@@ -115,10 +115,24 @@ function ServiceCard({
 export default function ServicesSection() {
     return (
         <section className="relative w-full overflow-hidden">
+          <div
+              className="absolute top-0 left-0 w-full h-[200px] z-100"
+              style={{
+                  background:
+                      "linear-gradient(to bottom, #132019 0%, rgba(19, 32, 25, 0) 100%)",
+              }}
+          />
+          <div
+              className="absolute bottom-0 left-0 w-full h-[150px] z-100"
+              style={{
+                  background:
+                      "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0) 100%)",
+              }}
+          />
             {/* Background Image */}
             <div className="absolute inset-0">
                 <Image
-                    src="/images/hero-bg.png"
+                    src="/images/sections/Services.png"
                     alt=""
                     fill
                     className="object-cover"
