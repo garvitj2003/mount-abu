@@ -223,7 +223,7 @@ export default function HeroSection() {
                     className="absolute bottom-0 left-0 w-full h-[300px]"
                     style={{
                         background:
-                            "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0.8) 40%, rgba(19, 32, 25, 0.4) 70%, transparent 100%)",
+                            "linear-gradient(to top, #000 0%, rgba(19, 32, 25, 0.8) 40%, rgba(19, 32, 25, 0.4) 70%, transparent 100%)",
                     }}
                 />
 
@@ -232,7 +232,7 @@ export default function HeroSection() {
                     className="absolute bottom-0 left-0 w-full h-[200px]"
                     style={{
                         background:
-                            "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0.6) 60%, transparent 100%)",
+                            "linear-gradient(to top, #000 0%, rgba(19, 32, 25, 0.6) 60%, transparent 100%)",
                     }}
                 />
 

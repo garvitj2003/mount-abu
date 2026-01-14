@@ -23,7 +23,7 @@ export default function HeroCarousel() {
   }, []);
 
   return (
-    <div className="absolute inset-0 w-full h-full bg-black overflow-hidden">
+    <div className="absolute inset-0 w-full h-full overflow-hidden">
       <AnimatePresence mode="popLayout">
         <motion.div
           key={currentIndex} // Changing the key triggers the animation

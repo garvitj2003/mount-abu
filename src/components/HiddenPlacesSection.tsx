@@ -10,7 +10,6 @@ import { motion, AnimatePresence, Variants } from "motion/react";
 // import { motion, AnimatePresence, Variants } from "framer-motion";
 // ----------------------------------------------------------------------
 
-// Best Practice: Define variants OUTSIDE the component to prevent re-creation on every render
 const textVariants: Variants = {
   hidden: { 
     opacity: 0, 
@@ -97,26 +96,40 @@ export default function HiddenPlacesSection() {
 
   return (
     <section className="relative w-full min-h-[925px] bg-[#17261e] overflow-hidden">
-      {/* Background Image */}
-      <div className="absolute inset-0">
-        <Image
-          src="/images/hidden-places-bg.png"
-          alt="background"
-          fill
-          className="object-cover object-center opacity-40"
-        />
+      
+      {/* --- UPDATED BACKGROUND IMAGE SECTION --- */}
+      <div className="absolute inset-0 w-full h-full">
+        <AnimatePresence mode="popLayout">
+          <motion.div
+            key={currentPlace.id} // Unique key ensures animation triggers on change
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.4 }} // Matches your original opacity-40 class
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1, ease: "easeInOut" }} // Slow, smooth crossfade
+            className="absolute inset-0 w-full h-full"
+          >
+            <Image
+              src={currentPlace.image}
+              alt="background"
+              fill
+              className="object-cover object-center"
+              priority // Preload current background
+            />
+          </motion.div>
+        </AnimatePresence>
       </div>
+      {/* ---------------------------------------- */}
 
       {/* Gradients */}
       <div
-        className="absolute top-0 left-0 w-full h-[400px]"
+        className="absolute top-0 left-0 w-full h-[400px] z-0"
         style={{
           background:
             "linear-gradient(to bottom, #132019 0%, rgba(19, 32, 25, 0) 100%)",
         }}
       />
       <div
-        className="absolute bottom-0 left-0 w-full h-[473px]"
+        className="absolute bottom-0 left-0 w-full h-[473px] z-0"
         style={{
           background:
             "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0) 100%)",

@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
-// If you haven't installed 'motion' v12, change this import to "framer-motion"
 import { 
   motion, 
   useMotionValue, 
@@ -68,21 +67,15 @@ const treks = [
   },
 ];
 
-// --- ANIMATION VARIANTS (Typed explicitly) ---
-
-// 1. Initial Load Stagger (Left Side)
+// --- ANIMATION VARIANTS ---
 const staggerContainerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.8,
-      delayChildren: 0.5,
-    },
+    transition: { staggerChildren: 0.8, delayChildren: 0.5 },
   },
 };
 
-// 2. Initial Load Item Reveal (Left Side Items)
 const itemRevealVariants: Variants = {
   hidden: { y: 20, opacity: 0, filter: "blur(5px)" },
   visible: { 
@@ -93,7 +86,6 @@ const itemRevealVariants: Variants = {
   },
 };
 
-// 3. Tab Change Text Transition (Only for Text)
 const textTabChangeVariants: Variants = {
   initial: { opacity: 0, y: 25, filter: "blur(8px)" },
   animate: { 
@@ -110,7 +102,6 @@ const textTabChangeVariants: Variants = {
   },
 };
 
-// 4. Right Column Initial Entry (Slide from Right - Happens once)
 const rightColEntryVariants: Variants = {
   hidden: { x: 100, opacity: 0 },
   visible: { 
@@ -131,8 +122,6 @@ export default function AdventuresSection() {
   useEffect(() => {
     const activeTab = tabRefs.current[activeTrek];
     if (activeTab) {
-      // Calculate position relative to the parent container if possible, 
-      // or just use offsetLeft if the layout is stable.
       const newX = activeTab.offsetLeft + 10;
       animate(highlightX, newX, {
         type: "spring",
@@ -165,7 +154,8 @@ export default function AdventuresSection() {
       <div className="absolute top-0 right-0 h-full w-[193px] bg-gradient-to-l from-[#132019] to-transparent" />
 
       {/* --- Content --- */}
-      <div className="relative z-10 max-w-[1440px] mx-auto px-[112px] py-[80px]">
+      {/* Added pb-[180px] to prevent text from overlapping the fixed bottom buttons */}
+      <div className="relative z-10 max-w-[1440px] mx-auto px-[112px] py-[80px] pb-[180px]">
         {/* Title */}
         <div className="flex flex-col items-center gap-[26px] text-center mb-[60px]">
           <p className="font-baron text-[24px] text-[#d4af37] leading-normal">Adventures</p>
@@ -186,7 +176,7 @@ export default function AdventuresSection() {
             viewport={{ once: true, amount: 0.3 }}
           >
             
-            {/* DYNAMIC TEXT AREA (Animates on tab change) */}
+            {/* DYNAMIC TEXT AREA */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentTrek.id} 
@@ -194,7 +184,7 @@ export default function AdventuresSection() {
                 initial="initial"
                 animate="animate"
                 exit="exit"
-                className="flex flex-col gap-[24px]"
+                className="flex flex-col gap-[24px] min-h-[220px]" 
               >
                 <div className="flex flex-col gap-[20px]">
                   <motion.p variants={itemRevealVariants} className="font-montserrat font-medium text-[20px] text-[#f5f2e9] capitalize">{currentTrek.subtitle}</motion.p>
@@ -205,7 +195,7 @@ export default function AdventuresSection() {
               </motion.div>
             </AnimatePresence>
 
-            {/* Navigation Tabs (Static relative to tab changes, animates once on load) */}
+            {/* Navigation Tabs */}
             <motion.div variants={itemRevealVariants} className="relative mt-[20px]">
               <motion.div
                 className="absolute top-[42px] left-0 w-full h-[3px]"
@@ -240,14 +230,9 @@ export default function AdventuresSection() {
                 ))}
               </div>
             </motion.div>
-
-            <motion.button variants={itemRevealVariants} className="mt-[40px] px-[24px] py-[12px] rounded-[6px] w-fit bg-[#d4af37]/40 backdrop-blur-[2px]">
-              <span className="font-poppins text-[16px] text-white underline">Look For Details</span>
-            </motion.button>
           </motion.div>
 
           {/* --- RIGHT SIDE (Images) --- */}
-          {/* Animates IN from right ONCE, but stays static on tab change */}
           <motion.div 
              className="relative w-[483px] h-[373px]"
              variants={rightColEntryVariants}
@@ -255,8 +240,6 @@ export default function AdventuresSection() {
              whileInView="visible"
              viewport={{ once: true, amount: 0.3 }}
           >
-             {/* No AnimatePresence, no Motion wrapper with Keys here. 
-                 This ensures images update instantly without animation effects. */}
               <div className="absolute left-0 top-0 w-[300px] h-[373px] rounded-[13px] overflow-hidden shadow-xl">
                 <Image src={currentTrek.images.main} alt={currentTrek.name} fill className="object-cover" priority />
               </div>
@@ -268,9 +251,28 @@ export default function AdventuresSection() {
               </div>
           </motion.div>
         </div>
+      </div>
 
-        {/* Navigation Arrows */}
-        <div className="absolute bottom-[100px] right-[112px] flex gap-[12px] items-center">
+      {/* --- FIXED BOTTOM CONTROLS OVERLAY --- */}
+      {/* This overlay ensures both the "Look For Details" button and the Arrow Navigation 
+          are perfectly aligned at the bottom (bottom-[100px]) regardless of the text height above.
+      */}
+      <div className="absolute inset-0 z-20 max-w-[1440px] mx-auto px-[112px] pointer-events-none">
+        
+        {/* LEFT ALIGNED: Details Button */}
+        <motion.button 
+          className="absolute bottom-[100px] left-[112px] px-[24px] py-[12px] rounded-[6px] bg-[#d4af37]/40 backdrop-blur-[2px] pointer-events-auto"
+          // We apply the same animation variants manually since it's outside the parent stagger
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={itemRevealVariants}
+        >
+          <span className="font-poppins text-[16px] text-white underline">Look For Details</span>
+        </motion.button>
+
+        {/* RIGHT ALIGNED: Navigation Arrows */}
+        <div className="absolute bottom-[100px] right-[112px] flex gap-[12px] items-center pointer-events-auto">
           <button
             className="w-[44px] h-[44px] opacity-40 hover:opacity-60 transition-opacity"
             onClick={() => setActiveTrek((prev) => (prev === 0 ? treks.length - 1 : prev - 1))}
@@ -285,6 +287,7 @@ export default function AdventuresSection() {
           </button>
         </div>
       </div>
+
     </section>
   );
 }
