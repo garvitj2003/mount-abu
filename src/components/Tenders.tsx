@@ -149,7 +149,6 @@ export default function Tenders() {
                     fill
                     className="object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-[#132019]/40 via-transparent to-[#132019]" />
             </div>
 
             <div className="relative z-10 max-w-[1440px] mx-auto px-[40px] py-[80px]">

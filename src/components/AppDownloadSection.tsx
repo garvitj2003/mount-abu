@@ -34,14 +34,16 @@ export default function AppDownloadSection() {
     return (
         <section className="relative w-full overflow-hidden bg-[#132019]">
             {/* Background */}
-            <div className="absolute inset-0">
-                <Image
-                    src="/images/hero-bg.png"
-                    alt=""
-                    fill
-                    className="object-cover opacity-30"
-                />
-            </div>
+            <div className="absolute top-0 left-0 w-full h-[200px] z-10 pointer-events-none" style={{ background: "linear-gradient(to bottom, #132019 0%, rgba(19, 32, 25, 0) 100%)" }} />
+            <div className="absolute bottom-0 left-0 w-full h-[150px] z-10 pointer-events-none" style={{ background: "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0) 100%)" }} />
+              <div className="absolute w-full h-full inset-0 bg-none bg-[#132019]">
+                  <Image
+                      src="/images/sections/download.png"
+                      fill
+                      alt="testimonals"
+                      className="object-cover opacity-30"
+                  />
+              </div>
 
             {/* Content container */}
             <div className="relative z-10 max-w-[1440px] mx-auto px-[40px] py-[80px]">

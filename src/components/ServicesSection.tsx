@@ -77,7 +77,7 @@ function ServiceCard({
         <motion.div
             custom={index}
             variants={cardVariants}
-            className={`flex flex-col gap-[24px] items-center p-[24px] rounded-[17px]
+            className={`flex flex-col gap-[24px] items-center p-[24px] rounded-[17px] z-20
                 backdrop-blur-[3px] bg-[rgba(19,32,25,0.2)]
                 border border-[rgba(245,242,233,0.16)]
                 w-[315px]
@@ -103,7 +103,7 @@ function ServiceCard({
                 </p>
                 <a
                     href={service.link}
-                    className="font-montserrat font-medium text-[14px] text-[#d4af37] underline underline-offset-2 hover:text-[#e5c048] transition-colors"
+                    className="font-montserrat cursor-pointer font-medium text-[14px] text-[#d4af37] underline underline-offset-2 hover:text-[#e5c048] transition-colors"
                 >
                     Read More
                 </a>
@@ -115,20 +115,20 @@ function ServiceCard({
 export default function ServicesSection() {
     return (
         <section className="relative w-full overflow-hidden">
-          <div
-              className="absolute top-0 left-0 w-full h-[200px] z-100"
-              style={{
-                  background:
-                      "linear-gradient(to bottom, #132019 0%, rgba(19, 32, 25, 0) 100%)",
-              }}
-          />
-          <div
-              className="absolute bottom-0 left-0 w-full h-[150px] z-100"
-              style={{
-                  background:
-                      "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0) 100%)",
-              }}
-          />
+            <div
+                className="absolute top-0 left-0 w-full h-[200px] z-100"
+                style={{
+                    background:
+                        "linear-gradient(to bottom, #132019 0%, rgba(19, 32, 25, 0) 100%)",
+                }}
+            />
+            <div
+                className="absolute bottom-0 left-0 w-full h-[150px] z-100 pointer-events-none"
+                style={{
+                    background:
+                        "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0) 100%)",
+                }}
+            />
             {/* Background Image */}
             <div className="absolute inset-0">
                 <Image

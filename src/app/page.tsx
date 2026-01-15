@@ -27,9 +27,9 @@ export default function Home() {
             <InformationGuidlines />
             <Tenders />
             <Testimonials/>
-            <ContactDirectorySection />
             <AppDownloadSection />
             <ConnectSection />
+            <ContactDirectorySection />
         </main>
     );
 }
