@@ -38,14 +38,14 @@ export default function AppDownloadSection() {
         <section className="relative w-full overflow-hidden bg-[#132019]">
             {/* Background Gradients */}
             <div
-                className="absolute top-0 left-0 w-full h-[200px] z-10 pointer-events-none"
+                className="absolute top-0 left-0 w-full h-48 z-10 pointer-events-none"
                 style={{
                     background:
                         "linear-gradient(to bottom, #132019 0%, rgba(19, 32, 25, 0) 100%)",
                 }}
             />
             <div
-                className="absolute bottom-0 left-0 w-full h-[150px] z-10 pointer-events-none"
+                className="absolute bottom-0 left-0 w-full h-40 z-10 pointer-events-none"
                 style={{
                     background:
                         "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0) 100%)",
@@ -61,27 +61,24 @@ export default function AppDownloadSection() {
             </div>
 
             {/* Content Container */}
-            <div className="relative z-10 max-w-[1440px] mx-auto px-[40px] py-[80px]">
+            <div className="relative z-10 container mx-auto px-4 md:px-8 py-16 md:py-24">
                 <motion.div
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true, margin: "-100px" }}
                     variants={fadeIn}
-                    // CHANGED: Using Grid for strict 50-50 split
-                    // grid-cols-1 for mobile, grid-cols-2 for desktop
-                    className={`bg-[${cardBgColorHex}] rounded-[24px] grid grid-cols-1 lg:grid-cols-2 overflow-hidden`}
+                    className="bg-[#f5f2e9] rounded-3xl grid grid-cols-1 lg:grid-cols-2 overflow-hidden shadow-2xl"
                 >
                     {/* --- LEFT COLUMN (Text) --- */}
                     <motion.div
                         variants={slideFromLeft}
-                        // 'h-full' ensures this column takes full height of the grid row
-                        className="w-full h-full p-[40px] flex flex-col justify-center items-center gap-[28px] z-20"
+                        className="w-full h-full p-8 md:p-12 lg:p-16 flex flex-col justify-center items-center gap-8 z-20"
                     >
-                        <div className="flex flex-col gap-[12px] w-full text-center">
-                            <h2 className="font-baron font-black text-[32px] text-[#121e17] capitalize leading-normal">
+                        <div className="flex flex-col gap-4 w-full text-center">
+                            <h2 className="font-baron font-black text-2xl md:text-3xl lg:text-4xl text-[#121e17] capitalize leading-normal">
                                 Get Our Application
                             </h2>
-                            <h3 className="font-montserrat font-normal text-center text-[14px] text-[#17261e] leading-normal">
+                            <h3 className="font-montserrat font-normal text-center text-sm md:text-base text-[#17261e] leading-relaxed max-w-lg mx-auto">
                                 Complete digital companion: Instant token
                                 approvals with QR tracking, real-time complaint
                                 filing & status updates with photo evidence,
@@ -92,12 +89,12 @@ export default function AppDownloadSection() {
                         </div>
 
                         {/* App Store Buttons */}
-                        <div className="flex gap-[28px] items-start flex-wrap justify-center">
+                        <div className="flex gap-4 md:gap-6 items-center flex-wrap justify-center">
                             <a
                                 href="#"
-                                className="w-[140px] h-[140px] bg-white border border-[#d4d4d4] rounded-[12px] flex items-center justify-center hover:shadow-lg transition-shadow overflow-hidden"
+                                className="w-24 h-24 md:w-28 md:h-28 bg-white border border-[#d4d4d4] rounded-xl flex items-center justify-center hover:shadow-lg transition-shadow overflow-hidden p-3 md:p-4"
                             >
-                                <div className="relative w-[82px] h-[90px]">
+                                <div className="relative w-full h-full">
                                     <Image
                                         src="/images/google-play-logo.svg"
                                         alt="Get it on Google Play"
@@ -109,9 +106,9 @@ export default function AppDownloadSection() {
 
                             <a
                                 href="#"
-                                className="w-[140px] h-[140px] bg-white border border-[#d4d4d4] rounded-[12px] flex items-center justify-center hover:shadow-lg transition-shadow overflow-hidden"
+                                className="w-24 h-24 md:w-28 md:h-28 bg-white border border-[#d4d4d4] rounded-xl flex items-center justify-center hover:shadow-lg transition-shadow overflow-hidden p-3 md:p-4"
                             >
-                                <div className="relative w-[81px] h-[91px]">
+                                <div className="relative w-full h-full">
                                     <Image
                                         src="/images/apple-logo.png"
                                         alt="Download on App Store"
@@ -126,32 +123,35 @@ export default function AppDownloadSection() {
                     {/* --- RIGHT COLUMN (Image Container) --- */}
                     <motion.div
                         variants={slideFromRight}
-                        // relative: creates context for fill image
-                        // h-full: ensures it stretches to match the text column height
-                        // min-h: ensures visibility on mobile where stacks vertical
-                        className="relative w-full h-full min-h-[420px]"
+                        className="relative w-full h-full min-h-[300px] md:min-h-[420px]"
                     >
                         <Image
                             src="/images/Mockups.png"
                             alt="Mount Abu App"
                             fill
-                            // object-cover: Ensures image fills the width/height of the grid cell
-                            // It will crop top/bottom if needed to maintain aspect ratio
-                            className="object-cover"
+                            className="object-cover object-center"
                             priority
                         />
 
                         {/* --- Gradient Overlay: Left (Fade from Text) --- */}
                         <div
-                            className="absolute top-0 left-0 h-full w-[20%] z-10 pointer-events-none"
+                            className="absolute top-0 left-0 h-full w-1/5 z-10 pointer-events-none hidden lg:block"
                             style={{
                                 background: `linear-gradient(to right, ${cardBgColorHex} 0%, rgba(${cardBgColorRgb}, 0) 100%)`,
+                            }}
+                        />
+                        
+                        {/* Mobile Gradient (Top down) */}
+                        <div
+                            className="absolute top-0 left-0 w-full h-20 z-10 pointer-events-none lg:hidden"
+                            style={{
+                                background: `linear-gradient(to bottom, ${cardBgColorHex} 0%, rgba(${cardBgColorRgb}, 0) 100%)`,
                             }}
                         />
 
                         {/* --- Gradient Overlay: Right (Fade to Edge) --- */}
                         <div
-                            className="absolute top-0 right-0 h-full w-[20%] z-10 pointer-events-none"
+                            className="absolute top-0 right-0 h-full w-1/5 z-10 pointer-events-none hidden lg:block"
                             style={{
                                 background: `linear-gradient(to left, ${cardBgColorHex} 0%, rgba(${cardBgColorRgb}, 0) 100%)`,
                             }}

@@ -120,21 +120,18 @@ const tableHeaders = [
 ];
 
 export default function Tenders() {
-    // Logic: 7 items * approx 96px height = 672px.
-    const MAX_HEIGHT_CLASS = "max-h-[672px]";
-
     return (
         <section className="relative w-full overflow-hidden py-10">
             {/* Gradients */}
             <div
-                className="absolute top-0 left-0 w-full h-[200px] z-10 pointer-events-none"
+                className="absolute top-0 left-0 w-full h-48 z-10 pointer-events-none"
                 style={{
                     background:
                         "linear-gradient(to bottom, #132019 0%, rgba(19, 32, 25, 0) 100%)",
                 }}
             />
             <div
-                className="absolute bottom-0 left-0 w-full h-[150px] z-10 pointer-events-none"
+                className="absolute bottom-0 left-0 w-full h-40 z-10 pointer-events-none"
                 style={{
                     background:
                         "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0) 100%)",
@@ -151,19 +148,19 @@ export default function Tenders() {
                 />
             </div>
 
-            <div className="relative z-10 max-w-[1440px] mx-auto px-[40px] py-[80px]">
+            <div className="relative z-10 container mx-auto px-4 md:px-8 py-16 md:py-24">
                 {/* Header Content */}
                 <motion.div
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true, margin: "-100px" }}
                     variants={fadeIn}
-                    className="flex flex-col gap-[26px] items-center text-center mb-[60px]"
+                    className="flex flex-col gap-6 items-center text-center mb-12 md:mb-16"
                 >
-                    <h1 className="font-baron text-3xl text-[#d4af37] tracking-tight uppercase ">
+                    <h1 className="font-baron text-xl md:text-2xl text-[#d4af37] tracking-tight uppercase ">
                         Tender
                     </h1>
-                    <h2 className="font-montserrat font-medium text-4xl text-white capitalize leading-[54px] max-w-[731px]">
+                    <h2 className="font-montserrat font-medium text-3xl md:text-4xl lg:text-5xl text-white capitalize leading-tight max-w-3xl">
                         View active municipal tenders with key details and NIT
                         downloads.
                     </h2>
@@ -175,19 +172,18 @@ export default function Tenders() {
                     whileInView="visible"
                     viewport={{ once: true, margin: "-100px" }}
                     variants={fadeIn}
-                    className={`w-full overflow-y-auto overflow-x-hidden custom-scrollbar rounded-[10px] border border-[rgba(255,255,255,0.1)] ${MAX_HEIGHT_CLASS}`}
+                    className="w-full overflow-x-auto rounded-xl border border-[rgba(255,255,255,0.1)] max-h-[70vh] custom-scrollbar"
                 >
-                    <table className="w-full border-collapse relative">
+                    <table className="w-full min-w-[800px] border-collapse relative">
                         {/* STICKY HEADER */}
                         <thead className="sticky top-0 z-20">
                             <tr>
                                 {tableHeaders.map((header, index) => (
                                     <th
                                         key={index}
-                                        className="px-4 py-[18px] bg-[#d49d37] border-b border-[rgba(255,255,255,0.1)]"
-                                        style={{ width: "20%" }}
+                                        className="px-4 py-5 bg-[#d49d37] border-b border-[rgba(255,255,255,0.1)] w-1/5"
                                     >
-                                        <p className="font-montserrat font-medium text-[16px] text-white text-center">
+                                        <p className="font-montserrat font-medium text-base text-white text-center whitespace-nowrap">
                                             {header}
                                         </p>
                                     </th>
@@ -208,22 +204,22 @@ export default function Tenders() {
                                     className="group"
                                 >
                                     <td className="p-4 border-[0.844px] border-[rgba(255,255,255,0.1)] align-middle">
-                                        <p className="font-montserrat font-normal text-[18px] text-[#f5f2e9] text-center leading-tight">
+                                        <p className="font-montserrat font-normal text-base md:text-lg text-[#f5f2e9] text-center leading-tight">
                                             {item.title}
                                         </p>
                                     </td>
                                     <td className="p-4 border-[0.844px] border-[rgba(255,255,255,0.1)] align-middle">
-                                        <p className="font-montserrat font-light text-[18px] text-[#f5f2e9] text-center">
+                                        <p className="font-montserrat font-light text-base md:text-lg text-[#f5f2e9] text-center">
                                             {item.department}
                                         </p>
                                     </td>
                                     <td className="p-4 border-[0.844px] border-[rgba(255,255,255,0.1)] align-middle">
-                                        <p className="font-montserrat font-light text-[18px] text-[#f5f2e9] text-center">
+                                        <p className="font-montserrat font-light text-base md:text-lg text-[#f5f2e9] text-center">
                                             {item.estimatedValue}
                                         </p>
                                     </td>
                                     <td className="p-4 border-[0.844px] border-[rgba(255,255,255,0.1)] align-middle">
-                                        <p className="font-montserrat font-light text-[18px] text-[#f5f2e9] text-center">
+                                        <p className="font-montserrat font-light text-base md:text-lg text-[#f5f2e9] text-center">
                                             {item.bidClosingDate}
                                         </p>
                                     </td>
@@ -231,9 +227,9 @@ export default function Tenders() {
                                         <div className="flex justify-center">
                                             <a
                                                 href={item.pdfLink}
-                                                className="px-6 py-2 bg-[rgba(255,0,4,0.29)] backdrop-blur-[14px] rounded-[8px] hover:bg-[rgba(255,0,4,0.4)] transition-colors inline-block"
+                                                className="px-6 py-2 bg-[rgba(255,0,4,0.29)] backdrop-blur-md rounded-lg hover:bg-[rgba(255,0,4,0.4)] transition-colors inline-block"
                                             >
-                                                <p className="font-montserrat font-medium text-[14px] text-white text-center whitespace-nowrap">
+                                                <p className="font-montserrat font-medium text-sm text-white text-center whitespace-nowrap">
                                                     Download PDF
                                                 </p>
                                             </a>

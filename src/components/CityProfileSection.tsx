@@ -121,16 +121,14 @@ function StatRow({
     isLink?: boolean;
 }) {
     return (
-        <div className="flex items-center justify-between w-full font-poppins text-[24px] text-[#f5f2e9]">
-            <p className="leading-normal whitespace-nowrap">{label}</p>
+        <div className="flex items-start justify-between w-full font-poppins text-lg md:text-2xl text-[#f5f2e9]">
+            <p className="leading-tight flex-1 pr-4">{label}</p>
             {isLink ? (
-                // Links stay as p or div, strictly speaking anchor or button is better but per your design:
-                <div className="leading-[30px] whitespace-nowrap text-[#d4af37] underline cursor-pointer">
+                <div className="leading-tight shrink-0 text-[#d4af37] underline cursor-pointer text-right">
                     {value}
                 </div>
             ) : (
-                // FIX: Changed from <p> to <div> to allow nesting of other divs (SlotCounter)
-                <div className="leading-[30px] whitespace-nowrap font-medium">
+                <div className="leading-tight shrink-0 font-medium text-right">
                     <SlotCounter value={value} />
                 </div>
             )}
@@ -150,7 +148,7 @@ function StatCard({
 }) {
     return (
         <div
-            className={`border border-[#d4af37] rounded-[24px] p-[20px] ${className}`}
+            className={`border border-[#d4af37] rounded-3xl p-5 md:p-6 ${className}`}
             style={{
                 background: "rgba(0, 0, 0, 0.08)",
                 backdropFilter: "blur(2px)",
@@ -158,8 +156,8 @@ function StatCard({
             }}
         >
             {title && (
-                <div className="flex items-start justify-between w-full mb-[18px]">
-                    <p className="font-poppins font-medium text-[24px] text-[#f5f2e9] leading-normal">
+                <div className="flex items-start justify-between w-full mb-4 md:mb-5">
+                    <p className="font-poppins font-medium text-xl md:text-2xl text-[#f5f2e9] leading-normal">
                         {title}
                     </p>
                 </div>
@@ -171,7 +169,7 @@ function StatCard({
 
 export default function CityProfileSection() {
     return (
-        <section className="relative w-full min-h-[800px] bg-[#17261e] overflow-hidden">
+        <section className="relative w-full min-h-screen bg-[#17261e] overflow-hidden flex items-center justify-center py-16 md:py-24">
             {/* Background Image */}
             <div className="absolute inset-0">
                 <div className="absolute inset-0 bg-[rgba(81,73,51,0.6)]" />
@@ -185,14 +183,14 @@ export default function CityProfileSection() {
 
             {/* Gradient overlays */}
             <div
-                className="absolute top-0 left-0 w-full h-[200px]"
+                className="absolute top-0 left-0 w-full h-48 md:h-64"
                 style={{
                     background:
                         "linear-gradient(to bottom, #132019 0%, rgba(19, 32, 25, 0) 100%)",
                 }}
             />
             <div
-                className="absolute bottom-0 left-0 w-full h-[200px]"
+                className="absolute bottom-0 left-0 w-full h-48 md:h-64"
                 style={{
                     background:
                         "linear-gradient(to top, #7F6D54 0%, rgba(19, 32, 25, 0) 100%)",
@@ -200,64 +198,69 @@ export default function CityProfileSection() {
             />
 
             {/* Content */}
-            <div className="relative z-10 flex flex-col items-center justify-center max-w-[1245px] mx-auto py-[80px] px-[20px]">
+            <div className="relative z-10 container mx-auto px-4 md:px-8">
                 {/* Title Section */}
-                <div className="flex flex-col items-center gap-[26px] text-center mb-[60px]">
-                    <p className="font-baron text-[24px] text-[#d4af37] leading-normal">
+                <div className="flex flex-col items-center gap-4 md:gap-6 text-center mb-12 md:mb-16">
+                    <p className="font-baron text-xl md:text-2xl text-[#d4af37] leading-normal uppercase tracking-wider">
                         CITY PROFILE
                     </p>
-                    <h2 className="font-poppins font-medium text-[40px] text-white capitalize leading-[54px]">
+                    <h2 className="font-poppins font-medium text-3xl md:text-4xl lg:text-5xl text-white capitalize leading-tight">
                         Mount Abu and its environment
                     </h2>
                 </div>
 
-                {/* Stats Grid */}
-                <div className="relative w-full h-[606px]">
+                {/* Stats Grid - Responsive Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
                     {/* Left large card - Area stats */}
-                    <StatCard className="absolute left-0 top-0 w-[622px] h-full flex flex-col items-center justify-center">
-                        <div className="flex flex-col gap-[30px] w-full">
-                            {areaStats.map((stat, index) => (
-                                <StatRow
-                                    key={index}
-                                    label={stat.label}
-                                    value={stat.value}
-                                    isLink={stat.isLink}
-                                />
-                            ))}
-                        </div>
-                    </StatCard>
+                    <div className="lg:col-span-6 flex">
+                        <StatCard className="w-full flex flex-col items-center justify-center py-8">
+                            <div className="flex flex-col gap-6 md:gap-8 w-full">
+                                {areaStats.map((stat, index) => (
+                                    <StatRow
+                                        key={index}
+                                        label={stat.label}
+                                        value={stat.value}
+                                        isLink={stat.isLink}
+                                    />
+                                ))}
+                            </div>
+                        </StatCard>
+                    </div>
 
-                    {/* Top right card - House holds */}
-                    <StatCard
-                        title="No of House holds"
-                        className="absolute left-[652px] top-0 w-[593px] h-[312px] flex flex-col gap-[18px] items-center justify-center py-[30px]"
-                    >
-                        <div className="flex flex-col gap-[18px] w-full">
-                            {houseHoldsStats.map((stat, index) => (
-                                <StatRow
-                                    key={index}
-                                    label={stat.label}
-                                    value={stat.value}
-                                />
-                            ))}
-                        </div>
-                    </StatCard>
+                    {/* Right side - Two stacked cards */}
+                    <div className="lg:col-span-6 flex flex-col gap-6">
+                        {/* Top right card - House holds */}
+                        <StatCard
+                            title="No of House holds"
+                            className="w-full flex-1 flex flex-col gap-4 md:gap-5 items-center justify-center py-8"
+                        >
+                            <div className="flex flex-col gap-4 md:gap-5 w-full">
+                                {houseHoldsStats.map((stat, index) => (
+                                    <StatRow
+                                        key={index}
+                                        label={stat.label}
+                                        value={stat.value}
+                                    />
+                                ))}
+                            </div>
+                        </StatCard>
 
-                    {/* Bottom right card - Birth/Death */}
-                    <StatCard
-                        title="Birth/Death"
-                        className="absolute left-[652px] top-[342px] w-[591px] h-[264px] flex flex-col gap-[18px] items-center justify-center py-[30px]"
-                    >
-                        <div className="flex flex-col gap-[18px] w-full">
-                            {birthDeathStats.map((stat, index) => (
-                                <StatRow
-                                    key={index}
-                                    label={stat.label}
-                                    value={stat.value}
-                                />
-                            ))}
-                        </div>
-                    </StatCard>
+                        {/* Bottom right card - Birth/Death */}
+                        <StatCard
+                            title="Birth/Death"
+                            className="w-full flex-1 flex flex-col gap-4 md:gap-5 items-center justify-center py-8"
+                        >
+                            <div className="flex flex-col gap-4 md:gap-5 w-full">
+                                {birthDeathStats.map((stat, index) => (
+                                    <StatRow
+                                        key={index}
+                                        label={stat.label}
+                                        value={stat.value}
+                                    />
+                                ))}
+                            </div>
+                        </StatCard>
+                    </div>
                 </div>
             </div>
         </section>

@@ -77,14 +77,14 @@ function ServiceCard({
         <motion.div
             custom={index}
             variants={cardVariants}
-            className={`flex flex-col gap-[24px] items-center p-[24px] rounded-[17px] z-20
-                backdrop-blur-[3px] bg-[rgba(19,32,25,0.2)]
+            className={`flex flex-col gap-6 items-center p-6 rounded-2xl z-20
+                backdrop-blur-sm bg-[rgba(19,32,25,0.2)]
                 border border-[rgba(245,242,233,0.16)]
-                w-[315px]
-                ${isOffset ? "mt-[63px]" : ""}`}
+                w-full
+                ${isOffset ? "lg:mt-16" : ""}`}
         >
             {/* Image Container */}
-            <div className="relative w-[267px] h-[230px] rounded-[12px] overflow-hidden shrink-0">
+            <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden shrink-0">
                 <Image
                     src={service.image}
                     alt={service.title}
@@ -94,16 +94,16 @@ function ServiceCard({
             </div>
 
             {/* Content */}
-            <div className="flex flex-col gap-[19px] items-start w-full">
-                <h3 className="font-montserrat font-bold text-[24px] text-[#f5f2e9] capitalize leading-normal">
+            <div className="flex flex-col gap-4 items-start w-full">
+                <h3 className="font-montserrat font-bold text-xl md:text-2xl text-[#f5f2e9] capitalize leading-tight">
                     {service.title}
                 </h3>
-                <p className="font-montserrat font-medium text-[20px] text-[#f5f2e9] leading-[28px]">
+                <p className="font-montserrat font-medium text-base md:text-lg text-[#f5f2e9] leading-relaxed">
                     {service.description}
                 </p>
                 <a
                     href={service.link}
-                    className="font-montserrat cursor-pointer font-medium text-[14px] text-[#d4af37] underline underline-offset-2 hover:text-[#e5c048] transition-colors"
+                    className="font-montserrat cursor-pointer font-medium text-sm text-[#d4af37] underline underline-offset-4 hover:text-[#e5c048] transition-colors"
                 >
                     Read More
                 </a>
@@ -116,14 +116,14 @@ export default function ServicesSection() {
     return (
         <section className="relative w-full overflow-hidden">
             <div
-                className="absolute top-0 left-0 w-full h-[200px] z-100"
+                className="absolute top-0 left-0 w-full h-48 md:h-64 z-10"
                 style={{
                     background:
                         "linear-gradient(to bottom, #132019 0%, rgba(19, 32, 25, 0) 100%)",
                 }}
             />
             <div
-                className="absolute bottom-0 left-0 w-full h-[150px] z-100 pointer-events-none"
+                className="absolute bottom-0 left-0 w-full h-40 md:h-52 z-10 pointer-events-none"
                 style={{
                     background:
                         "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0) 100%)",
@@ -142,19 +142,19 @@ export default function ServicesSection() {
             </div>
 
             {/* Content container */}
-            <div className="relative z-10 max-w-[1440px] mx-auto px-[37px] py-[82px]">
+            <div className="relative z-20 container mx-auto px-4 md:px-8 py-16 md:py-24">
                 {/* Header */}
                 <motion.div
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true, margin: "-100px" }}
                     variants={fadeIn}
-                    className="flex flex-col gap-[26px] items-center text-center mb-[60px]"
+                    className="flex flex-col gap-4 items-center text-center mb-12 md:mb-16"
                 >
-                    <p className="font-baron text-[24px] text-[#d4af37] tracking-[0.2em] leading-normal uppercase">
+                    <p className="font-baron text-xl md:text-2xl text-[#d4af37] tracking-[0.2em] leading-normal uppercase">
                         Services
                     </p>
-                    <h2 className="font-montserrat font-medium text-[40px] text-white capitalize leading-[54px]">
+                    <h2 className="font-montserrat font-medium text-3xl md:text-4xl lg:text-5xl text-white capitalize leading-tight">
                         Streamlined Digital Services
                     </h2>
                 </motion.div>
@@ -164,7 +164,7 @@ export default function ServicesSection() {
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true, margin: "-100px" }}
-                    className="flex justify-center gap-[35px] items-start"
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 items-start"
                 >
                     {services.map((service, index) => (
                         <ServiceCard

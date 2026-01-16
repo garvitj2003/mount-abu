@@ -222,7 +222,7 @@ export default function AdventuresSection() {
 
               {/* Animated Gold Line */}
               <motion.div
-                className="absolute top-[44px] left-0 h-[3px] min-w-full"
+                className="absolute top-10 left-0 h-[3px] min-w-full"
                 style={{ 
                   background: backgroundGradient,
                   width: "100%" 

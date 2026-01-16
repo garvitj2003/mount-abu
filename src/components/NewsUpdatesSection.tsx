@@ -69,17 +69,17 @@ export default function NewsUpdatesSection() {
     const currentItem = newsItems[currentIndex];
 
     return (
-        <section className="relative w-full min-h-screen py-20">
+        <section className="relative w-full min-h-screen py-16 md:py-20 overflow-hidden">
             {/**overlay fade */}
             <div
-                className="absolute top-0 left-0 w-full h-[150px] z-100"
+                className="absolute top-0 left-0 w-full h-40 z-10"
                 style={{
                     background:
                         "linear-gradient(to bottom, #7F6D54 0%, rgba(19, 32, 25, 0) 100%)",
                 }}
             />
             <div
-                className="absolute bottom-0 left-0 w-full h-[200px] z-100"
+                className="absolute bottom-0 left-0 w-full h-52 z-10"
                 style={{
                     background:
                         "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0) 100%)",
@@ -97,24 +97,24 @@ export default function NewsUpdatesSection() {
             </div>
 
             {/* Content container */}
-            <div className="relative z-10 max-w-[1440px] mx-auto px-[120px] py-[60px]">
+            <div className="relative z-20 container mx-auto px-4 md:px-8">
                 {/* Header */}
                 <motion.div
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true, margin: "-100px" }}
                     variants={fadeIn}
-                    className="flex justify-between items-start mb-[40px]"
+                    className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-10 md:mb-12"
                 >
-                    <div className="flex flex-col gap-[12px]">
-                        <h1 className="font-baron text-3xl font-extrabold  text-[#D4AF37] tracking-[0.2em] leading-normal uppercase font-poppins">
+                    <div className="flex flex-col gap-3">
+                        <h1 className="font-baron text-xl md:text-2xl font-extrabold text-[#D4AF37] tracking-[0.2em] leading-normal uppercase">
                             Updates
                         </h1>
-                        <h2 className="font-montserrat font-semibold text-[40px] text-white leading-[48px]">
+                        <h2 className="font-montserrat font-semibold text-3xl md:text-4xl lg:text-5xl text-white leading-tight">
                             News & Updates
                         </h2>
                     </div>
-                    <button className="bg-[#8b7e3a] hover:bg-[#a69545] underline transition-colors text-white font-montserrat font-medium text-[16px] px-[24px] py-[12px] rounded-[8px]">
+                    <button className="bg-[#8b7e3a] hover:bg-[#a69545] underline transition-colors text-white font-montserrat font-medium text-sm md:text-base px-6 py-3 rounded-lg">
                         View More
                     </button>
                 </motion.div>
@@ -127,31 +127,29 @@ export default function NewsUpdatesSection() {
                     variants={fadeIn}
                     className="relative"
                 >
-                    <div className="flex rounded-[16px] overflow-hidden shadow-lg">
+                    <div className="flex flex-col md:flex-row rounded-2xl overflow-hidden shadow-2xl">
                         {/* Left Content */}
                         <motion.div
                             variants={slideFromLeft}
-                            className="relative bg-[#faf8f3] w-[45%] p-[40px] flex flex-col justify-between min-h-[400px]"
+                            className="relative bg-[#faf8f3] w-full md:w-[45%] p-6 md:p-10 flex flex-col justify-between min-h-[350px] md:min-h-[400px]"
                         >
-                            {/* Background pattern */}
-
                             <div className="relative z-10">
-                                <p className="font-montserrat text-[14px] text-[#666] mb-[16px]">
+                                <p className="font-montserrat text-xs md:text-sm text-[#666] mb-4">
                                     {currentItem.tag}
                                 </p>
-                                <h3 className="font-montserrat font-semibold text-[28px] text-[#3d6b4f] leading-[36px] mb-[12px]">
+                                <h3 className="font-montserrat font-semibold text-xl md:text-2xl lg:text-3xl text-[#3d6b4f] leading-tight mb-3">
                                     {currentItem.title}
                                 </h3>
-                                <p className="font-montserrat text-[16px] text-[#888] mb-[32px]">
+                                <p className="font-montserrat text-sm md:text-base text-[#888] mb-8">
                                     {currentItem.dateRange}
                                 </p>
                             </div>
 
-                            <div className="relative z-10 flex items-center justify-between gap-[24px]">
+                            <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                                 {/* Navigation Arrows */}
-                                <div className="flex gap-[12px]">
+                                <div className="flex gap-3">
                                     <button
-                                        className="w-[44px] h-[44px] rounded-full opacity-40 hover:opacity-60 transition-opacity"
+                                        className="w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity"
                                         aria-label="Previous slide"
                                         onClick={handlePrev}
                                     >
@@ -165,7 +163,7 @@ export default function NewsUpdatesSection() {
                                     </button>
 
                                     <button
-                                        className="w-[44px] h-[44px] rounded-full hover:opacity-80 transition-opacity"
+                                        className="w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center hover:opacity-80 transition-opacity"
                                         aria-label="Next slide"
                                         onClick={handleNext}
                                     >
@@ -182,7 +180,7 @@ export default function NewsUpdatesSection() {
                                 {currentItem.pdfLink && (
                                     <a
                                         href={currentItem.pdfLink}
-                                        className="bg-[#e85a4f] hover:bg-[#d14a40] transition-colors text-white font-montserrat font-medium text-[16px] px-[32px] py-2 rounded-[8px]"
+                                        className="w-full sm:w-auto bg-[#e85a4f] hover:bg-[#d14a40] transition-colors text-white font-montserrat font-medium text-sm md:text-base px-8 py-3 rounded-lg text-center"
                                     >
                                         Download PDF
                                     </a>
@@ -193,7 +191,7 @@ export default function NewsUpdatesSection() {
                         {/* Right Image */}
                         <motion.div
                             variants={slideFromRight}
-                            className="relative w-[55%] min-h-[400px]"
+                            className="relative w-full md:w-[55%] h-[250px] md:h-auto min-h-[300px] md:min-h-[400px]"
                         >
                             <Image
                                 src={currentItem.image}

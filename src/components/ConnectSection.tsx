@@ -100,17 +100,23 @@ function ConnectCard({
     index: number;
     className?: string;
 }) {
+    // Determine a responsive height for images based on the card type
+    const getImageHeight = () => {
+        if (card.title === "Facebook") return "h-64 md:h-80";
+        if (["Instagram", "Twitter", "Office Address"].includes(card.title)) return "h-32 md:h-40";
+        return "h-48 md:h-56";
+    };
+
     return (
         <motion.a
             href={card.link}
             custom={index}
             variants={cardVariants}
-            className={`bg-[#f5f2e9] border border-[rgba(0,0,0,0.2)] rounded-[9px] overflow-hidden block hover:shadow-xl transition-shadow ${className}`}
+            className={`bg-[#f5f2e9] border border-black/20 rounded-xl overflow-hidden block hover:shadow-xl transition-shadow flex flex-col ${className}`}
         >
             {/* Image */}
             <div
-                className="relative w-full overflow-hidden rounded-b-[20px]"
-                style={{ height: card.imageHeight }}
+                className={`relative w-full overflow-hidden rounded-b-2xl shrink-0 ${getImageHeight()}`}
             >
                 <Image
                     src={card.image}
@@ -125,11 +131,11 @@ function ConnectCard({
             </div>
 
             {/* Content */}
-            <div className="p-[18px] pt-[16px]">
-                <h3 className="font-montserrat font-semibold text-[23px] text-black leading-[1.25] mb-[9px]">
+            <div className="p-4 md:p-5 flex-grow">
+                <h3 className="font-montserrat font-semibold text-lg md:text-xl text-black leading-tight mb-2">
                     {card.title}
                 </h3>
-                <p className="font-montserrat font-normal text-[14px] text-[rgba(0,0,0,0.4)] leading-[1.2]">
+                <p className="font-montserrat font-normal text-xs md:text-sm text-black/60 leading-normal line-clamp-3">
                     {card.description}
                 </p>
             </div>
@@ -141,7 +147,7 @@ export default function ConnectSection() {
     return (
         <section className="relative w-full overflow-hidden bg-[#132019]">
             <div
-                className="absolute top-0 left-0 w-full h-[200px] z-20 pointer-events-none"
+                className="absolute top-0 left-0 w-full h-48 z-20 pointer-events-none"
                 style={{
                     background:
                         "linear-gradient(to bottom, #132019 0%, rgba(19, 32, 25, 0) 100%)",
@@ -159,19 +165,19 @@ export default function ConnectSection() {
             </div>
 
             {/* Content container */}
-            <div className="relative z-10 max-w-[1270px] mx-auto px-[40px] py-[80px]">
+            <div className="relative z-30 container mx-auto px-4 md:px-8 py-16 md:py-24">
                 {/* Header */}
                 <motion.div
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true, margin: "-100px" }}
                     variants={fadeIn}
-                    className="flex flex-col gap-[26px] items-center text-center mb-[60px]"
+                    className="flex flex-col gap-4 items-center text-center mb-12 md:mb-16"
                 >
-                    <p className="font-baron text-[24px] text-[#d4af37] tracking-[0.2em] leading-normal uppercase">
+                    <p className="font-baron text-xl md:text-2xl text-[#d4af37] tracking-[0.2em] leading-normal uppercase">
                         Connect With Us
                     </p>
-                    <h2 className="font-montserrat font-medium text-[40px] text-white capitalize leading-[54px]">
+                    <h2 className="font-montserrat font-medium text-3xl md:text-4xl lg:text-5xl text-white capitalize leading-tight max-w-3xl">
                         Stay Updated And Reach Out Anytime
                     </h2>
                 </motion.div>
@@ -181,31 +187,31 @@ export default function ConnectSection() {
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true, margin: "-100px" }}
-                    className="grid grid-cols-1 lg:grid-cols-3 gap-[21px]"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6"
                 >
-                    {/* LEFT BLOCK: Spans 2 columns (Contains FB, Insta, Twitter, Address) */}
-                    <div className="lg:col-span-2 flex flex-col gap-[21px]">
+                    {/* LEFT BLOCK: Spans 2 columns on desktop */}
+                    <div className="lg:col-span-2 flex flex-col gap-5 md:gap-6">
                         
                         {/* Top Row of Left Block */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-[21px]">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
                             {/* Column 1: Facebook */}
                             <ConnectCard
                                 card={connectCards[0]}
                                 index={0}
-                                className="h-[482px]"
+                                className="h-full"
                             />
 
                             {/* Column 2: Instagram + Twitter Stack */}
-                            <div className="flex flex-col gap-[13px]">
+                            <div className="flex flex-col gap-5 md:gap-6">
                                 <ConnectCard
                                     card={connectCards[1]}
                                     index={1}
-                                    className="h-[234px]"
+                                    className="flex-1"
                                 />
                                 <ConnectCard
                                     card={connectCards[2]}
                                     index={2}
-                                    className="h-[234px]"
+                                    className="flex-1"
                                 />
                             </div>
                         </div>
@@ -214,21 +220,21 @@ export default function ConnectSection() {
                         <ConnectCard
                             card={connectCards[5]}
                             index={5}
-                            className="h-[234px] w-full"
+                            className="w-full"
                         />
                     </div>
 
-                    {/* RIGHT BLOCK: Column 3 (Contains YouTube, Helpline) */}
-                    <div className="flex flex-col gap-[16px]">
+                    {/* RIGHT BLOCK: Column 3 */}
+                    <div className="flex flex-col gap-5 md:gap-6">
                         <ConnectCard
                             card={connectCards[3]}
                             index={3}
-                            className="h-[362px]"
+                            className="flex-1"
                         />
                         <ConnectCard
                             card={connectCards[4]}
                             index={4}
-                            className="h-[350px]"
+                            className="flex-1"
                         />
                     </div>
                 </motion.div>

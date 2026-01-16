@@ -20,24 +20,20 @@ function Card({ title, buttonText, buttonVariant, href = "#" }: CardProps) {
   return (
     <a
       href={href}
-      className="flex flex-col items-center justify-center gap-[6px] rounded-[14px] border-[1.7px] border-[#2d4a2d] overflow-hidden pt-[14px] pb-[18px] px-0 backdrop-blur-[0.5px] transition-transform hover:scale-[1.02]"
-      style={{
-        backgroundImage:
-          "linear-gradient(90deg, rgba(245, 242, 233, 0.06) 0%, rgba(245, 242, 233, 0.06) 100%)",
-      }}
+      className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-[#2d4a2d] overflow-hidden pt-4 pb-5 px-4 backdrop-blur-[0.5px] transition-transform hover:scale-[1.02] bg-white/5"
     >
       {/* Title */}
-      <div className="flex items-center justify-center px-[19px] py-[18px] backdrop-blur-[15px]">
-        <h3 className="font-montserrat font-medium text-[24px] text-white text-center leading-[1.25] w-[221px]">
+      <div className="flex items-center justify-center px-4 py-4 backdrop-blur-md w-full min-h-[80px]">
+        <h3 className="font-montserrat font-medium text-xl md:text-2xl text-white text-center leading-tight max-w-[240px]">
           {title}
         </h3>
       </div>
       {/* Button */}
       <div
-        className="flex items-center justify-center px-[3px] py-[10px] rounded-[8px] backdrop-blur-[15px] w-[227px]"
+        className="flex items-center justify-center px-2 py-2.5 rounded-lg backdrop-blur-md w-full max-w-[240px]"
         style={{ backgroundColor: buttonColors[buttonVariant] }}
       >
-        <span className="font-montserrat font-medium text-[16px] text-white text-center leading-[1.25]">
+        <span className="font-montserrat font-medium text-sm md:text-base text-white text-center leading-tight">
           {buttonText}
         </span>
       </div>
@@ -95,10 +91,10 @@ const cardData: CardProps[] = [
 
 export default function InformationGuidlines() {
   return (
-    <div className="relative w-screen min-h-screen overflow-hidden">
+    <section className="relative w-full min-h-screen overflow-hidden bg-[#132019]">
       {/* Top gradient overlay */}
       <div
-        className="absolute top-0 left-0 w-full h-[200px] z-10"
+        className="absolute top-0 left-0 w-full h-48 md:h-64 z-10"
         style={{
           background:
             "linear-gradient(to bottom, #132019 0%, rgba(19, 32, 25, 0) 100%)",
@@ -106,15 +102,12 @@ export default function InformationGuidlines() {
       />
       {/* Bottom gradient overlay */}
       <div
-        className="absolute bottom-0 left-0 w-full h-[200px] z-10"
+        className="absolute bottom-0 left-0 w-full h-48 md:h-64 z-10"
         style={{
           background:
             "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0) 100%)",
         }}
       />
-
-      {/* Background color layer */}
-      <div className="absolute inset-0 bg-[#132019]" />
 
       {/* Background Image */}
       <div className="absolute inset-0 opacity-40">
@@ -127,19 +120,19 @@ export default function InformationGuidlines() {
       </div>
 
       {/* Content */}
-      <div className="relative z-20 flex flex-col items-center justify-center min-h-screen py-16 px-4">
+      <div className="relative z-20 container mx-auto px-4 md:px-8 py-16 md:py-24 flex flex-col items-center justify-center">
         {/* Header */}
-        <div className="flex flex-col items-center gap-2 mb-10">
-          <span className="font-montserrat font-medium text-[18px] tracking-[0.2em] uppercase text-[#a3a355]">
+        <div className="flex flex-col items-center gap-3 mb-12 md:mb-16">
+          <span className="font-montserrat font-medium text-base md:text-lg tracking-[0.2em] uppercase text-[#a3a355]">
             All you need
           </span>
-          <h2 className="font-playfair text-[36px] md:text-[42px] text-white text-center">
+          <h2 className="font-playfair text-3xl md:text-4xl lg:text-5xl text-white text-center leading-tight">
             Information & Guidelines
           </h2>
         </div>
 
         {/* Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-10 max-w-[1200px] w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl w-full">
           {cardData.map((card, index) => (
             <Card
               key={index}
@@ -151,6 +144,6 @@ export default function InformationGuidlines() {
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 }
