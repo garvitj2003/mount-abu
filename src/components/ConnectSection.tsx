@@ -176,37 +176,49 @@ export default function ConnectSection() {
                     </h2>
                 </motion.div>
 
-                {/* Cards Grid */}
+                {/* Main Grid Layout */}
                 <motion.div
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true, margin: "-100px" }}
-                    className="grid grid-cols-3 gap-[21px] h-[729px]"
+                    className="grid grid-cols-1 lg:grid-cols-3 gap-[21px]"
                 >
-                    {/* Column 1 - Facebook (tall) + Office Address (bottom part) */}
-                    <div className="flex flex-col gap-[13px]">
+                    {/* LEFT BLOCK: Spans 2 columns (Contains FB, Insta, Twitter, Address) */}
+                    <div className="lg:col-span-2 flex flex-col gap-[21px]">
+                        
+                        {/* Top Row of Left Block */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-[21px]">
+                            {/* Column 1: Facebook */}
+                            <ConnectCard
+                                card={connectCards[0]}
+                                index={0}
+                                className="h-[482px]"
+                            />
+
+                            {/* Column 2: Instagram + Twitter Stack */}
+                            <div className="flex flex-col gap-[13px]">
+                                <ConnectCard
+                                    card={connectCards[1]}
+                                    index={1}
+                                    className="h-[234px]"
+                                />
+                                <ConnectCard
+                                    card={connectCards[2]}
+                                    index={2}
+                                    className="h-[234px]"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Bottom Row of Left Block: Office Address */}
                         <ConnectCard
-                            card={connectCards[0]}
-                            index={0}
-                            className="h-[482px]"
+                            card={connectCards[5]}
+                            index={5}
+                            className="h-[234px] w-full"
                         />
                     </div>
 
-                    {/* Column 2 - Instagram + Twitter + Office Address (spans) */}
-                    <div className="flex flex-col gap-[13px]">
-                        <ConnectCard
-                            card={connectCards[1]}
-                            index={1}
-                            className="h-[234px]"
-                        />
-                        <ConnectCard
-                            card={connectCards[2]}
-                            index={2}
-                            className="h-[234px]"
-                        />
-                    </div>
-
-                    {/* Column 3 - YouTube + Helpline */}
+                    {/* RIGHT BLOCK: Column 3 (Contains YouTube, Helpline) */}
                     <div className="flex flex-col gap-[16px]">
                         <ConnectCard
                             card={connectCards[3]}
@@ -219,21 +231,6 @@ export default function ConnectSection() {
                             className="h-[350px]"
                         />
                     </div>
-                </motion.div>
-
-                {/* Office Address - spanning first two columns at bottom */}
-                <motion.div
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-100px" }}
-                    className="mt-[-221px] ml-0"
-                    style={{ width: "839px" }}
-                >
-                    <ConnectCard
-                        card={connectCards[5]}
-                        index={5}
-                        className="h-[234px]"
-                    />
                 </motion.div>
             </div>
         </section>
