@@ -95,7 +95,7 @@ export default function HiddenPlacesSection() {
   const nextNextImage = hiddenPlaces[getIndex(activeIndex + 2)].image;
 
   return (
-    <section className="relative w-full min-h-screen bg-[#17261e] overflow-hidden flex flex-col justify-center">
+    <section className="relative w-full py-4 min-h-screen bg-[#17261e] overflow-hidden flex flex-col justify-center">
       
       {/* --- UPDATED BACKGROUND IMAGE SECTION --- */}
       <div className="absolute inset-0 w-full h-full">
@@ -137,10 +137,10 @@ export default function HiddenPlacesSection() {
       />
 
       {/* Main Content Container */}
-      <div className="relative z-10 container mx-auto px-4 md:px-8 py-8 md:py-12 pb-20">
+      <div className="relative z-10 container mx-auto px-4 md:px-8 py-16 md:py-24 pb-32">
         
         {/* Title Section */}
-        <div className="flex flex-col items-center gap-4 text-center mb-8 md:mb-12">
+        <div className="flex flex-col items-center gap-6 text-center mb-16 lg:mb-24">
           <p className="font-baron text-xl md:text-2xl text-[#d4af37] leading-normal uppercase tracking-wide">
             Hidden Places
           </p>
@@ -150,11 +150,11 @@ export default function HiddenPlacesSection() {
         </div>
 
         {/* Content Row: Text (Left) + Carousel (Right) */}
-        <div className="flex flex-col lg:flex-row justify-between items-center lg:items-end gap-8 lg:gap-4">
+        <div className="flex flex-col lg:flex-row justify-between items-center lg:items-end gap-12 lg:gap-8">
           
           {/* --- LEFT SIDE: TEXT INFO --- */}
-          <div className="flex flex-col gap-4 w-full max-w-xl order-2 lg:order-1">
-            <div className="flex flex-col gap-4 min-h-[160px] md:min-h-[200px]">
+          <div className="flex flex-col gap-8 w-full max-w-xl order-2 lg:order-1">
+            <div className="flex flex-col gap-6 min-h-[200px]">
               
               {/* Animate Name */}
               <div className="overflow-hidden">
