@@ -152,7 +152,7 @@ export default function AboutSection() {
                 </div>
             </div>
 
-            <div className="absolute lg:-bottom-20 -bottom-4 left-0 w-full overflow-hidden text-[#132019] z-500">
+            <div className="absolute lg:-bottom-20 -bottom-4 left-0 w-full overflow-hidden text-[#132019] ">
                 <svg
                     className="relative block w-[calc(100%+1.3px)]"
                     data-name="Layer 1"
