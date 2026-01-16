@@ -79,9 +79,9 @@ function MinisterCard({
     const titleArray = Array.isArray(title) ? title : [title];
 
     return (
-        <div className="flex items-center shrink-0 w-[183px]">
+        <div className="flex items-center shrink-0 w-44">
             <div
-                className="flex flex-col gap-4 items-center justify-center p-[18px] rounded-[12.8px] border border-[#d4af37] border-solid grow"
+                className="flex flex-col gap-4 items-center justify-center p-4 rounded-xl border border-[#d4af37] border-solid grow"
                 style={{
                     background: "rgba(19, 32, 25, 0.2)",
                     backdropFilter: "blur(2.259px)",
@@ -90,7 +90,7 @@ function MinisterCard({
             >
                 {/* Profile Image */}
                 <div className="flex items-center justify-center">
-                    <div className="relative w-[115px] h-[115px] rounded-full overflow-hidden">
+                    <div className="relative w-28 h-28 rounded-full overflow-hidden">
                         <div
                             className="absolute inset-0 rounded-full"
                             style={{ background: "rgba(245, 242, 233, 0.11)" }}
@@ -116,7 +116,7 @@ function MinisterCard({
                 {/* Name and Title */}
                 <div className="flex items-center justify-center w-full">
                     <div className="flex flex-col gap-2 items-center justify-center text-[#f5f2e9] text-center grow">
-                        <div className="font-montserrat font-bold text-[18px] leading-normal capitalize w-full">
+                        <div className="font-montserrat font-bold text-lg leading-normal capitalize w-full">
                             {nameArray.map((line, i) => (
                                 <p
                                     key={i}
@@ -128,7 +128,7 @@ function MinisterCard({
                                 </p>
                             ))}
                         </div>
-                        <div className="font-montserrat font-medium text-[15px] leading-[21px]">
+                        <div className="font-montserrat font-medium text-sm leading-tight">
                             {titleArray.map((line, i) => (
                                 <p
                                     key={i}
@@ -150,10 +150,10 @@ function MinisterCard({
 // Navigation Header Component (Unchanged)
 function NavigationHeader() {
     return (
-        <header className="absolute top-0 left-0 right-0 z-50 backdrop-blur-md h-[70px] flex items-center justify-between px-8 border-b border-white/80">
+        <header className="absolute top-0 left-0 right-0 z-50 backdrop-blur-md h-20 flex items-center justify-between px-4 md:px-8 border-b border-white/80">
             {/* Logo and Title */}
             <div className="flex items-center gap-3">
-                <div className="relative w-[45px] h-[45px] rounded-full overflow-hidden bg-white flex items-center justify-center">
+                <div className="relative w-12 h-12 rounded-full overflow-hidden bg-white flex items-center justify-center">
                     {/* Logo placeholder - mountain icon */}
                     <svg
                         width="32"
@@ -170,13 +170,13 @@ function NavigationHeader() {
                         <circle cx="22" cy="10" r="3" fill="#FDD835" />
                     </svg>
                 </div>
-                <span className="text-white font-montserrat font-semibold text-lg">
+                <span className="text-white font-montserrat font-semibold text-base md:text-lg">
                     Nagar Palika Mount Abu
                 </span>
             </div>
 
             {/* Right side - Language and Menu */}
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4 md:gap-6">
                 <RunningBorderButton />
                 <button className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors">
                     <svg
@@ -220,7 +220,7 @@ export default function HeroSection() {
 
                 {/* Bottom Gradient Overlay - Dark green fade */}
                 <div
-                    className="absolute bottom-0 left-0 w-full h-[300px]"
+                    className="absolute bottom-0 left-0 w-full h-72"
                     style={{
                         background:
                             "linear-gradient(to top, #000 0%, rgba(19, 32, 25, 0.8) 40%, rgba(19, 32, 25, 0.4) 70%, transparent 100%)",
@@ -229,7 +229,7 @@ export default function HeroSection() {
 
                 {/* Second gradient layer for deeper bottom */}
                 <div
-                    className="absolute bottom-0 left-0 w-full h-[200px]"
+                    className="absolute bottom-0 left-0 w-full h-48"
                     style={{
                         background:
                             "linear-gradient(to top, #000 0%, rgba(19, 32, 25, 0.6) 60%, transparent 100%)",
@@ -237,14 +237,14 @@ export default function HeroSection() {
                 />
 
                 {/* Explore Text - Centered at bottom */}
-                <div className="absolute bottom-[40px] left-1/2 -translate-x-1/2 flex flex-col items-center">
-                    <p className="font-baron text-[20px] text-[#d4af37] leading-normal tracking-[0.2em] uppercase">
+                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                    <p className="font-baron text-xl text-[#d4af37] leading-normal tracking-[0.2em] uppercase">
                         EXPLORE
                     </p>
                 </div>
 
-                {/* Minister Cards - Bottom right */}
-                <div className="absolute bottom-14 right-[50px] flex gap-[21px] items-center">
+                {/* Minister Cards - Bottom centered on mobile, right-aligned on desktop */}
+                <div className="absolute bottom-24 left-1/2 -translate-x-1/2 md:left-auto md:right-12 md:translate-x-0 md:bottom-14 flex flex-row gap-2 md:gap-5 items-center scale-[0.65] sm:scale-90 md:scale-100 origin-bottom md:origin-bottom-right">
                     <MinisterCard
                         imageSrc="/images/minister2.png"
                         name={["Shri Bhajan", "Lal Sharma"]}

@@ -62,7 +62,6 @@ export default function DestinationsSection() {
         let offset = (index - activeIndex + total) % total;
 
         // Logic to center the offset around 0 for any array length
-        // This converts [0, 1, 2, 3, 4, 5] into [0, 1, 2, 3, -2, -1] for length 6
         if (offset > total / 2) {
             offset -= total;
         }
@@ -71,7 +70,7 @@ export default function DestinationsSection() {
     };
 
     return (
-        <section className="relative w-full min-h-[900px] bg-[#132019] overflow-hidden flex flex-col items-center">
+        <section className="relative w-full min-h-screen py-16 md:py-24 bg-[#132019] overflow-hidden flex flex-col items-center">
             {/* --- Background --- */}
             <div className="absolute inset-0 opacity-40">
                 <Image
@@ -82,21 +81,21 @@ export default function DestinationsSection() {
                 />
             </div>
             <div
-                className="absolute top-0 left-0 w-full h-[484px]"
+                className="absolute top-0 left-0 w-full h-[30rem]"
                 style={{
                     background:
                         "linear-gradient(to bottom, #000 0%, rgba(19, 32, 25, 0.6) 60%, transparent 100)",
                 }}
             />
             <div
-                className="absolute top-0 left-0 w-full h-[300px]"
+                className="absolute top-0 left-0 w-full h-72"
                 style={{
                     background:
                         "linear-gradient(to bottom, #000 0%, rgba(19, 32, 25, 0.8) 40%, rgba(19, 32, 25, 0.4) 70%, transparent 100%)",
                 }}
             />
             <div
-                className="absolute bottom-0 left-0 w-full h-[212px]"
+                className="absolute bottom-0 left-0 w-full h-52"
                 style={{
                     background:
                         "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0) 100%)",
@@ -104,15 +103,15 @@ export default function DestinationsSection() {
             />
 
             {/* --- Header Content --- */}
-            <div className="relative z-10 flex flex-col items-center pt-[85px] mb-[60px]">
-                <p className="font-baron text-[24px] text-[#d4af37] leading-normal tracking-wide mb-4">
+            <div className="relative z-10 flex flex-col items-center mb-10 md:mb-16 px-4">
+                <p className="font-baron text-xl md:text-2xl text-[#d4af37] leading-normal tracking-wide mb-4">
                     Destinations
                 </p>
                 <h2 className="text-[#f5f2e9] text-center capitalize">
-                    <span className="font-montserrat font-medium text-[40px] block md:inline mr-2 drop-shadow-lg">
+                    <span className="font-montserrat font-medium text-3xl md:text-4xl block md:inline md:mr-3 drop-shadow-lg">
                         Top Destinations to visit
                     </span>
-                    <span className="font-montserrat font-semibold text-[48px] drop-shadow-lg">
+                    <span className="font-montserrat font-semibold text-4xl md:text-5xl drop-shadow-lg">
                         Mount Abu
                     </span>
                 </h2>
@@ -120,7 +119,7 @@ export default function DestinationsSection() {
 
             {/* --- 3D Carousel Container --- */}
             <div
-                className="relative w-full max-w-[1224px] h-[450px] flex items-center justify-center"
+                className="relative w-full max-w-6xl h-[350px] md:h-[450px] flex items-center justify-center"
                 style={{ perspective: "1000px" }}
             >
                 <div className="relative w-full h-full flex items-center justify-center">
@@ -129,7 +128,6 @@ export default function DestinationsSection() {
                         const isCenter = position === 0;
 
                         // Check if the card is within the visible 5-card range
-                        // (Center(0) + 2 Left + 2 Right)
                         const isVisible = Math.abs(position) <= 2;
 
                         let xOffset = 0;
@@ -139,6 +137,11 @@ export default function DestinationsSection() {
                         let opacity = 1;
                         let brightness = 1;
 
+                        // Responsive xOffset logic
+                        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+                        const baseOffset = isMobile ? 120 : 260;
+                        const farOffset = isMobile ? 180 : 220;
+
                         if (position === 0) {
                             // Center
                             zIndex = 50;
@@ -146,24 +149,23 @@ export default function DestinationsSection() {
                             opacity = 1;
                         } else if (position === -1 || position === 1) {
                             // Immediate Neighbors
-                            xOffset = position * 260;
+                            xOffset = position * baseOffset;
                             zIndex = 30;
                             scale = 0.9;
                             rotateY = position === -1 ? 15 : -15;
-                            opacity = 1;
+                            opacity = isMobile ? 0.7 : 1;
                             brightness = 0.8;
                         } else if (position === -2 || position === 2) {
                             // Far Neighbors
-                            xOffset = position * 220;
+                            xOffset = position * farOffset;
                             zIndex = 10;
                             scale = 0.85;
                             rotateY = position === -2 ? 25 : -25;
-                            opacity = 0.9;
+                            opacity = isMobile ? 0 : 0.9; // Hide far neighbors on mobile
                             brightness = 0.6;
                         } else {
-                            // HIDDEN (Any card beyond the 5 visible slots)
-                            // We keep it in the DOM but hide it so it can animate in/out smoothly
-                            xOffset = 0; // Tuck behind center
+                            // HIDDEN
+                            xOffset = 0;
                             zIndex = -10;
                             scale = 0;
                             opacity = 0;
@@ -185,15 +187,15 @@ export default function DestinationsSection() {
                                     duration: 0.9,
                                     ease: [0.25, 1, 0.5, 0.9],
                                 }}
-                                className="absolute w-[331px] h-[408px] rounded-[13px]"
+                                className="absolute w-64 h-80 md:w-[331px] md:h-[408px] rounded-xl"
                                 style={{
                                     transformStyle: "preserve-3d",
-                                    pointerEvents: isVisible ? "auto" : "none", // Disable clicks on hidden cards
+                                    pointerEvents: isVisible && opacity > 0 ? "auto" : "none",
                                 }}
                             >
                                 {/* Image Card Container */}
                                 <div
-                                    className={`relative w-full h-full rounded-[13px] overflow-hidden shadow-2xl transition-all duration-500 group ${
+                                    className={`relative w-full h-full rounded-xl overflow-hidden shadow-2xl transition-all duration-500 group ${
                                         isCenter
                                             ? "border-4 border-[#122018] hover:scale-102"
                                             : ""
@@ -232,14 +234,14 @@ export default function DestinationsSection() {
                                                 delay: 0.2,
                                                 duration: 0.4,
                                             }}
-                                            className="absolute bottom-0 left-0 w-full p-6 text-center z-50"
+                                            className="absolute bottom-0 left-0 w-full p-4 md:p-6 text-center z-50"
                                         >
-                                            <div className="absolute bottom-0 left-0 w-full h-[250px] bg-gradient-to-t from-black via-black/70 to-transparent -z-10 rounded-b-[13px]" />
+                                            <div className="absolute bottom-0 left-0 w-full h-48 md:h-[250px] bg-gradient-to-t from-black via-black/70 to-transparent -z-10 rounded-b-xl" />
 
-                                            <h3 className="font-montserrat font-bold text-[24px] text-[#f5f2e9] mb-2 drop-shadow-md">
+                                            <h3 className="font-montserrat font-bold text-xl md:text-2xl text-[#f5f2e9] mb-1 md:mb-2 drop-shadow-md">
                                                 {dest.title}
                                             </h3>
-                                            <p className="font-montserrat text-[14px] text-gray-200 leading-relaxed drop-shadow-sm">
+                                            <p className="font-montserrat text-xs md:text-sm text-gray-200 leading-relaxed drop-shadow-sm line-clamp-2 md:line-clamp-none">
                                                 {dest.description}
                                             </p>
                                         </motion.div>
@@ -252,9 +254,9 @@ export default function DestinationsSection() {
             </div>
 
             {/* --- Navigation Controls --- */}
-            <div className="flex items-center gap-[20px] relative z-20 mt-[40px]">
+            <div className="flex items-center gap-5 relative z-20 mt-8 md:mt-12">
                 <button
-                    className="w-[44px] h-[44px] rounded-full opacity-40 hover:opacity-60 transition-opacity"
+                    className="w-11 h-11 rounded-full opacity-40 hover:opacity-60 transition-opacity"
                     aria-label="Previous slide"
                     onClick={handlePrev}
                 >
@@ -268,7 +270,7 @@ export default function DestinationsSection() {
                 </button>
 
                 <button
-                    className="w-[44px] h-[44px] rounded-full hover:opacity-80 transition-opacity"
+                    className="w-11 h-11 rounded-full hover:opacity-80 transition-opacity"
                     aria-label="Next slide"
                     onClick={handleNext}
                 >

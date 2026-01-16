@@ -18,11 +18,11 @@ export default function OverlappingFrames() {
             />
 
             <motion.div
-                className="absolute w-full h-full -top-1/3 -left-30 z-10" // Added z-10 to sit above curtain
+                className="absolute w-full h-full -top-1/4 -left-1/4 z-10" // Adjusted positioning
                 // Start: Visible and floating in place
                 initial={{
                     opacity: 1,
-                    scale: 1.6,
+                    scale: 2.5, // Increased scale to hide corners
                     rotate: 10,
                     x: 0,
                     y: 0,
@@ -30,8 +30,8 @@ export default function OverlappingFrames() {
                 // End: Flies away to Top Left immediately on load
                 animate={{
                     opacity: 0,
-                    x: -1000,
-                    y: -1000,
+                    x: -1200, // Increased travel distance
+                    y: -1200,
                     transition: exitTransition,
                 }}
             >
@@ -41,23 +41,24 @@ export default function OverlappingFrames() {
                     fill
                     priority
                     className="object-cover"
+                    sizes="100vw"
                 />
             </motion.div>
 
             {/* Frame 2: Starts visible, Animations to Bottom Right */}
             <motion.div
-                className="absolute inset-0 -bottom-1/3 -right-1/3 z-10"
+                className="absolute inset-0 -bottom-1/4 -right-1/4 z-10"
                 initial={{
                     opacity: 1,
-                    scale: 1.4,
+                    scale: 2.5, // Increased scale
                     rotate: 120,
                     x: 0,
                     y: 0,
                 }}
                 animate={{
                     opacity: 0,
-                    x: 1000,
-                    y: 1000,
+                    x: 1200,
+                    y: 1200,
                     transition: { ...exitTransition, delay: 0.1 },
                 }}
             >
@@ -67,6 +68,7 @@ export default function OverlappingFrames() {
                     fill
                     priority
                     className="object-cover"
+                    sizes="100vw"
                 />
             </motion.div>
 
@@ -75,15 +77,15 @@ export default function OverlappingFrames() {
                 className="absolute inset-0 -bottom-1/2 -left-1/2 z-10"
                 initial={{
                     opacity: 1,
-                    scale: 1.5,
+                    scale: 2.5, // Increased scale
                     rotate: 0,
                     x: 0,
                     y: 0,
                 }}
                 animate={{
                     opacity: 0,
-                    x: -1000,
-                    y: 1000,
+                    x: -1200,
+                    y: 1200,
                     transition: { ...exitTransition, delay: 0 },
                 }}
             >
@@ -93,6 +95,7 @@ export default function OverlappingFrames() {
                     fill
                     priority
                     className="object-cover"
+                    sizes="100vw"
                 />
             </motion.div>
         </div>

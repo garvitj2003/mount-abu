@@ -1,11 +1,8 @@
 "use client";
 
 import Image from "next/image";
-// Importing Variants type for TypeScript safety
-import { motion, Variants } from "motion/react"; 
+import { motion, Variants } from "motion/react";
 
-// --- 1. DEFINE VARIANTS OUTSIDE THE COMPONENT ---
-// This prevents them from being re-created on every single render.
 const slideFromLeft: Variants = {
     hidden: { opacity: 0, x: -100 },
     visible: {
@@ -26,9 +23,9 @@ const slideFromRight: Variants = {
 
 export default function AboutSection() {
     return (
-        <section className="relative w-full ">
+        <section className="relative w-full overflow-hidden">
             {/* Main content area with cream background */}
-            <div className="relative bg-[#f5f2e9] w-full overflow-hidden py-10">
+            <div className="relative bg-[#f5f2e9] w-full py-10">
                 {/* Background pattern with low opacity */}
                 <div className="absolute inset-0 opacity-[0.14]">
                     <Image
@@ -40,39 +37,38 @@ export default function AboutSection() {
                 </div>
 
                 {/* Content container */}
-                <div className="relative z-10 max-w-[1440px] mx-auto px-[120px] py-[80px]">
+                <div className="relative z-10 container mx-auto px-4 md:px-8 py-12 md:py-20">
                     {/* First About Block - Welcome to Mount Abu */}
-                    <div className="relative flex justify-between items-start mb-[80px]">
+                    <div className="relative flex flex-col md:flex-row justify-between items-center md:items-start gap-10 md:gap-16 mb-16 md:mb-24">
                         {/* Left content -> Slides in from Left */}
                         <motion.div
                             initial="hidden"
                             whileInView="visible"
                             viewport={{ once: true, margin: "-100px" }}
                             variants={slideFromLeft}
-                            className="flex flex-col gap-[33px] items-start max-w-[546px]"
+                            className="flex flex-col gap-6 md:gap-8 items-start w-full md:max-w-xl"
                         >
                             {/* Title section */}
-                            <div className="flex flex-col gap-[26px] items-start w-full">
-                                <p className="font-baron text-[24px] text-[#d4af37] leading-normal">
+                            <div className="flex flex-col gap-4 md:gap-6 items-start w-full">
+                                <p className="font-baron text-xl md:text-2xl text-[#d4af37] leading-normal uppercase tracking-wider">
                                     About
                                 </p>
                                 <div className="capitalize text-[#132019]">
-                                    <p className="font-montserrat font-medium text-[32px] leading-[44px] mb-0">
+                                    <p className="font-montserrat font-medium text-2xl md:text-3xl leading-tight">
                                         Welcome to
                                     </p>
-                                    <p className="font-montserrat font-semibold text-[40px] leading-[44px]">
+                                    <p className="font-montserrat font-semibold text-3xl md:text-4xl leading-tight">
                                         Mount Abu
                                     </p>
                                 </div>
                             </div>
 
                             {/* Description */}
-                            <div className="font-montserrat font-medium text-[20px] text-black leading-[28px]">
-                                <p className="mb-0">
+                            <div className="font-montserrat font-medium text-base md:text-lg lg:text-xl text-black leading-relaxed">
+                                <p className="font-bold mb-4">
                                     Discover Rajasthan&apos;s Only Hill Station
                                 </p>
-                                <p className="mb-0">&nbsp;</p>
-                                <p className="mb-0">
+                                <p>
                                     Nestled in the Aravalli Hills, Mount Abu is
                                     Rajasthan&apos;s only hill station—blessed
                                     with cool climate, lush greenery, serene
@@ -89,7 +85,7 @@ export default function AboutSection() {
                             whileInView="visible"
                             viewport={{ once: true, margin: "-100px" }}
                             variants={slideFromRight}
-                            className="relative w-[564px] h-[609px] rounded-[12px] overflow-hidden flex-shrink-0"
+                            className="relative w-full md:w-1/2 aspect-[4/5] md:aspect-square max-w-[564px] rounded-xl overflow-hidden shadow-xl"
                         >
                             <Image
                                 src="/images/about-sunset.png"
@@ -101,14 +97,14 @@ export default function AboutSection() {
                     </div>
 
                     {/* Second About Block - Nagar Palika Mount Abu */}
-                    <div className="relative flex justify-between items-start">
+                    <div className="relative flex flex-col md:flex-row justify-between items-center md:items-start gap-10 md:gap-16">
                         {/* Left image -> Slides in from Left */}
                         <motion.div
                             initial="hidden"
                             whileInView="visible"
                             viewport={{ once: true, margin: "-100px" }}
                             variants={slideFromLeft}
-                            className="relative w-[602px] h-[598px] rounded-[12px] overflow-hidden flex-shrink-0"
+                            className="relative w-full md:w-1/2 aspect-4/5 md:aspect-square max-w-[602px] rounded-xl overflow-hidden shadow-xl order-2 md:order-1"
                         >
                             <Image
                                 src="/images/about-building.png"
@@ -124,22 +120,23 @@ export default function AboutSection() {
                             whileInView="visible"
                             viewport={{ once: true, margin: "-100px" }}
                             variants={slideFromRight}
-                            className="flex flex-col gap-[33px] items-end max-w-[546px] mt-[140px]"
+                            className="flex flex-col gap-6 md:gap-8 items-start md:items-end w-full md:max-w-xl md:mt-24 order-1 md:order-2"
                         >
                             {/* Title section */}
-                            <div className="flex flex-col gap-[26px] items-end w-full">
-                                <p className="font-baron text-[24px] text-[#d4af37] leading-normal text-center">
+                            <div className="flex flex-col gap-4 md:gap-6 items-start md:items-end w-full">
+                                <p className="font-baron text-xl md:text-2xl text-[#d4af37] leading-normal uppercase tracking-wider">
                                     About
                                 </p>
-                                <p className="font-montserrat font-medium text-[40px] text-[#132019] capitalize leading-[54px] text-right">
+                                <p className="font-montserrat font-medium text-3xl md:text-4xl text-[#132019] capitalize leading-tight text-left md:text-right">
                                     Nagar Palika Mount Abu
                                 </p>
                             </div>
 
                             {/* Description */}
-                            <div className="font-montserrat font-medium text-[20px] text-black leading-[28px] text-right">
-                                <p className="mb-0">Serving Our Community</p>
-                                <p className="mb-0">&nbsp;</p>
+                            <div className="font-montserrat font-medium text-base md:text-lg lg:text-xl text-black leading-relaxed text-left md:text-right">
+                                <p className="font-bold mb-4">
+                                    Serving Our Community
+                                </p>
                                 <p>
                                     Nagar Palika Mount Abu is dedicated to
                                     developing and maintaining the city&apos;s
@@ -155,7 +152,7 @@ export default function AboutSection() {
                 </div>
             </div>
 
-            <div className="absolute -bottom-20 left-0 w-full overflow-hidden text-[#132019]">
+            <div className="absolute lg:-bottom-20 -bottom-4 left-0 w-full overflow-hidden text-[#132019] z-500">
                 <svg
                     className="relative block w-[calc(100%+1.3px)]"
                     data-name="Layer 1"

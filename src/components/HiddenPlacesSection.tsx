@@ -95,7 +95,7 @@ export default function HiddenPlacesSection() {
   const nextNextImage = hiddenPlaces[getIndex(activeIndex + 2)].image;
 
   return (
-    <section className="relative w-full min-h-[925px] bg-[#17261e] overflow-hidden">
+    <section className="relative w-full min-h-screen bg-[#17261e] overflow-hidden flex flex-col justify-center">
       
       {/* --- UPDATED BACKGROUND IMAGE SECTION --- */}
       <div className="absolute inset-0 w-full h-full">
@@ -122,14 +122,14 @@ export default function HiddenPlacesSection() {
 
       {/* Gradients */}
       <div
-        className="absolute top-0 left-0 w-full h-[400px] z-0"
+        className="absolute top-0 left-0 w-full h-96 z-0"
         style={{
           background:
             "linear-gradient(to bottom, #132019 0%, rgba(19, 32, 25, 0) 100%)",
         }}
       />
       <div
-        className="absolute bottom-0 left-0 w-full h-[473px] z-0"
+        className="absolute bottom-0 left-0 w-full h-96 z-0"
         style={{
           background:
             "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0) 100%)",
@@ -137,24 +137,24 @@ export default function HiddenPlacesSection() {
       />
 
       {/* Main Content Container */}
-      <div className="relative z-10 max-w-[1440px] mx-auto px-[70px] py-[80px]">
+      <div className="relative z-10 container mx-auto px-4 md:px-8 py-8 md:py-12 pb-20">
         
         {/* Title Section */}
-        <div className="flex flex-col items-center gap-[26px] text-center mb-[80px] lg:mb-[120px]">
-          <p className="font-baron text-[24px] text-[#d4af37] leading-normal uppercase tracking-wide">
+        <div className="flex flex-col items-center gap-4 text-center mb-8 md:mb-12">
+          <p className="font-baron text-xl md:text-2xl text-[#d4af37] leading-normal uppercase tracking-wide">
             Hidden Places
           </p>
-          <h2 className="font-montserrat font-medium text-[40px] text-white capitalize leading-[54px]">
+          <h2 className="font-montserrat font-medium text-3xl md:text-4xl text-white capitalize leading-tight">
             Unexplored Gems of Mount Abu
           </h2>
         </div>
 
         {/* Content Row: Text (Left) + Carousel (Right) */}
-        <div className="flex flex-col lg:flex-row justify-between items-end gap-12">
+        <div className="flex flex-col lg:flex-row justify-between items-center lg:items-end gap-8 lg:gap-4">
           
           {/* --- LEFT SIDE: TEXT INFO --- */}
-          <div className="flex flex-col gap-[32px] w-full max-w-[562px]">
-            <div className="flex flex-col gap-[24px] min-h-[200px]">
+          <div className="flex flex-col gap-4 w-full max-w-xl order-2 lg:order-1">
+            <div className="flex flex-col gap-4 min-h-[160px] md:min-h-[200px]">
               
               {/* Animate Name */}
               <div className="overflow-hidden">
@@ -165,7 +165,7 @@ export default function HiddenPlacesSection() {
                     initial="hidden"
                     animate="visible"
                     exit="exit"
-                    className="font-baron text-[32px] text-[#d4af37] leading-normal"
+                    className="font-baron text-3xl md:text-4xl text-[#d4af37] leading-normal text-center lg:text-left"
                   >
                     {currentPlace.name}
                   </motion.p>
@@ -181,7 +181,7 @@ export default function HiddenPlacesSection() {
                     initial="hidden"
                     animate="visible"
                     exit="exit"
-                    className="font-montserrat font-medium text-[20px] text-[#f5f2e9] leading-[28px]"
+                    className="font-montserrat font-medium text-base md:text-xl text-[#f5f2e9] leading-relaxed text-center lg:text-left"
                   >
                     {currentPlace.description}
                   </motion.p>
@@ -192,23 +192,23 @@ export default function HiddenPlacesSection() {
             {/* Buttons Row */}
             <div className="flex items-center justify-between w-full mt-4">
               <button
-                className="px-[24px] py-[12px] rounded-[6px] transition-transform hover:scale-105 active:scale-95"
+                className="px-6 py-3 rounded-md transition-transform hover:scale-105 active:scale-95"
                 style={{
                   background: "rgba(212, 175, 55, 0.44)",
                   backdropFilter: "blur(2px)",
                   WebkitBackdropFilter: "blur(2px)",
                 }}
               >
-                <span className="font-poppins text-[16px] text-white underline">
+                <span className="font-poppins text-sm md:text-base text-white underline">
                   View More
                 </span>
               </button>
 
               {/* Navigation Arrows */}
-              <div className="flex gap-[12px] items-center">
+              <div className="flex gap-3 items-center">
                 <button
                   onClick={handlePrev}
-                  className="w-[44px] h-[44px] opacity-40 hover:opacity-100 transition-opacity"
+                  className="w-11 h-11 opacity-40 hover:opacity-100 transition-opacity"
                   aria-label="Previous"
                 >
                   <Image
@@ -222,7 +222,7 @@ export default function HiddenPlacesSection() {
 
                 <button
                   onClick={handleNext}
-                  className="w-[44px] h-[44px] hover:opacity-80 transition-opacity"
+                  className="w-11 h-11 hover:opacity-80 transition-opacity"
                   aria-label="Next"
                 >
                   <Image
@@ -237,7 +237,7 @@ export default function HiddenPlacesSection() {
           </div>
 
           {/* --- RIGHT SIDE: ANIMATED IMAGE STACK --- */}
-          <div className="relative w-full max-w-[709px] h-[361px]">
+          <div className="relative w-full max-w-[340px] md:max-w-2xl lg:max-w-[700px] h-[400px] md:h-[360px] order-1 lg:order-2 flex justify-center lg:block">
             <AnimatePresence initial={false} mode="popLayout">
               
               {/* Card 1: The Active "Hero" Card */}
@@ -247,7 +247,7 @@ export default function HiddenPlacesSection() {
                 animate={{ opacity: 1, x: 0, scale: 1, zIndex: 10 }}
                 exit={{ opacity: 0, x: -50, scale: 0.95, zIndex: 0 }}
                 transition={{ duration: 0.6, ease: "easeInOut" }}
-                className="absolute left-0 top-0 w-[292px] h-[361px] rounded-[17px] border-[6px] border-[#d4af37] overflow-hidden shadow-2xl"
+                className="absolute lg:left-0 top-0 w-64 h-80 md:w-[292px] md:h-[361px] rounded-2xl border-[6px] border-[#d4af37] overflow-hidden shadow-2xl z-20 left-1/2 -translate-x-1/2 lg:translate-x-0"
               >
                 <Image
                   src={activeImage}
@@ -261,10 +261,11 @@ export default function HiddenPlacesSection() {
               <motion.div
                 key={`card-next-${activeIndex}`}
                 initial={{ opacity: 0, x: 100 }} 
-                animate={{ opacity: 1, x: 312, scale: 1, zIndex: 5 }} 
+                animate={{ opacity: 1, x: 0, scale: 1, zIndex: 5 }} 
                 exit={{ opacity: 0 }} 
                 transition={{ duration: 0.6, ease: "easeInOut", delay: 0.1 }}
-                className="absolute top-[63px] w-[228px] h-[298px] rounded-[17px] overflow-hidden shadow-xl"
+                className="hidden lg:block absolute top-[63px] w-[228px] h-[298px] rounded-2xl overflow-hidden shadow-xl"
+                style={{ left: '312px' }}
               >
                 <Image
                   src={nextImage}
@@ -279,10 +280,11 @@ export default function HiddenPlacesSection() {
               <motion.div
                 key={`card-next-next-${activeIndex}`}
                 initial={{ opacity: 0, x: 100 }}
-                animate={{ opacity: 1, x: 560, scale: 1, zIndex: 1 }}
+                animate={{ opacity: 1, x: 0, scale: 1, zIndex: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.6, ease: "easeInOut", delay: 0.2 }}
-                className="absolute top-[63px] w-[228px] h-[298px] rounded-[17px] overflow-hidden shadow-xl"
+                className="hidden lg:block absolute top-[63px] w-[228px] h-[298px] rounded-2xl overflow-hidden shadow-xl"
+                style={{ left: '560px' }}
               >
                 <Image
                   src={nextNextImage}
@@ -299,7 +301,7 @@ export default function HiddenPlacesSection() {
       </div>
 
       {/* Decorative Wave */}
-      <div className="absolute bottom-0 left-0 w-full h-[85px] z-20 pointer-events-none">
+      <div className="absolute -bottom-2 left-0 w-full h-20 md:h-24 z-20 pointer-events-none">
         <Image
           src="/images/wave-top.svg"
           alt="wave"
