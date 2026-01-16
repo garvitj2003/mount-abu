@@ -12,6 +12,7 @@ import ConnectSection from "@/components/ConnectSection";
 import NewsUpdatesSection from "@/components/NewsUpdatesSection";
 import InformationGuidlines from "@/components/InformationGuidlines";
 import Testimonials from "@/components/Testimonals";
+import Footer from "@/components/Footer";
 
 export default function Home() {
     return (
@@ -30,6 +31,7 @@ export default function Home() {
             <AppDownloadSection />
             <ConnectSection />
             <ContactDirectorySection />
+            <Footer />
         </main>
     );
 }

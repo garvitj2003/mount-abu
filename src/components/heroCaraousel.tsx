@@ -44,7 +44,6 @@ export default function HeroCarousel() {
       </AnimatePresence>
 
       {/* Optional: Dark Overlay for better text readability */}
-      <div className="absolute inset-0 bg-black/30 z-10" />
     </div>
   );
 }
