@@ -7,13 +7,13 @@ export default function OverlappingFrames() {
     const exitTransition = { duration: 3, ease: easeInOut, delay: 0.5 };
 
     return (
-        <div className="relative w-screen h-screen overflow-hidden">
+        <div className="fixed inset-0 w-screen h-screen overflow-hidden z-[9999] pointer-events-none">
             <motion.div
                 className="absolute inset-0 bg-[#ffffff] z-0" // Using white to blend with clouds. Change hex if clouds are off-white.
                 initial={{ opacity: 1 }}
                 animate={{
                     opacity: 0,
-                    transition: { duration: 1.2, ease: easeInOut, delay: 0.2 }, // Matches the cloud movement timing
+                    transition: { duration: 0.4, ease: easeInOut, delay: 0.2 }, // Matches the cloud movement timing
                 }}
             />
 

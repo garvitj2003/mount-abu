@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import OverlappingFrames from "./overLappingFrames";
 import HeroCarousel from "./heroCaraousel";
 import { motion } from "motion/react";
 
@@ -202,15 +201,6 @@ export default function HeroSection() {
     return (
         <>
             <div className="relative w-full h-[80vh] md:h-screen md:min-h-[800px] overflow-hidden flex flex-col">
-                {/* CLOUD LAYER:
-                  z-[100] ensures it is on top of everything (Nav, Text, Images).
-                  pointer-events-none ensures clicks pass through to the page
-                  after clouds fly away.
-                */}
-                <div className="absolute inset-0 z-[100] pointer-events-none">
-                    <OverlappingFrames />
-                </div>
-
                 {/* Navigation Header */}
                 <NavigationHeader />
 

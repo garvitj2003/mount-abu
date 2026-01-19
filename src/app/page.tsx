@@ -1,4 +1,5 @@
 import HeroSection from "@/components/HeroSection";
+import OverlappingFrames from "@/components/overLappingFrames";
 import DestinationsSection from "@/components/DestinationsSection";
 import AdventuresSection from "@/components/AdventuresSection";
 import HiddenPlacesSection from "@/components/HiddenPlacesSection";
@@ -17,6 +18,7 @@ import Footer from "@/components/Footer";
 export default function Home() {
     return (
         <main className="min-h-screen">
+            <OverlappingFrames />
             <HeroSection />
             <DestinationsSection />
             <AdventuresSection />

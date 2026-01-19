@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
 
@@ -46,6 +46,19 @@ const destinations = [
 
 export default function DestinationsSection() {
     const [activeIndex, setActiveIndex] = useState(2);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        // Initial check
+        handleResize();
+
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     const handleNext = () => {
         setActiveIndex((prev) => (prev + 1) % destinations.length);
@@ -138,7 +151,6 @@ export default function DestinationsSection() {
                         let brightness = 1;
 
                         // Responsive xOffset logic
-                        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
                         const baseOffset = isMobile ? 120 : 260;
                         const farOffset = isMobile ? 180 : 220;
 
