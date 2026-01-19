@@ -84,14 +84,14 @@ export default function DestinationsSection() {
                 className="absolute top-0 left-0 w-full h-[30rem]"
                 style={{
                     background:
-                        "linear-gradient(to bottom, #000 0%, rgba(19, 32, 25, 0.6) 60%, transparent 100)",
+                        "linear-gradient(to bottom, #132019 0%, rgba(19, 32, 25, 0.6) 60%, transparent 100)",
                 }}
             />
             <div
                 className="absolute top-0 left-0 w-full h-72"
                 style={{
                     background:
-                        "linear-gradient(to bottom, #000 0%, rgba(19, 32, 25, 0.8) 40%, rgba(19, 32, 25, 0.4) 70%, transparent 100%)",
+                        "linear-gradient(to bottom, #132019 0%, rgba(19, 32, 25, 0.8) 40%, rgba(19, 32, 25, 0.4) 70%, transparent 100%)",
                 }}
             />
             <div

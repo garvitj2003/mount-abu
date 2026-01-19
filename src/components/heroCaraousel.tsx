@@ -42,8 +42,6 @@ export default function HeroCarousel() {
           />
         </motion.div>
       </AnimatePresence>
-
-      {/* Optional: Dark Overlay for better text readability */}
     </div>
   );
 }

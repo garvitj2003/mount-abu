@@ -85,13 +85,13 @@ export default function Testimonials() {
                                         animate={{ opacity: 1, scale: 1 }}
                                         exit={{ opacity: 0, scale: 0.9 }}
                                         transition={{ duration: 0.4 }}
-                                        className="relative w-[85%] h-[85%] overflow-hidden rounded-full border-4 border-transparent"
+                                        className="relative w-full h-full overflow-hidden rounded-full border-4 border-transparent scale-120"
                                     >
                                         <Image
                                             src={currentTestimonial.image}
                                             fill
                                             alt={currentTestimonial.name}
-                                            className="object-cover"
+                                            className="object-contain"
                                         />
                                     </motion.div>
                                 </AnimatePresence>

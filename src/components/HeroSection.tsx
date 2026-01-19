@@ -7,62 +7,61 @@ import { motion } from "motion/react";
 
 const RunningBorderButton = () => {
     return (
-      <div className="flex  w-full items-center justify-center">
-            
+        <div className="flex  w-full items-center justify-center">
             <button className="relative flex items-center justify-center overflow-hidden rounded-full px-6 py-2 font-montserrat font-medium text-white transition-colors hover:bg-white/10">
-              
-              {/* 1. THE ANIMATED BORDER LAYER 
+                {/* 1. THE ANIMATED BORDER LAYER
                 - We place this absolutely so it sits behind the text.
                 - We use 'inset-0' to fill the button.
                 - We use a CSS Mask to cut out the center, leaving only a border.
               */}
-              <motion.div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  // The padding creates the border thickness (2px here)
-                  padding: "2px", 
-                  
-                  // This mask magic cuts out the center content-box from the border-box
-                  maskImage: "linear-gradient(#fff 0 0), linear-gradient(#fff 0 0)",
-                  maskClip: "content-box, border-box",
-                  maskComposite: "exclude", 
-                  WebkitMaskComposite: "xor", // Needed for Chrome/Safari
-                }}
-              >
-                {/* The Spinning Gradient 
+                <motion.div
+                    className="absolute inset-0 rounded-full"
+                    style={{
+                        // The padding creates the border thickness (2px here)
+                        padding: "2px",
+
+                        // This mask magic cuts out the center content-box from the border-box
+                        maskImage:
+                            "linear-gradient(#fff 0 0), linear-gradient(#fff 0 0)",
+                        maskClip: "content-box, border-box",
+                        maskComposite: "exclude",
+                        WebkitMaskComposite: "xor", // Needed for Chrome/Safari
+                    }}
+                >
+                    {/* The Spinning Gradient
                    - It needs to be much larger than the button to cover corners when spinning.
                    - We center it and spin it.
                 */}
-                <motion.div
-                  className="absolute inset-[-100%]"
-                  animate={{ rotate: 360 }}
-                  transition={{
-                    duration: 4,
-                    ease: "linear",
-                    repeat: Infinity,
-                  }}
-                  style={{
-                    // This creates the "Tail" effect. 
-                    // Using your requested color #09090b (which is very dark).
-                    // Note: On a dark blue bg, #09090b might look like a shadow. 
-                    background: `conic-gradient(from 0deg, transparent 0%, transparent 70%, #09090b 100%)`,
-                    
-                    // If you want the white/bright look from your image reference, use this instead:
-                    // background: `conic-gradient(from 0deg, transparent 0%, transparent 70%, #ffffff 100%)`,
-                  }}
-                />
-              </motion.div>
-      
-              {/* 2. THE CONTENT LAYER 
+                    <motion.div
+                        className="absolute inset-[-100%]"
+                        animate={{ rotate: 360 }}
+                        transition={{
+                            duration: 4,
+                            ease: "linear",
+                            repeat: Infinity,
+                        }}
+                        style={{
+                            // This creates the "Tail" effect.
+                            // Using your requested color #09090b (which is very dark).
+                            // Note: On a dark blue bg, #09090b might look like a shadow.
+                            background: `conic-gradient(from 0deg, transparent 0%, transparent 70%, #09090b 100%)`,
+
+                            // If you want the white/bright look from your image reference, use this instead:
+                            // background: `conic-gradient(from 0deg, transparent 0%, transparent 70%, #ffffff 100%)`,
+                        }}
+                    />
+                </motion.div>
+
+                {/* 2. THE CONTENT LAYER
                 - Relative positioning keeps it clickable and above the background (though bg is transparent).
               */}
-              <span className="relative z-10">हिन्दी</span>
-              
-              {/* Optional: Static Border overlay if you want a faint outline always visible 
+                <span className="relative z-10">हिन्दी</span>
+
+                {/* Optional: Static Border overlay if you want a faint outline always visible
                   (Remove this if you want ONLY the moving light) */}
-              <div className="absolute inset-0 rounded-full border border-white/20" />
+                <div className="absolute inset-0 rounded-full border border-white/20" />
             </button>
-          </div>
+        </div>
     );
 };
 // Minister Card Component (Unchanged)
@@ -223,7 +222,7 @@ export default function HeroSection() {
                     className="absolute bottom-0 left-0 w-full h-72"
                     style={{
                         background:
-                            "linear-gradient(to top, #000 0%, rgba(19, 32, 25, 0.8) 40%, rgba(19, 32, 25, 0.4) 70%, transparent 100%)",
+                            "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0.8) 40%, rgba(19, 32, 25, 0.4) 70%, transparent 100%)",
                     }}
                 />
 
@@ -232,7 +231,7 @@ export default function HeroSection() {
                     className="absolute bottom-0 left-0 w-full h-48"
                     style={{
                         background:
-                            "linear-gradient(to top, #000 0%, rgba(19, 32, 25, 0.6) 60%, transparent 100%)",
+                            "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0.6) 60%, transparent 100%)",
                     }}
                 />
 
