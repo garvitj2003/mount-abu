@@ -122,7 +122,7 @@ export default function AdventuresSection() {
 
   useEffect(() => {
     const activeTab = tabRefs.current[activeTrek];
-    if (activeTab) {
+    if (activeTab && scrollContainerRef.current) {
       // 1. Animate the Gold Line
       const newX = activeTab.offsetLeft + 10;
       animate(highlightX, newX, {
@@ -131,12 +131,14 @@ export default function AdventuresSection() {
         damping: 30,
       });
 
-      // 2. Auto-scroll the container to keep the active tab visible
-      // We use 'nearest' for block to avoid vertical jumps, and 'center' for inline to center the tab
-      activeTab.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center'
+      // 2. Scroll the container to keep the active tab visible
+      // We calculate the center position to avoid scrolling the whole page
+      const container = scrollContainerRef.current;
+      const scrollLeft = activeTab.offsetLeft - (container.clientWidth / 2) + (activeTab.clientWidth / 2);
+      
+      container.scrollTo({
+        left: scrollLeft,
+        behavior: 'smooth'
       });
     }
   }, [activeTrek, highlightX]);
