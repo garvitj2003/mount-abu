@@ -11,6 +11,13 @@ const heroImages = [
   "/images/hero/4.png",
 ];
 
+const mobileHeroImages = [
+  "/images/hero/mobile/1.png",
+  "/images/hero/mobile/2.png",
+  "/images/hero/mobile/3.png",
+  "/images/hero/mobile/4.png",
+];
+
 export default function HeroCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -33,13 +40,26 @@ export default function HeroCarousel() {
           transition={{ duration: 1.5, ease: "easeInOut" }} // Smooth 1.5s fade
           className="absolute inset-0 w-full h-full"
         >
-          <Image
-            src={heroImages[currentIndex]}
-            alt={`Hero Background ${currentIndex + 1}`}
-            fill
-            priority // Keep priority high so images don't flicker on load
-            className="object-cover object-center"
-          />
+          {/* Desktop Images */}
+          <div className="hidden md:block absolute inset-0">
+            <Image
+              src={heroImages[currentIndex]}
+              alt={`Hero Background ${currentIndex + 1}`}
+              fill
+              priority // Keep priority high so images don't flicker on load
+              className="object-cover object-center"
+            />
+          </div>
+          {/* Mobile Images */}
+          <div className="block md:hidden absolute inset-0">
+            <Image
+              src={mobileHeroImages[currentIndex]}
+              alt={`Hero Background Mobile ${currentIndex + 1}`}
+              fill
+              priority
+              className="object-cover object-top"
+            />
+          </div>
         </motion.div>
       </AnimatePresence>
     </div>
