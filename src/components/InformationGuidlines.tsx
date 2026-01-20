@@ -123,7 +123,7 @@ export default function InformationGuidlines() {
       <div className="relative z-20 container mx-auto px-4 md:px-8 py-16 md:py-24 flex flex-col items-center justify-center">
         {/* Header */}
         <div className="flex flex-col items-center gap-3 mb-12 md:mb-16">
-          <span className="font-montserrat font-medium text-base md:text-lg tracking-[0.2em] uppercase text-[#a3a355]">
+          <span className="font-baron  text-base md:text-lg tracking-[0.2em]  text-[#a3a355]">
             All you need
           </span>
           <h2 className="font-playfair text-3xl md:text-4xl lg:text-5xl text-white text-center leading-tight">

@@ -3,66 +3,8 @@
 import Image from "next/image";
 import HeroCarousel from "./heroCaraousel";
 import { motion } from "motion/react";
+import NavigationHeader from "./NavigationHeader";
 
-const RunningBorderButton = () => {
-    return (
-        <div className="flex  w-full items-center justify-center">
-            <button className="relative flex items-center justify-center overflow-hidden rounded-full px-6 py-2 font-montserrat font-medium text-white transition-colors hover:bg-white/10">
-                {/* 1. THE ANIMATED BORDER LAYER
-                - We place this absolutely so it sits behind the text.
-                - We use 'inset-0' to fill the button.
-                - We use a CSS Mask to cut out the center, leaving only a border.
-              */}
-                <motion.div
-                    className="absolute inset-0 rounded-full"
-                    style={{
-                        // The padding creates the border thickness (2px here)
-                        padding: "2px",
-
-                        // This mask magic cuts out the center content-box from the border-box
-                        maskImage:
-                            "linear-gradient(#fff 0 0), linear-gradient(#fff 0 0)",
-                        maskClip: "content-box, border-box",
-                        maskComposite: "exclude",
-                        WebkitMaskComposite: "xor", // Needed for Chrome/Safari
-                    }}
-                >
-                    {/* The Spinning Gradient
-                   - It needs to be much larger than the button to cover corners when spinning.
-                   - We center it and spin it.
-                */}
-                    <motion.div
-                        className="absolute inset-[-100%]"
-                        animate={{ rotate: 360 }}
-                        transition={{
-                            duration: 4,
-                            ease: "linear",
-                            repeat: Infinity,
-                        }}
-                        style={{
-                            // This creates the "Tail" effect.
-                            // Using your requested color #09090b (which is very dark).
-                            // Note: On a dark blue bg, #09090b might look like a shadow.
-                            background: `conic-gradient(from 0deg, transparent 0%, transparent 70%, #09090b 100%)`,
-
-                            // If you want the white/bright look from your image reference, use this instead:
-                            // background: `conic-gradient(from 0deg, transparent 0%, transparent 70%, #ffffff 100%)`,
-                        }}
-                    />
-                </motion.div>
-
-                {/* 2. THE CONTENT LAYER
-                - Relative positioning keeps it clickable and above the background (though bg is transparent).
-              */}
-                <span className="relative z-10">हिन्दी</span>
-
-                {/* Optional: Static Border overlay if you want a faint outline always visible
-                  (Remove this if you want ONLY the moving light) */}
-                <div className="absolute inset-0 rounded-full border border-white/20" />
-            </button>
-        </div>
-    );
-};
 // Minister Card Component (Unchanged)
 function MinisterCard({
     imageSrc,
@@ -145,58 +87,6 @@ function MinisterCard({
     );
 }
 
-// Navigation Header Component (Unchanged)
-function NavigationHeader() {
-    return (
-        <header className="relative md:absolute md:top-0 md:left-0 md:right-0 w-full z-50 backdrop-blur-md h-20 flex items-center justify-between px-4 md:px-8 border-b border-white/80 bg-[#132019] md:bg-transparent">
-            {/* Logo and Title */}
-            <div className="flex items-center gap-3">
-                <div className="relative w-12 h-12 rounded-full overflow-hidden bg-white flex items-center justify-center">
-                    {/* Logo placeholder - mountain icon */}
-                    <svg
-                        width="32"
-                        height="32"
-                        viewBox="0 0 32 32"
-                        fill="none"
-                        className="text-[#1197ff]"
-                    >
-                        <circle cx="16" cy="16" r="14" fill="#4CAF50" />
-                        <path
-                            d="M8 22L12 14L16 18L22 10L26 22H8Z"
-                            fill="#2E7D32"
-                        />
-                        <circle cx="22" cy="10" r="3" fill="#FDD835" />
-                    </svg>
-                </div>
-                <span className="text-white font-montserrat font-semibold text-base md:text-lg">
-                    Nagar Palika Mount Abu
-                </span>
-            </div>
-
-            {/* Right side - Language and Menu */}
-            <div className="flex items-center gap-4 md:gap-6">
-                <RunningBorderButton />
-                <button className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors">
-                    <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    >
-                        <line x1="3" y1="6" x2="21" y2="6" />
-                        <line x1="3" y1="12" x2="21" y2="12" />
-                        <line x1="3" y1="18" x2="21" y2="18" />
-                    </svg>
-                </button>
-            </div>
-        </header>
-    );
-}
-
 export default function HeroSection() {
     return (
         <>
@@ -229,8 +119,8 @@ export default function HeroSection() {
 
                     {/* Explore Text - Centered at bottom */}
                     <div className="absolute bottom-10 md:bottom-24 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                        <p className="font-baron text-xl text-[#d4af37] leading-normal tracking-[0.2em] uppercase">
-                            EXPLORE
+                        <p className="font-baron text-xl text-[#d4af37] leading-normal tracking-[0.2em]">
+                            Explore
                         </p>
                     </div>
 
