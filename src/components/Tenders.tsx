@@ -121,7 +121,7 @@ const tableHeaders = [
 
 export default function Tenders() {
     return (
-        <section className="relative w-full overflow-hidden py-10">
+        <section id="tenders" className="relative w-full overflow-hidden py-10">
             {/* Gradients */}
             <div
                 className="absolute top-0 left-0 w-full h-48 z-10 pointer-events-none"

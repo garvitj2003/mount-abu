@@ -95,7 +95,7 @@ export default function HiddenPlacesSection() {
   const nextNextImage = hiddenPlaces[getIndex(activeIndex + 2)].image;
 
   return (
-    <section className="relative w-full py-4 min-h-screen bg-[#17261e] overflow-hidden flex flex-col justify-center">
+    <section id="hidden-places" className="relative w-full py-4 min-h-screen bg-[#17261e] overflow-hidden flex flex-col justify-center">
       
       {/* --- UPDATED BACKGROUND IMAGE SECTION --- */}
       <div className="absolute inset-0 w-full h-full">

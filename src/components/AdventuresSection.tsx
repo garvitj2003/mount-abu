@@ -155,7 +155,7 @@ export default function AdventuresSection() {
   `;
 
   return (
-    <section className="relative w-full min-h-screen bg-[#17261e] overflow-hidden">
+    <section id="adventures" className="relative w-full min-h-screen bg-[#17261e] overflow-hidden">
       {/* --- Background Assets --- */}
       <div className="absolute inset-0 mix-blend-overlay opacity-[0.54]">
         <Image src="/images/adventures-bg.png" alt="" fill className="object-cover" />

@@ -17,9 +17,12 @@ const buttonColors: Record<ButtonVariant, string> = {
 };
 
 function Card({ title, buttonText, buttonVariant, href = "#" }: CardProps) {
+  const isExternal = href.startsWith("http");
   return (
     <a
       href={href}
+      target={isExternal ? "_blank" : undefined}
+      rel={isExternal ? "noopener noreferrer" : undefined}
       className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-[#2d4a2d] overflow-hidden pt-4 pb-5 px-4 backdrop-blur-[0.5px] transition-transform hover:scale-[1.02] bg-white/5"
     >
       {/* Title */}
@@ -56,6 +59,7 @@ const cardData: CardProps[] = [
     title: "Wards List",
     buttonText: "View Map",
     buttonVariant: "blue",
+    href: "https://drive.google.com/file/d/1cJExzDqt1iCDeGogL1rOSnEMN-D56tzz/view?usp=drivesdk",
   },
   {
     title: "Eco Sensitive Zone",

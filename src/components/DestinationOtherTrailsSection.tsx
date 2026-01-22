@@ -2,6 +2,8 @@
 
 import React from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { topDestinations } from "@/data/data";
 
 interface TrailCardProps {
   imageSrc: string;
@@ -9,13 +11,19 @@ interface TrailCardProps {
   trekName: string;
   distance: string;
   guideInfo: string;
+  slug: string;
 }
 
-function TrailCard({ imageSrc, title, trekName, distance, guideInfo }: TrailCardProps) {
+function TrailCard({ imageSrc, title, trekName, distance, guideInfo, slug }: TrailCardProps) {
+  const router = useRouter();
+  
   return (
-    <div className="flex flex-col gap-4 w-[350px] md:w-[379px] shrink-0">
+    <div 
+      onClick={() => router.push(`/destinations/${slug}`)}
+      className="flex flex-col gap-4 w-[350px] md:w-[379px] shrink-0 cursor-pointer"
+    >
         {/* Card Container */}
-        <div className="flex flex-col w-full bg-[#FFFBF1] rounded-[40px] overflow-hidden pb-8">
+        <div className="flex flex-col w-full bg-[#FFFBF1] rounded-[40px] overflow-hidden pb-8 transition-transform hover:scale-[1.02] duration-300">
             {/* Image Collage - Added rounded-[40px] and px-4 pt-4 to make it stand out with rounding on all corners */}
             <div className="relative w-full h-[292px] px-4 pt-4">
                 <div className="relative w-full h-full rounded-[40px] overflow-hidden">
@@ -30,7 +38,7 @@ function TrailCard({ imageSrc, title, trekName, distance, guideInfo }: TrailCard
             
             {/* Content - Changed to items-start and text-left */}
             <div className="flex flex-col items-start gap-3 mt-4 px-8">
-                <h3 className="font-montserrat font-bold text-[27px] leading-tight text-[#2E2E30] uppercase text-left">
+                <h3 className="font-montserrat font-bold text-[27px] leading-tight text-[#2E2E30] uppercase text-left line-clamp-1">
                     {title}
                 </h3>
                 
@@ -52,39 +60,11 @@ function TrailCard({ imageSrc, title, trekName, distance, guideInfo }: TrailCard
 }
 
 export default function DestinationOtherTrailsSection() {
-  // Static data based on the design
-  const trails = [
-    {
-        id: 1,
-        imageSrc: "/images/destinations/trail-card-collage.png",
-        title: "Shanti Shikhar",
-        trekName: "Trek 1",
-        distance: "12 Kms",
-        guideInfo: "1 Official Guide"
-    },
-    {
-        id: 2,
-        imageSrc: "/images/destinations/trail-card-collage.png",
-        title: "Guru Shikhar",
-        trekName: "Trek 2",
-        distance: "15 Kms",
-        guideInfo: "2 Official Guides"
-    },
-    {
-        id: 3,
-        imageSrc: "/images/destinations/trail-card-collage.png",
-        title: "Achalgarh",
-        trekName: "Trek 3",
-        distance: "8 Kms",
-        guideInfo: "1 Official Guide"
-    }
-  ];
-
   return (
     <section className="w-full flex justify-center px-4 md:px-0 mt-16 md:mt-24 mb-24">
       <div className="w-full max-w-[1276px] flex flex-col gap-8">
         <h2 className="font-baron font-bold text-[24px] leading-[1.4] text-[#5B5036]">
-          Other Trails From Limdi Kothi
+          More Destinations
         </h2>
 
         {/* Horizontal Scroll Container - Added style to hide scrollbar */}
@@ -101,14 +81,15 @@ export default function DestinationOtherTrailsSection() {
                 }
             `}</style>
             <div className="flex flex-nowrap gap-10 md:gap-[60px]">
-                {trails.map((trail) => (
+                {topDestinations.map((dest) => (
                     <TrailCard 
-                        key={trail.id}
-                        imageSrc={trail.imageSrc}
-                        title={trail.title}
-                        trekName={trail.trekName}
-                        distance={trail.distance}
-                        guideInfo={trail.guideInfo}
+                        key={dest.id}
+                        imageSrc={dest.details.images.main}
+                        title={dest.title}
+                        trekName="Top Rated"
+                        distance="Mount Abu"
+                        guideInfo="Must Visit"
+                        slug={dest.slug}
                     />
                 ))}
             </div>

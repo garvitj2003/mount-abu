@@ -169,7 +169,7 @@ function StatCard({
 
 export default function CityProfileSection() {
     return (
-        <section className="relative w-full min-h-screen bg-[#17261e] overflow-hidden flex items-center justify-center py-16 md:py-24">
+        <section id="city-profile" className="relative w-full min-h-screen bg-[#17261e] overflow-hidden flex items-center justify-center py-16 md:py-24">
             {/* Background Image */}
             <div className="absolute inset-0">
                 <div className="absolute inset-0 bg-[rgba(81,73,51,0.6)]" />

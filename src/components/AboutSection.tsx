@@ -23,7 +23,7 @@ const slideFromRight: Variants = {
 
 export default function AboutSection() {
     return (
-        <section className="relative w-full overflow-hidden">
+        <section id="about" className="relative w-full overflow-hidden">
             {/* Main content area with cream background */}
             <div className="relative bg-[#f5f2e9] w-full py-10">
                 {/* Background pattern with low opacity */}

@@ -114,7 +114,7 @@ function ServiceCard({
 
 export default function ServicesSection() {
     return (
-        <section className="relative w-full overflow-hidden">
+        <section id="services" className="relative w-full overflow-hidden">
             <div
                 className="absolute top-0 left-0 w-full h-48 md:h-64 z-10"
                 style={{

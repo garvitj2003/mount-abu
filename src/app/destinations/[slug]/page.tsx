@@ -1,6 +1,5 @@
-"use client";
-
 import React from "react";
+import { notFound } from "next/navigation";
 import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
 import DestinationTitleSection from "@/components/DestinationTitleSection";
@@ -8,35 +7,54 @@ import DestinationDetailSection from "@/components/DestinationDetailSection";
 import DestinationGuidelinesSection from "@/components/DestinationGuidelinesSection";
 import DestinationMapSection from "@/components/DestinationMapSection";
 import DestinationOtherTrailsSection from "@/components/DestinationOtherTrailsSection";
+import { destinations } from "@/data/data";
 
-export default function DestinationDetailsPage({
+// Helper to find destination by slug
+function findDestination(slug: string) {
+  // 1. Search in main destinations
+  const mainDest = destinations.find((d) => d.slug === slug);
+  return mainDest;
+}
+
+export default async function DestinationDetailsPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  // Static data from design (Node 183:5884)
-  const title = "Dilwara Jain Temple";
-  const description =
-    "Renowned for their stunning white marble craftsmanship, these Jain temples from the 11th–13th centuries showcase awe-inspiring carvings, domes, and pillars that reflect India’s architectural brilliance.";
+  const { slug } = await params;
+  const destination = findDestination(slug);
 
-  // Static data for Detail Section (Node 1375:15088)
-  const detailTitle = "Trail Details";
-  const detailDescription =
-    "The Dilwara Temples were built between the 11th and 13th centuries by Jain ministers Vimal Shah n and Tejapala. Vimal Vasahi was constructed in 1031 CE by Vimal Shah, a minister of Bhima I, the Solanki king of Gujarat. Luna Vasahi was built in 1230 CE by Tejapala and his brother Vastupal, ministers of Vastupal, the prime minister of Gujarat. The temples are renowned for their intricate marble carvings, domes, and pillars, showcasing the pinnacle of Jain artistry. The complex includes Pittalhar, Parshvanath, and Mahavir Swami temples, each with unique architectural features and historical significance. The temples have been a center of Jain pilgrimage and cultural heritage for centuries.";
-  const detailImage = "/images/destinations/dilwara-detail.png";
+  if (!destination) {
+    notFound();
+  }
 
   return (
     <div className="min-h-screen bg-[#FFFBEF] flex flex-col">
       <NavigationHeader variant="light" />
       
       <main className="flex-grow flex flex-col items-center pt-20 md:pt-24 pb-20">
-        <DestinationTitleSection title={title} description={description} />
-        <DestinationDetailSection 
-          title={detailTitle} 
-          description={detailDescription} 
-          imageSrc={detailImage} 
+        <DestinationTitleSection 
+          title={destination.title} 
+          description={destination.description} 
         />
-        <DestinationGuidelinesSection />
+        
+        {destination.details && (
+          <DestinationDetailSection 
+            title={destination.details.heading} 
+            description={destination.details.text} 
+            imageSrc={destination.details.images?.main || ""} 
+          />
+        )}
+
+        {/* 
+            Some destinations might not have guidelines in the data snippet (e.g. treks if we supported them fully), 
+            but the main destinations do. 
+            We check if guidelines exist.
+        */}
+        {destination.guidelines && (
+          <DestinationGuidelinesSection guidelines={destination.guidelines} />
+        )}
+
         <DestinationMapSection />
         <DestinationOtherTrailsSection />
       </main>
