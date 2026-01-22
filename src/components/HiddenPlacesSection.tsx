@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 // ----------------------------------------------------------------------
 // OPTION A: If you are using the new Motion v12
 import { motion, AnimatePresence, Variants } from "motion/react"; 
+import { unexploredGems } from "../data/data";
 
 // OPTION B: If you are using the standard Framer Motion v11
 // import { motion, AnimatePresence, Variants } from "framer-motion";
@@ -33,46 +35,12 @@ const textVariants: Variants = {
   },
 };
 
-const hiddenPlaces = [
-  {
-    id: 1,
-    name: "Narki Lake",
-    description:
-      "Mount Abu is not only a crown jewel of Rajasthan's tourism but also a symbol of our state's commitment to sustainable development and civic excellence.",
-    image: "/images/destinations/nakkiLake.jpg", 
-  },
-  {
-    id: 2,
-    name: "Dilwara Jain Temple",
-    description:
-      "The Dilwara Temples are a group of Jain temples located in Mount Abu. They are famous for their stunning marble architecture and intricate carvings.",
-    image: "/images/destinations/dilwaraTemple.jpg",
-  },
-  {
-    id: 3,
-    name: "View Point",
-    description:
-      "One of the most scenic spots in Mount Abu offering panoramic views of the surrounding Aravalli hills and the lush green valleys below.",
-    image: "/images/destinations/sunsetPoint.jpg",
-  },
-  {
-    id: 4,
-    name: "Toad Rock",
-    description:
-      "A unique rock formation that resembles a toad about to leap. This natural wonder offers excellent views and is a popular spot for photography.",
-    image: "/images/destinations/toadRock.jpg",
-  },
-  {
-    id: 5,
-    name: "Guru Shikhar",
-    description:
-      "The highest point of the Aravalli Range, offering breathtaking panoramic views of the entire region.",
-    image: "/images/destinations/mountAbuPeak.jpg",
-  },
-];
-
 export default function HiddenPlacesSection() {
+  const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
+
+  // Use unexploredGems from data.js
+  const hiddenPlaces = unexploredGems;
 
   // Helper to handle wrapping around the array safely
   const getIndex = (index: number) => {
@@ -90,9 +58,9 @@ export default function HiddenPlacesSection() {
   const currentPlace = hiddenPlaces[activeIndex];
 
   // We determine the 3 visible images: Active, Next, Next+1
-  const activeImage = hiddenPlaces[getIndex(activeIndex)].image;
-  const nextImage = hiddenPlaces[getIndex(activeIndex + 1)].image;
-  const nextNextImage = hiddenPlaces[getIndex(activeIndex + 2)].image;
+  const activeImage = hiddenPlaces[getIndex(activeIndex)].details.images.main;
+  const nextImage = hiddenPlaces[getIndex(activeIndex + 1)].details.images.main;
+  const nextNextImage = hiddenPlaces[getIndex(activeIndex + 2)].details.images.main;
 
   return (
     <section id="hidden-places" className="relative w-full py-4 min-h-screen bg-[#17261e] overflow-hidden flex flex-col justify-center">
@@ -109,7 +77,7 @@ export default function HiddenPlacesSection() {
             className="absolute inset-0 w-full h-full"
           >
             <Image
-              src={currentPlace.image}
+              src={currentPlace.details.images.main}
               alt="background"
               fill
               className="object-cover object-center"
@@ -167,7 +135,7 @@ export default function HiddenPlacesSection() {
                     exit="exit"
                     className="font-baron text-3xl md:text-4xl text-[#d4af37] leading-normal text-center lg:text-left"
                   >
-                    {currentPlace.name}
+                    {currentPlace.title}
                   </motion.p>
                 </AnimatePresence>
               </div>
@@ -192,7 +160,8 @@ export default function HiddenPlacesSection() {
             {/* Buttons Row */}
             <div className="flex items-center justify-between w-full mt-4">
               <button
-                className="px-6 py-3 rounded-md transition-transform hover:scale-105 active:scale-95"
+                onClick={() => router.push(`/destinations/${currentPlace.slug}`)}
+                className="px-6 py-3 rounded-md transition-transform hover:scale-105 active:scale-95 cursor-pointer"
                 style={{
                   background: "rgba(212, 175, 55, 0.44)",
                   backdropFilter: "blur(2px)",
@@ -200,7 +169,7 @@ export default function HiddenPlacesSection() {
                 }}
               >
                 <span className="font-poppins text-sm md:text-base text-white underline">
-                  View More
+                  Look for Details
                 </span>
               </button>
 

@@ -741,19 +741,19 @@ export const trekGroups = [
     routes: [
       {
         id: "trek-limdi-shanti",
-        title: "Limdi Kothi → Shanti Shikhar",
+        title: "Shanti Shikhar",
         description: "This trek begins from Limdi Kothi and gradually ascends through dense forest terrain toward Shanti Shikhar. The route is calm and scenic, making it suitable for training treks. Trekkers experience forest cover, rocky patches, and peaceful surroundings with rewarding views from the top.",
         images: { main: "", gallery: [] }
       },
       {
         id: "trek-limdi-aadesh",
-        title: "Limdi Kothi → Aadesh Cave",
+        title: "Aadesh Cave",
         description: "Starting from Limdi Kothi, this route leads through uneven forest trails toward Aadesh Cave. The trek involves rocky terrain and narrow passages. Inside the cave, trekkers witness naturally formed rock structures created by erosion, offering an adventurous cave exploration experience.",
         images: { main: "", gallery: [] }
       },
       {
         id: "eco-craigs-path", // Preserved ID
-        title: "Limdi Kothi → Craig’s Point",
+        title: "Craig’s Point",
         description: "(Craig’s Point Trek) Named after British official Colonel Craig, this trek starts from Limdi Kothi and gradually becomes more challenging. Craig’s Point offers views of Anadra village and spectacular sunsets. The descent reaches a seasonal waterbed, followed by rock climbing sections and cave exploration. The trail opens onto a flat rock with stunning town views and returns via a 110-year-old British path, completing a circular trek of 3–5 hours.",
         images: {
           main: "/images/destination/craig’s-path/main.jpg",
@@ -762,13 +762,13 @@ export const trekGroups = [
       },
       {
         id: "trek-limdi-table-rock",
-        title: "Limdi Kothi → Table Rock",
+        title: "Table Rock",
         description: "This route passes through forest trails and rocky ascents toward the flat-topped Table Rock. The trek includes caves and scenic viewpoints. From the top, trekkers enjoy panoramic views of Nakki Lake, Mount Abu town, and surrounding hills.",
         images: { main: "", gallery: [] }
       },
       {
         id: "eco-limdi-kothi", // Preserved ID for Cave Trek
-        title: "Limdi Kothi → Adhar Devi Temple",
+        title: "Adhar Devi Temple",
         description: "(Limdi Kothi Cave Trek) Beginning at Adhar Devi Temple, this cave trek moves deep into the jungle. Craig’s Point and Table Rock share this route. After 10–15 minutes beyond the main trail, trekkers reach caves requiring the chimney technique to pass narrow rock gaps. The route is adventurous yet manageable and showcases impressive natural cave formations.",
         images: {
           main: "/images/destination/Limdi Kothi Cave Trek/img_1.jpg",
@@ -785,7 +785,7 @@ export const trekGroups = [
     routes: [
       {
         id: "trek-stmary-hanuman",
-        title: "St. Mary School → Aarna Hanuman Ji Temple",
+        title: "Aarna Hanuman Ji Temple",
         description: "This trek follows forest paths from St. Mary School to Aarna Hanuman Ji Temple. The route includes gradual ascents and rocky sections and is commonly used for spiritual walks and training treks. The temple is set in a peaceful forest environment.",
         images: { main: "", gallery: [] }
       },
@@ -802,7 +802,7 @@ export const trekGroups = [
     routes: [
       {
         id: "trek-guru-utraj",
-        title: "Guru Shikhar → Utraj",
+        title: "Utraj",
         description: "Starting from Guru Shikhar, this trek descends through dense forest toward Utraj village. The route is remote and quiet, ideal for long-distance village trekking and exploration of rural forest landscapes.",
         images: { main: "", gallery: [] }
       }
@@ -813,7 +813,7 @@ export const trekGroups = [
     routes: [
       {
         id: "eco-plummy-peak", // Preserved ID
-        title: "SVIM Institute → Plummy Peak",
+        title: "Plummy Peak",
         description: "A commonly used training trek, this route passes through forest trails and gradual climbs. Plummy Peak offers scenic views of surrounding hills and is frequently included in mountaineering training programs.",
         images: {
           main: "/images/destination/plummy-peak-trek/image_1.jpg",
@@ -826,7 +826,7 @@ export const trekGroups = [
       },
       {
         id: "eco-table-rock", // Preserved ID
-        title: "SVIM Institute → Table Rock",
+        title: "Table Rock",
         description: "(Table Rock Trek) Located on Shanti Shikhar Mountain near Gaumukh Road, this is one of the most popular beginner treks in Mount Abu. The flat rock resembles a large table. From the top, trekkers can view Nakki Lake, Mount Abu town, and Anadra village. A cave en route displays natural formations formed by water erosion.",
         images: {
           main: "/images/destination/table-rock-trek/image_1.jpg",
@@ -839,7 +839,7 @@ export const trekGroups = [
       },
       {
         id: "eco-jesus-christ-trek", // Preserved ID
-        title: "SVIM Institute → Jesus Christ Trek",
+        title: "Jesus Christ Trek",
         description: "This trek begins at SVIM Institute and leads through forested terrain toward the Jesus Christ rock formation. The route includes rocky climbs and narrow paths, making it suitable for training and exploration.",
         images: {
           main: "/images/destination/jesus-christ-trek/main.jpg",
@@ -853,7 +853,7 @@ export const trekGroups = [
     routes: [
       {
         id: "trek-gurukul-salim",
-        title: "Gurukul School → Salim Ali Watch Tower",
+        title: "Salim Ali Watch Tower",
         description: "(Wild Rose Nature Trail) This biodiversity-rich trail follows the Wild Rose Nature Trail to Salim Ali Watch Tower. It is ideal for bird watching and nature studies. The watch tower provides elevated views of the forest canopy and surrounding wildlife habitat.",
         images: { main: "", gallery: [] }
       }
@@ -864,19 +864,19 @@ export const trekGroups = [
     routes: [
       {
         id: "trek-nakki-trevor",
-        title: "Travors Tank → Nakki Lake",
+        title: "Travors Tank",
         description: "This peaceful trek descends from Travors Tank toward Nakki Lake through shaded forest paths. It is commonly used for relaxed walks and training treks, connecting remote forest zones to the town center.",
         images: { main: "", gallery: [] }
       },
       {
         id: "trek-nakki-adhar",
-        title: "Nakki Lake → Adhar Devi Temple",
+        title: "Adhar Devi Temple",
         description: "This trek ascends from Nakki Lake toward Adhar Devi Temple via stone steps and forest trails. It is frequently used by pilgrims and trekkers and offers scenic lake views during the climb.",
         images: { main: "", gallery: [] }
       },
       {
         id: "eco-bailys-walk", // Preserved ID
-        title: "Nakki Lake → Sunset Point (Bailey’s Walk)",
+        title: "Sunset Point (Bailey’s Walk)",
         description: "(Bailey’s Walk) Bailey’s Walk is a historic forest trail named after British officer Sir Bailey. The route includes 54 steps leading to Aghai Goddess Temple and passes Rama Kund, Toad Rock, and Hathi Gupha. The trail is rich in rare vegetation and wildlife, including sloth bears, leopards, and diverse bird species.",
         images: {
           main: "/images/destination/bailey’s-walk/main.jpg",
@@ -894,7 +894,7 @@ export const trekGroups = [
     routes: [
       {
         id: "trek-sunset-palanpur",
-        title: "Sunset Point → Palanpur Point",
+        title: "Palanpur Point",
         description: "This ridge walk offers expansive valley views and rocky terrain. Best experienced during early morning or evening hours, the trek provides wide panoramic landscapes.",
         images: { main: "", gallery: [] }
       }
@@ -905,7 +905,7 @@ export const trekGroups = [
     routes: [
       {
         id: "eco-abu-road-trek", // Preserved ID
-        title: "Abu Road → Mount Abu",
+        title: "Mount Abu",
         description: "One of the longest treks in Mount Abu (16–18 km), this route begins near Rishikesh Temple behind Brahma Kumari’s Anand Sarovar. The trail passes dense forest, streambeds, and wildlife zones. Trekkers may encounter bears, leopards, porcupines, and seasonal forest berries.",
         images: {
           main: "/images/destination/abu-road-to-mount-abu-trek/main.jpg",
@@ -923,7 +923,7 @@ export const trekGroups = [
     routes: [
       {
         id: "eco-shergaon-trek", // Preserved ID
-        title: "Shergaon → Guru Shikhar",
+        title: "Guru Shikhar",
         description: "This multi-day trek begins at Guru Shikhar, passes through Utraj village, and ends near Vashtanji Temple. Taking approximately three days, the route offers insight into traditional village life deep within dense forest.",
         images: {
           main: "/images/destination/shergao-trek/image_1.jpg",
@@ -942,7 +942,7 @@ export const trekGroups = [
       },
       {
         id: "trek-shergaon-kedarnath",
-        title: "Shergaon → Kedarnath Temple – Somnath Mahadev Temple",
+        title: "Kedarnath Temple – Somnath Mahadev Temple",
         description: "Starting near Utraj, this trail passes through Mount Abu Wildlife Sanctuary, known for its high biodiversity. Leopards, deer, oxen, and over 250 bird species inhabit this area. Two Shiva temples—Kedarnath and Somnath Mahadev—lie along the route, offering spiritual and scenic highlights.",
         images: { main: "", gallery: [] }
       }
@@ -953,7 +953,7 @@ export const trekGroups = [
     routes: [
       {
         id: "eco-tiger-path", // Preserved ID
-        title: "Tiger Path → Sitawan (Gaumukh Road)",
+        title: "Sitawan (Gaumukh Road)",
         description: "Also known as the Old Cart Road, this long-distance trek is used by the forest department for wildlife monitoring. The trail becomes narrow near Golden Horn Point and ends near Sitawan with views of Suraj Kund.",
         images: {
           main: "/images/destination/tiger-path/image_1.jpg",
@@ -966,7 +966,7 @@ export const trekGroups = [
       },
       {
         id: "eco-jalandharnath", // Preserved ID
-        title: "Tiger Path → Jalandharnath",
+        title: "Jalandharnath",
         description: "One of the toughest treks in Mount Abu, this route leads to Jalandharnath Temple dedicated to Lord Shiva. The trail is steep, slippery, and physically demanding. From the summit, trekkers can see Abu Road city.",
         images: {
           main: "/images/destination/jalandharnath-trek-toughest-trek-in-abu/image_1.jpg",

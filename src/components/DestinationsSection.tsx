@@ -149,10 +149,10 @@ export default function DestinationsSection() {
                             key={cat}
                             onClick={() => handleCategoryChange(cat)}
                             className={`
-                                px-4 py-2 rounded-full text-sm md:text-base font-montserrat font-medium transition-all duration-300
+                                px-4 py-2 rounded-xl text-sm md:text-base font-montserrat font-medium transition-all duration-300 border border-[#D4AF37]
                                 ${activeCategory === cat
-                                    ? "bg-[#d4af37] text-[#132019] shadow-[0_0_15px_rgba(212,175,55,0.4)] scale-105"
-                                    : "bg-white/10 text-gray-300 hover:bg-white/20 hover:text-white backdrop-blur-sm border border-white/10"}
+                                    ? "bg-gradient-to-br from-[#D4AF37] to-[#17241B] text-white shadow-[0_0_15px_rgba(212,175,55,0.4)] scale-105"
+                                    : "bg-[#D4AF37]/[0.08] text-[#D4AF37] hover:bg-[#D4AF37]/20"}
                             `}
                         >
                             {cat}
@@ -221,6 +221,7 @@ export default function DestinationsSection() {
                             return (
                                 <motion.div
                                     key={dest.id}
+                                    onClick={() => router.push(`/destinations/${dest.slug}`)}
                                     initial={false}
                                     animate={{
                                         x: xOffset,
@@ -234,7 +235,7 @@ export default function DestinationsSection() {
                                         duration: 0.9,
                                         ease: [0.25, 1, 0.5, 0.9],
                                     }}
-                                    className="absolute w-64 h-80 md:w-[331px] md:h-[408px] rounded-xl"
+                                    className="absolute w-64 h-80 md:w-[331px] md:h-[408px] rounded-xl cursor-pointer"
                                     style={{
                                         transformStyle: "preserve-3d",
                                         pointerEvents: isVisible && opacity > 0 ? "auto" : "none",
