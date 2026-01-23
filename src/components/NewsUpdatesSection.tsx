@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { motion, Variants } from "motion/react";
+import { motion, Variants, AnimatePresence } from "motion/react";
 import { useState } from "react";
 
 const fadeIn: Variants = {
@@ -20,6 +20,11 @@ const slideFromLeft: Variants = {
         x: 0,
         transition: { duration: 0.8, ease: "easeOut" },
     },
+    exit: {
+        opacity: 0,
+        x: -50,
+        transition: { duration: 0.5, ease: "easeIn" },
+    },
 };
 
 const slideFromRight: Variants = {
@@ -28,6 +33,11 @@ const slideFromRight: Variants = {
         opacity: 1,
         x: 0,
         transition: { duration: 0.8, ease: "easeOut" },
+    },
+    exit: {
+        opacity: 0,
+        x: 50,
+        transition: { duration: 0.5, ease: "easeIn" },
     },
 };
 
@@ -43,11 +53,27 @@ interface NewsItem {
 const newsItems: NewsItem[] = [
     {
         id: 1,
-        tag: "Fairs and Festivals for the next 5 years",
-        title: "Experience Mount Abu's Vibrant Festivals",
-        dateRange: "2025-26 To 2029-30",
-        image: "/images/fairs-festivals.png",
-        pdfLink: "#",
+        tag: "Fairs and Festivals this month",
+        title: "Vasant Panchami Celebration",
+        dateRange: "23 Jan 2026",
+        image: "/images/news/vasant-panchami.jpeg",
+        pdfLink: "",
+    },
+    {
+        id: 2,
+        tag: "Fairs and Festivals this month",
+        title: "Republic Day Parade & Events",
+        dateRange: "26 Jan 2026",
+        image: "/images/news/republic-day.jpeg",
+        pdfLink: "",
+    },
+    {
+        id: 3,
+        tag: "Upcoming Major Festival",
+        title: "Maha Shivratri Devotion",
+        dateRange: "15 Feb 2026",
+        image: "/images/news/maha-shivratri.jpeg",
+        pdfLink: "",
     },
 ];
 
@@ -114,9 +140,6 @@ export default function NewsUpdatesSection() {
                             News & Updates
                         </h2>
                     </div>
-                    <button className="bg-[#8b7e3a] hover:bg-[#a69545] underline transition-colors text-white font-montserrat font-medium text-sm md:text-base px-6 py-3 rounded-lg">
-                        View More
-                    </button>
                 </motion.div>
 
                 {/* News Card */}
@@ -127,23 +150,29 @@ export default function NewsUpdatesSection() {
                     variants={fadeIn}
                     className="relative"
                 >
-                    <div className="flex flex-col md:flex-row rounded-2xl overflow-hidden shadow-2xl">
+                    <div className="flex flex-col md:flex-row rounded-2xl overflow-hidden shadow-2xl min-h-[550px] md:min-h-[400px]">
                         {/* Left Content */}
-                        <motion.div
-                            variants={slideFromLeft}
-                            className="relative bg-[#faf8f3] w-full md:w-[45%] p-6 md:p-10 flex flex-col justify-between min-h-[350px] md:min-h-[400px]"
-                        >
-                            <div className="relative z-10">
-                                <p className="font-montserrat text-xs md:text-sm text-[#666] mb-4">
-                                    {currentItem.tag}
-                                </p>
-                                <h3 className="font-montserrat font-semibold text-xl md:text-2xl lg:text-3xl text-[#3d6b4f] leading-tight mb-3">
-                                    {currentItem.title}
-                                </h3>
-                                <p className="font-montserrat text-sm md:text-base text-[#888] mb-8">
-                                    {currentItem.dateRange}
-                                </p>
-                            </div>
+                        <div className="relative bg-[#faf8f3] w-full md:w-[45%] p-6 md:p-10 flex flex-col justify-between order-2 md:order-1">
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={`text-${currentItem.id}`}
+                                    variants={slideFromLeft}
+                                    initial="hidden"
+                                    animate="visible"
+                                    exit="exit"
+                                    className="relative z-10"
+                                >
+                                    <p className="font-montserrat text-xs md:text-sm text-[#666] mb-4">
+                                        {currentItem.tag}
+                                    </p>
+                                    <h3 className="font-montserrat font-semibold text-xl md:text-2xl lg:text-3xl text-[#3d6b4f] leading-tight mb-3">
+                                        {currentItem.title}
+                                    </h3>
+                                    <p className="font-montserrat text-sm md:text-base text-[#888] mb-8">
+                                        {currentItem.dateRange}
+                                    </p>
+                                </motion.div>
+                            </AnimatePresence>
 
                             <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                                 {/* Navigation Arrows */}
@@ -186,20 +215,26 @@ export default function NewsUpdatesSection() {
                                     </a>
                                 )}
                             </div>
-                        </motion.div>
+                        </div>
 
                         {/* Right Image */}
-                        <motion.div
-                            variants={slideFromRight}
-                            className="relative w-full md:w-[55%] h-[250px] md:h-auto min-h-[300px] md:min-h-[400px]"
-                        >
-                            <Image
-                                src={currentItem.image}
-                                alt={currentItem.title}
-                                fill
-                                className="object-cover"
-                            />
-                        </motion.div>
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={`image-${currentItem.id}`}
+                                variants={slideFromRight}
+                                initial="hidden"
+                                animate="visible"
+                                exit="exit"
+                                className="relative w-full md:w-[55%] h-[250px] md:h-auto min-h-[250px] md:min-h-full order-1 md:order-2"
+                            >
+                                <Image
+                                    src={currentItem.image}
+                                    alt={currentItem.title}
+                                    fill
+                                    className="object-cover"
+                                />
+                            </motion.div>
+                        </AnimatePresence>
                     </div>
                 </motion.div>
             </div>

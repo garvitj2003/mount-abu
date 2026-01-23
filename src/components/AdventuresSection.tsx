@@ -210,10 +210,10 @@ export default function AdventuresSection() {
             </div>
 
             {/* Vertical Accordion */}
-            <div className="relative pl-2">
+            <div className="relative">
                {/* Vertical Line */}
                <motion.div 
-                 className="absolute left-8.5 top-2 bottom-4 w-[2px]"
+                 className="absolute left-2.75 top-2 bottom-4 w-[2px]"
                  style={{
                    background: mobileBackgroundGradient
                  }}
@@ -231,13 +231,13 @@ export default function AdventuresSection() {
                    return (
                      <div 
                         key={route.id} 
-                        className="relative pl-12"
+                        className="relative pl-10"
                         ref={(el) => { mobileTabRefs.current[index] = el; }}
                      >
                        {/* Dot Marker */}
                        <button
                          onClick={() => setActiveRouteIndex(index)}
-                         className={`absolute left-[20px] top-0 w-4 h-4 -ml-[1px] z-10 transition-transform duration-300 ${
+                         className={`absolute left-[5px] top-0 w-[16px] h-[16px] -ml-[1px] z-10 transition-transform duration-300 ${
                            isActive ? 'scale-125' : 'scale-100 opacity-70'
                          }`}
                        >
