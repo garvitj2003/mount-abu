@@ -145,7 +145,7 @@ function ConnectCard({
 
 export default function ConnectSection() {
     return (
-        <section className="relative w-full overflow-hidden bg-[#132019]">
+        <section id="connect" className="relative w-full overflow-hidden bg-[#132019]">
             <div
                 className="absolute top-0 left-0 w-full h-48 z-20 pointer-events-none"
                 style={{

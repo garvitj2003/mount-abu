@@ -35,7 +35,7 @@ export default function AppDownloadSection() {
     const cardBgColorRgb = "245, 242, 233";
 
     return (
-        <section className="relative w-full overflow-hidden bg-[#132019]">
+        <section id="app-download" className="relative w-full overflow-hidden bg-[#132019]">
             {/* Background Gradients */}
             <div
                 className="absolute top-0 left-0 w-full h-48 z-10 pointer-events-none"

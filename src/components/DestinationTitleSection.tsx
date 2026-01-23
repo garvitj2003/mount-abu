@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
-import { Share2, Heart } from "lucide-react";
-import { motion } from "motion/react";
+import React, { useState } from "react";
+import { Share2, Heart, Check } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 
 interface DestinationTitleSectionProps {
   title: string;
@@ -13,6 +13,18 @@ export default function DestinationTitleSection({
   title,
   description,
 }: DestinationTitleSectionProps) {
+  const [showToast, setShowToast] = useState(false);
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy: ", err);
+    }
+  };
+
   return (
     <section className="w-full flex justify-center px-4 md:px-0 mt-10 md:mt-16">
       <div className="w-full max-w-[1276px] flex flex-col gap-[27px]">
@@ -23,13 +35,32 @@ export default function DestinationTitleSection({
           </h1>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-6">
-             <button className="hover:opacity-70 transition-opacity">
+          <div className="relative flex items-center gap-6">
+             <button 
+               onClick={handleShare}
+               className="hover:opacity-70 transition-opacity p-2 -ml-2 rounded-full hover:bg-black/5 cursor-pointer"
+               aria-label="Share"
+             >
                 <Share2 size={24} color="#000000" />
              </button>
-             <button className="hover:opacity-70 transition-opacity">
+             <button className="hover:opacity-70 transition-opacity p-2 -ml-2 rounded-full hover:bg-black/5 cursor-pointer">
                 <Heart size={24} color="#000000" />
              </button>
+
+             {/* Toast Notification */}
+             <AnimatePresence>
+               {showToast && (
+                 <motion.div
+                   initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                   animate={{ opacity: 1, y: 0, scale: 1 }}
+                   exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                   className="absolute top-14 left-0 z-50 bg-[#132019] text-[#d4af37] px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2 whitespace-nowrap border border-[#d4af37]/20 cursor-default"
+                 >
+                   <Check size={16} />
+                   <span className="font-montserrat text-sm font-medium">Link copied</span>
+                 </motion.div>
+               )}
+             </AnimatePresence>
           </div>
         </div>
 

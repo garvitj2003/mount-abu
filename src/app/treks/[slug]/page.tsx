@@ -6,6 +6,7 @@ import DestinationTitleSection from "@/components/DestinationTitleSection";
 import DestinationDetailSection from "@/components/DestinationDetailSection";
 import DestinationMapSection from "@/components/DestinationMapSection";
 import TrekOtherRoutesSection from "@/components/TrekOtherRoutesSection";
+import AnimatedSection from "@/components/AnimatedSection";
 import { trekGroups } from "@/data/data";
 
 // Helper to find trek by slug (using ID as slug)
@@ -40,22 +41,30 @@ export default async function TrekDetailsPage({
     <div className="min-h-screen bg-[#FFFBEF] flex flex-col">
       <NavigationHeader variant="light" />
       
-      <main className="flex-grow flex flex-col items-center pt-20 md:pt-24 pb-20">
-        <DestinationTitleSection 
-          title={route.title} 
-          description={route.description} 
-        />
+      <main className="flex-grow flex flex-col items-center pt-20 md:pt-24 pb-20 w-full">
+        <AnimatedSection>
+          <DestinationTitleSection 
+            title={route.title} 
+            description={route.description} 
+          />
+        </AnimatedSection>
         
         {/* Using DestinationDetailSection to display the image and re-emphasize the route info */}
-        <DestinationDetailSection 
-          title={`Starting from ${group.startPoint}`} 
-          description={route.description} 
-          imageSrc={mainImage} 
-        />
+        <AnimatedSection delay={0.1}>
+          <DestinationDetailSection 
+            title={`Starting from ${group.startPoint}`} 
+            description={route.description} 
+            imageSrc={mainImage} 
+          />
+        </AnimatedSection>
 
-        <DestinationMapSection />
+        <AnimatedSection delay={0.2}>
+          <DestinationMapSection />
+        </AnimatedSection>
         
-        <TrekOtherRoutesSection routes={group.routes} currentTrekId={route.id} />
+        <AnimatedSection delay={0.3}>
+          <TrekOtherRoutesSection routes={group.routes} currentTrekId={route.id} />
+        </AnimatedSection>
       </main>
 
       <Footer />

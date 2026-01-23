@@ -221,7 +221,7 @@ export default function DestinationsSection() {
                             return (
                                 <motion.div
                                     key={dest.id}
-                                    onClick={() => router.push(`/destinations/${dest.slug}`)}
+                                    onClick={() => isCenter && router.push(`/destinations/${dest.slug}`)}
                                     initial={false}
                                     animate={{
                                         x: xOffset,
@@ -235,17 +235,19 @@ export default function DestinationsSection() {
                                         duration: 0.9,
                                         ease: [0.25, 1, 0.5, 0.9],
                                     }}
-                                    className="absolute w-64 h-80 md:w-[331px] md:h-[408px] rounded-xl cursor-pointer"
+                                    className={`absolute w-64 h-80 md:w-[331px] md:h-[408px] rounded-xl ${
+                                        isCenter ? "cursor-pointer" : "cursor-default"
+                                    }`}
                                     style={{
                                         transformStyle: "preserve-3d",
-                                        pointerEvents: isVisible && opacity > 0 ? "auto" : "none",
+                                        pointerEvents: isCenter ? "auto" : "none",
                                     }}
                                 >
                                     {/* Image Card Container */}
                                     <div
                                         className={`relative w-full h-full rounded-xl overflow-hidden shadow-2xl transition-all duration-500 group ${
                                             isCenter
-                                                ? "border-4 border-[#122018] hover:scale-102"
+                                                ? "border-2 border-[#122018] hover:scale-102"
                                                 : ""
                                         }`}
                                     >
@@ -282,11 +284,11 @@ export default function DestinationsSection() {
                                                     delay: 0.2,
                                                     duration: 0.4,
                                                 }}
-                                                className="absolute bottom-0 left-0 w-full p-4 md:p-6 text-center z-50"
+                                                className="absolute bottom-0 left-0 w-full p-4 md:p-6 text-left z-50"
                                             >
                                                 <div className="absolute bottom-0 left-0 w-full h-48 md:h-[250px] bg-gradient-to-t from-black via-black/70 to-transparent -z-10 rounded-b-xl" />
 
-                                                <h3 className="font-montserrat font-bold text-xl md:text-2xl text-[#f5f2e9] mb-1 md:mb-2 drop-shadow-md">
+                                                <h3 className="font-montserrat font-bold text-xl md:text-xl text-[#f5f2e9] mb-1 md:mb-2 drop-shadow-md">
                                                     {dest.title}
                                                 </h3>
                                                 <p className="font-montserrat text-xs md:text-sm text-gray-200 leading-relaxed drop-shadow-sm line-clamp-2 md:line-clamp-none">

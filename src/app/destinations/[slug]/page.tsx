@@ -7,6 +7,7 @@ import DestinationDetailSection from "@/components/DestinationDetailSection";
 import DestinationGuidelinesSection from "@/components/DestinationGuidelinesSection";
 import DestinationMapSection from "@/components/DestinationMapSection";
 import DestinationOtherTrailsSection from "@/components/DestinationOtherTrailsSection";
+import AnimatedSection from "@/components/AnimatedSection";
 import { destinations } from "@/data/data";
 
 // Helper to find destination by slug
@@ -32,18 +33,22 @@ export default async function DestinationDetailsPage({
     <div className="min-h-screen bg-[#FFFBEF] flex flex-col">
       <NavigationHeader variant="light" />
       
-      <main className="flex-grow flex flex-col items-center pt-20 md:pt-24 pb-20">
-        <DestinationTitleSection 
-          title={destination.title} 
-          description={destination.description} 
-        />
+      <main className="flex-grow flex flex-col items-center pt-20 md:pt-24 pb-20 w-full">
+        <AnimatedSection>
+          <DestinationTitleSection 
+            title={destination.title} 
+            description={destination.description} 
+          />
+        </AnimatedSection>
         
         {destination.details && (
-          <DestinationDetailSection 
-            title={destination.details.heading} 
-            description={destination.details.text} 
-            imageSrc={destination.details.images?.main || ""} 
-          />
+          <AnimatedSection delay={0.1}>
+            <DestinationDetailSection 
+              title={destination.details.heading} 
+              description={destination.details.text} 
+              imageSrc={destination.details.images?.main || ""} 
+            />
+          </AnimatedSection>
         )}
 
         {/* 
@@ -52,11 +57,18 @@ export default async function DestinationDetailsPage({
             We check if guidelines exist.
         */}
         {destination.guidelines && (
-          <DestinationGuidelinesSection guidelines={destination.guidelines} />
+          <AnimatedSection delay={0.2}>
+            <DestinationGuidelinesSection guidelines={destination.guidelines} />
+          </AnimatedSection>
         )}
 
-        <DestinationMapSection />
-        <DestinationOtherTrailsSection />
+        <AnimatedSection delay={0.3}>
+          <DestinationMapSection />
+        </AnimatedSection>
+
+        <AnimatedSection delay={0.4}>
+          <DestinationOtherTrailsSection />
+        </AnimatedSection>
       </main>
 
       <Footer />

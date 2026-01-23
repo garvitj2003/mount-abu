@@ -67,18 +67,21 @@ export default function AdventuresSection() {
 
   // --- LINE ANIMATION LOGIC ---
   const highlightX = useMotionValue(0);
+  const highlightY = useMotionValue(0);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const mobileTabRefs = useRef<(HTMLDivElement | null)[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Reset refs array when group changes to avoid stale refs
     tabRefs.current = tabRefs.current.slice(0, currentGroup.routes.length);
+    mobileTabRefs.current = mobileTabRefs.current.slice(0, currentGroup.routes.length);
   }, [currentGroup]);
 
   useEffect(() => {
+    // Desktop Animation
     const activeTab = tabRefs.current[activeRouteIndex];
     if (activeTab && scrollContainerRef.current) {
-      // 1. Animate the Gold Line
       const newX = activeTab.offsetLeft + 10;
       animate(highlightX, newX, {
         type: "spring",
@@ -86,7 +89,6 @@ export default function AdventuresSection() {
         damping: 30,
       });
 
-      // 2. Scroll the container to keep the active tab visible
       const container = scrollContainerRef.current;
       const scrollLeft = activeTab.offsetLeft - (container.clientWidth / 2) + (activeTab.clientWidth / 2);
       
@@ -95,15 +97,50 @@ export default function AdventuresSection() {
         behavior: 'smooth'
       });
     }
-  }, [activeRouteIndex, highlightX, currentGroup]); // Re-run when route or group changes
+
+    // Mobile Animation
+    // We add a small delay to allow the layout (accordion expansion) to settle or start
+    // Using a timeout is a simple way to wait for the re-render layout shift
+    const updateMobileLine = () => {
+        const activeMobileTab = mobileTabRefs.current[activeRouteIndex];
+        if (activeMobileTab) {
+            // The dot is relative to the "relative pl-2" container.
+            // activeMobileTab is the wrapper div for each route.
+            // We want the line to center on the dot which is at top:0 inside that div relative to the list container.
+            const newY = activeMobileTab.offsetTop + 10; // +10 to center on the 20px dot
+            animate(highlightY, newY, {
+                type: "spring",
+                stiffness: 200,
+                damping: 30,
+            });
+        }
+    };
+
+    // Call immediately and slightly after to catch layout shifts
+    updateMobileLine();
+    const timer = setTimeout(updateMobileLine, 400); // Wait for accordion animation (0.4s)
+    return () => clearTimeout(timer);
+
+  }, [activeRouteIndex, highlightX, highlightY, currentGroup]);
 
   const backgroundGradient = useMotionTemplate`
     linear-gradient(
       90deg, 
       transparent, 
-      transparent calc(${highlightX}px - 100px), 
+      transparent calc(${highlightX}px - 200px), 
       #d4af37 ${highlightX}px, 
       rgba(110, 91, 29, 0.1) calc(${highlightX}px + 100px), 
+      transparent
+    )
+  `;
+
+  const mobileBackgroundGradient = useMotionTemplate`
+    linear-gradient(
+      180deg, 
+      transparent, 
+      transparent calc(${highlightY}px - 100px), 
+      #d4af37 ${highlightY}px, 
+      rgba(110, 91, 29, 0.1) calc(${highlightY}px + 100px), 
       transparent
     )
   `;
@@ -149,9 +186,150 @@ export default function AdventuresSection() {
         {/* Grid Container */}
         <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-12 md:gap-16">
           
+          {/* ================= MOBILE LAYOUT (Vertical) ================= */}
+          <div className="flex flex-col md:hidden w-full gap-8">
+            {/* Mobile Group Selector */}
+            <div className="flex justify-between items-center px-2 py-4 border-b border-white/10">
+              <h3 className="font-montserrat font-medium text-xl text-[#f5f2e9] tracking-wide">
+                {currentGroup.startPoint}
+              </h3>
+              <div className="flex gap-2">
+                <button 
+                  className="p-2 opacity-60 hover:opacity-100"
+                  onClick={handlePrevGroup}
+                >
+                  <Image src="/images/nav-prev.svg" alt="Prev" width={32} height={32} className="rotate-180" />
+                </button>
+                <button 
+                  className="p-2 opacity-60 hover:opacity-100"
+                  onClick={handleNextGroup}
+                >
+                  <Image src="/images/nav-next.svg" alt="Next" width={32} height={32} />
+                </button>
+              </div>
+            </div>
+
+            {/* Vertical Accordion */}
+            <div className="relative pl-2">
+               {/* Vertical Line */}
+               <motion.div 
+                 className="absolute left-8.5 top-2 bottom-4 w-[2px]"
+                 style={{
+                   background: mobileBackgroundGradient
+                 }}
+               />
+
+               <div className="flex flex-col gap-10">
+                 {currentGroup.routes.map((route, index) => {
+                   const isActive = index === activeRouteIndex;
+                   
+                   // Resolve images for this specific route (or fallback)
+                   const rMainImg = route.images?.main || "/images/adventure-main.png";
+                   const rSmall1 = route.images?.gallery?.[0] || "/images/adventure-small-1.png";
+                   const rSmall2 = route.images?.gallery?.[1] || "/images/adventure-small-2.png";
+
+                   return (
+                     <div 
+                        key={route.id} 
+                        className="relative pl-12"
+                        ref={(el) => { mobileTabRefs.current[index] = el; }}
+                     >
+                       {/* Dot Marker */}
+                       <button
+                         onClick={() => setActiveRouteIndex(index)}
+                         className={`absolute left-[20px] top-0 w-4 h-4 -ml-[1px] z-10 transition-transform duration-300 ${
+                           isActive ? 'scale-125' : 'scale-100 opacity-70'
+                         }`}
+                       >
+                         <div className="relative w-full h-full">
+                            <Image 
+                                src={isActive ? "/images/trek-dot-active.svg" : "/images/trek-dot.svg"} 
+                                alt="Dot" 
+                                fill 
+                                className="object-contain"
+                            />
+                         </div>
+                       </button>
+
+                       {/* Content Container */}
+                       <div 
+                         onClick={() => setActiveRouteIndex(index)}
+                         className="cursor-pointer"
+                       >
+                         {!isActive ? (
+                           // Collapsed State
+                           <div className="opacity-50 hover:opacity-80 transition-opacity mt-[-2px]">
+                             <p className="font-montserrat font-medium text-xs text-[#f5f2e9] mb-1 tracking-wider uppercase">
+                               Route {index + 1}
+                             </p>
+                             <p className="font-baron text-lg text-[#d4af37]">
+                               {route.title}
+                             </p>
+                           </div>
+                         ) : (
+                           // Expanded (Active) State
+                           <motion.div 
+                             initial={{ opacity: 0, y: 10 }}
+                             animate={{ opacity: 1, y: 0 }}
+                             transition={{ duration: 0.4 }}
+                             className="flex flex-col gap-5 mt-[-4px]"
+                           >
+                             {/* Header */}
+                             <div>
+                               <p className="font-montserrat font-medium text-sm text-[#f5f2e9] opacity-80 mb-1 tracking-wider uppercase">
+                                 {currentGroup.startPoint} to
+                               </p>
+                               <p className="font-baron text-2xl text-[#d4af37] leading-tight">
+                                 {route.title}
+                               </p>
+                             </div>
+
+                             {/* Description */}
+                             <p className="font-montserrat text-sm text-[#f5f2e9]/80 leading-relaxed text-justify">
+                               {route.description}
+                             </p>
+                             
+                             {/* Mobile Image Grid */}
+                             <div className="grid grid-cols-5 gap-2 h-40 w-full rounded-xl overflow-hidden shadow-lg mt-1">
+                                  {/* Big Image (Left) - Spans 3 cols */}
+                                  <div className="relative col-span-3 h-full">
+                                      <Image src={rMainImg} fill className="object-cover" alt={route.title} />
+                                  </div>
+                                  {/* Small Images (Right) - Spans 2 cols */}
+                                  <div className="col-span-2 flex flex-col gap-2 h-full">
+                                      <div className="relative flex-1 rounded-bl-none overflow-hidden">
+                                           <Image src={rSmall1} fill className="object-cover" alt="" />
+                                      </div>
+                                      <div className="relative flex-1 rounded-tl-none overflow-hidden">
+                                           <Image src={rSmall2} fill className="object-cover" alt="" />
+                                      </div>
+                                  </div>
+                             </div>
+
+                             {/* CTA Button */}
+                             <button 
+                               onClick={(e) => {
+                                   e.stopPropagation();
+                                   router.push(`/treks/${route.id}`)
+                               }}
+                               className="self-start px-6 py-2.5 mt-2 bg-[#d4af37] hover:bg-[#b5952f] text-[#17261e] font-montserrat font-semibold text-xs rounded transition-colors shadow-lg"
+                             >
+                               Look For Details
+                             </button>
+                           </motion.div>
+                         )}
+                       </div>
+                     </div>
+                   );
+                 })}
+               </div>
+            </div>
+          </div>
+
+          {/* ================= DESKTOP LAYOUT (Horizontal) ================= */}
           {/* --- LEFT SIDE (Text & Navigation) --- */}
           <motion.div 
-            className="flex flex-col gap-6 w-full md:max-w-2xl order-2 md:order-1"
+            className="hidden md:flex flex-col gap-6 w-full md:max-w-2xl order-2 md:order-1"
             variants={staggerContainerVariants}
             initial="hidden"
             whileInView="visible"
@@ -242,7 +420,7 @@ export default function AdventuresSection() {
 
           {/* --- RIGHT SIDE (Images) --- */}
           <motion.div 
-             className="relative w-full max-w-[480px] aspect-[4/3] md:h-[373px] order-1 md:order-2"
+             className="hidden md:block relative w-full max-w-[480px] aspect-[4/3] md:h-[373px] order-1 md:order-2"
              variants={rightColEntryVariants}
              initial="hidden"
              whileInView="visible"
@@ -262,7 +440,7 @@ export default function AdventuresSection() {
       </div>
 
       {/* --- BOTTOM CONTROLS --- */}
-      <div className="absolute bottom-12 md:bottom-24 left-0 w-full z-20">
+      <div className="hidden md:block absolute bottom-12 md:bottom-24 left-0 w-full z-20">
         <div className="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between pointer-events-none">
           {/* Details Button */}
           <motion.button 

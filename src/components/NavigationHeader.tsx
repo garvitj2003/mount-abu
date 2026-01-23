@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 
 interface NavigationHeaderProps {
-  variant?: "dark" | "light";
+    variant?: "dark" | "light";
 }
 
 interface MenuItem {
@@ -22,67 +22,72 @@ const menuItems: MenuItem[] = [
         children: [
             { label: "Top Destinations", href: "#destinations" },
             { label: "Eco tourism & adventures", href: "#adventures" },
-            { label: "Unexplored Gems of Mount Abu", href: "#hidden-places" }
-        ]
+            { label: "Unexplored Gems of Mount Abu", href: "#hidden-places" },
+        ],
     },
     {
         label: "Municipal Services",
         children: [
-            { label: "Digital Construction Token", href: "#" },
-            { label: "Complaint Redressal & Tracking", href: "#" },
-            { label: "Vital Certificates (Birth/Death)", href: "#" },
-            { label: "Marriage Certificate", href: "#" }
-        ]
-    },
-    {
-        label: "About Municipal Council",
-        children: [{ label: "View map", href: "#map" }]
+            { label: "Digital Construction Token", href: "#services" },
+            { label: "Complaint Redressal & Tracking", href: "#services" },
+            { label: "Vital Certificates (Birth/Death)", href: "#services" },
+            { label: "Marriage Certificate", href: "#services" },
+        ],
     },
     { label: "City Profile", href: "#city-profile" },
     {
         label: "News & Updates",
         children: [
             { label: "Notices", href: "#notices" },
-            { label: "Tenders", href: "#tenders" }
-        ]
+            { label: "Tenders", href: "#tenders" },
+        ],
     },
     {
         label: "Information & Guidelines",
         children: [
-            { label: "Nagar Palika Act", href: "#" },
-            { label: "Wards Map", href: "#" },
-            { label: "Construction Guidelines", href: "#" },
-            { label: "Eco-Sensitive Zone", href: "#" },
-            { label: "Land Purchase Guidelines", href: "#" },
-            { label: "Restaurant Licences", href: "#" },
-            { label: "Taxes", href: "#" },
-            { label: "Budget", href: "#" }
-        ]
+            {
+                label: "Nagar Palika Act",
+                href: "https://drive.google.com/file/d/1k5A-CDzAPz3xCGLcsETX8F3GYdZZxmVP/view?usp=drivesdk",
+            },
+            {
+                label: "Wards Map",
+                href: "https://drive.google.com/file/d/1cJExzDqt1iCDeGogL1rOSnEMN-D56tzz/view?usp=drivesdk",
+            },
+            {
+                label: "Construction Guidelines",
+                href: "https://drive.google.com/file/d/1PA4DyI-cEGMtTJCSimeTy-QfZ5QR-e57/view?usp=drivesdk",
+            },
+            { label: "Solid Waste Management", href: "#info-guidelines" },
+            {
+                label: "Land Purchase Guidelines",
+                href: "https://drive.google.com/file/d/1k5A-CDzAPz3xCGLcsETX8F3GYdZZxmVP/view?usp=drivesdk",
+            },
+            { label: "Restaurant Licences", href: "#info-guidelines" },
+            { label: "Taxes", href: "#info-guidelines" },
+            { label: "Budget", href: "#info-guidelines" },
+        ],
     },
     { label: "Testimonials", href: "#testimonials" },
-    {
-        label: "Important Links",
-        children: [
-            { label: "Rajasthan Sampark", href: "#" },
-            { label: "Pehchan", href: "#" },
-            { label: "e-Proc", href: "#" },
-            { label: "Other Govt. Links", href: "#" }
-        ]
-    },
     { label: "Contact Diary", href: "#contact" },
     {
         label: "More",
         children: [
-            { label: "Get our application", href: "#" },
-            { label: "Connect With Us", href: "#" }
-        ]
-    }
+            { label: "Get our application", href: "#app-download" },
+            { label: "Connect With Us", href: "#connect" },
+        ],
+    },
 ];
 
-const RunningBorderButton = ({ variant = "dark" }: { variant?: "dark" | "light" }) => {
+const RunningBorderButton = ({
+    variant = "dark",
+}: {
+    variant?: "dark" | "light";
+}) => {
     return (
         <div className="flex w-full items-center justify-center">
-            <button className={`relative flex items-center justify-center overflow-hidden rounded-full px-6 py-2 font-montserrat font-medium transition-colors ${variant === "dark" ? "text-white hover:bg-white/10" : "text-black hover:bg-black/5"}`}>
+            <button
+                className={`relative flex items-center justify-center overflow-hidden rounded-full px-6 py-2 font-montserrat font-medium transition-colors ${variant === "dark" ? "text-white hover:bg-white/10" : "text-black hover:bg-black/5"}`}
+            >
                 <motion.div
                     className="absolute inset-0 rounded-full"
                     style={{
@@ -103,20 +108,25 @@ const RunningBorderButton = ({ variant = "dark" }: { variant?: "dark" | "light" 
                             repeat: Infinity,
                         }}
                         style={{
-                            background: variant === "dark" 
-                                ? `conic-gradient(from 0deg, transparent 0%, transparent 70%, #09090b 100%)`
-                                : `conic-gradient(from 0deg, transparent 0%, transparent 70%, #5B5036 100%)`,
+                            background:
+                                variant === "dark"
+                                    ? `conic-gradient(from 0deg, transparent 0%, transparent 70%, #09090b 100%)`
+                                    : `conic-gradient(from 0deg, transparent 0%, transparent 70%, #5B5036 100%)`,
                         }}
                     />
                 </motion.div>
                 <span className="relative z-10">हिन्दी</span>
-                <div className={`absolute inset-0 rounded-full border ${variant === "dark" ? "border-white/20" : "border-black/10"}`} />
+                <div
+                    className={`absolute inset-0 rounded-full border ${variant === "dark" ? "border-white/20" : "border-black/10"}`}
+                />
             </button>
         </div>
     );
 };
 
-export default function NavigationHeader({ variant = "dark" }: NavigationHeaderProps) {
+export default function NavigationHeader({
+    variant = "dark",
+}: NavigationHeaderProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [expandedItems, setExpandedItems] = useState<string[]>([]);
     const isDark = variant === "dark";
@@ -133,7 +143,10 @@ export default function NavigationHeader({ variant = "dark" }: NavigationHeaderP
         };
     }, [isOpen]);
 
-    const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    const scrollToSection = (
+        e: React.MouseEvent<HTMLAnchorElement>,
+        href: string,
+    ) => {
         if (href.startsWith("#")) {
             e.preventDefault();
             setIsOpen(false);
@@ -147,36 +160,32 @@ export default function NavigationHeader({ variant = "dark" }: NavigationHeaderP
     };
 
     const toggleExpand = (label: string) => {
-        setExpandedItems(prev => 
-            prev.includes(label) 
-                ? prev.filter(item => item !== label)
-                : [...prev, label]
+        setExpandedItems((prev) =>
+            prev.includes(label)
+                ? prev.filter((item) => item !== label)
+                : [...prev, label],
         );
     };
 
     return (
         <>
-            <header className={`relative md:absolute md:top-0 md:left-0 md:right-0 w-full z-50 backdrop-blur-md h-20 flex items-center justify-between px-4 md:px-8 border-b ${isDark ? "border-white/80 bg-[#132019] md:bg-transparent text-white" : "border-black/10 bg-white/80 md:bg-transparent text-black"}`}>
+            <header
+                className={`relative md:absolute md:top-0 md:left-0 md:right-0 w-full z-50 backdrop-blur-md h-20 flex items-center justify-between px-4 md:px-8 border-b ${isDark ? "border-white/80 bg-[#132019] md:bg-transparent text-white" : "border-black/10 bg-white/80 md:bg-transparent text-black"}`}
+            >
                 {/* Logo and Title */}
                 <div className="flex items-center gap-3">
-                    <div className="relative w-12 h-12 rounded-full overflow-hidden bg-white flex items-center justify-center">
+                    <div className="relative w-12 h-12 flex items-center justify-center">
                         {/* Logo placeholder - mountain icon */}
-                        <svg
-                            width="32"
-                            height="32"
-                            viewBox="0 0 32 32"
-                            fill="none"
-                            className="text-[#1197ff]"
-                        >
-                            <circle cx="16" cy="16" r="14" fill="#4CAF50" />
-                            <path
-                                d="M8 22L12 14L16 18L22 10L26 22H8Z"
-                                fill="#2E7D32"
-                            />
-                            <circle cx="22" cy="10" r="3" fill="#FDD835" />
-                        </svg>
+                        <Image
+                            src="/images/footer/logo.png"
+                            alt="Nagar Palika Mount Abu"
+                            fill
+                            className="object-contain object-left"
+                        />
                     </div>
-                    <span className={`font-montserrat font-semibold text-base md:text-lg ${isDark ? "text-white" : "text-[#132019]"}`}>
+                    <span
+                        className={`font-montserrat font-semibold text-base md:text-lg ${isDark ? "text-white" : "text-[#132019]"}`}
+                    >
                         Nagar Palika Mount Abu
                     </span>
                 </div>
@@ -184,7 +193,7 @@ export default function NavigationHeader({ variant = "dark" }: NavigationHeaderP
                 {/* Right side - Language and Menu */}
                 <div className="flex items-center gap-4 md:gap-6">
                     <RunningBorderButton variant={variant} />
-                    <button 
+                    <button
                         onClick={() => setIsOpen(true)}
                         className={`p-2 rounded-lg transition-colors ${isDark ? "text-white hover:bg-white/10" : "text-black hover:bg-black/5"}`}
                     >
@@ -224,29 +233,41 @@ export default function NavigationHeader({ variant = "dark" }: NavigationHeaderP
                             initial={{ x: "100%" }}
                             animate={{ x: 0 }}
                             exit={{ x: "100%" }}
-                            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                            transition={{
+                                type: "spring",
+                                damping: 30,
+                                stiffness: 300,
+                            }}
                             className="fixed top-0 right-0 h-full w-full max-w-[771px] bg-[#132019]/80 backdrop-blur-[4px] z-[100] border-l border-white/10 flex flex-col shadow-2xl overflow-hidden"
                         >
                             {/* Background Elements */}
                             <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
                                 {/* Large Background Text */}
                                 <div className="absolute top-[40%] right-[-10%] transform -rotate-90 md:rotate-0 md:right-0 md:top-20 opacity-10 whitespace-nowrap">
-                                     <span className="font-baron text-[80px] md:text-[140px] leading-none text-white/10 select-none block md:hidden">
-                                        EXPLORE<br/>MOUNT<br/>ABU
-                                     </span>
-                                     <span className="font-baron text-[120px] leading-none text-white/10 select-none hidden md:block text-right pr-10">
-                                        EXPLORE<br/>MOUNT<br/>ABU
-                                     </span>
+                                    <span className="font-baron text-[80px] md:text-[140px] leading-none text-white/10 select-none block md:hidden">
+                                        EXPLORE
+                                        <br />
+                                        MOUNT
+                                        <br />
+                                        ABU
+                                    </span>
+                                    <span className="font-baron text-[120px] leading-none text-white/10 select-none hidden md:block text-right pr-10">
+                                        EXPLORE
+                                        <br />
+                                        MOUNT
+                                        <br />
+                                        ABU
+                                    </span>
                                 </div>
-                                
+
                                 {/* Bottom Texture Image */}
                                 <div className="absolute bottom-0 right-0 w-full h-[300px] opacity-10">
-                                     <Image 
-                                        src="/images/drawer/bg-texture.png" 
-                                        alt="Texture" 
+                                    <Image
+                                        src="/images/drawer/bg-texture.png"
+                                        alt="Texture"
                                         fill
                                         className="object-cover object-bottom"
-                                     />
+                                    />
                                 </div>
                             </div>
 
@@ -279,12 +300,29 @@ export default function NavigationHeader({ variant = "dark" }: NavigationHeaderP
                             <div className="flex-1 overflow-y-auto py-8 px-6 md:px-12 relative z-10 custom-scrollbar">
                                 <nav className="flex flex-col gap-8 pb-20">
                                     {menuItems.map((item, index) => (
-                                        <div key={item.label} className="flex flex-col">
-                                            <div className="flex items-center justify-between group cursor-pointer" onClick={() => item.children ? toggleExpand(item.label) : null}>
+                                        <div
+                                            key={item.label}
+                                            className="flex flex-col"
+                                        >
+                                            <div
+                                                className="flex items-center justify-between group cursor-pointer"
+                                                onClick={() =>
+                                                    item.children
+                                                        ? toggleExpand(
+                                                              item.label,
+                                                          )
+                                                        : null
+                                                }
+                                            >
                                                 {item.href && !item.children ? (
                                                     <Link
                                                         href={item.href}
-                                                        onClick={(e) => scrollToSection(e, item.href!)}
+                                                        onClick={(e) =>
+                                                            scrollToSection(
+                                                                e,
+                                                                item.href!,
+                                                            )
+                                                        }
                                                         className="font-baron text-xl md:text-2xl font-bold text-white hover:text-[#d4af37] transition-colors tracking-widest uppercase"
                                                     >
                                                         {item.label}
@@ -294,17 +332,25 @@ export default function NavigationHeader({ variant = "dark" }: NavigationHeaderP
                                                         {item.label}
                                                     </span>
                                                 )}
-                                                
+
                                                 {item.children && (
                                                     <motion.div
-                                                        animate={{ rotate: expandedItems.includes(item.label) ? 180 : 0 }}
-                                                        transition={{ duration: 0.3 }}
+                                                        animate={{
+                                                            rotate: expandedItems.includes(
+                                                                item.label,
+                                                            )
+                                                                ? 180
+                                                                : 0,
+                                                        }}
+                                                        transition={{
+                                                            duration: 0.3,
+                                                        }}
                                                         className="p-1"
                                                     >
-                                                        <Image 
-                                                            src="/images/drawer/chevron-down.svg" 
-                                                            alt="Expand" 
-                                                            width={24} 
+                                                        <Image
+                                                            src="/images/drawer/chevron-down.svg"
+                                                            alt="Expand"
+                                                            width={24}
                                                             height={24}
                                                             className="text-white group-hover:brightness-75 transition-all"
                                                         />
@@ -314,28 +360,81 @@ export default function NavigationHeader({ variant = "dark" }: NavigationHeaderP
 
                                             {/* Submenu */}
                                             <AnimatePresence>
-                                                {item.children && expandedItems.includes(item.label) && (
-                                                    <motion.div
-                                                        initial={{ height: 0, opacity: 0 }}
-                                                        animate={{ height: "auto", opacity: 1 }}
-                                                        exit={{ height: 0, opacity: 0 }}
-                                                        transition={{ duration: 0.3 }}
-                                                        className="overflow-hidden"
-                                                    >
-                                                        <div className="flex flex-col gap-4 pl-4 pt-6 border-l border-white/20 ml-2 mt-2">
-                                                            {item.children.map((child) => (
-                                                                <Link
-                                                                    key={child.label}
-                                                                    href={child.href}
-                                                                    onClick={(e) => scrollToSection(e, child.href)}
-                                                                    className="font-baron text-lg text-[#d4af37] hover:text-white transition-colors tracking-wider uppercase"
-                                                                >
-                                                                    {child.label}
-                                                                </Link>
-                                                            ))}
-                                                        </div>
-                                                    </motion.div>
-                                                )}
+                                                {item.children &&
+                                                    expandedItems.includes(
+                                                        item.label,
+                                                    ) && (
+                                                        <motion.div
+                                                            initial={{
+                                                                height: 0,
+                                                                opacity: 0,
+                                                            }}
+                                                            animate={{
+                                                                height: "auto",
+                                                                opacity: 1,
+                                                            }}
+                                                            exit={{
+                                                                height: 0,
+                                                                opacity: 0,
+                                                            }}
+                                                            transition={{
+                                                                duration: 0.3,
+                                                            }}
+                                                            className="overflow-hidden"
+                                                        >
+                                                            <div className="flex flex-col gap-4 pl-4 pt-6 border-l border-white/20 ml-2 mt-2">
+                                                                {item.children.map(
+                                                                    (child) =>
+                                                                        child.href.startsWith(
+                                                                            "http",
+                                                                        ) ? (
+                                                                            <a
+                                                                                key={
+                                                                                    child.label
+                                                                                }
+                                                                                href={
+                                                                                    child.href
+                                                                                }
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                onClick={() =>
+                                                                                    setIsOpen(
+                                                                                        false,
+                                                                                    )
+                                                                                }
+                                                                                className="font-baron text-lg text-[#d4af37] hover:text-white transition-colors tracking-wider uppercase"
+                                                                            >
+                                                                                {
+                                                                                    child.label
+                                                                                }
+                                                                            </a>
+                                                                        ) : (
+                                                                            <Link
+                                                                                key={
+                                                                                    child.label
+                                                                                }
+                                                                                href={
+                                                                                    child.href
+                                                                                }
+                                                                                onClick={(
+                                                                                    e,
+                                                                                ) =>
+                                                                                    scrollToSection(
+                                                                                        e,
+                                                                                        child.href,
+                                                                                    )
+                                                                                }
+                                                                                className="font-baron text-lg text-[#d4af37] hover:text-white transition-colors tracking-wider uppercase"
+                                                                            >
+                                                                                {
+                                                                                    child.label
+                                                                                }
+                                                                            </Link>
+                                                                        ),
+                                                                )}
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
                                             </AnimatePresence>
                                         </div>
                                     ))}

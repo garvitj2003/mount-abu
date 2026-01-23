@@ -69,7 +69,7 @@ export default function NewsUpdatesSection() {
     const currentItem = newsItems[currentIndex];
 
     return (
-        <section className="relative w-full min-h-screen py-16 md:py-20 overflow-hidden">
+        <section id="notices" className="relative w-full min-h-screen py-16 md:py-20 overflow-hidden">
             {/**overlay fade */}
             <div
                 className="absolute top-0 left-0 w-full h-40 z-10"
