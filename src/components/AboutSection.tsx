@@ -50,7 +50,7 @@ export default function AboutSection() {
                         >
                             {/* Title section */}
                             <div className="flex flex-col gap-4 md:gap-6 items-start w-full">
-                                <p className="font-baron text-xl md:text-2xl text-[#d4af37] leading-normal uppercase tracking-wider">
+                                <p className="font-baron text-xl md:text-2xl text-[#d4af37] leading-normal  tracking-wider">
                                     About
                                 </p>
                                 <div className="capitalize text-[#132019]">
@@ -124,7 +124,7 @@ export default function AboutSection() {
                         >
                             {/* Title section */}
                             <div className="flex flex-col gap-4 md:gap-6 items-start md:items-end w-full">
-                                <p className="font-baron text-xl md:text-2xl text-[#d4af37] leading-normal uppercase tracking-wider">
+                                <p className="font-baron text-xl md:text-2xl text-[#d4af37] leading-normal  tracking-wider">
                                     About
                                 </p>
                                 <p className="font-montserrat font-medium text-3xl md:text-4xl text-[#132019] capitalize leading-tight text-left md:text-right">

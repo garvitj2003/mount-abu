@@ -23,10 +23,25 @@ function Card({ title, buttonText, buttonVariant, href = "#" }: CardProps) {
             href={href}
             target={isExternal ? "_blank" : undefined}
             rel={isExternal ? "noopener noreferrer" : undefined}
-            className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-[#2d4a2d] overflow-hidden pt-4 pb-5 px-4 backdrop-blur-[0.5px] transition-transform hover:scale-[1.02] bg-white/5"
+            className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl overflow-hidden pt-4 pb-5 px-4 backdrop-blur-[0.5px] transition-all duration-300 hover:scale-[1.04] bg-white/5"
         >
+            {/* Shimmer Effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-[250%] transition-transform duration-1000 ease-out rotate-12 pointer-events-none z-30 scale-[2.5]" />
+
+            {/* Gradient Border using Mask */}
+            <div 
+                className="absolute inset-0 rounded-2xl pointer-events-none"
+                style={{
+                    padding: "1.5px",
+                    background: "linear-gradient(to top, #D4AF37, #2D4A2D)",
+                    WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                    WebkitMaskComposite: "destination-out",
+                    maskComposite: "exclude",
+                }}
+            />
+
             {/* Title */}
-            <div className="flex items-center justify-center px-4 py-4 backdrop-blur-md w-full min-h-[80px]">
+            <div className="flex items-center justify-center px-4 py-4 w-full min-h-[80px]">
                 <h3 className="font-montserrat font-medium text-xl md:text-2xl text-white text-center leading-tight max-w-[240px]">
                     {title}
                 </h3>
@@ -64,7 +79,7 @@ const cardData: CardProps[] = [
         href: "https://drive.google.com/file/d/1cJExzDqt1iCDeGogL1rOSnEMN-D56tzz/view?usp=drivesdk",
     },
     {
-        title: "Solid Waste Management Guidelinese",
+        title: "Solid Waste Management",
         buttonText: "Download PDF",
         buttonVariant: "red",
     },
@@ -131,7 +146,7 @@ export default function InformationGuidlines() {
             <div className="relative z-20 container mx-auto px-4 md:px-8 py-16 md:py-24 flex flex-col items-center justify-center">
                 {/* Header */}
                 <div className="flex flex-col items-center gap-3 mb-12 md:mb-16">
-                    <span className="font-baron  text-base md:text-lg tracking-[0.2em]  text-[#a3a355]">
+                    <span className="font-baron  md:text-2xl tracking-tight text-[#a3a355]">
                         All you need
                     </span>
                     <h2 className="font-playfair text-3xl md:text-4xl lg:text-5xl text-white text-center leading-tight">

@@ -174,7 +174,7 @@ export default function CityProfileSection() {
             <div className="absolute inset-0">
                 <div className="absolute inset-0 bg-[rgba(81,73,51,0.6)]" />
                 <div
-                    className="absolute inset-0 opacity-30 bg-cover bg-center"
+                    className="absolute inset-0 opacity-30 md:bg-cover bg-center"
                     style={{
                         backgroundImage: "url('/images/brahma-kumari-bg.png')",
                     }}

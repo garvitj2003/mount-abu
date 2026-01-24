@@ -79,16 +79,16 @@ export default function Testimonials() {
             <div className="relative z-20 container mx-auto px-4 md:px-8">
                 {/* Header Section */}
                 <div className="flex flex-col items-center gap-4 mb-12 md:mb-16">
-                    <h3 className="text-[#d4af37] font-display text-xl md:text-2xl uppercase tracking-[0.2em] text-center">
+                    <h3 className="text-[#d4af37] font-display text-xl md:text-2xl  tracking-tight text-center">
                         Testimonials
                     </h3>
-                    <h2 className="text-white font-sans font-medium text-3xl md:text-4xl lg:text-5xl uppercase text-center leading-tight">
+                    <h2 className="text-white font-sans font-medium text-3xl md:text-4xl lg:text-5xl  text-center leading-tight">
                         Leadership messages
                     </h2>
                 </div>
 
                 {/* Speaker Section */}
-                <div className="flex flex-col lg:flex-row items-center gap-10 md:gap-16 max-w-6xl mx-auto w-full">
+                <div className="flex flex-col lg:flex-row items-center gap-10 md:gap-16 max-w-7xl mx-auto w-full">
                     {/* Image Column */}
                     <div className="relative flex-shrink-0 w-full max-w-[320px] md:max-w-[420px] aspect-[3/4] flex justify-center items-center -mt-12 md:-mt-24">
                         <AnimatePresence mode="wait">
@@ -131,41 +131,42 @@ export default function Testimonials() {
                                 </div>
 
                                 <div className="min-h-[180px] md:min-h-[220px] flex items-start justify-center lg:justify-start">
-                                    <p className="text-[#f5f2e9] font-sans font-medium text-base md:text-lg lg:text-xl leading-relaxed max-w-2xl">
+                                    <p className="text-[#f5f2e9] font-sans font-medium text-base md:text-lg lg:text-xl leading-relaxed max-w-3xl">
                                         {currentTestimonial.message}
                                     </p>
                                 </div>
                             </motion.div>
                         </AnimatePresence>
-
-                        <div className="mt-4 flex items-center justify-center lg:justify-start gap-4">
-                            <button 
-                                onClick={handlePrev} 
-                                className="w-11 h-11 rounded-full opacity-40 hover:opacity-60 transition-opacity"
-                                aria-label="Previous testimonial"
-                            >
-                                <Image
-                                    src="/images/nav-prev.svg"
-                                    width={44}
-                                    height={44}
-                                    alt="Previous"
-                                    className="rotate-180"
-                                />
-                            </button>
-                            <button 
-                                onClick={handleNext} 
-                                className="w-11 h-11 rounded-full hover:opacity-80 transition-opacity"
-                                aria-label="Next testimonial"
-                            >
-                                <Image
-                                    src="/images/nav-next.svg"
-                                    width={44}
-                                    height={44}
-                                    alt="Next"
-                                />
-                            </button>
-                        </div>
                     </div>
+                </div>
+
+                {/* Navigation Buttons */}
+                <div className="mt-8 flex items-center justify-center gap-4 relative z-30">
+                    <button 
+                        onClick={handlePrev} 
+                        className="w-11 h-11 rounded-full opacity-40 hover:opacity-60 transition-opacity"
+                        aria-label="Previous testimonial"
+                    >
+                        <Image
+                            src="/images/nav-prev.svg"
+                            width={44}
+                            height={44}
+                            alt="Previous"
+                            className="rotate-180"
+                        />
+                    </button>
+                    <button 
+                        onClick={handleNext} 
+                        className="w-11 h-11 rounded-full hover:opacity-80 transition-opacity"
+                        aria-label="Next testimonial"
+                    >
+                        <Image
+                            src="/images/nav-next.svg"
+                            width={44}
+                            height={44}
+                            alt="Next"
+                        />
+                    </button>
                 </div>
             </div>
         </section>

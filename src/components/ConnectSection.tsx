@@ -174,7 +174,7 @@ export default function ConnectSection() {
                     variants={fadeIn}
                     className="flex flex-col gap-4 items-center text-center mb-12 md:mb-16"
                 >
-                    <p className="font-baron text-xl md:text-2xl text-[#d4af37] tracking-[0.2em] leading-normal uppercase">
+                    <p className="font-baron text-xl md:text-2xl text-[#d4af37] tracking-[0.2em] leading-normal">
                         Connect With Us
                     </p>
                     <h2 className="font-montserrat font-medium text-3xl md:text-4xl lg:text-5xl text-white capitalize leading-tight max-w-3xl">

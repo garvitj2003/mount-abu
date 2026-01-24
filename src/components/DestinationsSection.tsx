@@ -247,7 +247,7 @@ export default function DestinationsSection() {
                                     <div
                                         className={`relative w-full h-full rounded-xl overflow-hidden shadow-2xl transition-all duration-500 group ${
                                             isCenter
-                                                ? "border-2 border-[#122018] hover:scale-102"
+                                                ? "border-2 border-[#122018] hover:scale-101"
                                                 : ""
                                         }`}
                                     >
@@ -266,7 +266,7 @@ export default function DestinationsSection() {
 
                                         {/* --- HOVER EFFECT (Only for center card) --- */}
                                         {isCenter && (
-                                            <div className="absolute inset-4 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-[200%] transition-transform duration-1000 ease-out rotate-12 pointer-events-none z-20" />
+                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-[250%] transition-transform duration-1000 ease-out rotate-12 pointer-events-none z-20 scale-[2.5]" />
                                         )}
                                     </div>
 

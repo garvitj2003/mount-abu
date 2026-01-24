@@ -77,12 +77,16 @@ function ServiceCard({
         <motion.div
             custom={index}
             variants={cardVariants}
-            className={`flex flex-col gap-6 items-center p-6 rounded-2xl z-20
+            whileHover={{ scale: 1.04 }}
+            className={`relative flex flex-col gap-6 items-center p-6 rounded-2xl z-20
                 backdrop-blur-sm bg-[rgba(19,32,25,0.2)]
                 border border-[rgba(245,242,233,0.16)]
-                w-full
+                w-full group overflow-hidden transition-all duration-300
                 ${isOffset ? "lg:mt-16" : ""}`}
         >
+            {/* Shimmer Effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-[250%] transition-transform duration-1000 ease-out rotate-12 pointer-events-none z-30 scale-[2.5]" />
+
             {/* Image Container */}
             <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden shrink-0">
                 <Image
@@ -151,7 +155,7 @@ export default function ServicesSection() {
                     variants={fadeIn}
                     className="flex flex-col gap-4 items-center text-center mb-12 md:mb-16"
                 >
-                    <p className="font-baron text-xl md:text-2xl text-[#d4af37] tracking-[0.2em] leading-normal uppercase">
+                    <p className="font-baron text-xl md:text-2xl text-[#d4af37] tracking-[0.2em] leading-normal">
                         Services
                     </p>
                     <h2 className="font-montserrat font-medium text-3xl md:text-4xl lg:text-5xl text-white capitalize leading-tight">

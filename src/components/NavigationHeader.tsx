@@ -129,7 +129,16 @@ export default function NavigationHeader({
 }: NavigationHeaderProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [expandedItems, setExpandedItems] = useState<string[]>([]);
+    const [isScrolled, setIsScrolled] = useState(false);
     const isDark = variant === "dark";
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 20);
+        };
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
 
     // Lock body scroll when drawer is open
     useEffect(() => {
@@ -170,7 +179,11 @@ export default function NavigationHeader({
     return (
         <>
             <header
-                className={`relative md:absolute md:top-0 md:left-0 md:right-0 w-full z-50 backdrop-blur-md h-20 flex items-center justify-between px-4 md:px-8 border-b ${isDark ? "border-white/80 bg-[#132019] md:bg-transparent text-white" : "border-black/10 bg-white/80 md:bg-transparent text-black"}`}
+                className={`fixed top-0 left-0 right-0 w-full z-50 backdrop-blur-md transition-all duration-300 h-20 flex items-center justify-between px-4 md:px-8 border-b ${
+                    isDark
+                        ? `text-white ${isScrolled ? "bg-[#132019]/90 border-white/10 shadow-lg" : "bg-[#132019] md:bg-transparent border-white/10 md:border-transparent"}`
+                        : `text-black ${isScrolled ? "bg-white/90 border-black/10 shadow-sm" : "bg-white/80 md:bg-transparent border-black/10 md:border-transparent"}`
+                }`}
             >
                 {/* Logo and Title */}
                 <div className="flex items-center gap-3">
