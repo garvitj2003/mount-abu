@@ -822,7 +822,7 @@ export const trekGroups = [
             },
             {
                 id: "trek-stmary-spongy",
-                title: "St. Mary School → Spongy Hill",
+                title: "Spongy Hill",
                 description:
                     "This trek passes through forest terrain with soft, leaf-covered soil, giving a spongy feel underfoot. It is best enjoyed during monsoon and winter and is suitable for beginners and nature walks.",
                 images: { main: "", gallery: [] },
@@ -979,7 +979,7 @@ export const trekGroups = [
             },
             {
                 id: "trek-shergaon-rishikesh",
-                title: "Shergaon → Rishikesh Temple",
+                title: "Rishikesh Temple",
                 description:
                     "A long forest route connecting Shergaon village to Rishikesh Temple through quiet jungle paths and rural terrain.",
                 images: { main: "", gallery: [] },

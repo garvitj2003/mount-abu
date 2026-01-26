@@ -92,7 +92,7 @@ export default function Tenders() {
                 />
             </div>
 
-            <div className="relative z-10 container mx-auto px-4 md:px-8 py-16 md:py-24">
+            <div className="relative z-10 container mx-auto px-4 md:px-20.5 py-16 md:py-24">
                 {/* Header Content */}
                 <motion.div
                     initial="hidden"

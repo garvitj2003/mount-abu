@@ -198,7 +198,7 @@ export default function CityProfileSection() {
             />
 
             {/* Content */}
-            <div className="relative z-10 container mx-auto px-4 md:px-8">
+            <div className="relative z-10 container mx-auto px-4 md:px-20.5">
                 {/* Title Section */}
                 <div className="flex flex-col items-center gap-4 md:gap-6 text-center mb-12 md:mb-16">
                     <p className="font-baron text-xl md:text-2xl text-[#d4af37] leading-normal uppercase tracking-wider">

@@ -105,7 +105,7 @@ export default function HiddenPlacesSection() {
       />
 
       {/* Main Content Container */}
-      <div className="relative z-10 container mx-auto px-4 md:px-8 py-16 md:py-24 pb-32">
+      <div className="relative z-10 container mx-auto px-4 md:px-20.5 py-16 md:py-24 pb-32">
         
         {/* Title Section */}
         <div className="flex flex-col items-center gap-6 text-center mb-16 lg:mb-24">
@@ -177,11 +177,11 @@ export default function HiddenPlacesSection() {
               <div className="flex gap-3 items-center">
                 <button
                   onClick={handlePrev}
-                  className="w-11 h-11 opacity-40 hover:opacity-100 transition-opacity"
+                  className="w-11 h-11 hover:opacity-80 transition-opacity cursor-pointer"
                   aria-label="Previous"
                 >
                   <Image
-                    src="/images/nav-prev.svg"
+                    src="/images/nav-next.svg"
                     alt="Previous"
                     width={44}
                     height={44}
@@ -191,7 +191,7 @@ export default function HiddenPlacesSection() {
 
                 <button
                   onClick={handleNext}
-                  className="w-11 h-11 hover:opacity-80 transition-opacity"
+                  className="w-11 h-11 hover:opacity-80 transition-opacity cursor-pointer"
                   aria-label="Next"
                 >
                   <Image

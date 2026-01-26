@@ -37,7 +37,7 @@ export default function AboutSection() {
                 </div>
 
                 {/* Content container */}
-                <div className="relative z-10 container mx-auto px-4 md:px-8 py-12 md:py-20">
+                <div className="relative z-10 container mx-auto px-4 md:px-20.5 py-12 md:py-20">
                     {/* First About Block - Welcome to Mount Abu */}
                     <div className="relative flex flex-col md:flex-row justify-between items-center md:items-start gap-10 md:gap-16 mb-16 md:mb-24">
                         {/* Left content -> Slides in from Left */}

@@ -123,7 +123,7 @@ export default function NewsUpdatesSection() {
             </div>
 
             {/* Content container */}
-            <div className="relative z-20 container mx-auto px-4 md:px-8">
+            <div className="relative z-20 container mx-auto px-4 md:px-20.5">
                 {/* Header */}
                 <motion.div
                     initial="hidden"
@@ -178,7 +178,7 @@ export default function NewsUpdatesSection() {
                                 {/* Navigation Arrows */}
                                 <div className="flex gap-3">
                                     <button
-                                        className="w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity"
+                                        className="w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
                                         aria-label="Previous slide"
                                         onClick={handlePrev}
                                     >
@@ -192,7 +192,7 @@ export default function NewsUpdatesSection() {
                                     </button>
 
                                     <button
-                                        className="w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center hover:opacity-80 transition-opacity"
+                                        className="w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
                                         aria-label="Next slide"
                                         onClick={handleNext}
                                     >

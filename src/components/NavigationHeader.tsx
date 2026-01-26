@@ -179,10 +179,12 @@ export default function NavigationHeader({
     return (
         <>
             <header
-                className={`fixed top-0 left-0 right-0 w-full z-50 backdrop-blur-md transition-all duration-300 h-20 flex items-center justify-between px-4 md:px-8 border-b ${
+                className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 h-20 flex items-center justify-between px-4 md:px-20.5 border-b ${
+                    isScrolled ? "backdrop-blur-xl" : "backdrop-blur-md"
+                } ${
                     isDark
-                        ? `text-white ${isScrolled ? "bg-[#132019]/90 border-white/10 shadow-lg" : "bg-[#132019] md:bg-transparent border-white/10 md:border-transparent"}`
-                        : `text-black ${isScrolled ? "bg-white/90 border-black/10 shadow-sm" : "bg-white/80 md:bg-transparent border-black/10 md:border-transparent"}`
+                        ? `text-white border-white/10 ${isScrolled ? "bg-white/5 shadow-lg" : "bg-[#132019] md:bg-transparent md:border-transparent"}`
+                        : `text-black border-black/10 ${isScrolled ? "bg-black/5 shadow-sm" : "bg-white/80 md:bg-transparent md:border-transparent"}`
                 }`}
             >
                 {/* Logo and Title */}
@@ -256,7 +258,7 @@ export default function NavigationHeader({
                             {/* Background Elements */}
                             <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
                                 {/* Large Background Text */}
-                                <div className="absolute top-[40%] right-[-10%] transform -rotate-90 md:rotate-0 md:right-0 md:top-20 opacity-10 whitespace-nowrap">
+                                <div className="absolute top-[40%] right-[-10%] transform -rotate-90 md:rotate-0 md:right-0 md:top-20 opacity-50 whitespace-nowrap">
                                     <span className="font-baron text-[80px] md:text-[140px] leading-none text-white/10 select-none block md:hidden">
                                         EXPLORE
                                         <br />
@@ -274,7 +276,7 @@ export default function NavigationHeader({
                                 </div>
 
                                 {/* Bottom Texture Image */}
-                                <div className="absolute bottom-0 right-0 w-full h-[300px] opacity-10">
+                                <div className="absolute bottom-0 right-0 w-full h-[300px] opacity-70">
                                     <Image
                                         src="/images/drawer/bg-texture.png"
                                         alt="Texture"
@@ -415,8 +417,9 @@ export default function NavigationHeader({
                                                                                         false,
                                                                                     )
                                                                                 }
-                                                                                className="font-baron text-lg text-[#d4af37] hover:text-white transition-colors tracking-wider uppercase"
+                                                                                className="group flex items-center gap-3 font-baron text-lg text-[#d4af37] hover:text-white transition-colors tracking-wider uppercase"
                                                                             >
+                                                                                <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37] group-hover:bg-white transition-colors flex-shrink-0" />
                                                                                 {
                                                                                     child.label
                                                                                 }
@@ -437,8 +440,9 @@ export default function NavigationHeader({
                                                                                         child.href,
                                                                                     )
                                                                                 }
-                                                                                className="font-baron text-lg text-[#d4af37] hover:text-white transition-colors tracking-wider uppercase"
+                                                                                className="group flex items-center gap-3 font-baron text-lg text-[#d4af37] hover:text-white transition-colors tracking-wider uppercase"
                                                                             >
+                                                                                <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37] group-hover:bg-white transition-colors flex-shrink-0" />
                                                                                 {
                                                                                     child.label
                                                                                 }

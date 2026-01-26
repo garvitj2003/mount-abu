@@ -144,11 +144,11 @@ export default function Testimonials() {
                 <div className="mt-8 flex items-center justify-center gap-4 relative z-30">
                     <button 
                         onClick={handlePrev} 
-                        className="w-11 h-11 rounded-full opacity-40 hover:opacity-60 transition-opacity"
+                        className="w-11 h-11 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
                         aria-label="Previous testimonial"
                     >
                         <Image
-                            src="/images/nav-prev.svg"
+                            src="/images/nav-next.svg"
                             width={44}
                             height={44}
                             alt="Previous"
@@ -157,7 +157,7 @@ export default function Testimonials() {
                     </button>
                     <button 
                         onClick={handleNext} 
-                        className="w-11 h-11 rounded-full hover:opacity-80 transition-opacity"
+                        className="w-11 h-11 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
                         aria-label="Next testimonial"
                     >
                         <Image

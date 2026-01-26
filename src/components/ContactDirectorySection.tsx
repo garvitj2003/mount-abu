@@ -224,11 +224,11 @@ export default function ContactDirectorySection() {
                 >
                     <button
                         onClick={handlePrev}
-                        className="w-11 h-11 rounded-full opacity-40 hover:opacity-60 transition-opacity"
+                        className="w-11 h-11 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
                         aria-label="Previous"
                     >
                         <Image
-                            src="/images/nav-prev.svg"
+                            src="/images/nav-next.svg"
                             alt="Previous"
                             width={44}
                             height={44}
@@ -238,7 +238,7 @@ export default function ContactDirectorySection() {
 
                     <button
                         onClick={handleNext}
-                        className="w-11 h-11 rounded-full hover:opacity-80 transition-opacity"
+                        className="w-11 h-11 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
                         aria-label="Next"
                     >
                         <Image
