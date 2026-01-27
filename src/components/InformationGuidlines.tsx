@@ -133,7 +133,7 @@ export default function InformationGuidlines() {
             />
 
             {/* Background Image */}
-            <div className="absolute inset-0 opacity-40">
+            <div className="absolute inset-0 opacity-20">
                 <Image
                     src="/images/sections/Info.png"
                     alt=""
@@ -155,7 +155,7 @@ export default function InformationGuidlines() {
                 </div>
 
                 {/* Cards Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl w-full">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl w-full [&>*:nth-child(odd):last-child]:col-span-2 lg:[&>*:nth-child(odd):last-child]:col-span-1">
                     {cardData.map((card, index) => (
                         <Card
                             key={index}

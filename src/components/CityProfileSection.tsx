@@ -148,21 +148,26 @@ function StatCard({
 }) {
     return (
         <div
-            className={`border border-[#d4af37] rounded-3xl p-5 md:p-6 ${className}`}
+            className={`group relative overflow-hidden border border-[#d4af37] rounded-3xl p-5 md:p-6 transition-all duration-300 hover:scale-[1.02] ${className}`}
             style={{
                 background: "rgba(0, 0, 0, 0.08)",
                 backdropFilter: "blur(2px)",
                 WebkitBackdropFilter: "blur(2px)",
             }}
         >
+            {/* Shimmer Effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-[250%] transition-transform duration-1000 ease-out rotate-12 pointer-events-none z-30 scale-[2.5]" />
+
             {title && (
-                <div className="flex items-start justify-between w-full mb-4 md:mb-5">
+                <div className="flex items-start justify-between w-full mb-4 md:mb-5 relative z-10">
                     <p className="font-poppins font-medium text-xl md:text-2xl text-[#f5f2e9] leading-normal">
                         {title}
                     </p>
                 </div>
             )}
-            {children}
+            <div className="relative z-10 w-full">
+                {children}
+            </div>
         </div>
     );
 }
