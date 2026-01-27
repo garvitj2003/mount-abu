@@ -64,7 +64,10 @@ export default function Testimonials() {
     };
 
     return (
-        <section id="testimonials" className="relative w-full min-h-screen bg-[#132019] overflow-hidden flex items-center py-16 md:py-24">
+        <section 
+            id="testimonials" 
+            className="relative w-full min-h-screen bg-[#132019] overflow-hidden flex items-center py-16 md:py-24"
+        >
             <div className="absolute top-0 left-0 w-full h-48 md:h-64 z-10 pointer-events-none" style={{ background: "linear-gradient(to bottom, #132019 0%, rgba(19, 32, 25, 0) 100%)" }} />
             <div className="absolute bottom-0 left-0 w-full h-40 md:h-52 z-10 pointer-events-none" style={{ background: "linear-gradient(to top, #132019 0%, rgba(19, 32, 25, 0) 100%)" }} />
             <div className="absolute inset-0">
@@ -169,6 +172,23 @@ export default function Testimonials() {
                     </button>
                 </div>
             </div>
+
+            {/* Decorative Mountain silhouette */}
+            <motion.div
+                className="absolute bottom-0 left-0 w-full z-10 pointer-events-none hidden md:block"
+                initial={{ y: 0 }}
+                whileInView={{ y: -60 }}
+                transition={{ duration: 1.8, ease: "easeOut" }}
+                viewport={{ once: false, amount: 0.1 }}
+            >
+                <Image
+                    src="/images/testimonials/mountain-testimonials.png"
+                    width={1920}
+                    height={400}
+                    alt=""
+                    className="w-full h-auto object-contain object-bottom opacity-50"
+                />
+            </motion.div>
         </section>
     );
 }

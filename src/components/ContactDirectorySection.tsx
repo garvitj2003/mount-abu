@@ -102,7 +102,7 @@ function ContactTableCard({ table }: { table: ContactTable }) {
                         {table.officers.map((officer, idx) => (
                             <tr
                                 key={idx}
-                                className="group hover:bg-white/5 transition-colors"
+                                className="group bg-white/5 hover:bg-transparent transition-colors"
                             >
                                 {/* Cell: Name */}
                                 <td className="p-4 border-b border-r border-white/10 align-middle">

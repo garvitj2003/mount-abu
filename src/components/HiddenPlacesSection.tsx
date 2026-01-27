@@ -63,7 +63,7 @@ export default function HiddenPlacesSection() {
   const nextNextImage = hiddenPlaces[getIndex(activeIndex + 2)].details.images.main;
 
   return (
-    <section id="hidden-places" className="relative w-full py-4 min-h-screen bg-[#17261e] overflow-hidden flex flex-col justify-center">
+    <section id="hidden-places" className="relative w-full py-4 min-h-screen bg-[#132019] overflow-hidden flex flex-col justify-center">
       
       {/* --- UPDATED BACKGROUND IMAGE SECTION --- */}
       <div className="absolute inset-0 w-full h-full">
@@ -270,9 +270,9 @@ export default function HiddenPlacesSection() {
       </div>
 
       {/* Decorative Wave */}
-      <div className="absolute -bottom-5 lg:-bottom-18 left-0 w-full overflow-hidden text-[#f5f2e9] ">
+      <div className="absolute -bottom-12  w-full overflow-hidden text-[#f5f2e9] z-20 pointer-events-none">
           <svg
-              className="relative block w-[calc(100%+1.3px)]"
+              className="relative block w-[calc(100%+1.3px)] h-20 md:h-25 lg:h-30"
               data-name="Layer 1"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 1200 120"

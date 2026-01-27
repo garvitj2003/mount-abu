@@ -87,16 +87,16 @@ export default function Footer() {
                         </div>
 
                         {/* Social Icons (Added based on image) */}
-                        <div className="flex items-center gap-4 text-gray-800">
-                            <Link href="#" className="hover:text-purple-700 transition-colors"><Instagram size={20} /></Link>
-                            <Link href="#" className="hover:text-purple-700 transition-colors"><Facebook size={20} /></Link>
-                            <Link href="#" className="hover:text-purple-700 transition-colors"><Twitter size={20} /></Link>
-                            <Link href="#" className="hover:text-purple-700 transition-colors"><Send size={20} /></Link>
-                            <Link href="#" className="hover:text-purple-700 transition-colors"><MessageCircle size={20} /></Link>
+                        <div className="flex items-center gap-4 text-black">
+                            <Link href="#" className="hover:text-black/70 transition-colors"><Instagram size={20} /></Link>
+                            <Link href="#" className="hover:text-black/70 transition-colors"><Facebook size={20} /></Link>
+                            <Link href="#" className="hover:text-black/70 transition-colors"><Twitter size={20} /></Link>
+                            <Link href="#" className="hover:text-black/70 transition-colors"><Send size={20} /></Link>
+                            <Link href="#" className="hover:text-black/70 transition-colors"><MessageCircle size={20} /></Link>
                         </div>
 
                         {/* Description */}
-                        <div className="text-[13px] leading-relaxed text-gray-600 text-justify pr-0 lg:pr-8">
+                        <div className="text-[13px] leading-relaxed text-black text-justify pr-0 lg:pr-8">
                             <p className="mb-4">
                                 The Nagar Palika Mount Abu is the Local Governing Body Responsible For The Administration And Development Of The Hill Station. Located Near The Polo Ground, It Oversees Various Municipal Functions Including Sanitation, Water Supply, Infrastructure Development, And Public Services.
                             </p>
@@ -109,31 +109,31 @@ export default function Footer() {
                     {/* --- COLUMN 2: Contact Info (Span 3) --- */}
                     <div className="lg:col-span-3 pt-4 lg:pt-8 flex flex-col gap-6">
                          {/* Phone */}
-                        <div className="flex items-center gap-3 group">
-                            <div className="shrink-0 text-purple-800">
+                        <div className="flex items-center gap-3 group cursor-pointer">
+                            <div className="shrink-0 text-black group-hover:text-black/70 transition-colors">
                                 <Phone size={18} />
                             </div>
-                            <span className="text-[14px] font-medium group-hover:text-purple-800 transition-colors">
+                            <span className="text-[14px] font-medium text-black group-hover:text-black/70 transition-colors">
                                 +91 8305591122
                             </span>
                         </div>
                         
                         {/* Email */}
-                        <div className="flex items-center gap-3 group">
-                            <div className="shrink-0 text-purple-800">
+                        <div className="flex items-center gap-3 group cursor-pointer">
+                            <div className="shrink-0 text-black group-hover:text-black/70 transition-colors">
                                 <Mail size={18} />
                             </div>
-                            <span className="text-[14px] font-medium group-hover:text-purple-800 transition-colors">
+                            <span className="text-[14px] font-medium text-black group-hover:text-black/70 transition-colors">
                                 Palikaabu@Gmail.Com
                             </span>
                         </div>
 
                         {/* Address */}
-                        <div className="flex items-start gap-3 group">
-                            <div className="shrink-0 text-purple-800 mt-1">
+                        <div className="flex items-start gap-3 group cursor-pointer">
+                            <div className="shrink-0 text-black mt-1 group-hover:text-black/70 transition-colors">
                                 <MapPin size={18} />
                             </div>
-                            <span className="text-[14px] font-medium max-w-[200px] leading-snug group-hover:text-purple-800 transition-colors">
+                            <span className="text-[14px] font-medium max-w-[200px] leading-snug text-black group-hover:text-black/70 transition-colors">
                                 Nagar Palika Mount Abu Near Polo Ground
                             </span>
                         </div>
@@ -147,7 +147,7 @@ export default function Footer() {
                         <ul className="flex flex-col gap-2.5">
                             {adventureLinks.map((item) => (
                                 <li key={item}>
-                                    <Link href="#" className="text-[14px] text-gray-600 hover:text-purple-800 transition-colors block">
+                                    <Link href="#" className="text-[14px] text-black hover:text-black/70 transition-colors block">
                                         {item}
                                     </Link>
                                 </li>
@@ -165,7 +165,7 @@ export default function Footer() {
                             <ul className="flex flex-col gap-2.5">
                                 {quickLinks.map((item) => (
                                     <li key={item}>
-                                        <Link href="#" className="text-[14px] text-gray-600 hover:text-purple-800 transition-colors block">
+                                        <Link href="#" className="text-[14px] text-black hover:text-black/70 transition-colors block">
                                             {item}
                                         </Link>
                                     </li>
@@ -181,7 +181,7 @@ export default function Footer() {
                             <ul className="flex flex-col gap-2.5">
                                 {connectLinks.map((item) => (
                                     <li key={item}>
-                                        <Link href="#" className="text-[14px] text-gray-600 hover:text-purple-800 transition-colors block">
+                                        <Link href="#" className="text-[14px] text-black hover:text-black/70 transition-colors block">
                                             {item}
                                         </Link>
                                     </li>
@@ -193,7 +193,7 @@ export default function Footer() {
 
                 {/* Copyright Section */}
                 <div className="relative z-10 mt-16 pt-8 border-t border-gray-200/50 text-center">
-                    <p className="text-[13px] text-gray-500">
+                    <p className="text-[13px] text-black/70">
                         © 2025 Nagar Palika Mount Abu. All Rights Reserved.
                     </p>
                 </div>

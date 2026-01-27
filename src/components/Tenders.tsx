@@ -145,7 +145,7 @@ export default function Tenders() {
                                     initial="hidden"
                                     whileInView="visible"
                                     viewport={{ once: true }}
-                                    className="group"
+                                    className="group bg-white/5 hover:bg-transparent transition-colors"
                                 >
                                     <td className="p-4 border-[0.844px] border-[rgba(255,255,255,0.1)] align-middle">
                                         <p className="font-montserrat font-normal text-base md:text-lg text-[#f5f2e9] text-center leading-tight">
