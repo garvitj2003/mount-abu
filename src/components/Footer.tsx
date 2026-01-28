@@ -2,15 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { 
-  Phone, 
-  Mail, 
-  MapPin, 
-  Instagram, 
-  Facebook, 
-  Twitter, 
-  Send, 
-  MessageCircle 
+import {
+    Phone,
+    Mail,
+    MapPin,
+    Instagram,
+    Facebook,
+    Twitter,
+    Youtube,
 } from "lucide-react";
 
 const adventureLinks = [
@@ -47,7 +46,6 @@ const connectLinks = ["About Us", "Contact Us"];
 export default function Footer() {
     return (
         <footer className="relative w-full bg-[#F5F2E9] text-[#1a1a1a] font-montserrat">
-            
             {/* Top Vector Curve */}
             <div className="absolute top-0 w-full h-[85px] -mt-[60px] z-20 pointer-events-none">
                 <Image
@@ -69,11 +67,9 @@ export default function Footer() {
             </div>
 
             <div className="relative z-10 w-full px-6 pt-12 pb-8 lg:px-12 xl:px-20 max-w-[1600px] mx-auto">
-                
                 {/* Main Grid Layout: 12 Columns */}
                 {/* Col 1 gets 4 spans (wider), others get remaining space */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-y-12 lg:gap-x-8 xl:gap-x-12">
-
                     {/* --- COLUMN 1: Logo, Socials, Description (Span 4) --- */}
                     <div className="lg:col-span-4 flex flex-col gap-6">
                         {/* Logo */}
@@ -88,27 +84,56 @@ export default function Footer() {
 
                         {/* Social Icons (Added based on image) */}
                         <div className="flex items-center gap-4 text-black">
-                            <Link href="#" className="hover:text-black/70 transition-colors"><Instagram size={20} /></Link>
-                            <Link href="#" className="hover:text-black/70 transition-colors"><Facebook size={20} /></Link>
-                            <Link href="#" className="hover:text-black/70 transition-colors"><Twitter size={20} /></Link>
-                            <Link href="#" className="hover:text-black/70 transition-colors"><Send size={20} /></Link>
-                            <Link href="#" className="hover:text-black/70 transition-colors"><MessageCircle size={20} /></Link>
+                            <Link
+                                href="https://www.instagram.com/np.mountabu?igsh=MTE3bW9sd3B2eW1vMw%3D%3D&utm_source=qr"
+                                className="hover:text-black/70 transition-colors"
+                            >
+                                <Instagram size={20} />
+                            </Link>
+                            <Link
+                                href="https://www.facebook.com/share/1CwEH7SrJq/?mibextid=wwXIfr"
+                                className="hover:text-black/70 transition-colors"
+                            >
+                                <Facebook size={20} />
+                            </Link>
+                            <Link
+                                href="https://x.com/npmountabu?s=21&t=xT07g2afJhAy8mov76WXzg"
+                                className="hover:text-black/70 transition-colors"
+                            >
+                                <Twitter size={20} />
+                            </Link>
+                            <Link
+                                href="https://youtube.com/@np.mountabu?si=vtjs6kTlEcNC1OM4"
+                                className="hover:text-black/70 transition-colors"
+                            >
+                                <Youtube size={20} />
+                            </Link>
                         </div>
 
                         {/* Description */}
                         <div className="text-[13px] leading-relaxed text-black text-justify pr-0 lg:pr-8">
                             <p className="mb-4">
-                                The Nagar Palika Mount Abu is the Local Governing Body Responsible For The Administration And Development Of The Hill Station. Located Near The Polo Ground, It Oversees Various Municipal Functions Including Sanitation, Water Supply, Infrastructure Development, And Public Services.
+                                The Nagar Palika Mount Abu is the Local
+                                Governing Body Responsible For The
+                                Administration And Development Of The Hill
+                                Station. Located Near The Polo Ground, It
+                                Oversees Various Municipal Functions Including
+                                Sanitation, Water Supply, Infrastructure
+                                Development, And Public Services.
                             </p>
                             <p>
-                                The Nagar Palika Plays A Crucial Role In Maintaining The Cleanliness And Aesthetic Appeal Of Mount Abu, A Popular Tourist Destination Known For Its Serene Beauty And Natural Attractions.
+                                The Nagar Palika Plays A Crucial Role In
+                                Maintaining The Cleanliness And Aesthetic Appeal
+                                Of Mount Abu, A Popular Tourist Destination
+                                Known For Its Serene Beauty And Natural
+                                Attractions.
                             </p>
                         </div>
                     </div>
 
                     {/* --- COLUMN 2: Contact Info (Span 3) --- */}
                     <div className="lg:col-span-3 pt-4 lg:pt-8 flex flex-col gap-6">
-                         {/* Phone */}
+                        {/* Phone */}
                         <div className="flex items-center gap-3 group cursor-pointer">
                             <div className="shrink-0 text-black group-hover:text-black/70 transition-colors">
                                 <Phone size={18} />
@@ -117,7 +142,7 @@ export default function Footer() {
                                 +91 8305591122
                             </span>
                         </div>
-                        
+
                         {/* Email */}
                         <div className="flex items-center gap-3 group cursor-pointer">
                             <div className="shrink-0 text-black group-hover:text-black/70 transition-colors">
@@ -147,7 +172,10 @@ export default function Footer() {
                         <ul className="flex flex-col gap-2.5">
                             {adventureLinks.map((item) => (
                                 <li key={item}>
-                                    <Link href="#" className="text-[14px] text-black hover:text-black/70 transition-colors block">
+                                    <Link
+                                        href="#"
+                                        className="text-[14px] text-black hover:text-black/70 transition-colors block"
+                                    >
                                         {item}
                                     </Link>
                                 </li>
@@ -165,7 +193,10 @@ export default function Footer() {
                             <ul className="flex flex-col gap-2.5">
                                 {quickLinks.map((item) => (
                                     <li key={item}>
-                                        <Link href="#" className="text-[14px] text-black hover:text-black/70 transition-colors block">
+                                        <Link
+                                            href="#"
+                                            className="text-[14px] text-black hover:text-black/70 transition-colors block"
+                                        >
                                             {item}
                                         </Link>
                                     </li>
@@ -181,7 +212,10 @@ export default function Footer() {
                             <ul className="flex flex-col gap-2.5">
                                 {connectLinks.map((item) => (
                                     <li key={item}>
-                                        <Link href="#" className="text-[14px] text-black hover:text-black/70 transition-colors block">
+                                        <Link
+                                            href="#"
+                                            className="text-[14px] text-black hover:text-black/70 transition-colors block"
+                                        >
                                             {item}
                                         </Link>
                                     </li>
