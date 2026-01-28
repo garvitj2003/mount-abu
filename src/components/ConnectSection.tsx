@@ -41,7 +41,7 @@ const connectCards: ConnectCard[] = [
         description:
             "Follow updates, photos and announcements from Mount Abu Nagar Parishad.",
         image: "/images/connect-facebook.png",
-        link: "#",
+        link: "https://www.facebook.com/share/1CwEH7SrJq/?mibextid=wwXIfr",
         imageHeight: 358,
     },
     {
@@ -50,7 +50,7 @@ const connectCards: ConnectCard[] = [
         description:
             "See visual stories of events, initiatives and life in Mount Abu.",
         image: "/images/connect-instagram.png",
-        link: "#",
+        link: "https://www.instagram.com/np.mountabu?igsh=MTE3bW9sd3B2eW1vMw%3D%3D&utm_source=qr",
         imageHeight: 127,
     },
     {
@@ -59,7 +59,7 @@ const connectCards: ConnectCard[] = [
         description:
             "Get quick alerts, notices and service updates in real time.",
         image: "/images/connect-twitter.png",
-        link: "#",
+        link: "https://x.com/npmountabu?s=21&t=xT07g2afJhAy8mov76WXzg",
         imageHeight: 127,
     },
     {
@@ -68,7 +68,7 @@ const connectCards: ConnectCard[] = [
         description:
             "Watch event coverage, public messages and awareness videos.",
         image: "/images/connect-youtube.png",
-        link: "#",
+        link: "https://youtube.com/@np.mountabu?si=vtjs6kTlEcNC1OM4",
         imageHeight: 241,
     },
     {
