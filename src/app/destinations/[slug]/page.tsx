@@ -1,13 +1,13 @@
 import React from "react";
 import { notFound } from "next/navigation";
-import NavigationHeader from "@/components/NavigationHeader";
-import Footer from "@/components/Footer";
-import DestinationTitleSection from "@/components/DestinationTitleSection";
-import DestinationDetailSection from "@/components/DestinationDetailSection";
-import DestinationGuidelinesSection from "@/components/DestinationGuidelinesSection";
-import DestinationMapSection from "@/components/DestinationMapSection";
-import DestinationOtherTrailsSection from "@/components/DestinationOtherTrailsSection";
-import AnimatedSection from "@/components/AnimatedSection";
+import NavigationHeader from "@/components/landing/NavigationHeader";
+import Footer from "@/components/landing/Footer";
+import DestinationTitleSection from "@/components/landing/DestinationTitleSection";
+import DestinationDetailSection from "@/components/landing/DestinationDetailSection";
+import DestinationGuidelinesSection from "@/components/landing/DestinationGuidelinesSection";
+import DestinationMapSection from "@/components/landing/DestinationMapSection";
+import DestinationOtherTrailsSection from "@/components/landing/DestinationOtherTrailsSection";
+import AnimatedSection from "@/components/landing/AnimatedSection";
 import { destinations } from "@/data/data";
 
 // Helper to find destination by slug

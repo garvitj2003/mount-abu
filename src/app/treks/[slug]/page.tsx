@@ -1,12 +1,12 @@
 import React from "react";
 import { notFound } from "next/navigation";
-import NavigationHeader from "@/components/NavigationHeader";
-import Footer from "@/components/Footer";
-import DestinationTitleSection from "@/components/DestinationTitleSection";
-import DestinationDetailSection from "@/components/DestinationDetailSection";
-import DestinationMapSection from "@/components/DestinationMapSection";
-import TrekOtherRoutesSection from "@/components/TrekOtherRoutesSection";
-import AnimatedSection from "@/components/AnimatedSection";
+import NavigationHeader from "@/components/landing/NavigationHeader";
+import Footer from "@/components/landing/Footer";
+import DestinationTitleSection from "@/components/landing/DestinationTitleSection";
+import DestinationDetailSection from "@/components/landing/DestinationDetailSection";
+import DestinationMapSection from "@/components/landing/DestinationMapSection";
+import TrekOtherRoutesSection from "@/components/landing/TrekOtherRoutesSection";
+import AnimatedSection from "@/components/landing/AnimatedSection";
 import { trekGroups } from "@/data/data";
 
 // Helper to find trek by slug (using ID as slug)

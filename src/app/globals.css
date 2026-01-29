@@ -19,6 +19,7 @@
     --color-cream: var(--cream);
     --font-sans: var(--font-montserrat);
     --font-display: var(--font-baron);
+    --font-onest: var(--font-onest);
 }
 
 body {
@@ -48,6 +49,10 @@ body {
 
 .font-montserrat {
     font-family: var(--font-montserrat);
+}
+
+.font-onest {
+    font-family: var(--font-onest);
 }
 
 html,

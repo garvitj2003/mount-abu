@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 // ----------------------------------------------------------------------
 // OPTION A: If you are using the new Motion v12
 import { motion, AnimatePresence, Variants } from "motion/react"; 
-import { unexploredGems } from "../data/data";
+import { unexploredGems } from "../../data/data";
 
 // OPTION B: If you are using the standard Framer Motion v11
 // import { motion, AnimatePresence, Variants } from "framer-motion";
