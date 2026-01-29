@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { topDestinations, functionalCategories } from "../data/data";
+import { topDestinations, functionalCategories } from "../../data/data";
 
 // Define the shape of our destination data based on data.js
 interface Destination {

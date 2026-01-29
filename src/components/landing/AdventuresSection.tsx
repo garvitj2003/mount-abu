@@ -11,7 +11,7 @@ import {
     AnimatePresence,
     Variants,
 } from "motion/react";
-import { trekGroups } from "../data/data";
+import { trekGroups } from "../../data/data";
 
 // --- ANIMATION VARIANTS ---
 const staggerContainerVariants: Variants = {

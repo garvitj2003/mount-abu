@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import { Montserrat } from "next/font/google";
+import { Montserrat, Onest } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
-import OverlappingFrames from "@/components/overLappingFrames";
+import OverlappingFrames from "@/components/landing/overLappingFrames";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const onest = Onest({
+  variable: "--font-onest",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
@@ -58,7 +64,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${montserrat.variable} ${baronNeue.variable} antialiased`}>
+      <body className={`${montserrat.variable} ${onest.variable} ${baronNeue.variable} antialiased`}>
         <OverlappingFrames />
         {children}
       </body>
