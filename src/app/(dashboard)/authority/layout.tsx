@@ -1,4 +1,5 @@
 import Navbar from "@/components/dashboard/Navbar";
+import SidebarAuthority from "@/components/dashboard/authority/sidebar-authority";
 
 export default function AuthorityLayout({
   children,
@@ -8,9 +9,12 @@ export default function AuthorityLayout({
   return (
     <div className="min-h-screen w-full bg-[#F5F6F7]">
       <Navbar />
-      <main className="p-6">
-        {children}
-      </main>
+      <div className="flex">
+        <SidebarAuthority />
+        <main className="flex-1">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

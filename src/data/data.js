@@ -666,6 +666,496 @@ export const destinations = [
         location: { lat: 0, lng: 0, googleMapsLink: "" },
     },
     {
+        id: "her-swarup-bhavan",
+        slug: "swarup-bhavan-palace",
+        title: "Swarup Bhavan Palace",
+        description:
+            "A 1907 palace blending Roman, Rajput, Moorish, and Gothic styles, currently the summer home of the Sirohi Royal Family.",
+        details: {
+            heading: "Architectural Marvel",
+            text: "Built in 1907 A.D. by Maharao Keshri Singh of Sirohi, this palace is a unique amalgamation of four architectural styles: a Roman porch, Rajput jharokhas, Moorish arches, and a Gothic central corridor. During the World Wars, it served as a convalescence home for allied forces. Today, it remains the private summer residence of the Sirohi Royal Family.",
+            images: {
+                main: "/images/destination/Swarup Bhavan Palace/img_1.jpeg",
+                gallery: [
+                    "/images/destination/Swarup Bhavan Palace/img_2.jpeg",
+                    "/images/destination/Swarup Bhavan Palace/img_3.jpeg",
+                    "/images/destination/Swarup Bhavan Palace/img_4.jpeg",
+                    "/images/destination/Swarup Bhavan Palace/img_5.jpeg",
+                ],
+            },
+        },
+        guidelines: {
+            entryFee: "Not stated",
+            timings: "Not stated",
+            photography: "Not stated",
+            ageLimit: "Not stated",
+            quietHours: "Not stated",
+            smoking: "Not stated",
+            pets: "Not stated",
+            notes: ["Private Residence", "Summer Home"],
+        },
+        location: {
+            lat: 0,
+            lng: 0,
+            googleMapsLink: "",
+        },
+    },
+    {
+        id: "her-bikaner-palace",
+        slug: "bikaner-palace",
+        title: "Bikaner Palace",
+        description:
+            "Designed by Sir Swinton Jacob in 1893, this estate-like palace is now a heritage hotel surrounded by peaceful hills.",
+        details: {
+            heading: "The Palace Hotel",
+            text: "Constructed in 1893 for Maharaja Ganga Singh and designed by the renowned Sir Samuel Swinton Jacob, Bikaner House is a landmark example of colonial-era architecture in Rajasthan. Converted into a hotel in 1962, the property preserves an old-world layout with extensive grounds and natural rock formations, offering a quiet, estate-like atmosphere distinct from newer resorts.",
+            images: {
+                main: "/images/destination/Bikaner Palace/img_1.jpeg",
+                gallery: [
+                    "/images/destination/Bikaner Palace/img_2.jpeg",
+                    "/images/destination/Bikaner Palace/img_3.jpeg",
+                    "/images/destination/Bikaner Palace/img_4.jpeg",
+                    "/images/destination/Bikaner Palace/img_5.jpeg",
+                ],
+            },
+        },
+        guidelines: {
+            entryFee: "Not stated",
+            timings: "Not stated",
+            photography: "Not stated",
+            ageLimit: "Not stated",
+            quietHours: "Not stated",
+            smoking: "Not stated",
+            pets: "Not stated",
+            notes: ["Heritage Hotel", "Large Grounds"],
+        },
+        location: {
+            lat: 0,
+            lng: 0,
+            googleMapsLink: "",
+        },
+    },
+    {
+        id: "her-jaipur-house",
+        slug: "jaipur-house",
+        title: "Jaipur House",
+        description:
+            "A late-19th-century royal retreat perched on a cliff overlooking Nakki Lake, featuring traditional Rajput architecture.",
+        details: {
+            heading: "Cliffside Royal Retreat",
+            text: "Built in 1897 by Maharaja Sawai Ram Singh II, Jaipur House is perched on a mountaintop next to Nakki Lake, offering some of the best panoramic views in Mount Abu. The palace features classic Rajput elements like 'Chatris' and 'Jharokhas.' Now a boutique heritage hotel, it combines the original palace structure with modern comforts, including suites named after the seasons of Rajasthan.",
+            images: {
+                main: "/images/destination/Jaipur House/img_1.jpeg",
+                gallery: [
+                    "/images/destination/Jaipur House/img_2.jpeg",
+                    "/images/destination/Jaipur House/img_3.jpeg",
+                    "/images/destination/Jaipur House/img_4.jpeg",
+                    "/images/destination/Jaipur House/img_5.jpeg",
+                ],
+            },
+        },
+        guidelines: {
+            entryFee: "Not stated",
+            timings: "Not stated",
+            photography: "Not stated",
+            ageLimit: "Not stated",
+            quietHours: "Not stated",
+            smoking: "Not stated",
+            pets: "Not stated",
+            notes: ["Heritage Hotel", "Lake View"],
+        },
+        location: {
+            lat: 0,
+            lng: 0,
+            googleMapsLink: "",
+        },
+    },
+    {
+        id: "her-alwar-house",
+        slug: "alwar-house",
+        title: "Alwar House",
+        description:
+            "A grand structure resembling a French chateau with Gothic towers, currently operating as a residential school.",
+        details: {
+            heading: "Architectural Showpiece",
+            text: "Known today as the Adarsh Vidya Mandir Shankar Vidya Peeth, Alwar House was built by the King of Alwar to rival other royal residences. The design is distinct from typical Rajput silhouettes, featuring steep red roofs and Gothic-style towers reminiscent of a French chateau. Since 1995, this heritage site has functioned as an educational campus rather than a hotel.",
+            images: {
+                main: "/images/destination/Alwar House/img_1.jpeg",
+                gallery: [
+                    "/images/destination/Alwar House/img_2.jpeg",
+                    "/images/destination/Alwar House/img_3.jpeg",
+                    "/images/destination/Alwar House/img_4.jpeg",
+                    "/images/destination/Alwar House/img_5.jpeg",
+                ],
+            },
+        },
+        guidelines: {
+            entryFee: "Not stated",
+            timings: "Not stated",
+            photography: "Restricted (School Campus)",
+            ageLimit: "Not stated",
+            quietHours: "Not stated",
+            smoking: "Not stated",
+            pets: "Not stated",
+            notes: ["Educational Institution", "Not a Hotel"],
+        },
+        location: {
+            lat: 0,
+            lng: 0,
+            googleMapsLink: "",
+        },
+    },
+    {
+        id: "her-palanpur-house",
+        slug: "palanpur-house",
+        title: "Palanpur House",
+        description:
+            "A century-old palace turned hotel, originally built by the Nawab of Palanpur and known for its old-world charm.",
+        details: {
+            heading: "Historic Hospitality",
+            text: "Constructed more than a century ago by Nawab Sher Mohammed Khan, this property was later modified by his son into a summer castle. It has a long history of hospitality, operating first as 'Mount Hotel,' then 'Hotel Skeltania,' and now as Palanpur Palace. It is recognized for its large rooms and quiet, lush surroundings typical of early hill-station estates.",
+            images: {
+                main: "/images/destination/Palanpur House/img_1.jpeg",
+                gallery: [
+                    "/images/destination/Palanpur House/img_2.jpeg",
+                    "/images/destination/Palanpur House/img_3.jpeg",
+                    "/images/destination/Palanpur House/img_4.jpeg",
+                    "/images/destination/Palanpur House/img_5.jpeg",
+                ],
+            },
+        },
+        guidelines: {
+            entryFee: "Not stated",
+            timings: "Not stated",
+            photography: "Not stated",
+            ageLimit: "Not stated",
+            quietHours: "Not stated",
+            smoking: "Not stated",
+            pets: "Not stated",
+            notes: ["Heritage Hotel"],
+        },
+        location: {
+            lat: 0,
+            lng: 0,
+            googleMapsLink: "",
+        },
+    },
+    {
+        id: "her-cama-rajputana",
+        slug: "cama-rajputana-club",
+        title: "Cama Rajputana Club",
+        description:
+            "A 135-year-old British-era club restored into a heritage resort with extensive gardens and sporting history.",
+        details: {
+            heading: "Colonial Leisure",
+            text: "Established over 135 years ago, the Cama Rajputana Club was once the center of social activity for British officers and Rajputana Maharajas. Today, it is a heritage resort spread across approximately 18 acres of landscaped grounds, featuring fountains and waterfalls. It retains its legacy as a leisure destination, preserving the history of its ballrooms and sports tournaments.",
+            images: {
+                main: "/images/destination/Cama Rajputana Club/img_1.jpeg",
+                gallery: [
+                    "/images/destination/Cama Rajputana Club/img_2.jpeg",
+                    "/images/destination/Cama Rajputana Club/img_3.jpeg",
+                    "/images/destination/Cama Rajputana Club/img_4.jpeg",
+                    "/images/destination/Cama Rajputana Club/img_5.jpeg",
+                ],
+            },
+        },
+        guidelines: {
+            entryFee: "Not stated",
+            timings: "Not stated",
+            photography: "Not stated",
+            ageLimit: "Not stated",
+            quietHours: "Not stated",
+            smoking: "Not stated",
+            pets: "Not stated",
+            notes: ["Heritage Resort", "Colonial History"],
+        },
+        location: {
+            lat: 0,
+            lng: 0,
+            googleMapsLink: "",
+        },
+    },
+    {
+        id: "her-kishangarh-house",
+        slug: "kishangarh-house",
+        title: "Kishangarh House",
+        description:
+            "A late-colonial Victorian estate built in the 1890s, surrounded by large gardens.",
+        details: {
+            heading: "Victorian Retreat",
+            text: "Originally known as Victoria House, this property was built around 1890 as a royal retreat for the Maharaja of Kishangarh. It is a prime example of the Victorian style of architecture in Mount Abu. The house sits within a 5-acre estate featuring Silver Birch and Mango trees, operating today as a heritage stay that balances proximity to the town center with natural seclusion.",
+            images: {
+                main: "/images/destination/Kishangrah House/img_1.jpeg",
+                gallery: [
+                    "/images/destination/Kishangrah House/img_2.jpeg",
+                    "/images/destination/Kishangrah House/img_3.jpeg",
+                    "/images/destination/Kishangrah House/img_4.jpeg",
+                    "/images/destination/Kishangrah House/img_5.jpeg",
+                ],
+            },
+        },
+        guidelines: {
+            entryFee: "Not stated",
+            timings: "Not stated",
+            photography: "Not stated",
+            ageLimit: "Not stated",
+            quietHours: "Not stated",
+            smoking: "Not stated",
+            pets: "Not stated",
+            notes: ["Heritage Hotel", "Victorian Architecture"],
+        },
+        location: {
+            lat: 0,
+            lng: 0,
+            googleMapsLink: "",
+        },
+    },
+    {
+        id: "her-limdi-palace",
+        slug: "limdi-palace",
+        title: "Limdi Palace",
+        description:
+            "An immense colonial-era structure that remains one of the largest, yet partially unfinished, royal projects in Mount Abu.",
+        details: {
+            heading: "The Unfinished Masterpiece",
+            text: "Commissioned by His Highness Daulat Singh Ji of Limdi, this palace was intended to be one of the largest in Mount Abu. However, the project was never fully completed after the ruler's passing. The existing structure, originally meant for officers and staff, still boasts a massive footprint. It has seen various uses, including as a school, and is currently undergoing renovation for hospitality purposes.",
+            images: {
+                main: "/images/destination/Limdi Palace/img_1.jpeg",
+                gallery: [
+                    "/images/destination/Limdi Palace/img_2.jpeg",
+                    "/images/destination/Limdi Palace/img_3.jpeg",
+                    "/images/destination/Limdi Palace/img_4.jpeg",
+                    "/images/destination/Limdi Palace/img_5.jpeg",
+                ],
+            },
+        },
+        guidelines: {
+            entryFee: "Not stated",
+            timings: "Not stated",
+            photography: "Not stated",
+            ageLimit: "Not stated",
+            quietHours: "Not stated",
+            smoking: "Not stated",
+            pets: "Not stated",
+            notes: ["Under Renovation", "Historical Building"],
+        },
+        location: {
+            lat: 0,
+            lng: 0,
+            googleMapsLink: "",
+        },
+    },
+    {
+        id: "her-connaught-house",
+        slug: "connaught-house",
+        title: "Connaught House",
+        description:
+            "A 1930s English cottage-style heritage property, originally the residence of Jodhpur's last British Chief Minister.",
+        details: {
+            heading: "English Country Charm",
+            text: "Built in the 1930s by Sir Donald Field, the last British Chief Minister of Jodhpur, Connaught House is a heritage hotel that resembles a traditional English cottage. It is now part of the Jodhpur royal family's properties. Tucked away in a quiet area near Nakki Lake, it functions like a country manor, offering a calm, garden-set retreat distinct from larger hotels.",
+            images: {
+                main: "/images/destination/Connaught House/img_1.jpeg",
+                gallery: [
+                    "/images/destination/Connaught House/img_2.jpeg",
+                    "/images/destination/Connaught House/img_3.jpeg",
+                    "/images/destination/Connaught House/img_4.jpeg",
+                    "/images/destination/Connaught House/img_5.jpeg",
+                ],
+            },
+        },
+        guidelines: {
+            entryFee: "Not stated",
+            timings: "Not stated",
+            photography: "Not stated",
+            ageLimit: "Not stated",
+            quietHours: "Not stated",
+            smoking: "Not stated",
+            pets: "Not stated",
+            notes: ["Heritage Hotel", "Cottage Style"],
+        },
+        location: {
+            lat: 0,
+            lng: 0,
+            googleMapsLink: "",
+        },
+    },
+    {
+        id: "her-altus-house",
+        slug: "altus-house",
+        title: "Altus House",
+        description:
+            "An opulent Indo-western guest house perched on a hill, formerly a royal abode.",
+        details: {
+            heading: "Hilltop Luxury",
+            text: "Altus House is a luxury guest house situated on the outskirts of Mount Abu, perched atop a small hill with rock formations and trees. Formerly an exclusive abode of the Rajputana Royal family, the property has been refurbished to offer modern comforts while retaining its heritage atmosphere. It features terraced lawns and panoramic views of the natural surroundings.",
+            images: {
+                main: "/images/destination/altus-house/main.jpg",
+                gallery: [
+                    "/images/destination/altus-house/img_2.jpeg",
+                    "/images/destination/altus-house/img_3.jpeg",
+                    "/images/destination/altus-house/img_4.jpeg",
+                    "/images/destination/altus-house/img_5.jpeg",
+                ],
+            },
+        },
+        guidelines: {
+            entryFee: "Not stated",
+            timings: "Not stated",
+            photography: "Not stated",
+            ageLimit: "Not stated",
+            quietHours: "Not stated",
+            smoking: "Not stated",
+            pets: "Not stated",
+            notes: ["Luxury Homestay", "Heritage"],
+        },
+        location: {
+            lat: 0,
+            lng: 0,
+            googleMapsLink: "",
+        },
+    },
+    {
+        id: "her-wordsworth-lodge",
+        slug: "wordsworth-lodge",
+        title: "Wordsworth Lodge",
+        description:
+            "A boutique stay with a unique literary connection, built in the 1960s on the slopes of Gurushikhar.",
+        details: {
+            heading: "A Literary Legacy",
+            text: "This charming boutique hotel has a unique origin story: it was built in the 1960s by Diana Wordsworth, a descendant of poet William Wordsworth, and Colonel Buddha Sen. The site was selected with the help of famous tiger conservationist Fateh Singh Rathore. Designed by architect Rumy Shroff to blend with the topography, it offers a secluded stay on the forested slopes of Gurushikhar.",
+            images: {
+                main: "/images/destination/Wordsworth Lodge/img_1.jpeg",
+                gallery: [
+                    "/images/destination/Wordsworth Lodge/img_2.jpeg",
+                    "/images/destination/Wordsworth Lodge/img_3.jpeg",
+                    "/images/destination/Wordsworth Lodge/img_4.jpeg",
+                    "/images/destination/Wordsworth Lodge/img_5.jpeg",
+                ],
+            },
+        },
+        guidelines: {
+            entryFee: "Not stated",
+            timings: "Not stated",
+            photography: "Not stated",
+            ageLimit: "Not stated",
+            quietHours: "Not stated",
+            smoking: "Not stated",
+            pets: "Not stated",
+            notes: ["Boutique Hotel", "Secluded"],
+        },
+        location: {
+            lat: 0,
+            lng: 0,
+            googleMapsLink: "",
+        },
+    },
+    {
+        id: "her-ratan-vilas",
+        slug: "ratan-vilas",
+        title: "Ratan Vilas",
+        description:
+            "A nature-centric resort located near Gurushikhar, designed to blend into the jungle landscape.",
+        details: {
+            heading: "Nature's Abode",
+            text: "Located on the Gurushikhar Road away from the town's congestion, Ratan Vilas is positioned as a nature-forward resort. While a modern property, it is notable for its setting, offering experiences like bird watching and hiking. The architecture utilizes natural materials to enhance the feeling of being at one with the hills and the surrounding jungle.",
+            images: {
+                main: "/images/destination/Ratan Vilas/img_1.jpeg",
+                gallery: [
+                    "/images/destination/Ratan Vilas/img_2.jpeg",
+                    "/images/destination/Ratan Vilas/img_3.jpeg",
+                    "/images/destination/Ratan Vilas/img_4.jpeg",
+                    "/images/destination/Ratan Vilas/img_5.jpeg",
+                ],
+            },
+        },
+        guidelines: {
+            entryFee: "Not stated",
+            timings: "Not stated",
+            photography: "Not stated",
+            ageLimit: "Not stated",
+            quietHours: "Not stated",
+            smoking: "Not stated",
+            pets: "Not stated",
+            notes: ["Nature Resort", "Wildlife"],
+        },
+        location: {
+            lat: 0,
+            lng: 0,
+            googleMapsLink: "",
+        },
+    },
+    {
+        id: "her-bharatpur-palace",
+        slug: "bharatpur-palace",
+        title: "Bharatpur Palace",
+        description:
+            "Formerly the residence of the Bharatpur Maharaja, this palace is now known as Hotel Sunrise Palace.",
+        details: {
+            heading: "Royal Kothi",
+            text: "Originally known as 'Brij Kothi' or 'Bharatpur Kothi,' this structure was built by H.H. Brijendra Singh of Bharatpur, a keen polo player who frequented Mount Abu. The palace holds historical significance as the initial residence of Dada Lekhraj Kripalani, founder of the Brahma Kumaris, when he first arrived in Mount Abu. It has since been converted into Hotel Sunrise Palace.",
+            images: {
+                main: "/images/destination/Bharatpur Palace/img_1.jpeg",
+                gallery: [
+                    "/images/destination/Bharatpur Palace/img_2.jpeg",
+                    "/images/destination/Bharatpur Palace/img_3.jpeg",
+                    "/images/destination/Bharatpur Palace/img_4.jpeg",
+                    "/images/destination/Bharatpur Palace/img_5.jpeg",
+                ],
+            },
+        },
+        guidelines: {
+            entryFee: "Not stated",
+            timings: "Not stated",
+            photography: "Not stated",
+            ageLimit: "Not stated",
+            quietHours: "Not stated",
+            smoking: "Not stated",
+            pets: "Not stated",
+            notes: ["Heritage Hotel", "Historical Site"],
+        },
+        location: {
+            lat: 0,
+            lng: 0,
+            googleMapsLink: "",
+        },
+    },
+    {
+        id: "her-moors-cave",
+        slug: "moors-cave",
+        title: "Moor's Cave",
+        description:
+            "A hidden cave containing inscriptions from 1901 by Victoria Cross recipient Major General Arthur Thomas Moore.",
+        details: {
+            heading: "A Historical Mystery",
+            text: "Discovered in 2006 near Sunset Point, this cave contains inscriptions carved by Major General Arthur Thomas Moore, a recipient of the Victoria Cross for bravery in 1857. The carvings are dated 1901, a time when Moore's whereabouts were historically unaccounted for. The site serves as a unique, tangible link to colonial military history and the personal life of a decorated officer.",
+            images: {
+                main: "/images/destination/Moors Cave/img_1.jpeg",
+                gallery: [
+                    "/images/destination/Moors Cave/img_2.jpeg",
+                    "/images/destination/Moors Cave/img_3.jpeg",
+                    "/images/destination/Moors Cave/img_4.jpeg",
+                    "/images/destination/Moors Cave/img_5.jpeg",
+                ],
+            },
+        },
+        guidelines: {
+            entryFee: "Free",
+            timings: "Daylight hours",
+            photography: "Allowed",
+            ageLimit: "None",
+            quietHours: "None",
+            smoking: "Not advised",
+            pets: "Allowed",
+            notes: ["Historical Site", "Cave"],
+        },
+        location: {
+            lat: 0,
+            lng: 0,
+            googleMapsLink: "",
+        },
+    },
+    {
         id: "mkt-main-bazaar",
         slug: "mount-abu-main-bazaar",
         title: "Mount Abu Main Bazaar",
