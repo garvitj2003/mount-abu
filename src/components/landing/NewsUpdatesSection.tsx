@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { motion, Variants, AnimatePresence } from "motion/react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const fadeIn: Variants = {
     hidden: { opacity: 0, y: 30 },
@@ -50,6 +51,12 @@ interface NewsItem {
     pdfLink?: string;
 }
 
+interface NoticeItem {
+    id: number;
+    title: string;
+    date: string;
+}
+
 const newsItems: NewsItem[] = [
     {
         id: 1,
@@ -77,7 +84,31 @@ const newsItems: NewsItem[] = [
     },
 ];
 
+const notices: NoticeItem[] = [
+    {
+        id: 1,
+        title: "Traffic Advisory",
+        date: "2025-26 To 2029-30",
+    },
+    {
+        id: 2,
+        title: "Traffic Advisory",
+        date: "2025-26 To 2029-30",
+    },
+    {
+        id: 3,
+        title: "Traffic Advisory",
+        date: "2025-26 To 2029-30",
+    },
+    {
+        id: 4,
+        title: "Traffic Advisory",
+        date: "2025-26 To 2029-30",
+    },
+];
+
 export default function NewsUpdatesSection() {
+    const router = useRouter();
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const handlePrev = () => {
@@ -140,103 +171,148 @@ export default function NewsUpdatesSection() {
                             News & Updates
                         </h2>
                     </div>
+
+                    <button onClick={() => router.push('/events-and-notice')} className="flex items-center gap-2.5 px-6 py-3 rounded-md bg-[#D4AF37]/50 backdrop-blur-[4px] hover:bg-[#D4AF37]/60 transition-colors">
+                        <span className="font-montserrat text-white text-base underline">View More</span>
+                    </button>
                 </motion.div>
 
-                {/* News Card */}
-                <motion.div
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-100px" }}
-                    variants={fadeIn}
-                    className="relative"
-                >
-                    <div className="flex flex-col md:flex-row rounded-2xl overflow-hidden shadow-2xl min-h-[550px] md:min-h-[400px]">
-                        {/* Left Content */}
-                        <div className="relative bg-[#faf8f3] w-full md:w-[45%] p-6 md:p-10 flex flex-col justify-between order-2 md:order-1">
+                {/* Main Layout: News Card + Notices Panel */}
+                <div className="flex flex-col lg:flex-row gap-6">
+                    {/* Left: News Card (Carousel) */}
+                    <motion.div
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, margin: "-100px" }}
+                        variants={fadeIn}
+                        className="relative w-full lg:w-[65%]"
+                    >
+                        <div className="flex flex-col md:flex-row rounded-2xl overflow-hidden shadow-2xl min-h-[550px] md:min-h-[400px] h-full">
+                            {/* Left Content */}
+                            <div className="relative bg-[#faf8f3] w-full md:w-[45%] p-6 md:p-10 flex flex-col justify-between order-2 md:order-1">
+                                <AnimatePresence mode="wait">
+                                    <motion.div
+                                        key={`text-${currentItem.id}`}
+                                        variants={slideFromLeft}
+                                        initial="hidden"
+                                        animate="visible"
+                                        exit="exit"
+                                        className="relative z-10"
+                                    >
+                                        <p className="font-montserrat text-xs md:text-sm text-[#666] mb-4">
+                                            {currentItem.tag}
+                                        </p>
+                                        <h3 className="font-montserrat font-semibold text-xl md:text-2xl lg:text-3xl text-[#3d6b4f] leading-tight mb-3">
+                                            {currentItem.title}
+                                        </h3>
+                                        <p className="font-montserrat text-sm md:text-base text-[#888] mb-8">
+                                            {currentItem.dateRange}
+                                        </p>
+                                    </motion.div>
+                                </AnimatePresence>
+
+                                <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                                    {/* Navigation Arrows */}
+                                    <div className="flex gap-3">
+                                        <button
+                                            className="w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
+                                            aria-label="Previous slide"
+                                            onClick={handlePrev}
+                                        >
+                                            <Image
+                                                src="/images/nav-next.svg"
+                                                alt="Previous"
+                                                width={44}
+                                                height={44}
+                                                className="rotate-180"
+                                            />
+                                        </button>
+
+                                        <button
+                                            className="w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
+                                            aria-label="Next slide"
+                                            onClick={handleNext}
+                                        >
+                                            <Image
+                                                src="/images/nav-next.svg"
+                                                alt="Next"
+                                                width={44}
+                                                height={44}
+                                            />
+                                        </button>
+                                    </div>
+
+                                    {/* Download PDF Button */}
+                                    {currentItem.pdfLink && (
+                                        <a
+                                            href={currentItem.pdfLink}
+                                            className="w-full sm:w-auto bg-[#e85a4f] hover:bg-[#d14a40] transition-colors text-white font-montserrat font-medium text-sm md:text-base px-8 py-3 rounded-lg text-center"
+                                        >
+                                            Download PDF
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Right Image */}
                             <AnimatePresence mode="wait">
                                 <motion.div
-                                    key={`text-${currentItem.id}`}
-                                    variants={slideFromLeft}
+                                    key={`image-${currentItem.id}`}
+                                    variants={slideFromRight}
                                     initial="hidden"
                                     animate="visible"
                                     exit="exit"
-                                    className="relative z-10"
+                                    className="relative w-full md:w-[55%] h-[250px] md:h-auto min-h-[250px] md:min-h-full order-1 md:order-2"
                                 >
-                                    <p className="font-montserrat text-xs md:text-sm text-[#666] mb-4">
-                                        {currentItem.tag}
-                                    </p>
-                                    <h3 className="font-montserrat font-semibold text-xl md:text-2xl lg:text-3xl text-[#3d6b4f] leading-tight mb-3">
-                                        {currentItem.title}
-                                    </h3>
-                                    <p className="font-montserrat text-sm md:text-base text-[#888] mb-8">
-                                        {currentItem.dateRange}
-                                    </p>
+                                    <Image
+                                        src={currentItem.image}
+                                        alt={currentItem.title}
+                                        fill
+                                        className="object-cover"
+                                    />
                                 </motion.div>
                             </AnimatePresence>
+                        </div>
+                    </motion.div>
 
-                            <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-                                {/* Navigation Arrows */}
-                                <div className="flex gap-3">
-                                    <button
-                                        className="w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
-                                        aria-label="Previous slide"
-                                        onClick={handlePrev}
-                                    >
-                                        <Image
-                                            src="/images/nav-next.svg"
-                                            alt="Previous"
-                                            width={44}
-                                            height={44}
-                                            className="rotate-180"
-                                        />
-                                    </button>
+                    {/* Right: Notices Panel */}
+                    <motion.div
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, margin: "-100px" }}
+                        variants={fadeIn}
+                        className="w-full lg:w-[35%] flex flex-col"
+                    >
+                        <div className=" border border-white/60 bg-[#4D4836]/40 backdrop-blur-xs rounded-[14px] overflow-hidden flex flex-col h-full">
+                            {/* Panel Header */}
+                            <div className="px-6 py-5">
+                                <h3 className="font-montserrat font-medium text-xl text-white">Notices</h3>
+                            </div>
 
-                                    <button
-                                        className="w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center hover:opacity-80 transition-opacity cursor-pointer"
-                                        aria-label="Next slide"
-                                        onClick={handleNext}
+                            {/* Notices List */}
+                            <div className="flex-1 p-5 flex flex-col gap-2 overflow-y-auto max-h-[600px] custom-scrollbar">
+                                {notices.map((notice) => (
+                                    <div
+                                        key={notice.id}
+                                        className="bg-[#F8EFDB] rounded-[14px] p-4 flex flex-row justify-between items-center gap-4"
                                     >
-                                        <Image
-                                            src="/images/nav-next.svg"
-                                            alt="Next"
-                                            width={44}
-                                            height={44}
-                                        />
-                                    </button>
-                                </div>
-
-                                {/* Download PDF Button */}
-                                {currentItem.pdfLink && (
-                                    <a
-                                        href={currentItem.pdfLink}
-                                        className="w-full sm:w-auto bg-[#e85a4f] hover:bg-[#d14a40] transition-colors text-white font-montserrat font-medium text-sm md:text-base px-8 py-3 rounded-lg text-center"
-                                    >
-                                        Download PDF
-                                    </a>
-                                )}
+                                        <div className="flex flex-col gap-2">
+                                            <h4 className="font-montserrat font-semibold text-lg text-black leading-tight">
+                                                {notice.title}
+                                            </h4>
+                                            <p className="font-montserrat text-sm text-[#030303]">
+                                                {notice.date}
+                                            </p>
+                                        </div>
+                                        <button className="bg-[#655734] hover:bg-[#52462a] transition-colors backdrop-blur-[4px] px-4 py-2.5 rounded-[6px] text-white font-montserrat text-sm whitespace-nowrap underline">
+                                            View More
+                                        </button>
+                                    </div>
+                                ))}
                             </div>
                         </div>
-
-                        {/* Right Image */}
-                        <AnimatePresence mode="wait">
-                            <motion.div
-                                key={`image-${currentItem.id}`}
-                                variants={slideFromRight}
-                                initial="hidden"
-                                animate="visible"
-                                exit="exit"
-                                className="relative w-full md:w-[55%] h-[250px] md:h-auto min-h-[250px] md:min-h-full order-1 md:order-2"
-                            >
-                                <Image
-                                    src={currentItem.image}
-                                    alt={currentItem.title}
-                                    fill
-                                    className="object-cover"
-                                />
-                            </motion.div>
-                        </AnimatePresence>
-                    </div>
-                </motion.div>
+                    </motion.div>
+                </div>
             </div>
         </section>
     );

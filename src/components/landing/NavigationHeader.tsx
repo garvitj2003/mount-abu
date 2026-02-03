@@ -312,7 +312,7 @@ export default function NavigationHeader({
                             </div>
 
                             {/* Navigation Links */}
-                            <div className="flex-1 overflow-y-auto py-8 px-6 md:px-12 relative z-10 custom-scrollbar">
+                            <div className="flex-1 overflow-y-auto py-8 px-6 md:px-12 relative z-10 scrollbar-hidden">
                                 <nav className="flex flex-col gap-8 pb-20">
                                     {menuItems.map((item, index) => (
                                         <div
