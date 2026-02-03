@@ -5,12 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import NavigationHeader from "@/components/landing/NavigationHeader";
 import Footer from "@/components/landing/Footer";
-import { motion } from "motion/react";
+import { motion, Variants } from "motion/react";
 import { Calendar, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { events, notices } from "@/data/events";
 
-const fadeIn = {
+const fadeIn: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,

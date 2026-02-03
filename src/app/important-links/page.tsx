@@ -5,10 +5,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import NavigationHeader from "@/components/landing/NavigationHeader";
 import Footer from "@/components/landing/Footer";
-import { motion } from "motion/react";
+import { motion, Variants } from "motion/react";
 import { ChevronDown } from "lucide-react";
 
-const fadeIn = {
+const fadeIn: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,

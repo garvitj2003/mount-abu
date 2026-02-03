@@ -5,12 +5,26 @@ import { notFound, useRouter } from "next/navigation";
 import NavigationHeader from "@/components/landing/NavigationHeader";
 import Footer from "@/components/landing/Footer";
 import DestinationMapSection from "@/components/landing/DestinationMapSection";
-import { motion } from "motion/react";
+import { motion, Variants } from "motion/react";
 import { allItems } from "@/data/events";
 import { Heart, Clock, Share2, ArrowLeft } from "lucide-react"; 
 import Link from "next/link";
 
-const fadeIn = {
+interface Item {
+  id: number;
+  image: string;
+  tag: string;
+  title: string;
+  date: string;
+  pdfLink: string;
+  description: string;
+  type: string;
+  time?: string;
+  location?: string;
+  status?: string;
+}
+
+const fadeIn: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
@@ -28,7 +42,7 @@ export default function EventNoticeDetailPage({
   
   const { id } = React.use(params); 
 
-  const item = allItems.find((d) => d.id.toString() === id);
+  const item = allItems.find((d) => d.id.toString() === id) as Item | undefined;
 
   if (!item) {
     notFound();
