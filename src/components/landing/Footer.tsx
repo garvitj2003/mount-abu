@@ -13,16 +13,16 @@ import {
 } from "lucide-react";
 
 const adventureLinks = [
-    "Top Destinations",
-    "Temples",
-    "Heritage",
-    "Parks And Wildlife",
-    "Viewpoints",
-    "Markets",
-    "Hidden Gems",
-    "Eco Tourism & Adventures",
-    "Fairs And Festivals",
-    "Information & Guidelines",
+    { label: "Top Destinations", href: "/#destinations" },
+    { label: "Temples", href: "/#destinations" },
+    { label: "Heritage", href: "/#destinations" },
+    { label: "Parks And Wildlife", href: "/#destinations" },
+    { label: "Viewpoints", href: "/#destinations" },
+    { label: "Markets", href: "/#destinations" },
+    { label: "Hidden Gems", href: "/#hidden-places" },
+    { label: "Eco Tourism & Adventures", href: "/#adventures" },
+    { label: "Fairs And Festivals", href: "/#notices" },
+    { label: "Information & Guidelines", href: "/#info-guidelines" },
 ];
 
 const quickLinks = [
@@ -122,7 +122,6 @@ export default function Footer() {
                             <Link href="https://youtube.com/@np.mountabu?si=vtjs6kTlEcNC1OM4" className="hover:text-black/70 transition-colors">
                                 <Youtube size={18} />
                             </Link>
-                            {/* WhatsApp icon was in image, mapped to check if available in lucide or use generic */}
                         </div>
 
                         {/* Description */}
@@ -138,9 +137,9 @@ export default function Footer() {
                             <h3 className="text-[15px] font-bold text-[#1a1a1a] mb-3">Adventure</h3>
                             <ul className="flex flex-col gap-1.5">
                                 {adventureLinks.map((item) => (
-                                    <li key={item}>
-                                        <Link href="#" className="text-[13px] text-black hover:text-black/70 transition-colors block">
-                                            {item}
+                                    <li key={item.label}>
+                                        <Link href={item.href} className="text-[13px] text-black hover:text-black/70 transition-colors block">
+                                            {item.label}
                                         </Link>
                                     </li>
                                 ))}
@@ -149,8 +148,12 @@ export default function Footer() {
 
                         {/* FAQ & Help */}
                         <div className="flex flex-col gap-2">
-                            <h3 className="text-[15px] font-bold text-[#1a1a1a]">Frequently Asked Questions</h3>
-                            <h3 className="text-[15px] font-bold text-[#1a1a1a]">Help</h3>
+                            <Link href="/FAQs" className="text-[15px] font-bold text-[#1a1a1a] hover:text-[#1a1a1a]/70 transition-colors">
+                                Frequently Asked Questions
+                            </Link>
+                            <Link href="/help" className="text-[15px] font-bold text-[#1a1a1a] hover:text-[#1a1a1a]/70 transition-colors">
+                                Help
+                            </Link>
                         </div>
                     </div>
 
@@ -172,7 +175,9 @@ export default function Footer() {
 
                         {/* Other Govt Links */}
                         <div>
-                            <h3 className="text-[15px] font-bold text-[#1a1a1a]">Other Govt. Links</h3>
+                          <Link href="/important-links" className="text-[15px] font-bold text-[#1a1a1a] hover:text-[#1a1a1a]/70 transition-colors">
+                              Other Govt. Links
+                          </Link>
                         </div>
 
                         {/* Connect */}
@@ -192,7 +197,7 @@ export default function Footer() {
                 </div>
 
                 {/* Copyright Section */}
-                <div className="relative z-10 mt-8 pt-6 border-gray-300 text-center">
+                <div className="relative z-10 mt-8 pt-6 border-t border-gray-300 text-center">
                     <p className="text-[12px] text-black/80">
                         © 2025 Nagar Palika Mount Abu. All Rights Reserved.
                     </p>
