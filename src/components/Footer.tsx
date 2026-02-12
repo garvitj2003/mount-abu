@@ -149,7 +149,7 @@ export default function Footer() {
                                 <Mail size={18} />
                             </div>
                             <span className="text-[14px] font-medium text-black group-hover:text-black/70 transition-colors">
-                                Palikaabu@Gmail.Com
+                                <span>Palikaabu</span><span>@</span><span>Gmail</span><span>.</span><span>Com</span>
                             </span>
                         </div>
 

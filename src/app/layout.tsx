@@ -3,6 +3,7 @@ import { Montserrat } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import OverlappingFrames from "@/components/overLappingFrames";
+import { headers } from "next/headers";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -51,13 +52,17 @@ export const metadata: Metadata = {
   description: "Discover the beauty of Mount Abu, Rajasthan's only hill station",
 };
 
-export default function RootLayout({
+export const dynamic = 'force-dynamic';
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const nonce = headersList.get('x-nonce') || undefined;
   return (
-    <html lang="en">
+    <html lang="en" nonce={nonce}>
       <body className={`${montserrat.variable} ${baronNeue.variable} antialiased`}>
         <OverlappingFrames />
         {children}
