@@ -1,34 +1,16 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
 
-interface UserState {
-  user: {
-    id: number | null;
-    name: string | null;
-    role: string | null;
-    mobile: string | null;
-  } | null;
-  isAuthenticated: boolean;
-  setAuth: (user: UserState["user"]) => void;
-  logout: () => void;
+interface AuthState {
+  // We keep only transient client-side state here
+  // User metadata is now managed by TanStack Query (useUser)
+  tempMobile: string | null;
+  setTempMobile: (mobile: string | null) => void;
 }
 
 /**
- * Zustand store for Managing User Authentication State.
- * This is used for UI logic (sidebar, profile, etc.).
- * Note: Security is still handled by HttpOnly cookies and Backend.
+ * Zustand store for purely client-side UI auth state.
  */
-export const useAuthStore = create<UserState>()(
-  persist(
-    (set) => ({
-      user: null,
-      isAuthenticated: false,
-      setAuth: (user) => set({ user, isAuthenticated: !!user }),
-      logout: () => set({ user: null, isAuthenticated: false }),
-    }),
-    {
-      name: "auth-storage", // unique name
-      storage: createJSONStorage(() => localStorage),
-    }
-  )
-);
+export const useAuthStore = create<AuthState>((set) => ({
+  tempMobile: null,
+  setTempMobile: (mobile) => set({ tempMobile: mobile }),
+}));

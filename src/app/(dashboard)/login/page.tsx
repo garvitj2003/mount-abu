@@ -8,6 +8,7 @@ import { AuthService } from "@/services/authService";
 import { loginWithOtpAction } from "@/app/actions/auth";
 import { mobileSchema, otpSchema } from "@/lib/validations/auth";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useQueryClient } from "@tanstack/react-query";
 
 type LoginView = 
   | "citizen" 
@@ -20,7 +21,8 @@ type LoginView =
 
 export default function LoginPage() {
   const router = useRouter();
-  const setAuth = useAuthStore((state) => state.setAuth);
+  const queryClient = useQueryClient();
+  const setTempMobile = useAuthStore((state) => state.setTempMobile);
 
   const [view, setView] = useState<LoginView>("citizen");
   const [showPassword, setShowPassword] = useState(false);
@@ -72,8 +74,9 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await AuthService.sendOtp(mobile);
+      setTempMobile(mobile);
       setView("otp");
-    } catch (err) {
+    } catch (err: any) {
       setError(err.response?.data?.detail || "Failed to send OTP. Please try again.");
     } finally {
       setIsLoading(false);
@@ -92,13 +95,9 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const result = await loginWithOtpAction(mobile, otpString);
-      if (result.success && result.user) {
-        setAuth({
-          id: result.user.id,
-          name: result.user.name,
-          role: result.user.role,
-          mobile: mobile
-        });
+      if (result.success) {
+        // Invalidate 'user' query so TanStack Query fetches fresh data on dashboard load
+        await queryClient.invalidateQueries({ queryKey: ["user"] });
         
         // Redirect to citizen module only
         router.push("/citizen");
