@@ -1,8 +1,14 @@
 "use client";
 import Image from "next/image";
 import { motion, easeInOut } from "motion/react";
+import { usePathname } from "next/navigation";
 
 export default function OverlappingFrames() {
+    const pathname = usePathname();
+    
+    // Only render on the landing page
+    if (pathname !== "/") return null;
+
     // Configuration for the immediate exit animation
     const exitTransition = { duration: 3, ease: easeInOut, delay: 0.5 };
 

@@ -1,8 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import ApplicationsTable from "@/components/dashboard/citizen/applications/ApplicationsTable";
+import NewApplicationModal from "@/components/dashboard/citizen/applications/NewApplicationModal";
 
 export default function ApplicationsPage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest">
       {/* Header */}
@@ -15,7 +19,10 @@ export default function ApplicationsPage() {
             All your new construction and renovation applications go here.
           </p>
         </div>
-        <button className="rounded-lg bg-[#0C83FF] px-4 py-3 text-sm font-medium text-white hover:bg-blue-600 transition-colors">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="rounded-lg cursor-pointer bg-[#0C83FF] px-4 py-3 text-sm font-medium text-white hover:bg-blue-600 transition-colors"
+        >
           New Application
         </button>
       </div>
@@ -24,6 +31,12 @@ export default function ApplicationsPage() {
       <div className="flex flex-col p-5">
         <ApplicationsTable />
       </div>
+
+      {/* Modal */}
+      <NewApplicationModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     </div>
   );
 }

@@ -1,6 +1,11 @@
+"use client";
+
 import Image from "next/image";
+import { useUser } from "@/hooks/useUser";
 
 export default function Navbar() {
+  const { data: user } = useUser();
+
   return (
     <header className="flex h-[69px] w-full items-center border-b border-[#D6D9DE] bg-white font-onest">
       {/* Left Section - Aligned with Sidebar width */}
@@ -99,7 +104,7 @@ export default function Navbar() {
                   className="h-full w-full object-cover p-0.5"
               />
             </div>
-            <span className="text-sm text-black font-medium">Hi, 8746574328</span>
+            <span className="text-sm text-black font-medium">Hi, {user?.mobile || "..."}</span>
             <svg
               width="8"
               height="5"
@@ -119,6 +124,5 @@ export default function Navbar() {
         </div>
       </div>
     </header>
-
   );
 }
