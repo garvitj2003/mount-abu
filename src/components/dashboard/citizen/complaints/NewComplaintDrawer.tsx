@@ -43,7 +43,7 @@ export default function NewComplaintDrawer({
     if (user) {
       setFormData(prev => ({
         ...prev,
-        applicant_name: user.full_name || "",
+        applicant_name: user.name || "",
         applicant_mobile: user.mobile || "",
       }));
     }
@@ -102,7 +102,7 @@ export default function NewComplaintDrawer({
       onClose();
       // Reset form
       setFormData({
-        applicant_name: user?.full_name || "",
+        applicant_name: user?.name || "",
         applicant_mobile: user?.mobile || "",
         location_address: "",
         description: "",
@@ -211,7 +211,7 @@ export default function NewComplaintDrawer({
                         {Array.from(new Set(pastComplaints.map(c => c.category_id)))
                           .map(catId => {
                             const category = categories.find(cat => cat.id === catId);
-                            return <option key={catId} value={catId}>{category?.name || "Unknown Category"}</option>;
+                            return <option key={catId} value={catId || 0}>{category?.name || "Unknown Category"}</option>;
                           })
                         }
                       </>

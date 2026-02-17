@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const complaintSchema = z.object({
-  category_id: z.number({ required_error: "Please select a category" }).min(1, "Please select a category"),
-  ward_id: z.number({ required_error: "Please select a ward" }).min(1, "Please select a ward"),
+  category_id: z.number().min(1, "Please select a category"),
+  ward_id: z.number().min(1, "Please select a ward"),
   location_address: z.string().min(5, "Please provide a more detailed location"),
   title: z.string().min(5, "Title must be at least 5 characters"),
   description: z.string().min(10, "Please provide a more detailed description"),
