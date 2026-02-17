@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
+import { useRouter } from "next/navigation";
 
 interface NewApplicationModalProps {
   isOpen: boolean;
@@ -12,6 +13,13 @@ export default function NewApplicationModal({
   isOpen,
   onClose,
 }: NewApplicationModalProps) {
+  const router = useRouter();
+
+  const handleSelect = (type: string) => {
+    onClose();
+    router.push("/citizen/applications/new-application");
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -42,7 +50,7 @@ export default function NewApplicationModal({
                 className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md hover:bg-gray-200 transition-colors"
               >
                 <Image
-                  src="/dashboard/images/applications/close.svg"
+                  src="/dashboard/icons/close.svg"
                   alt="Close"
                   width={14}
                   height={14}
@@ -58,34 +66,34 @@ export default function NewApplicationModal({
 
               <div className="flex w-full items-center gap-5">
                 {/* New Construction */}
-
-                <button className="group cursor-pointer relative flex h-[140px] flex-1 flex-col items-center justify-end overflow-hidden rounded-lg border border-[#D6D9DE] pb-4 transition-all hover:border-[#0C83FF]">
+                <button
+                  onClick={() => handleSelect("new")}
+                  className="group cursor-pointer relative flex h-[140px] flex-1 flex-col items-center justify-end overflow-hidden rounded-lg border border-[#D6D9DE] pb-4 transition-all hover:border-[#0C83FF]"
+                >
                   <Image
                     src="/dashboard/images/applications/new-construction-bg.png"
                     alt="New Construction"
                     fill
                     className="object-cover"
                   />
-
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/90 transition-all group-hover:to-[#0C83FF]" />
-
                   <span className="relative z-10 text-sm font-normal text-black transition-colors group-hover:text-white">
                     New Construction
                   </span>
                 </button>
 
                 {/* Renovation */}
-
-                <button className="group cursor-pointer relative flex h-[140px] flex-1 flex-col items-center justify-end overflow-hidden rounded-lg border border-[#D6D9DE] pb-4 transition-all hover:border-[#0C83FF]">
+                <button
+                  onClick={() => handleSelect("renovation")}
+                  className="group cursor-pointer relative flex h-[140px] flex-1 flex-col items-center justify-end overflow-hidden rounded-lg border border-[#D6D9DE] pb-4 transition-all hover:border-[#0C83FF]"
+                >
                   <Image
                     src="/dashboard/images/applications/renovation-bg.png"
                     alt="Renovation"
                     fill
                     className="object-cover"
                   />
-
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/90 transition-all group-hover:to-[#0C83FF]" />
-
                   <span className="relative z-10 text-sm font-normal text-black transition-colors group-hover:text-white">
                     Renovation
                   </span>

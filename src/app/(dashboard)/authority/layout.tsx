@@ -9,11 +9,11 @@ export default function AuthorityLayout({
 }) {
   return (
     <DashboardGuard>
-      <div className="min-h-screen w-full bg-[#F5F6F7]">
+      <div className="flex h-screen w-full flex-col bg-[#F5F6F7]">
         <Navbar />
-        <div className="flex">
+        <div className="flex flex-1 overflow-hidden">
           <SidebarAuthority />
-          <main className="flex-1">
+          <main className="flex-1 overflow-y-auto">
             {children}
           </main>
         </div>
