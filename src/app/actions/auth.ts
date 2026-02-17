@@ -76,6 +76,39 @@ export async function loginWithOtpAction(mobile: string, otp: string) {
 }
 
 /**
+ * Server Action for Login with Password (Authority).
+ */
+export async function loginWithPasswordAction(username: string, password: string) {
+  try {
+    const response = await fetch(`${API_URL}/auth/login/password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return { success: false, error: errorData?.detail || "Login failed" };
+    }
+
+    const tokens: TokenResponse = await response.json();
+    await setAuthCookies(tokens);
+
+    return { 
+      success: true, 
+      user: {
+        name: tokens.name,
+        role: tokens.role,
+        id: tokens.user_id
+      }
+    };
+  } catch (error) {
+    console.error("Login Action Error:", error);
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+/**
  * Server Action to refresh tokens.
  */
 export async function refreshAction() {
