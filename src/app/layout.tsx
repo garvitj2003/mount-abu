@@ -49,10 +49,11 @@ const baronNeue = localFont({
 
 export const metadata: Metadata = {
   title: "Mount Abu - Majestic Hill Station",
-  description: "Discover the beauty of Mount Abu, Rajasthan's only hill station",
+  description:
+    "Discover the beauty of Mount Abu, Rajasthan's only hill station",
 };
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function RootLayout({
   children,
@@ -60,12 +61,23 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const headersList = await headers();
-  const nonce = headersList.get('x-nonce') || undefined;
+  const nonce = headersList.get("x-nonce") || undefined;
   return (
     <html lang="en" nonce={nonce}>
-      <body className={`${montserrat.variable} ${baronNeue.variable} antialiased`}>
+      <body
+        className={`${montserrat.variable} ${baronNeue.variable} antialiased`}
+      >
         <OverlappingFrames />
         {children}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof window !== 'undefined' && window.next) {
+                window.next.version = 'hidden';
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
