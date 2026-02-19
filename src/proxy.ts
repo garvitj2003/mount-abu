@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function proxy(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   // --- VULNERABILITY FIX: Improper Error Handling ---
   // The report (Page 4) showed that TRACE requests cause a 500 Server Error.
   // We explicitly block TRACE and TRACK methods to return a 405.
