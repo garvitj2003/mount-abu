@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { useRouter } from "next/navigation";
@@ -19,6 +19,13 @@ type LoginView =
   | "new-password" 
   | "success";
 
+const BG_IMAGES = [
+  "/dashboard/images/hero-bg/1.png",
+  "/dashboard/images/hero-bg/2.png",
+  "/dashboard/images/hero-bg/3.png",
+  "/dashboard/images/hero-bg/4.png",
+];
+
 export default function LoginPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -28,6 +35,16 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   
+  // Background Slider State
+  const [currentBg, setCurrentBg] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentBg((prev) => (prev + 1) % BG_IMAGES.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Form States
   const [mobile, setMobile] = useState("");
   const [username, setUsername] = useState("");
@@ -496,10 +513,28 @@ export default function LoginPage() {
     <div className={`relative min-h-screen w-full overflow-hidden font-onest`}>
       {/* Background */}
       <div className="absolute inset-0 z-0">
-        <div className="relative h-full w-full animate-slow-zoom">
-          <Image src="/dashboard/images/hero-bg/4.png" alt="Background" fill className="object-cover" priority />
-          <div className="absolute inset-0 bg-black/40" />
-        </div>
+        <AnimatePresence initial={false}>
+          <motion.div
+            key={currentBg}
+            initial={{ opacity: 0, scale: currentBg % 2 === 0 ? 1 : 1.1 }}
+            animate={{ opacity: 1, scale: currentBg % 2 === 0 ? 1.1 : 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              opacity: { duration: 1.5, ease: "easeInOut" },
+              scale: { duration: 5, ease: "linear" }
+            }}
+            className="absolute inset-0"
+          >
+            <Image
+              src={BG_IMAGES[currentBg]}
+              alt="Background"
+              fill
+              className="object-cover"
+              priority
+            />
+          </motion.div>
+        </AnimatePresence>
+        <div className="absolute inset-0 z-10 bg-black/40" />
       </div>
 
       {/* Content */}
