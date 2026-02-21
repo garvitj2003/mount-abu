@@ -2,19 +2,23 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
 import { logoutAction } from "@/app/actions/auth";
 import ProfileDrawer from "./ProfileDrawer";
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { data: user } = useUser();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isProfileDrawerOpen, setIsProfileDrawerOpen] = useState(false);
   const [dropdownPos, setDropdownPosition] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
+
+  const isAuthority = pathname?.startsWith("/authority");
+  const displayName = isAuthority ? user?.name : user?.mobile;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -158,7 +162,7 @@ export default function Navbar() {
                   className="h-full w-full object-cover p-0.5"
               />
             </div>
-            <span className="text-sm text-black font-medium">Hi, {user?.mobile || "..."}</span>
+            <span className="text-sm text-black font-medium">Hi, {displayName || "..."}</span>
             <svg
               width="8"
               height="5"

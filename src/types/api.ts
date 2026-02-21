@@ -296,6 +296,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/applications/{application_id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Withdraw Application
+         * @description Withdraw an application.
+         *
+         *     Only the owning CITIZEN can withdraw.
+         *     Allowed only if status is PENDING or SUBMITTED.
+         */
+        post: operations["withdraw_application_api_applications__application_id__withdraw_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/{application_id}/action": {
         parameters: {
             query?: never;
@@ -412,6 +435,83 @@ export interface paths {
          * @description Get all comments for an application.
          */
         get: operations["get_application_comments_api_applications__application_id__comments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Tokens
+         * @description List tokens (approved application phases) for the current citizen.
+         *
+         *     Returns tokens with computed fields:
+         *     - token_number (e.g. TKN-2025-014)
+         *     - application_number (e.g. APP-2025-00321)
+         *     - remaining_quantity_pct (overall remaining material %)
+         *     - valid_till (activation date + 60 days)
+         *     - materials breakdown with approved/consumed/remaining quantities
+         *
+         *     Supports filtering by status (ACTIVE, PENDING, COMPLETED) and
+         *     searching by token or application number.
+         */
+        get: operations["list_tokens_api_tokens_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/{application_id}/tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Application Tokens
+         * @description Get all tokens for a specific application with material summaries.
+         */
+        get: operations["get_application_tokens_api_applications__application_id__tokens_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tokens/{transport_code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Token Detail
+         * @description Get full token details by transport code.
+         *
+         *     Returns everything needed for the Token Detail screen:
+         *     - Token header: token_number, status, valid date range
+         *     - Application info: applicant name, property address, usage, type
+         *     - Authority info: issued by, issued on, token generated from
+         *     - Material summary: per-material approved/consumed/remaining
+         *     - Vehicle entries: all naka checkpoint entries with vehicle, material, qty, date
+         */
+        get: operations["get_token_detail_api_tokens__transport_code__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -924,6 +1024,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/complaints/{id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Withdraw Complaint
+         * @description Withdraw a complaint.
+         *
+         *     Only the owning user can withdraw.
+         *     Allowed only if status is PENDING.
+         */
+        post: operations["withdraw_complaint_api_complaints__id__withdraw_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/naka/{transport_code}": {
         parameters: {
             query?: never;
@@ -1050,6 +1173,27 @@ export interface paths {
         };
         /** List Profile History */
         get: operations["list_profile_history_api_city_profile_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Users
+         * @description List users based on the filter.
+         *     Only SUPERADMIN, NODAL_OFFICER, and COMMISSIONER can access this.
+         */
+        get: operations["list_users_api_users_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1260,13 +1404,18 @@ export interface components {
              * Comments
              * @default []
              */
-            comments: components["schemas"]["CommentResponse"][];
+            comments: components["schemas"]["backend__schemas__response__application__CommentResponse"][];
+            /**
+             * Tokens
+             * @default []
+             */
+            tokens: components["schemas"]["backend__schemas__response__application__TokenResponse"][];
         };
         /**
          * ApplicationStatus
          * @enum {string}
          */
-        ApplicationStatus: "PENDING" | "SUBMITTED" | "APPROVED" | "FORWARDED" | "WITHHELD" | "OBJECTED" | "REJECTED" | "TOKEN_GENERATED";
+        ApplicationStatus: "PENDING" | "SUBMITTED" | "APPROVED" | "FORWARDED" | "WITHHELD" | "OBJECTED" | "REJECTED" | "TOKEN_GENERATED" | "WITHDRAWN";
         /**
          * ApplicationType
          * @enum {string}
@@ -1577,27 +1726,23 @@ export interface components {
              */
             media_paths?: string[] | null;
         };
-        /**
-         * CommentResponse
-         * @description Response schema for application comments.
-         */
+        /** CommentResponse */
         CommentResponse: {
             /** Id */
             id: number;
-            /** Application Id */
-            application_id: number;
             /** Comment */
             comment: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
             /** Comment By */
-            comment_by: number;
-            /** Commenter Name */
-            commenter_name?: string | null;
-            /** @default GENERAL */
-            comment_type: components["schemas"]["CommentType"] | null;
-            /** Media Paths */
-            media_paths?: unknown[] | null;
-            /** Created At */
-            created_at?: string | null;
+            comment_by?: number | null;
+            /** Media Path */
+            media_path?: string | null;
+            /** Access Url */
+            access_url?: string | null;
         };
         /**
          * CommentType
@@ -1634,6 +1779,12 @@ export interface components {
             description: string | null;
             /** Status */
             status: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            created_by: components["schemas"]["UserSummary"] | null;
         };
         /** ComplaintCategoryUpdate */
         ComplaintCategoryUpdate: {
@@ -1761,7 +1912,7 @@ export interface components {
              * Comments
              * @default []
              */
-            comments: components["schemas"]["backend__schemas__response__complaint__CommentResponse"][];
+            comments: components["schemas"]["CommentResponse"][];
         };
         /**
          * ComplaintRow
@@ -1785,7 +1936,7 @@ export interface components {
          * ComplaintStatus
          * @enum {string}
          */
-        ComplaintStatus: "PENDING" | "IN_PROGRESS" | "RESOLVED" | "WITHHELD" | "REJECTED";
+        ComplaintStatus: "PENDING" | "IN_PROGRESS" | "RESOLVED" | "WITHHELD" | "REJECTED" | "WITHDRAWN";
         /**
          * CreateUserRequest
          * @description Request schema for creating a new user.
@@ -1850,6 +2001,12 @@ export interface components {
             type: string;
             /** Status */
             status: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            created_by: components["schemas"]["UserSummary"] | null;
         };
         /** DepartmentUpdate */
         DepartmentUpdate: {
@@ -2223,6 +2380,12 @@ export interface components {
             name: string;
             /** Unit */
             unit: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            created_by: components["schemas"]["UserSummary"] | null;
         };
         /**
          * MaterialUsageSummary
@@ -2298,9 +2461,15 @@ export interface components {
              */
             message: string;
         };
-        /** MessageResponse */
+        /**
+         * MessageResponse
+         * @description Response with a message.
+         */
         MessageResponse: {
-            /** Message */
+            /**
+             * Message
+             * @description Response message
+             */
             message: string;
         };
         /**
@@ -2382,6 +2551,11 @@ export interface components {
             phase_status: components["schemas"]["ApplicationPhaseStatus"];
             /** Materials */
             materials: components["schemas"]["NakaMaterialSummary"][];
+            /**
+             * Vehicle Entries
+             * @default []
+             */
+            vehicle_entries: components["schemas"]["backend__schemas__response__naka__VehicleEntryResponse"][];
         };
         /** NoticeCreate */
         NoticeCreate: {
@@ -2618,6 +2792,12 @@ export interface components {
             permissions: string | null;
             /** Status */
             status: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            created_by: components["schemas"]["UserSummary"] | null;
         };
         /** RoleUpdate */
         RoleUpdate: {
@@ -2763,6 +2943,80 @@ export interface components {
             /** Total */
             total: number | null;
         };
+        /**
+         * TokenAuthorityInfo
+         * @description Authority / system information shown on the token detail page.
+         */
+        TokenAuthorityInfo: {
+            /** Issued By */
+            issued_by?: string | null;
+            /** Issued On */
+            issued_on?: string | null;
+            /** Token Generated From */
+            token_generated_from?: string | null;
+        };
+        /**
+         * TokenDetailResponse
+         * @description Full token detail returned for GET /tokens/{transport_code}.
+         *
+         *     Maps to the "Token Details" screen that shows:
+         *     - Header: token_number, status, date range
+         *     - Left panel: QR/application info
+         *     - Vehicle Entries tab
+         *     - Material Summary tab
+         */
+        TokenDetailResponse: {
+            /** Transport Code */
+            transport_code: string;
+            /** Token Number */
+            token_number: string;
+            status: components["schemas"]["ApplicationPhaseStatus"];
+            /** Valid From */
+            valid_from?: string | null;
+            /** Valid Till */
+            valid_till?: string | null;
+            /** Application Id */
+            application_id: number;
+            /** Application Number */
+            application_number: string;
+            /** Applicant Name */
+            applicant_name: string;
+            /** Property Address */
+            property_address: string;
+            property_usage: components["schemas"]["PropertyUsageType"];
+            application_type: components["schemas"]["ApplicationType"];
+            authority: components["schemas"]["TokenAuthorityInfo"];
+            /**
+             * Materials
+             * @default []
+             */
+            materials: components["schemas"]["TokenMaterialResponse"][];
+            /** Remaining Quantity Pct */
+            remaining_quantity_pct?: number | null;
+            /**
+             * Vehicle Entries
+             * @default []
+             */
+            vehicle_entries: components["schemas"]["VehicleEntryResponse"][];
+        };
+        /**
+         * TokenMaterialResponse
+         * @description Per-material summary within a token (phase).
+         */
+        TokenMaterialResponse: {
+            /** Material Id */
+            material_id: number;
+            /** Material Name */
+            material_name?: string | null;
+            /** Unit */
+            unit?: string | null;
+            /** Approved Quantity */
+            approved_quantity: number;
+            /** Consumed Quantity */
+            consumed_quantity: number;
+            /** Remaining Quantity */
+            remaining_quantity: number;
+        };
         /** TokenResponse */
         TokenResponse: {
             /** Access Token */
@@ -2826,10 +3080,38 @@ export interface components {
             user_id: number;
         };
         /**
+         * UserFilter
+         * @enum {string}
+         */
+        UserFilter: "CITIZEN" | "OFFICIAL";
+        /** UserResponse */
+        UserResponse: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Mobile */
+            mobile: string;
+            role: components["schemas"]["UserRole"];
+            /** Username */
+            username?: string | null;
+            /** Created At */
+            created_at?: string | null;
+        };
+        /**
          * UserRole
          * @enum {string}
          */
         UserRole: "SUPERADMIN" | "NODAL_OFFICER" | "COMMISSIONER" | "CITIZEN" | "NAKA_INCHARGE" | "DEPT_LAND" | "DEPT_LEGAL" | "DEPT_ATP" | "JEN";
+        /** UserSummary */
+        UserSummary: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Role */
+            role: string;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -2838,6 +3120,41 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /**
+         * VehicleEntryResponse
+         * @description A single vehicle / naka entry shown under the Vehicle Entries tab.
+         */
+        VehicleEntryResponse: {
+            /** Id */
+            id: number;
+            /** Vehicle Number */
+            vehicle_number?: string | null;
+            /** Material Name */
+            material_name?: string | null;
+            /** Material Unit */
+            material_unit?: string | null;
+            /** Quantity Entered */
+            quantity_entered: number;
+            /**
+             * Entry At
+             * Format: date-time
+             */
+            entry_at: string;
+            /** Remarks */
+            remarks?: string | null;
+            /** Media Path */
+            media_path?: string | null;
+            /** Access Url */
+            access_url?: string | null;
+        };
+        /** VehicleMaterialResponse */
+        VehicleMaterialResponse: {
+            /** Id */
+            id: number;
+            material: components["schemas"]["MaterialResponse"];
+            /** Quantity */
+            quantity: number;
         };
         /**
          * Visibility
@@ -2917,6 +3234,12 @@ export interface components {
             description: string | null;
             /** Status */
             status: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            created_by: components["schemas"]["UserSummary"] | null;
         };
         /** WardUpdate */
         WardUpdate: {
@@ -2936,7 +3259,7 @@ export interface components {
          * @description Actions that can be taken on an application.
          * @enum {string}
          */
-        WorkflowAction: "APPROVE" | "REJECT" | "OBJECT" | "FORWARD" | "GENERATE_TOKENS";
+        WorkflowAction: "APPROVE" | "REJECT" | "OBJECT" | "FORWARD" | "GENERATE_TOKENS" | "WITHDRAW";
         /**
          * WorkflowActionRequest
          * @description Request body for workflow actions (approve/reject/object/forward).
@@ -2960,34 +3283,77 @@ export interface components {
              */
             phase_materials?: components["schemas"]["PhaseMaterialEntry"][] | null;
         };
-        /** CommentResponse */
-        backend__schemas__response__complaint__CommentResponse: {
-            /** Id */
-            id: number;
-            /** Comment */
-            comment: string;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Comment By */
-            comment_by?: number | null;
-            /** Media Path */
-            media_path?: string | null;
-            /** Access Url */
-            access_url?: string | null;
+        /** MessageResponse */
+        backend__controllers__auth__MessageResponse: {
+            /** Message */
+            message: string;
         };
         /**
-         * MessageResponse
-         * @description Response with a message.
+         * CommentResponse
+         * @description Response schema for application comments.
          */
-        backend__schemas__response__meta__MessageResponse: {
+        backend__schemas__response__application__CommentResponse: {
+            /** Id */
+            id: number;
+            /** Application Id */
+            application_id: number;
+            /** Comment */
+            comment: string;
+            /** Comment By */
+            comment_by: number;
+            /** Commenter Name */
+            commenter_name?: string | null;
+            /** @default GENERAL */
+            comment_type: components["schemas"]["CommentType"] | null;
+            /** Media Paths */
+            media_paths?: unknown[] | null;
+            /** Created At */
+            created_at?: string | null;
+        };
+        /**
+         * TokenResponse
+         * @description Lightweight token for the token-list table.
+         *
+         *     Only the 5 columns shown in the listing screen + transport_code
+         *     (the unique token identifier used in URLs).
+         */
+        backend__schemas__response__application__TokenResponse: {
+            /** Transport Code */
+            transport_code: string;
+            /** Token Number */
+            token_number: string;
+            /** Application Number */
+            application_number: string;
+            /** Remaining Quantity Pct */
+            remaining_quantity_pct?: number | null;
+            /** Valid Till */
+            valid_till?: string | null;
+            status: components["schemas"]["ApplicationPhaseStatus"];
+        };
+        /** VehicleEntryResponse */
+        backend__schemas__response__naka__VehicleEntryResponse: {
+            /** Id */
+            id: number;
+            /** Phase */
+            phase: number;
+            /** Vehicle Number */
+            vehicle_number: string;
+            /** Driver Name */
+            driver_name: string | null;
+            /** Driver Mobile */
+            driver_mobile: string | null;
             /**
-             * Message
-             * @description Response message
+             * Entry At
+             * Format: date-time
              */
-            message: string;
+            entry_at: string;
+            entered_by_user: components["schemas"]["UserSummary"] | null;
+            /** Remarks */
+            remarks: string | null;
+            /** Media Path */
+            media_path: string | null;
+            /** Materials */
+            materials: components["schemas"]["VehicleMaterialResponse"][];
         };
     };
     responses: never;
@@ -3017,7 +3383,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MessageResponse"];
+                    "application/json": components["schemas"]["backend__controllers__auth__MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -3189,7 +3555,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__meta__MessageResponse"];
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -3255,7 +3621,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__meta__MessageResponse"];
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -3534,6 +3900,37 @@ export interface operations {
             };
         };
     };
+    withdraw_application_api_applications__application_id__withdraw_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     workflow_action_api_applications__application_id__action_put: {
         parameters: {
             query?: never;
@@ -3719,7 +4116,105 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CommentResponse"][];
+                    "application/json": components["schemas"]["backend__schemas__response__application__CommentResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_tokens_api_tokens_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by token status: ACTIVE, PENDING, COMPLETED */
+                status?: string | null;
+                /** @description Search by token number or application number */
+                search?: string | null;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["backend__schemas__response__application__TokenResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_application_tokens_api_applications__application_id__tokens_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["backend__schemas__response__application__TokenResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_token_detail_api_tokens__transport_code__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transport_code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenDetailResponse"];
                 };
             };
             /** @description Validation Error */
@@ -5258,6 +5753,37 @@ export interface operations {
             };
         };
     };
+    withdraw_complaint_api_complaints__id__withdraw_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComplaintResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_naka_phase_summary_api_naka__transport_code__get: {
         parameters: {
             query?: never;
@@ -5482,6 +6008,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CityProfileResponse"][];
+                };
+            };
+        };
+    };
+    list_users_api_users_get: {
+        parameters: {
+            query: {
+                /** @description Filter users by type (CITIZEN or OFFICIAL) */
+                filter: components["schemas"]["UserFilter"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
