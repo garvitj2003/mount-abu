@@ -7,6 +7,7 @@ import { useUser } from "@/hooks/useUser";
 import { useApplications } from "@/hooks/useApplications";
 import { ApplicationService } from "@/services/applicationService";
 import { type components } from "@/types/api";
+import TablePagination from "@/components/ui/TablePagination";
 
 type ApplicationResponse = components["schemas"]["ApplicationResponse"];
 type ApplicationStatus = components["schemas"]["ApplicationStatus"];
@@ -68,6 +69,8 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<"All" | "NEW" | "RENOVATION">("All");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const limit = 10;
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
   const [dropdownPos, setDropdownPosition] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -133,6 +136,9 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
       app.id.toString().includes(search);
     return matchesFilter && matchesSearch;
   });
+
+  const totalPages = Math.ceil(filteredApplications.length / limit);
+  const paginatedApplications = filteredApplications.slice((page - 1) * limit, page * limit);
 
   if (isLoading) {
     return (
@@ -254,8 +260,8 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
             </tr>
           </thead>
           <tbody>
-            {filteredApplications.length > 0 ? (
-              filteredApplications.map((app) => (
+            {paginatedApplications.length > 0 ? (
+              paginatedApplications.map((app) => (
                 <tr key={app.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                   <td className="px-2 py-3">
                     <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">
@@ -350,36 +356,12 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
       )}
 
       {/* Pagination */}
-      <div className="flex items-center justify-between pt-2">
-        {/* Rows per page */}
-        <div className="flex items-center gap-3">
-          <span className="text-[12.77px] font-medium text-[#343434]">Show</span>
-          <div className="flex items-center justify-between gap-2 rounded border border-[#C6CAD1] bg-white px-3 py-2">
-             <span className="text-[14.9px] font-medium text-[#343434]">10</span>
-             <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M1 1L5 5L9 1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <span className="text-[12.77px] font-medium text-[#343434]">Row</span>
-        </div>
-
-        {/* Page numbers */}
-        <div className="flex items-center gap-3">
-            <button className="flex h-[34px] w-[34px] items-center justify-center rounded bg-[#F5F6F7] hover:bg-gray-200">
-                <svg width="6" height="10" viewBox="0 0 6 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M5 1L1 5L5 9" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-            </button>
-            <div className="flex items-center gap-1">
-                 <button className="flex h-[35px] w-[35px] items-center justify-center rounded bg-[#0C83FF] text-[12.77px] font-medium text-white">1</button>
-            </div>
-             <button className="flex h-[34px] w-[34px] items-center justify-center rounded bg-[#F5F6F7] border border-[#C6CAD1] hover:bg-gray-200">
-                <svg width="6" height="10" viewBox="0 0 6 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1 1L5 5L1 9" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-            </button>
-        </div>
-      </div>
+      <TablePagination
+        currentPage={page}
+        totalPages={totalPages}
+        limit={limit}
+        onPageChange={setPage}
+      />
     </div>
   );
 }

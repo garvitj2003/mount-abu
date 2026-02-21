@@ -14,6 +14,7 @@ import NewWardDrawer from "@/components/dashboard/authority/master-data/NewWardD
 import NewDepartmentDrawer from "@/components/dashboard/authority/master-data/NewDepartmentDrawer";
 import NewRoleDrawer from "@/components/dashboard/authority/master-data/NewRoleDrawer";
 import NewMaterialDrawer from "@/components/dashboard/authority/master-data/NewMaterialDrawer";
+import TablePagination from "@/components/ui/TablePagination";
 
 type TabType = "Complaint Categories" | "Wards/Zones" | "Departments" | "Roles" | "Materials";
 
@@ -134,6 +135,10 @@ export default function AuthorityMasterDataPage() {
   const [activeTab, setActiveTab] = useState<TabType>("Complaint Categories");
   const [indicatorStyle, setIndicatorStyle] = useState({ width: 0, left: 0 });
   
+  // Pagination State
+  const [page, setPage] = useState(1);
+  const limit = 10;
+  
   // Drawer States
   const [isCategoryDrawerOpen, setIsCategoryDrawerOpen] = useState(false);
   const [isWardDrawerOpen, setIsWardDrawerOpen] = useState(false);
@@ -208,7 +213,10 @@ export default function AuthorityMasterDataPage() {
     }
   };
 
-  const { columns, data, buttonText, onAdd, isLoading } = getTabData();
+  const { columns, data: allData, buttonText, onAdd, isLoading } = getTabData();
+
+  const totalPages = Math.ceil(allData.length / limit);
+  const data = allData.slice((page - 1) * limit, page * limit);
 
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest relative">
@@ -314,6 +322,14 @@ export default function AuthorityMasterDataPage() {
               </table>
             )}
           </div>
+          
+          {/* Pagination */}
+          <TablePagination
+            currentPage={page}
+            totalPages={totalPages}
+            limit={limit}
+            onPageChange={setPage}
+          />
         </div>
       </div>
 

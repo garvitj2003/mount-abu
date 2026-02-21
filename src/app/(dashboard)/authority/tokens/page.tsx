@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import TablePagination from "@/components/ui/TablePagination";
 
 const TOKENS_DATA = [
   {
@@ -41,6 +42,8 @@ const ProgressBar = ({ progress }: { progress: number }) => (
 
 export default function AuthorityTokensPage() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const limit = 10;
 
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest">
@@ -145,38 +148,12 @@ export default function AuthorityTokensPage() {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between pt-2">
-            <div className="flex items-center gap-3">
-              <span className="text-[12.77px] font-medium text-[#343434]">Show</span>
-              <div className="flex items-center justify-between gap-2 rounded border border-[#C6CAD1] bg-white px-3 py-2">
-                <span className="text-[14.9px] font-medium text-[#343434]">10</span>
-                <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} className="opacity-60" />
-              </div>
-              <span className="text-[12.77px] font-medium text-[#343434]">Row</span>
-            </div>
-
-            <div className="flex items-center gap-3 font-inter">
-              <button className="flex h-[34px] w-[34px] items-center justify-center rounded bg-[#F5F6F7] hover:bg-gray-200">
-                <svg width="6" height="10" viewBox="0 0 6 10" fill="none">
-                  <path d="M5 1L1 5L5 9" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-              <div className="flex items-center gap-1">
-                <button className="flex h-[35px] w-[35px] items-center justify-center rounded bg-[#0C83FF] text-[12.77px] font-medium text-white">1</button>
-                <button className="flex h-[35px] w-[35px] items-center justify-center rounded bg-transparent text-[12.77px] font-medium text-[#343434] hover:bg-gray-50">2</button>
-                <button className="flex h-[35px] w-[35px] items-center justify-center rounded bg-transparent text-[12.77px] font-medium text-[#343434] hover:bg-gray-50">3</button>
-                <button className="flex h-[35px] w-[35px] items-center justify-center rounded bg-transparent text-[12.77px] font-medium text-[#343434] hover:bg-gray-50">4</button>
-                <button className="flex h-[35px] w-[35px] items-center justify-center rounded bg-transparent text-[12.77px] font-medium text-[#343434] hover:bg-gray-50">5</button>
-                <span className="flex h-[35px] w-[35px] items-center justify-center text-[12.77px] font-medium text-[#343434]">...</span>
-                <button className="flex h-[35px] w-[35px] items-center justify-center rounded bg-transparent text-[12.77px] font-medium text-[#343434] hover:bg-gray-50">10</button>
-              </div>
-              <button className="flex h-[34px] w-[34px] items-center justify-center rounded border border-[#C6CAD1] bg-[#F5F6F7] hover:bg-gray-200">
-                <svg width="6" height="10" viewBox="0 0 6 10" fill="none">
-                  <path d="M1 1L5 5L1 9" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            </div>
-          </div>
+          <TablePagination
+            currentPage={page}
+            totalPages={10}
+            limit={limit}
+            onPageChange={setPage}
+          />
         </div>
       </div>
     </div>

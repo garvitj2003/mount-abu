@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useMyComplaints } from "@/hooks/useComplaints";
 import { useUser } from "@/hooks/useUser";
 import { type components } from "@/types/api";
+import TablePagination from "@/components/ui/TablePagination";
 
 type ComplaintResponse = components["schemas"]["ComplaintResponse"];
 type ComplaintStatus = components["schemas"]["ComplaintStatus"];
@@ -56,6 +57,8 @@ export default function ComplaintsTable({ onComplaintClick }: ComplaintsTablePro
   const { data: user } = useUser();
   const [filter, setFilter] = useState<ComplaintStatus | "All">("All");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const limit = 10;
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
   const [dropdownPos, setDropdownPosition] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -108,6 +111,9 @@ export default function ComplaintsTable({ onComplaintClick }: ComplaintsTablePro
       comp.id.toString().includes(search);
     return matchesSearch;
   });
+
+  const totalPages = Math.ceil(filteredComplaints.length / limit);
+  const paginatedComplaints = filteredComplaints.slice((page - 1) * limit, page * limit);
 
   if (isLoading) {
     return (
@@ -179,8 +185,8 @@ export default function ComplaintsTable({ onComplaintClick }: ComplaintsTablePro
             </tr>
           </thead>
           <tbody>
-            {filteredComplaints.length > 0 ? (
-              filteredComplaints.map((item) => (
+            {paginatedComplaints.length > 0 ? (
+              paginatedComplaints.map((item) => (
                 <tr key={item.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                   <td className="px-2 py-3">
                     <span onClick={() => onComplaintClick?.(item)} className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">
@@ -249,27 +255,12 @@ export default function ComplaintsTable({ onComplaintClick }: ComplaintsTablePro
       )}
 
       {/* Pagination */}
-      <div className="flex items-center justify-between pt-2">
-        <div className="flex items-center gap-3">
-          <span className="text-[12.77px] font-medium text-[#343434]">Show</span>
-          <div className="flex items-center justify-between gap-2 rounded border border-[#C6CAD1] bg-white px-3 py-2">
-             <span className="text-[14.9px] font-medium text-[#343434]">10</span>
-             <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </div>
-          <span className="text-[12.77px] font-medium text-[#343434]">Row</span>
-        </div>
-        <div className="flex items-center gap-3">
-            <button className="flex h-[34px] w-[34px] items-center justify-center rounded bg-[#F5F6F7] hover:bg-gray-200">
-                <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M5 1L1 5L5 9" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
-            <div className="flex items-center gap-1">
-                 <button className="flex h-[35px] w-[35px] items-center justify-center rounded bg-[#0C83FF] text-[12.77px] font-medium text-white">1</button>
-            </div>
-             <button className="flex h-[34px] w-[34px] items-center justify-center rounded bg-[#F5F6F7] border border-[#C6CAD1] hover:bg-gray-200">
-                <svg width="6" height="10" viewBox="0 0 6 10" fill="none"><path d="M1 1L5 5L1 9" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
-        </div>
-      </div>
+      <TablePagination
+        currentPage={page}
+        totalPages={totalPages}
+        limit={limit}
+        onPageChange={setPage}
+      />
     </div>
   );
 }

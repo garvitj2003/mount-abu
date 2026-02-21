@@ -12,6 +12,21 @@ export function useMyComplaints(params: { status?: ComplaintStatus | null; offse
   });
 }
 
+export function useAllComplaints(params: {
+  status?: ComplaintStatus | null;
+  ward_id?: number | null;
+  department_id?: number | null;
+  category_id?: number | null;
+  offset?: number;
+  limit?: number;
+}) {
+  return useQuery({
+    queryKey: ["complaints", "all", params],
+    queryFn: () => ComplaintService.getAllComplaints(params),
+    staleTime: 30 * 1000,
+  });
+}
+
 export function useComplaint(id: number | null) {
   return useQuery({
     queryKey: ["complaint", id],

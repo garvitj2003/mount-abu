@@ -18,6 +18,18 @@ export const ComplaintService = {
     return response.data;
   },
 
+  async getAllComplaints(params: {
+    status?: ComplaintStatus | null;
+    ward_id?: number | null;
+    department_id?: number | null;
+    category_id?: number | null;
+    offset?: number;
+    limit?: number;
+  }): Promise<ComplaintListResponse> {
+    const response = await api.get<ComplaintListResponse>("/api/complaints", { params });
+    return response.data;
+  },
+
   async createComplaint(data: ComplaintCreateRequest): Promise<ComplaintResponse> {
     const response = await api.post<ComplaintResponse>("/api/complaints", data);
     return response.data;

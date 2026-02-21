@@ -3,6 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useUser } from "@/hooks/useUser";
+import { ROLE_PERMISSIONS } from "@/lib/role-permissions";
+import { useMemo } from "react";
+
+
 
 const MENU_ITEMS = [
   {
@@ -69,6 +74,30 @@ const MENU_ITEMS = [
 
 export default function SidebarAuthority() {
   const pathname = usePathname();
+  const { data: user, isLoading } = useUser();
+  const role = user?.role;
+
+  const filteredMenuItems = useMemo(() => {
+    if (!role) return [];
+    // Superadmin can see all items
+    if (role === "SUPERADMIN") return MENU_ITEMS;
+
+    const allowedRoutes = ROLE_PERMISSIONS[role] ?? [];
+    return MENU_ITEMS.filter((item) => {
+      // Always allow the main dashboard link
+      if (item.href === "/authority") return true;
+      // Check if any allowed route is a prefix of the item's href
+      return allowedRoutes.some((allowedPath) => item.href.startsWith(allowedPath));
+    });
+  }, [role]);
+
+  if (isLoading) {
+    return (
+      <aside className="h-full min-h-[calc(100vh-69px)] w-[230px] border-r border-[#D6D9DE] bg-white pt-5 font-onest">
+        {/* Loading skeleton can be added here */}
+      </aside>
+    );
+  }
 
   return (
     <aside className="h-full min-h-[calc(100vh-69px)] w-[230px] border-r border-[#D6D9DE] bg-white pt-5 font-onest">
@@ -77,9 +106,7 @@ export default function SidebarAuthority() {
           Admin Dashboard
         </h2>
         <nav className="flex flex-col gap-2 pb-5">
-          {MENU_ITEMS.map((item) => {
-            // Check if current path starts with item href (for sub-routes)
-            // But handle exact match for dashboard home "/" vs other routes
+          {filteredMenuItems.map((item) => {
             const isActive =
               item.href === "/authority"
                 ? pathname === "/authority"
@@ -121,3 +148,4 @@ export default function SidebarAuthority() {
     </aside>
   );
 }
+

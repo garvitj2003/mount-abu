@@ -2,73 +2,86 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useAllComplaints } from "@/hooks/useComplaints";
+import { useComplaintCategories } from "@/hooks/useMasterData";
+import { type components } from "@/types/api";
+import DropdownSelect from "@/components/ui/DropdownSelect";
+import TablePagination from "@/components/ui/TablePagination";
 
-const COMPLAINTS_DATA = [
-  {
-    id: "1",
-    complaintId: "CMP-0001",
-    category: "Road Maintenance",
-    wardNo: "12",
-    location: "Neelkanth Road, Mount Abu",
-    assignedTo: "Kanhaiya Lal",
-    submittedOn: "10 JAN 2026",
-    status: "Open",
-  },
-  {
-    id: "2",
-    complaintId: "CMP-0001",
-    category: "Water Supply",
-    wardNo: "5",
-    location: "Dhoondhai Area",
-    assignedTo: "Kanhaiya Lal",
-    submittedOn: "09 JAN 2026",
-    status: "Assigned to",
-  },
-  {
-    id: "3",
-    complaintId: "CMP-0003",
-    category: "Street Light",
-    wardNo: "8",
-    location: "Market Road",
-    assignedTo: "Bhavani Singh",
-    submittedOn: "08 JAN 2026",
-    status: "Resolved",
-  },
-];
+type ComplaintStatus = components["schemas"]["ComplaintStatus"];
 
-const StatusBadge = ({ status }: { status: string }) => {
+const StatusBadge = ({ status }: { status: ComplaintStatus }) => {
   let icon = "";
   let textColor = "";
-  let label = status;
+  let label = status.replace("_", " ");
 
   switch (status) {
-    case "Open":
+    case "PENDING":
       icon = "/dashboard/icons/cross-round-red.svg";
       textColor = "text-[#EF4444]";
+      label = "Submitted";
       break;
-    case "Assigned to":
+    case "IN_PROGRESS":
       icon = "/dashboard/icons/timer-round.svg";
       textColor = "text-[#B39632]";
+      label = "In Progress";
       break;
-    case "Resolved":
+    case "RESOLVED":
       icon = "/dashboard/icons/tick-round-green.svg";
       textColor = "text-[#059669]";
+      label = "Resolved";
+      break;
+    case "REJECTED":
+    case "WITHDRAWN":
+    case "WITHHELD":
+      icon = "/dashboard/icons/warning.svg"; // Fallback or specific icon
+      textColor = "text-[#EF4444]";
+      label = status.charAt(0) + status.slice(1).toLowerCase();
       break;
     default:
-      return null;
+      icon = "/dashboard/icons/question-mark.svg";
+      textColor = "text-gray-500";
+      label = status;
   }
 
   return (
     <div className="flex items-center gap-1.5">
-      <Image src={icon} alt={status} width={14} height={14} />
+      {icon && <Image src={icon} alt={status} width={14} height={14} />}
       <span className={`text-sm font-normal ${textColor}`}>{label}</span>
     </div>
   );
 };
 
 export default function AuthorityComplaintsPage() {
-  const [filter, setFilter] = useState("All");
+  const [filter, setFilter] = useState<ComplaintStatus | "All">("All");
   const [search, setSearch] = useState("");
+  const [categoryId, setCategoryId] = useState<number | "All">("All");
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
+  const { data: categories } = useComplaintCategories();
+
+  const { data, isLoading } = useAllComplaints({
+    status: filter === "All" ? null : filter,
+    category_id: categoryId === "All" ? null : categoryId,
+    offset: (page - 1) * limit,
+    limit: limit,
+  });
+
+  const complaints = data?.items || [];
+  const total = data?.total || 0;
+  const totalPages = Math.ceil(total / limit);
+
+  const filteredComplaints = complaints.filter((c) => 
+    c.title.toLowerCase().includes(search.toLowerCase()) || 
+    c.id.toString().includes(search) ||
+    c.applicant_name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const categoryOptions = [
+    { label: "All Category", value: "All" },
+    ...(categories?.map((cat) => ({ label: cat.name, value: cat.id })) || [])
+  ];
 
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest">
@@ -103,29 +116,37 @@ export default function AuthorityComplaintsPage() {
               />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 h-9">
               {/* Category Dropdown */}
-              <div className="flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors">
-                <span className="text-sm font-normal text-[#343434]">All Category</span>
-                <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} className="opacity-60" />
-              </div>
+              <DropdownSelect
+                options={categoryOptions}
+                value={categoryId}
+                onChange={(val) => setCategoryId(val === "All" ? "All" : Number(val))}
+                className="w-[160px] h-full"
+              />
 
               {/* Status Divider */}
               <div className="h-6 w-[1px] bg-[#D6D9DE] mx-1"></div>
 
               {/* Filter Tabs */}
               <div className="flex items-center rounded-lg border border-[#D6D9DE] bg-white overflow-hidden">
-                {["All", "Submitted", "Resolved", "Closed"].map((s) => (
+                {(["All", "PENDING", "IN_PROGRESS", "RESOLVED", "REJECTED"] as const).map((s) => (
                   <button
                     key={s}
-                    onClick={() => setFilter(s)}
+                    onClick={() => {
+                        setFilter(s);
+                        setPage(1);
+                    }}
                     className={`px-4 py-2 text-sm transition-colors ${
                       filter === s
                         ? "bg-[#E7F3FF] text-[#0C83FF] font-semibold"
                         : "bg-white text-[#343434] hover:bg-gray-50 border-r border-[#D6D9DE] last:border-r-0"
                     }`}
                   >
-                    {s}
+                    {s === "All" ? "All" : 
+                     s === "PENDING" ? "Submitted" :
+                     s === "IN_PROGRESS" ? "In Progress" :
+                     s === "RESOLVED" ? "Resolved" : "Closed"}
                   </button>
                 ))}
               </div>
@@ -142,7 +163,7 @@ export default function AuthorityComplaintsPage() {
                     "Category",
                     "Ward No.",
                     "Location",
-                    "Assigned To",
+                    "Assigned To", // Note: API might not have this, we'll check.
                     "Submitted On",
                     "Status",
                   ].map((header, idx) => (
@@ -156,77 +177,87 @@ export default function AuthorityComplaintsPage() {
                 </tr>
               </thead>
               <tbody>
-                {COMPLAINTS_DATA.map((item) => (
-                  <tr key={item.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
-                    <td className="px-2 py-3">
-                      <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{item.complaintId}</span>
-                    </td>
-                    <td className="px-2 py-3">
-                      <span className="text-sm font-normal text-[#343434]">{item.category}</span>
-                    </td>
-                    <td className="px-2 py-3">
-                      <span className="text-sm font-normal text-[#343434]">{item.wardNo}</span>
-                    </td>
-                    <td className="px-2 py-3">
-                      <span className="text-sm font-normal text-[#343434] line-clamp-1 max-w-[200px]" title={item.location}>{item.location}</span>
-                    </td>
-                    <td className="px-2 py-3">
-                      <span className="text-sm font-normal text-[#343434]">{item.assignedTo}</span>
-                    </td>
-                    <td className="px-2 py-3">
-                      <span className="text-sm font-normal text-[#343434]">{item.submittedOn}</span>
-                    </td>
-                    <td className="px-2 py-3">
-                      <StatusBadge status={item.status} />
-                    </td>
-                    <td className="px-2 py-3 text-center">
-                      <button className="text-[#343434] hover:bg-gray-200 rounded p-1 transition-colors">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                          <path d="M8 8.66667C8.36819 8.66667 8.66667 8.36819 8.66667 8C8.66667 7.63181 8.36819 7.33333 8 7.33333C7.63181 7.33333 7.33333 7.63181 7.33333 8C7.33333 8.36819 7.63181 8.66667 8 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M13.3333 8.66667C13.7015 8.66667 14 8.36819 14 8C14 7.63181 13.7015 7.33333 13.3333 7.33333C12.9651 7.33333 12.6667 7.63181 12.6667 8C12.6667 8.36819 12.9651 8.66667 13.3333 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M2.66667 8.66667C3.03486 8.66667 3.33333 8.36819 3.33333 8C3.33333 7.63181 3.03486 7.33333 2.66667 7.33333C2.29848 7.33333 2 7.63181 2 8C2 8.36819 2.29848 8.66667 2.66667 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </button>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={8} className="px-2 py-10 text-center">
+                      <div className="flex justify-center items-center gap-2">
+                         <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#0C83FF] border-t-transparent"></div>
+                         <span className="text-sm text-gray-500">Loading complaints...</span>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                ) : filteredComplaints.length === 0 ? (
+                    <tr>
+                        <td colSpan={8} className="px-2 py-10 text-center text-sm text-gray-500">
+                            No complaints found.
+                        </td>
+                    </tr>
+                ) : (
+                  filteredComplaints.map((item) => (
+                    <tr key={item.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
+                      <td className="px-2 py-3">
+                        <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">
+                            #CMP-{item.id.toString().padStart(4, '0')}
+                        </span>
+                      </td>
+                      <td className="px-2 py-3">
+                        {/* Assuming category_name is available in ComplaintRow based on schema. 
+                            If not, we might need to map category_id to name using categories list */}
+                        <span className="text-sm font-normal text-[#343434]">
+                            {(item as any).category_name || categories?.find(c => c.id === item.category_id)?.name || "—"}
+                        </span>
+                      </td>
+                      <td className="px-2 py-3">
+                        <span className="text-sm font-normal text-[#343434]">{item.ward_id || "—"}</span>
+                      </td>
+                      <td className="px-2 py-3">
+                        <span className="text-sm font-normal text-[#343434] line-clamp-1 max-w-[200px]" title={item.location_address || ""}>
+                            {item.location_address || "—"}
+                        </span>
+                      </td>
+                      <td className="px-2 py-3">
+                        {/* API response for getAllComplaints might not have assignedTo yet. 
+                            ComplaintRow schema has: complaint_id, title, category_name, status, applicant_name, created_at.
+                            It does NOT have assignedTo. I'll put "-" for now or applicant_name if that's what we want.
+                            Wait, the mock had "Assigned To". The citizen view shows "Ward No", "Location".
+                            The authority view shows "Assigned To".
+                            If the API doesn't return it, I can't show it. I'll use "—" for now.
+                        */}
+                        <span className="text-sm font-normal text-[#343434]">
+                            —
+                        </span>
+                      </td>
+                      <td className="px-2 py-3">
+                        <span className="text-sm font-normal text-[#343434]">
+                            {new Date(item.created_at || "").toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </span>
+                      </td>
+                      <td className="px-2 py-3">
+                        <StatusBadge status={item.status} />
+                      </td>
+                      <td className="px-2 py-3 text-center">
+                        <button className="text-[#343434] hover:bg-gray-200 rounded p-1 transition-colors">
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 8.66667C8.36819 8.66667 8.66667 8.36819 8.66667 8C8.66667 7.63181 8.36819 7.33333 8 7.33333C7.63181 7.33333 7.33333 7.63181 7.33333 8C7.33333 8.36819 7.63181 8.66667 8 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M13.3333 8.66667C13.7015 8.66667 14 8.36819 14 8C14 7.63181 13.7015 7.33333 13.3333 7.33333C12.9651 7.33333 12.6667 7.63181 12.6667 8C12.6667 8.36819 12.9651 8.66667 13.3333 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M2.66667 8.66667C3.03486 8.66667 3.33333 8.36819 3.33333 8C3.33333 7.63181 3.03486 7.33333 2.66667 7.33333C2.29848 7.33333 2 7.63181 2 8C2 8.36819 2.29848 8.66667 2.66667 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between pt-2">
-            <div className="flex items-center gap-3">
-              <span className="text-[12.77px] font-medium text-[#343434]">Show</span>
-              <div className="flex items-center justify-between gap-2 rounded border border-[#C6CAD1] bg-white px-3 py-2">
-                <span className="text-[14.9px] font-medium text-[#343434]">10</span>
-                <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} className="opacity-60" />
-              </div>
-              <span className="text-[12.77px] font-medium text-[#343434]">Row</span>
-            </div>
-
-            <div className="flex items-center gap-3 font-inter">
-              <button className="flex h-[34px] w-[34px] items-center justify-center rounded bg-[#F5F6F7] hover:bg-gray-200">
-                <svg width="6" height="10" viewBox="0 0 6 10" fill="none">
-                  <path d="M5 1L1 5L5 9" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-              <div className="flex items-center gap-1">
-                <button className="flex h-[35px] w-[35px] items-center justify-center rounded bg-[#0C83FF] text-[12.77px] font-medium text-white">1</button>
-                <button className="flex h-[35px] w-[35px] items-center justify-center rounded bg-transparent text-[12.77px] font-medium text-[#343434] hover:bg-gray-50">2</button>
-                <button className="flex h-[35px] w-[35px] items-center justify-center rounded bg-transparent text-[12.77px] font-medium text-[#343434] hover:bg-gray-50">3</button>
-                <button className="flex h-[35px] w-[35px] items-center justify-center rounded bg-transparent text-[12.77px] font-medium text-[#343434] hover:bg-gray-50">4</button>
-                <button className="flex h-[35px] w-[35px] items-center justify-center rounded bg-transparent text-[12.77px] font-medium text-[#343434] hover:bg-gray-50">5</button>
-                <span className="flex h-[35px] w-[35px] items-center justify-center text-[12.77px] font-medium text-[#343434]">...</span>
-                <button className="flex h-[35px] w-[35px] items-center justify-center rounded bg-transparent text-[12.77px] font-medium text-[#343434] hover:bg-gray-50">10</button>
-              </div>
-              <button className="flex h-[34px] w-[34px] items-center justify-center rounded border border-[#C6CAD1] bg-[#F5F6F7] hover:bg-gray-200">
-                <svg width="6" height="10" viewBox="0 0 6 10" fill="none">
-                  <path d="M1 1L5 5L1 9" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            </div>
-          </div>
+          <TablePagination
+            currentPage={page}
+            totalPages={totalPages}
+            limit={limit}
+            onPageChange={setPage}
+          />
         </div>
       </div>
     </div>

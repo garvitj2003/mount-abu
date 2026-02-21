@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { decodeJwt } from "jose";
+import { ROLE_PERMISSIONS } from "./lib/role-permissions";
+import { components } from "./types/api";
+
+type UserRole = components["schemas"]["UserRole"];
 
 const API_URL = process.env.INTERNAL_API_URL || "http://localhost:8000";
 const publicRoutes = ["/login", "/signup", "/api/auth/refresh", "/public"];
@@ -71,6 +75,8 @@ export async function proxy(request: NextRequest) {
       const payload = decodeJwt(accessToken);
       const role = payload.role as string;
 
+
+      // 3.2. Role-Based Access Control (RBAC)
       if (role === "CITIZEN" && path.startsWith("/authority")) {
         return NextResponse.redirect(new URL("/citizen", request.url));
       }
@@ -79,7 +85,21 @@ export async function proxy(request: NextRequest) {
         return NextResponse.redirect(new URL("/authority", request.url));
       }
 
-      // If we refreshed the token in step 2, we need to return the response 
+      // **New RBAC check for authority routes**
+      if (
+        role !== "SUPERADMIN" && // Superadmin can access everything
+        path.startsWith("/authority/") 
+      ) {
+        const allowedRoutes = ROLE_PERMISSIONS[role as UserRole] ?? [];
+        // The check should be if the current path starts with any of the allowed routes.
+        const isAllowed = allowedRoutes.some(allowedPath => path.startsWith(allowedPath));
+        
+        if (!isAllowed) {
+          return NextResponse.redirect(new URL("/unauthorized", request.url));
+        }
+      }
+
+      // If we refreshed the token in step 2, we need to return the response
       // that contains the new cookie, otherwise we just return NextResponse.next()
       const response = NextResponse.next();
       if (!cookies.get("access_token")?.value && accessToken) {
