@@ -37,6 +37,69 @@ export default function NewApplicationPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Resume Application Logic
+  useEffect(() => {
+    const resumeApplication = async () => {
+      if (!applicationId) return;
+
+      try {
+        const app = await ApplicationService.getApplication(applicationId);
+        
+        // 1. Populate Form Data
+        updateFormData({
+          applicant_name: app.applicant_name,
+          father_name: app.father_name,
+          email: app.email || "",
+          current_address: app.current_address,
+          property_address: app.property_address,
+          type: app.type as any, // Cast to enum
+          work_description: app.work_description,
+          contractor_name: app.contractor_name || "",
+          is_agriculture_land: app.is_agriculture_land,
+          property_usage: app.property_usage as any,
+          department_id: app.department_id || 0,
+          ward_id: app.ward_id || 0,
+        });
+
+        // 2. Populate Materials (Local State)
+        if (dbMaterials.length > 0) {
+          const mergedMaterials = dbMaterials.map((dm) => {
+            const existing = app.materials?.find((am) => am.material_id === dm.id);
+            return {
+              id: dm.id,
+              name: dm.name,
+              unit: dm.unit,
+              qty: existing ? existing.quantity.toString() : "",
+            };
+          });
+          setMaterials(mergedMaterials);
+        }
+
+        // 3. Determine Step
+        const requiredDocs = ["AADHAAR", "OWNERSHIP_DOCUMENTS", "PROPERTY_PHOTOS", "PERMISSION_DOCUMENTS"];
+        const uploadedDocTypes = app.documents?.map(d => d.document_type) || [];
+        const allDocsUploaded = requiredDocs.every(type => uploadedDocTypes.includes(type as any));
+        
+        const hasMaterials = app.materials && app.materials.length > 0;
+
+        if (!allDocsUploaded) {
+          setCurrentStep(2);
+        } else if (!hasMaterials) {
+          setCurrentStep(3);
+        } else {
+          setCurrentStep(4);
+        }
+
+      } catch (error) {
+        console.error("Failed to resume application", error);
+      }
+    };
+
+    if (applicationId && dbMaterials.length > 0) { // Wait for dbMaterials to be loaded to map correctly
+        resumeApplication();
+    }
+  }, [applicationId, updateFormData, setCurrentStep, dbMaterials]);
+
   // Sync Mobile
   useEffect(() => {
     if (user?.mobile) {
@@ -45,25 +108,26 @@ export default function NewApplicationPage() {
   }, [user, updateFormData, formData.email]);
 
   // Form State Step 2 (Files)
-  const [files, setFiles] = useState<{ [key: string]: File | null }>({
+  const [files, setFiles] = useState<{ [key: string]: File | File[] | null }>({
     aadharCard: null,
     ownershipDocument: null,
-    propertyPhotos: null,
+    propertyPhotos: [],
     permissionDocuments: null,
   });
 
   // Form State Step 3 (Materials)
-  const [materials, setMaterials] = useState([
-    { id: 1, name: "Cement", unit: "Kgs", qty: "" },
-    { id: 2, name: "Sand", unit: "Kgs", qty: "" },
-    { id: 3, name: "Tiles", unit: "Nos", qty: "" },
-    { id: 4, name: "Concrete", unit: "Kgs", qty: "" },
-    { id: 5, name: "Steel Rods (Reinforcement)", unit: "Kgs", qty: "" },
-    { id: 6, name: "Slabs", unit: "bags", qty: "" },
-    { id: 7, name: "Granite / Kota Stone", unit: "Kgs", qty: "" },
-    { id: 8, name: "Bricks", unit: "Nos", qty: "" },
-    { id: 9, name: "Stone", unit: "Kgs", qty: "" },
-  ]);
+  const [materials, setMaterials] = useState<{id: number, name: string, unit: string, qty: string}[]>([]);
+
+  useEffect(() => {
+    if (dbMaterials.length > 0 && materials.length === 0) {
+      setMaterials(dbMaterials.map(m => ({
+        id: m.id,
+        name: m.name,
+        unit: m.unit,
+        qty: ""
+      })));
+    }
+  }, [dbMaterials, materials.length]);
 
   const [extraMaterials, setExtraMaterials] = useState<
     { id: number; name: string; unit: string; qty: string }[]
@@ -85,8 +149,24 @@ export default function NewApplicationPage() {
     });
   };
 
-  const handleFileChange = (key: string, file: File | null) => {
-    setFiles((prev) => ({ ...prev, [key]: file }));
+  const handleFileChange = (key: string, fileList: FileList | null) => {
+    if (key === "propertyPhotos") {
+      if (fileList) {
+        setFiles((prev) => ({
+          ...prev,
+          [key]: [...(prev[key] as File[] || []), ...Array.from(fileList)],
+        }));
+      }
+    } else {
+      setFiles((prev) => ({ ...prev, [key]: fileList ? fileList[0] : null }));
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    setFiles((prev) => ({
+      ...prev,
+      propertyPhotos: (prev.propertyPhotos as File[]).filter((_, i) => i !== index),
+    }));
   };
 
   const handleMaterialQtyChange = (id: number, qty: string) => {
@@ -149,12 +229,37 @@ export default function NewApplicationPage() {
         { key: "propertyPhotos", type: "PROPERTY_PHOTOS" },
         { key: "permissionDocuments", type: "PERMISSION_DOCUMENTS" },
       ];
+      
       let completed = 0;
+      let totalFiles = 0;
+      
+      // Calculate total files
+      docTypes.forEach(doc => {
+        if (doc.key === "propertyPhotos") {
+          totalFiles += (files[doc.key] as File[])?.length || 0;
+        } else if (files[doc.key]) {
+          totalFiles += 1;
+        }
+      });
+
       for (const doc of docTypes) {
-        const file = files[doc.key];
-        if (file) await ApplicationService.uploadDocument(applicationId, file, doc.type);
-        completed++;
-        setUploadProgress(Math.round((completed / docTypes.length) * 100));
+        if (doc.key === "propertyPhotos") {
+          const photos = files[doc.key] as File[];
+          if (photos && photos.length > 0) {
+            for (const photo of photos) {
+              await ApplicationService.uploadDocument(applicationId, photo, doc.type);
+              completed++;
+              setUploadProgress(Math.round((completed / totalFiles) * 100));
+            }
+          }
+        } else {
+          const file = files[doc.key] as File;
+          if (file) {
+            await ApplicationService.uploadDocument(applicationId, file, doc.type);
+            completed++;
+            setUploadProgress(Math.round((completed / totalFiles) * 100));
+          }
+        }
       }
       setCurrentStep(3);
     } catch (error) {
@@ -172,8 +277,7 @@ export default function NewApplicationPage() {
       const requirements: any[] = [];
       materials.forEach(m => {
         if (m.qty && !isNaN(Number(m.qty))) {
-          const dbMat = dbMaterials.find(dm => dm.name.toLowerCase() === m.name.toLowerCase());
-          if (dbMat) requirements.push({ material_id: dbMat.id, material_qty: Number(m.qty) });
+          requirements.push({ material_id: m.id, material_qty: Number(m.qty) });
         }
       });
       if (requirements.length === 0) {
@@ -378,7 +482,7 @@ export default function NewApplicationPage() {
     const uploadFields = [
       { key: "aadharCard", label: "Aadhar Card", hint: "PDF Only", accept: ".pdf" },
       { key: "ownershipDocument", label: "Ownership Document", hint: "PDF Only", accept: ".pdf" },
-      { key: "propertyPhotos", label: "Property Photos", hint: "JPEG, PNG formats.", accept: ".jpg,.jpeg,.png" },
+      { key: "propertyPhotos", label: "Property Photos", hint: "JPEG, PNG formats.", accept: ".jpg,.jpeg,.png", multiple: true },
       { key: "permissionDocuments", label: "Permission Documents", hint: "PDF Only", accept: ".pdf" },
     ];
     return (
@@ -392,27 +496,56 @@ export default function NewApplicationPage() {
         {uploadFields.map((field) => (
           <div key={field.key} className="flex gap-5">
             <label className="w-[228px] text-[12px] font-normal text-[#343434] leading-tight font-onest">{field.label}</label>
-            <div className="flex h-[138px] w-[321px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-[#D6D9DE] bg-white p-3">
-              {files[field.key] ? (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-50">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17L4 12" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <div className="flex items-start gap-4">
+              <div className="flex h-[138px] w-[321px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-[#D6D9DE] bg-white p-3">
+                {(files[field.key] && !field.multiple) ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-50">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17L4 12" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </div>
+                    <span className="text-xs font-medium text-[#343434] truncate max-w-[200px] font-onest">{(files[field.key] as File).name}</span>
+                    <button onClick={() => handleFileChange(field.key, null)} className="text-[10px] text-red-500 hover:underline font-onest">Remove</button>
                   </div>
-                  <span className="text-xs font-medium text-[#343434] truncate max-w-[200px] font-onest">{files[field.key]?.name}</span>
-                  <button onClick={() => handleFileChange(field.key, null)} className="text-[10px] text-red-500 hover:underline font-onest">Remove</button>
+                ) : (
+                  <>
+                    <Image src="/dashboard/icons/applications/upload-cloud.svg" alt="upload" width={36} height={36} />
+                    <div className="flex flex-col items-center">
+                      <p className="text-sm font-normal text-black text-center leading-tight font-onest">Choose {field.multiple ? "files" : "a file"} or drag & drop.</p>
+                      <p className="text-[12px] font-normal text-black opacity-60 font-onest">{field.hint}</p>
+                    </div>
+                    <label className="mt-1 flex cursor-pointer items-center justify-center rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-2 text-sm font-normal text-[#343434] hover:bg-gray-200 transition-colors font-onest">
+                      Browse File
+                      <input 
+                        type="file" 
+                        className="hidden" 
+                        accept={field.accept} 
+                        multiple={field.multiple}
+                        onChange={(e) => handleFileChange(field.key, e.target.files)} 
+                      />
+                    </label>
+                  </>
+                )}
+              </div>
+              
+              {/* Preview List for Multiple Files (Property Photos) */}
+              {field.multiple && (files[field.key] as File[])?.length > 0 && (
+                <div className="flex flex-col gap-2 max-h-[138px] overflow-y-auto pr-1">
+                  {(files[field.key] as File[]).map((file, index) => (
+                    <div key={index} className="flex h-12 w-[200px] items-center gap-2 rounded border border-[#D6D9DE] bg-white p-1 pr-2 shrink-0">
+                      <div className="h-10 w-10 relative bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                        {file.type.startsWith('image/') ? (
+                          <img src={URL.createObjectURL(file)} alt="preview" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-500">Doc</div>
+                        )}
+                      </div>
+                      <span className="text-xs text-[#343434] truncate flex-1 font-onest">{file.name}</span>
+                      <button onClick={() => removePhoto(index)} className="p-1 hover:bg-red-50 rounded">
+                        <Image src="/dashboard/icons/close.svg" alt="remove" width={10} height={10} className="opacity-60 hover:opacity-100" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <>
-                  <Image src="/dashboard/icons/applications/upload-cloud.svg" alt="upload" width={36} height={36} />
-                  <div className="flex flex-col items-center">
-                    <p className="text-sm font-normal text-black text-center leading-tight font-onest">Choose a file or drag & drop it here.</p>
-                    <p className="text-[12px] font-normal text-black opacity-60 font-onest">{field.hint}</p>
-                  </div>
-                  <label className="mt-1 flex cursor-pointer items-center justify-center rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-2 text-sm font-normal text-[#343434] hover:bg-gray-200 transition-colors font-onest">
-                    Browse File
-                    <input type="file" className="hidden" accept={field.accept} onChange={(e) => handleFileChange(field.key, e.target.files?.[0] || null)} />
-                  </label>
-                </>
               )}
             </div>
           </div>
@@ -423,7 +556,7 @@ export default function NewApplicationPage() {
             <button onClick={() => setCurrentStep(1)} disabled={uploading} className="flex items-center justify-center gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-6 py-3 text-sm font-medium text-[#343434] hover:bg-gray-200 transition-colors font-onest disabled:opacity-50">
               <Image src="/dashboard/icons/applications/arrow-back.svg" alt="back" width={14} height={14} /> Back
             </button>
-            <button onClick={onNextStep2} disabled={uploading || !Object.values(files).some(f => f !== null)} className="flex items-center justify-center gap-2 rounded-lg bg-[#0C83FF] px-6 py-3 text-sm font-medium text-white hover:bg-blue-600 transition-colors font-onest disabled:opacity-50">
+            <button onClick={onNextStep2} disabled={uploading || (!files.aadharCard || !files.ownershipDocument || !files.permissionDocuments)} className="flex items-center justify-center gap-2 rounded-lg bg-[#0C83FF] px-6 py-3 text-sm font-medium text-white hover:bg-blue-600 transition-colors font-onest disabled:opacity-50">
               {uploading ? "Uploading..." : "Next"} {!uploading && <Image src="/dashboard/icons/applications/step-arrow.svg" alt="next" width={14} height={14} className="invert brightness-0" />}
             </button>
           </div>

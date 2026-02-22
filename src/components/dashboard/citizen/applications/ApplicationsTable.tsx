@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@/hooks/useUser";
 import { useApplications } from "@/hooks/useApplications";
+import { useApplicationStore } from "@/store/useApplicationStore";
 import { ApplicationService } from "@/services/applicationService";
 import { type components } from "@/types/api";
 import TablePagination from "@/components/ui/TablePagination";
@@ -67,6 +69,8 @@ interface ApplicationsTableProps {
 export default function ApplicationsTable({ onComplaintClick }: ApplicationsTableProps) {
   const { data: user } = useUser();
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const { setApplicationId } = useApplicationStore();
   const [filter, setFilter] = useState<"All" | "NEW" | "RENOVATION">("All");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -113,6 +117,13 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
         left: rect.right - 195,
       });
       setOpenDropdownId(id);
+    }
+  };
+
+  const handleResume = (app: ApplicationResponse) => {
+    if (app.status === "PENDING") {
+      setApplicationId(app.id);
+      router.push("/citizen/applications/new-application");
     }
   };
 
@@ -264,7 +275,10 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
               paginatedApplications.map((app) => (
                 <tr key={app.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                   <td className="px-2 py-3">
-                    <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">
+                    <span 
+                      onClick={() => handleResume(app)}
+                      className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer"
+                    >
                       #{app.id.toString().padStart(5, '0')}
                     </span>
                   </td>
@@ -335,6 +349,8 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
               e.stopPropagation();
               setOpenDropdownId(null);
               // Handle View Application logic
+              const app = applications.find(a => a.id === openDropdownId);
+              if (app) handleResume(app);
             }}
             className="flex h-10 w-full items-center gap-[11px] rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer"
           >

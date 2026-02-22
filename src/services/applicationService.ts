@@ -42,6 +42,11 @@ export const ApplicationService = {
     return response.data;
   },
 
+  async getApplication(id: number): Promise<ApplicationResponse> {
+    const response = await api.get<ApplicationResponse>(`/api/applications/${id}`);
+    return response.data;
+  },
+
   async createApplication(
     data: ApplicationCreate,
   ): Promise<ApplicationResponse> {

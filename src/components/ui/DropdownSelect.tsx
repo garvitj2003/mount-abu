@@ -16,6 +16,8 @@ interface DropdownSelectProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  renderTrigger?: (option: Option | undefined, isOpen: boolean) => React.ReactNode;
+  triggerClassName?: string;
 }
 
 export default function DropdownSelect({
@@ -25,6 +27,8 @@ export default function DropdownSelect({
   placeholder = "Select option",
   className = "",
   disabled = false,
+  renderTrigger,
+  triggerClassName = "",
 }: DropdownSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -48,22 +52,28 @@ export default function DropdownSelect({
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
-        className={`flex h-full w-full items-center justify-between rounded-lg border bg-white px-3 text-sm transition-colors focus:border-[#0C83FF] focus:outline-none disabled:bg-gray-50 disabled:opacity-60 ${
+        className={`flex h-full w-full items-center justify-between rounded-lg border px-3 text-sm transition-colors focus:border-[#0C83FF] focus:outline-none disabled:bg-gray-50 disabled:opacity-60 ${
           isOpen ? "border-[#0C83FF]" : "border-[#D6D9DE]"
-        }`}
+        } ${triggerClassName || "bg-white"}`}
       >
-        <span className={`truncate font-normal ${selectedOption ? "text-[#343434]" : "text-[#343434] opacity-40"}`}>
-          {selectedOption ? selectedOption.label : placeholder}
-        </span>
-        <div className={`pointer-events-none transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
-          <Image
-            src="/dashboard/icons/applications/chevron-down.svg"
-            alt="down"
-            width={10}
-            height={6}
-            className="opacity-60"
-          />
-        </div>
+        {renderTrigger ? (
+          renderTrigger(selectedOption, isOpen)
+        ) : (
+          <>
+            <span className={`truncate font-normal ${selectedOption ? "text-[#343434]" : "text-[#343434] opacity-40"}`}>
+              {selectedOption ? selectedOption.label : placeholder}
+            </span>
+            <div className={`pointer-events-none transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
+              <Image
+                src="/dashboard/icons/applications/chevron-down.svg"
+                alt="down"
+                width={10}
+                height={6}
+                className="opacity-60"
+              />
+            </div>
+          </>
+        )}
       </button>
 
       <AnimatePresence>

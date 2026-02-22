@@ -36,9 +36,7 @@ const formatDate = (dateStr: string) => {
   });
 };
 
-const formatCreator = (row: any) => {
-  return row.created_by?.full_name || row.created_by?.username || "System";
-};
+
 
 const CATEGORY_COLUMNS: TableColumn[] = [
   { 
@@ -52,7 +50,7 @@ const CATEGORY_COLUMNS: TableColumn[] = [
   { 
     header: "Created by", 
     key: "created_by",
-    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatCreator(row)}</span>
+    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{row.created_by?.name || "System"}</span>
   },
   { 
     header: "Created On", 
@@ -69,7 +67,7 @@ const WARD_COLUMNS: TableColumn[] = [
   { 
     header: "Created by", 
     key: "created_by",
-    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatCreator(row)}</span>
+    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{row.created_by?.name || "System"}</span>
   },
   { 
     header: "Created On", 
@@ -86,7 +84,7 @@ const DEPARTMENT_COLUMNS: TableColumn[] = [
   { 
     header: "Created by", 
     key: "created_by",
-    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatCreator(row)}</span>
+    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{row.created_by?.name || "System"}</span>
   },
   { 
     header: "Created On", 
@@ -102,7 +100,7 @@ const ROLE_COLUMNS: TableColumn[] = [
   { 
     header: "Created by", 
     key: "created_by",
-    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatCreator(row)}</span>
+    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{row.created_by?.name || "System"}</span>
   },
   { 
     header: "Created On", 
@@ -122,7 +120,7 @@ const MATERIAL_COLUMNS: TableColumn[] = [
   { 
     header: "Created by", 
     key: "created_by",
-    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatCreator(row)}</span>
+    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{row.created_by?.name || "System"}</span>
   },
   { 
     header: "Created On", 

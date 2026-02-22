@@ -8,15 +8,10 @@ import TablePagination from "@/components/ui/TablePagination";
 import { type components } from "@/types/api";
 
 // Define a type for the user who created the entry, based on actual usage
-interface CreatorUser {
-  full_name?: string | null;
-  username?: string | null;
-}
+
 
 // Extend the generated ComplaintCategoryResponse to include created_by
-type ComplaintCategory = components["schemas"]["ComplaintCategoryResponse"] & {
-  created_by?: CreatorUser | null;
-};
+type ComplaintCategory = components["schemas"]["ComplaintCategoryResponse"]
 
 interface TableColumn {
   header: string;
@@ -34,10 +29,6 @@ const formatDate = (dateStr: string) => {
   });
 };
 
-const formatCreator = (row: ComplaintCategory) => {
-  // Now row.created_by is correctly typed, allowing safe access
-  return row.created_by?.full_name || row.created_by?.username || "System";
-};
 
 const CATEGORY_COLUMNS: TableColumn[] = [
   {
@@ -57,7 +48,7 @@ const CATEGORY_COLUMNS: TableColumn[] = [
     key: "created_by",
     render: (row) => (
       <span className="text-sm font-normal text-[#343434] opacity-70">
-        {formatCreator(row)}
+        {row.created_by?.name || ""}
       </span>
     ),
   },
