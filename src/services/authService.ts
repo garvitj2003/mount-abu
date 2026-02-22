@@ -31,7 +31,7 @@ export const AuthService = {
    * Note: This returns tokens, so we should probably handle this in a Server Action
    * if we want to set HttpOnly cookies directly.
    */
-  async signup(name: string, mobile: string, otp: string): Promise<components["schemas"]["TokenResponse"]> {
+  async signup(name: string, mobile: string, otp: string): Promise<components["schemas"]["backend__controllers__auth__TokenResponse"]> {
     const response = await api.post("/auth/signup", { name, mobile, otp });
     return response.data;
   }

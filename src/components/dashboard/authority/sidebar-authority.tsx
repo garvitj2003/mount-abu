@@ -76,13 +76,13 @@ export default function SidebarAuthority() {
   const pathname = usePathname();
   const { data: user, isLoading } = useUser();
   const role = user?.role;
-
+  type AuthorityRole = keyof typeof ROLE_PERMISSIONS;
+  
   const filteredMenuItems = useMemo(() => {
     if (!role) return [];
     // Superadmin can see all items
     if (role === "SUPERADMIN") return MENU_ITEMS;
-
-    const allowedRoutes = ROLE_PERMISSIONS[role] ?? [];
+    const allowedRoutes = ROLE_PERMISSIONS[role as AuthorityRole] ?? [];
     return MENU_ITEMS.filter((item) => {
       // Always allow the main dashboard link
       if (item.href === "/authority") return true;

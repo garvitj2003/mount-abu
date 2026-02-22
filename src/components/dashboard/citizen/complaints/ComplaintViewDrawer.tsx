@@ -41,7 +41,7 @@ export default function ComplaintViewDrawer({
     },
     { 
       label: "Resolved", 
-      date: displayData?.status === "RESOLVED" ? new Date(displayData.updated_at).toLocaleString() : "—", 
+      date: displayData?.status === "RESOLVED" ? new Date(displayData.updated_at || "").toLocaleString() : "—", 
       completed: displayData?.status === "RESOLVED" 
     },
   ];
@@ -128,7 +128,7 @@ export default function ComplaintViewDrawer({
                         Submitted On
                       </p>
                       <p className="text-sm font-medium text-[#343434]">
-                        {new Date(displayData.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        {new Date(displayData.created_at || "").toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                       </p>
                     </div>
                   </div>

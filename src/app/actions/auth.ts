@@ -3,7 +3,8 @@
 import { cookies } from "next/headers";
 import { type components } from "@/types/api";
 
-type TokenResponse = components["schemas"]["TokenResponse"];
+type TokenResponse = components["schemas"]["backend__controllers__auth__TokenResponse"];
+type RefreshTokenResponse = components["schemas"]["RefreshTokenResponse"];
 
 const API_URL = process.env.INTERNAL_API_URL || "http://localhost:8000";
 
@@ -131,7 +132,7 @@ export async function refreshAction() {
       return { success: false, error: "Session expired" };
     }
 
-    const tokens = await response.json();
+    const tokens: RefreshTokenResponse = await response.json();
     // Update the access_token cookie
     cookieStore.set("access_token", tokens.access_token, {
       httpOnly: false,

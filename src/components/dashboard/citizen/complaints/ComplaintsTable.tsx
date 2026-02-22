@@ -196,7 +196,7 @@ export default function ComplaintsTable({ onComplaintClick }: ComplaintsTablePro
                   <td className="px-2 py-3"><span className="text-sm font-normal text-[#333333] line-clamp-1 max-w-[200px]">{item.title}</span></td>
                   <td className="px-2 py-3"><span className="text-sm font-normal text-[#333333]">{item.ward_id || "—"}</span></td>
                   <td className="px-2 py-3"><span className="text-sm font-normal text-[#333333] line-clamp-1 max-w-[250px]">{item.location_address || "—"}</span></td>
-                  <td className="px-2 py-3"><span className="text-sm font-normal text-[#333333]">{new Date(item.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span></td>
+                  <td className="px-2 py-3"><span className="text-sm font-normal text-[#333333]">{new Date(item.created_at ||"").toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span></td>
                   <td className="px-2 py-3"><StatusBadge status={item.status} /></td>
                   <td className="px-2 py-3 text-center relative">
                       <button 

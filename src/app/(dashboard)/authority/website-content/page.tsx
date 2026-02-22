@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import DropdownSelect from "@/components/ui/DropdownSelect";
 import TablePagination from "@/components/ui/TablePagination";
+import { useCityProfile, useUpdateCityProfile } from "@/hooks/useCityProfile";
 
 type TabType = "Notices" | "Tenders" | "Events" | "Leaders Board" | "Contact Diary" | "City Profile" | "Downloads";
 
@@ -65,7 +66,6 @@ const generateDownloads = () => [
 
 const RenderStatus = (status: string) => {
   const isDanger = ["Expired", "Inactive", "Cancelled", "Closed", "Rejected"].includes(status);
-  const isSuccess = ["Active", "Published", "Completed"].includes(status);
   const isWarning = ["Upcoming", "Pending"].includes(status);
   
   let iconSrc = "/dashboard/icons/tick-round-green.svg";
@@ -190,7 +190,83 @@ export default function AuthorityWebsiteContentPage() {
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
+  // City Profile Data (DUMMY for now)
+  const cityProfile = {
+    area_sq_km: "21.64 sq. km",
+    no_of_wards: 25,
+    ward_boundaries: "21.64 sq. km",
+    population_estimate: 25,
+    rental_properties_of_corporation: 25,
+    number_of_slums: 0,
+    solid_waste_per_day: "9.1 Tones",
+    street_light_poles: 150,
+    employees_in_board: 135,
+    households_residential: 4500,
+    households_shops_offices: 550,
+    households_open_plots: 0,
+    birth_registration_per_year: 800,
+    birth_certificate_per_year: 900
+  };
+  const isLoadingProfile = false;
+  // const { data: cityProfile, isLoading: isLoadingProfile } = useCityProfile();
+  const updateProfile = { isPending: false }; // Mocked mutation state
+
+  // City Profile Form States (Initialized with strings to ensure controlled inputs)
+  const [profileForm, setProfileForm] = useState({
+    area_sq_km: "21.64 sq. km",
+    no_of_wards: "25",
+    ward_boundaries: "21.64 sq. km",
+    population_estimate: "25",
+    rental_properties_of_corporation: "25",
+    number_of_slums: "0",
+    solid_waste_per_day: "9.1 Tones",
+    street_light_poles: "150",
+    employees_in_board: "135",
+    households_residential: "4500",
+    households_shops_offices: "550",
+    households_open_plots: "0",
+    birth_registration_per_year: "800",
+    birth_certificate_per_year: "900"
+  });
+
+  // Sync effect removed to avoid controlled input warnings and cascading renders
+
+  const handleProfileChange = (field: keyof typeof profileForm, value: string) => {
+    setProfileForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const isCardChanged = (fields: (keyof typeof profileForm)[]) => {
+    if (!cityProfile) return false;
+    return fields.some(field => {
+      const currentValue = profileForm[field];
+      const originalValue = (cityProfile as any)[field]?.toString() || "";
+      return currentValue !== originalValue;
+    });
+  };
+
+  const handleSave = async (fields: (keyof typeof profileForm)[]) => {
+    const updateData: any = {};
+    fields.forEach(field => {
+      const value = profileForm[field];
+      // Convert to number if the field is expected to be a number in schema
+      if (["no_of_wards", "population_estimate", "rental_properties_of_corporation", "number_of_slums", "street_light_poles", "employees_in_board", "households_residential", "households_shops_offices", "households_open_plots", "birth_registration_per_year", "birth_certificate_per_year"].includes(field)) {
+        updateData[field] = value === "" ? null : Number(value);
+      } else {
+        updateData[field] = value === "" ? null : value;
+      }
+    });
+
+    try {
+      // await updateProfile.mutateAsync(updateData); // Commented out due to CORS/trailing slash issues
+      alert("Dummy Save: Changes would be saved to backend.");
+    } catch (err) {
+      console.error("Failed to update profile", err);
+      alert("Failed to save changes.");
+    }
+  };
+
   // Filter States
+  const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string | number | null>(null);
   const [status, setStatus] = useState<string | number | null>(null);
   const [page, setPage] = useState(1);
@@ -217,9 +293,12 @@ export default function AuthorityWebsiteContentPage() {
   }, [activeTab]);
 
   useEffect(() => {
-    checkScroll();
+    const timer = setTimeout(checkScroll, 0);
     window.addEventListener("resize", checkScroll);
-    return () => window.removeEventListener("resize", checkScroll);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", checkScroll);
+    };
   }, [activeTab]);
 
   const getTabData = () => {
@@ -307,17 +386,19 @@ export default function AuthorityWebsiteContentPage() {
             Create and manage system users, assign roles, and control access across municipal operations.
           </p>
         </div>
-        <button 
-          className="flex items-center justify-center gap-2.5 rounded-lg bg-[#0C83FF] px-4 py-3 text-sm font-medium text-white hover:bg-blue-600 transition-colors"
-        >
-          {activeTab === "Notices" ? "Add New Notice" :
-           activeTab === "Tenders" ? "Add New Tender" :
-           activeTab === "Events" ? "Add New Event" :
-           activeTab === "Downloads" ? "Add New Download" :
-           activeTab === "Leaders Board" ? "Add New Leader" :
-           activeTab === "Contact Diary" ? "Add New Contact" :
-           `Manage ${activeTab}`}
-        </button>
+        {activeTab !== "City Profile" && (
+          <button 
+            className="flex items-center justify-center gap-2.5 rounded-lg bg-[#0C83FF] px-4 py-3 text-sm font-medium text-white hover:bg-blue-600 transition-colors"
+          >
+            {activeTab === "Notices" ? "Add New Notice" :
+             activeTab === "Tenders" ? "Add New Tender" :
+             activeTab === "Events" ? "Add New Event" :
+             activeTab === "Downloads" ? "Add New Download" :
+             activeTab === "Leaders Board" ? "Add New Leader" :
+             activeTab === "Contact Diary" ? "Add New Contact" :
+             `Manage ${activeTab}`}
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -350,124 +431,320 @@ export default function AuthorityWebsiteContentPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-5">
-        <div className="flex flex-col gap-4 rounded-lg border border-[#D6D9DE] bg-white p-4 min-h-[400px]">
-          {/* Filters Row */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            {/* Search */}
-            <div className="flex w-[209px] items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2 h-9">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-60 shrink-0">
-                <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <input type="text" placeholder="Search" className="w-full border-none bg-transparent p-0 text-sm text-[#343434] outline-none placeholder:opacity-60" />
+      <div className="flex-1 p-5 overflow-y-auto">
+        {activeTab === "City Profile" ? (
+          isLoadingProfile ? (
+            <div className="flex h-64 w-full items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0C83FF] border-t-transparent"></div>
             </div>
-
-            {/* Dropdowns & Date */}
-            <div className="flex items-center gap-2 h-9">
-                {/* Dropdowns */}
-                <div className="w-[160px] h-full">
-                    <DropdownSelect
-                        options={typeOptions}
-                        value={typeFilter}
-                        onChange={setTypeFilter}
-                        placeholder={typeLabel}
-                        className="h-full"
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+              {/* Column 1: City Profile */}
+              <div className="flex flex-col gap-6 bg-white border border-[#D6D9DE] p-5 rounded-lg shadow-sm">
+                <div className="flex justify-between items-center border-b border-[#D6D9DE] pb-3">
+                  <h2 className="text-lg font-medium text-[#343434]">City Profile</h2>
+                  <button 
+                    disabled={!isCardChanged(["area_sq_km", "no_of_wards", "ward_boundaries", "population_estimate", "rental_properties_of_corporation", "number_of_slums", "solid_waste_per_day", "street_light_poles", "employees_in_board"]) || updateProfile.isPending}
+                    onClick={() => handleSave(["area_sq_km", "no_of_wards", "ward_boundaries", "population_estimate", "rental_properties_of_corporation", "number_of_slums", "solid_waste_per_day", "street_light_poles", "employees_in_board"])}
+                    className="bg-[#0C83FF] text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  >
+                    {updateProfile.isPending ? "Saving..." : "Save"}
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-x-4 gap-y-5">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[13px] font-normal text-[#343434]">Area In Sq. km.</label>
+                    <input 
+                      type="text" 
+                      value={profileForm.area_sq_km} 
+                      onChange={(e) => handleProfileChange("area_sq_km", e.target.value)}
+                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
                     />
-                </div>
-
-                <div className="h-6 w-[1px] bg-[#D6D9DE] mx-1"></div>
-
-                <div className="w-[140px] h-full">
-                    <DropdownSelect
-                        options={[
-                            { label: "Active", value: "Active" },
-                            { label: "Expired", value: "Expired" },
-                            { label: "Closed", value: "Closed" },
-                            { label: "Cancelled", value: "Cancelled" },
-                            { label: "Upcoming", value: "Upcoming" },
-                            { label: "Completed", value: "Completed" },
-                            { label: "Published", value: "Published" },
-                        ]}
-                        value={status}
-                        onChange={setStatus}
-                        placeholder="All Status"
-                        className="h-full"
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[13px] font-normal text-[#343434]">No. of wards</label>
+                    <input 
+                      type="text" 
+                      value={profileForm.no_of_wards} 
+                      onChange={(e) => handleProfileChange("no_of_wards", e.target.value)}
+                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
                     />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[13px] font-normal text-[#343434]">Ward boundries</label>
+                    <input 
+                      type="text" 
+                      value={profileForm.ward_boundaries} 
+                      onChange={(e) => handleProfileChange("ward_boundaries", e.target.value)}
+                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[13px] font-normal text-[#343434]">Population estimate</label>
+                    <input 
+                      type="text" 
+                      value={profileForm.population_estimate} 
+                      onChange={(e) => handleProfileChange("population_estimate", e.target.value)}
+                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
+                    />
+                  </div>
                 </div>
 
-                <div className="h-6 w-[1px] bg-[#D6D9DE] mx-1"></div>
-
-                {/* Date Range */}
-                <div className="flex items-center gap-2 h-full">
-                    <div className="flex w-[124px] h-full items-center justify-between rounded-lg border border-[#D6D9DE] bg-white px-3 py-2 cursor-pointer">
-                        <span className="text-sm text-[#343434] opacity-60">From</span>
-                        <Image src="/dashboard/icons/applications/calendar.svg" alt="calendar" width={18} height={18} className="opacity-60" />
-                    </div>
-                    <span className="text-[#343434]">-</span>
-                    <div className="flex w-[124px] h-full items-center justify-between rounded-lg border border-[#D6D9DE] bg-white px-3 py-2 cursor-pointer">
-                        <span className="text-sm text-[#343434] opacity-60">To</span>
-                        <Image src="/dashboard/icons/applications/calendar.svg" alt="calendar" width={18} height={18} className="opacity-60" />
-                    </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[13px] font-normal text-[#343434]">Rental Properties of corporation</label>
+                  <input 
+                    type="text" 
+                    value={profileForm.rental_properties_of_corporation} 
+                    onChange={(e) => handleProfileChange("rental_properties_of_corporation", e.target.value)}
+                    className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
+                  />
                 </div>
+
+                <div className="grid grid-cols-2 gap-x-4 gap-y-5">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[13px] font-normal text-[#343434]">Number of Slums</label>
+                    <input 
+                      type="text" 
+                      value={profileForm.number_of_slums} 
+                      onChange={(e) => handleProfileChange("number_of_slums", e.target.value)}
+                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[13px] font-normal text-[#343434]">Solid waste per day</label>
+                    <input 
+                      type="text" 
+                      value={profileForm.solid_waste_per_day} 
+                      onChange={(e) => handleProfileChange("solid_waste_per_day", e.target.value)}
+                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[13px] font-normal text-[#343434]">Street Light poles</label>
+                    <input 
+                      type="text" 
+                      value={profileForm.street_light_poles} 
+                      onChange={(e) => handleProfileChange("street_light_poles", e.target.value)}
+                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[13px] font-normal text-[#343434]">Employees in board</label>
+                    <input 
+                      type="text" 
+                      value={profileForm.employees_in_board} 
+                      onChange={(e) => handleProfileChange("employees_in_board", e.target.value)}
+                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Column 2: No of House holds */}
+              <div className="flex flex-col gap-6 bg-white border border-[#D6D9DE] p-5 rounded-lg shadow-sm">
+                <div className="flex justify-between items-center border-b border-[#D6D9DE] pb-3">
+                  <h2 className="text-base font-semibold text-[#343434]">No of House holds</h2>
+                  <button 
+                    disabled={!isCardChanged(["households_residential", "households_shops_offices", "households_open_plots"]) || updateProfile.isPending}
+                    onClick={() => handleSave(["households_residential", "households_shops_offices", "households_open_plots"])}
+                    className="bg-[#0C83FF] text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  >
+                    {updateProfile.isPending ? "Saving..." : "Save"}
+                  </button>
+                </div>
+                
+                <div className="flex flex-col gap-5">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[13px] font-normal text-[#343434]">Residential</label>
+                    <input 
+                      type="text" 
+                      value={profileForm.households_residential} 
+                      onChange={(e) => handleProfileChange("households_residential", e.target.value)}
+                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[13px] font-normal text-[#343434]">Shops & Offices</label>
+                    <input 
+                      type="text" 
+                      value={profileForm.households_shops_offices} 
+                      onChange={(e) => handleProfileChange("households_shops_offices", e.target.value)}
+                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[13px] font-normal text-[#343434]">Open Plots</label>
+                    <input 
+                      type="text" 
+                      value={profileForm.households_open_plots} 
+                      onChange={(e) => handleProfileChange("households_open_plots", e.target.value)}
+                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Column 3: Birth/Death */}
+              <div className="flex flex-col gap-6 bg-white border border-[#D6D9DE] p-5 rounded-lg shadow-sm">
+                <div className="flex justify-between items-center border-b border-[#D6D9DE] pb-3">
+                  <h2 className="text-base font-semibold text-[#343434]">Birth/Death</h2>
+                  <button 
+                    disabled={!isCardChanged(["birth_registration_per_year", "birth_certificate_per_year"]) || updateProfile.isPending}
+                    onClick={() => handleSave(["birth_registration_per_year", "birth_certificate_per_year"])}
+                    className="bg-[#0C83FF] text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  >
+                    {updateProfile.isPending ? "Saving..." : "Save"}
+                  </button>
+                </div>
+                
+                <div className="flex flex-col gap-5">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[13px] font-normal text-[#343434]">Registration per year</label>
+                    <input 
+                      type="text" 
+                      value={profileForm.birth_registration_per_year} 
+                      onChange={(e) => handleProfileChange("birth_registration_per_year", e.target.value)}
+                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[13px] font-normal text-[#343434]">Certificate per year</label>
+                    <input 
+                      type="text" 
+                      value={profileForm.birth_certificate_per_year} 
+                      onChange={(e) => handleProfileChange("birth_certificate_per_year", e.target.value)}
+                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )
+        ) : (
+          <div className="flex flex-col gap-4 rounded-lg border border-[#D6D9DE] bg-white p-4 min-h-[400px]">
+            {/* Filters Row */}
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              {/* Search */}
+              <div className="flex w-[209px] items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2 h-9">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-60 shrink-0">
+                  <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <input 
+                  type="text" 
+                  placeholder="Search" 
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full border-none bg-transparent p-0 text-sm text-[#343434] outline-none placeholder:opacity-60 focus:ring-0" 
+                />
+              </div>
 
-          {/* Table */}
-          <div 
-            ref={tableContainerRef}
-            onScroll={checkScroll}
-            className="w-full overflow-x-auto [&::-webkit-scrollbar]:h-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#D6D9DE] [&::-webkit-scrollbar-thumb]:rounded-full"
-          >
-            <table className="w-full border-separate border-spacing-0">
-              <thead>
-                <tr>
-                  {columns.map((col, idx) => (
-                    <th 
-                      key={idx} 
-                      className={`px-2 py-3 text-left bg-white border-b border-[#D6D9DE] ${col.key === "actions" ? "sticky right-0 z-20" : ""}`}
-                    >
-                      <div className={`flex items-center gap-2 ${idx < columns.length - 1 && col.key !== "actions" ? "border-r border-[rgba(0,0,0,0.1)]" : ""} pr-2`}>
-                        <span className="text-xs font-semibold text-[#333333] opacity-70 uppercase whitespace-nowrap">{col.header}</span>
+              {/* Dropdowns & Date */}
+              <div className="flex items-center gap-2 h-9">
+                  {/* Dropdowns */}
+                  <div className="w-[160px] h-full">
+                      <DropdownSelect
+                          options={typeOptions}
+                          value={typeFilter}
+                          onChange={setTypeFilter}
+                          placeholder={typeLabel}
+                          className="h-full"
+                      />
+                  </div>
+
+                  <div className="h-6 w-[1px] bg-[#D6D9DE] mx-1"></div>
+
+                  <div className="w-[140px] h-full">
+                      <DropdownSelect
+                          options={[
+                              { label: "Active", value: "Active" },
+                              { label: "Expired", value: "Expired" },
+                              { label: "Closed", value: "Closed" },
+                              { label: "Cancelled", value: "Cancelled" },
+                              { label: "Upcoming", value: "Upcoming" },
+                              { label: "Completed", value: "Completed" },
+                              { label: "Published", value: "Published" },
+                          ]}
+                          value={status}
+                          onChange={setStatus}
+                          placeholder="All Status"
+                          className="h-full"
+                      />
+                  </div>
+
+                  <div className="h-6 w-[1px] bg-[#D6D9DE] mx-1"></div>
+
+                  {/* Date Range */}
+                  <div className="flex items-center gap-2 h-full">
+                      <div className="flex w-[124px] h-full items-center justify-between rounded-lg border border-[#D6D9DE] bg-white px-3 py-2 cursor-pointer">
+                          <span className="text-sm text-[#343434] opacity-60">From</span>
+                          <Image src="/dashboard/icons/applications/calendar.svg" alt="calendar" width={18} height={18} className="opacity-60" />
                       </div>
-                      {col.key === "actions" && showRightShadow && <div className="absolute inset-y-0 left-0 w-px bg-[#D6D9DE] shadow-[-2px_0_4px_rgba(0,0,0,0.05)]" />}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {data.map((row: any, idx: number) => (
-                  <tr key={idx} className="hover:bg-gray-50 transition-colors group">
-                    {columns.map((col, colIdx) => (
-                      <td 
-                        key={colIdx} 
-                        className={`px-2 py-3 border-b border-[#D6D9DE] bg-white group-hover:bg-gray-50 whitespace-nowrap ${col.key === "actions" ? "sticky right-0 z-10" : ""}`}
+                      <span className="text-[#343434]">-</span>
+                      <div className="flex w-[124px] h-full items-center justify-between rounded-lg border border-[#D6D9DE] bg-white px-3 py-2 cursor-pointer">
+                          <span className="text-sm text-[#343434] opacity-60">To</span>
+                          <Image src="/dashboard/icons/applications/calendar.svg" alt="calendar" width={18} height={18} className="opacity-60" />
+                      </div>
+                  </div>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div 
+              ref={tableContainerRef}
+              onScroll={checkScroll}
+              className="w-full overflow-x-auto [&::-webkit-scrollbar]:h-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#D6D9DE] [&::-webkit-scrollbar-thumb]:rounded-full"
+            >
+              <table className="w-full border-separate border-spacing-0">
+                <thead>
+                  <tr>
+                    {columns.map((col, idx) => (
+                      <th 
+                        key={idx} 
+                        className={`px-2 py-3 text-left bg-white border-b border-[#D6D9DE] ${col.key === "actions" ? "sticky right-0 z-20" : ""}`}
                       >
+                        <div className={`flex items-center gap-2 ${idx < columns.length - 1 && col.key !== "actions" ? "border-r border-[rgba(0,0,0,0.1)]" : ""} pr-2`}>
+                          <span className="text-xs font-semibold text-[#333333] opacity-70 uppercase whitespace-nowrap">{col.header}</span>
+                        </div>
                         {col.key === "actions" && showRightShadow && <div className="absolute inset-y-0 left-0 w-px bg-[#D6D9DE] shadow-[-2px_0_4px_rgba(0,0,0,0.05)]" />}
-                        {col.render ? (
-                          col.render(row)
-                        ) : (
-                          <span className={`text-sm ${colIdx === 0 ? "font-medium" : "font-normal text-[#343434] ${colIdx > 0 ? 'opacity-70' : ''}"}`}>
-                            {row[col.key] || "—"}
-                          </span>
-                        )}
-                      </td>
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {data.map((row: any, idx: number) => (
+                    <tr key={idx} className="hover:bg-gray-50 transition-colors group">
+                      {columns.map((col, colIdx) => (
+                        <td 
+                          key={colIdx} 
+                          className={`px-2 py-3 border-b border-[#D6D9DE] bg-white group-hover:bg-gray-50 whitespace-nowrap ${col.key === "actions" ? "sticky right-0 z-10" : ""}`}
+                        >
+                          {col.key === "actions" && showRightShadow && <div className="absolute inset-y-0 left-0 w-px bg-[#D6D9DE] shadow-[-2px_0_4px_rgba(0,0,0,0.05)]" />}
+                          {col.render ? (
+                            col.render(row)
+                          ) : (
+                            <span className={`text-sm ${colIdx === 0 ? "font-medium" : "font-normal text-[#343434] ${colIdx > 0 ? 'opacity-70' : ''}"}`}>
+                              {row[col.key] || "—"}
+                            </span>
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Pagination */}
+            <TablePagination
+              currentPage={page}
+              totalPages={Math.ceil(data.length / limit)}
+              limit={limit}
+              onPageChange={setPage}
+            />
           </div>
-          
-          {/* Pagination */}
-          <TablePagination
-            currentPage={page}
-            totalPages={Math.ceil(data.length / limit)}
-            limit={limit}
-            onPageChange={setPage}
-          />
-
-        </div>
+        )}
       </div>
     </div>
   );
