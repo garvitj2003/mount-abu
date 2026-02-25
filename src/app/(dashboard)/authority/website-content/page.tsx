@@ -5,6 +5,12 @@ import Image from "next/image";
 import DropdownSelect from "@/components/ui/DropdownSelect";
 import TablePagination from "@/components/ui/TablePagination";
 import { useCityProfile, useUpdateCityProfile } from "@/hooks/useCityProfile";
+import AddNoticeDrawer from "@/components/dashboard/authority/website-content/AddNoticeDrawer";
+import AddTenderDrawer from "@/components/dashboard/authority/website-content/AddTenderDrawer";
+import AddEventDrawer from "@/components/dashboard/authority/website-content/AddEventDrawer";
+import AddLeaderDrawer from "@/components/dashboard/authority/website-content/AddLeaderDrawer";
+import AddContactDrawer from "@/components/dashboard/authority/website-content/AddContactDrawer";
+import AddDownloadDrawer from "@/components/dashboard/authority/website-content/AddDownloadDrawer";
 
 type TabType = "Notices" | "Tenders" | "Events" | "Leaders Board" | "Contact Diary" | "City Profile" | "Downloads";
 
@@ -189,6 +195,14 @@ export default function AuthorityWebsiteContentPage() {
   const [indicatorStyle, setIndicatorStyle] = useState({ width: 0, left: 0 });
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  // Drawer States
+  const [isNoticeDrawerOpen, setIsNoticeDrawerOpen] = useState(false);
+  const [isTenderDrawerOpen, setIsTenderDrawerOpen] = useState(false);
+  const [isEventDrawerOpen, setIsEventDrawerOpen] = useState(false);
+  const [isLeaderDrawerOpen, setIsLeaderDrawerOpen] = useState(false);
+  const [isContactDrawerOpen, setIsContactDrawerOpen] = useState(false);
+  const [isDownloadDrawerOpen, setIsDownloadDrawerOpen] = useState(false);
 
   // City Profile Data (DUMMY for now)
   const cityProfile = {
@@ -388,6 +402,14 @@ export default function AuthorityWebsiteContentPage() {
         </div>
         {activeTab !== "City Profile" && (
           <button 
+            onClick={() => {
+              if (activeTab === "Notices") setIsNoticeDrawerOpen(true);
+              if (activeTab === "Tenders") setIsTenderDrawerOpen(true);
+              if (activeTab === "Events") setIsEventDrawerOpen(true);
+              if (activeTab === "Leaders Board") setIsLeaderDrawerOpen(true);
+              if (activeTab === "Contact Diary") setIsContactDrawerOpen(true);
+              if (activeTab === "Downloads") setIsDownloadDrawerOpen(true);
+            }}
             className="flex items-center justify-center gap-2.5 rounded-lg bg-[#0C83FF] px-4 py-3 text-sm font-medium text-white hover:bg-blue-600 transition-colors"
           >
             {activeTab === "Notices" ? "Add New Notice" :
@@ -746,6 +768,30 @@ export default function AuthorityWebsiteContentPage() {
           </div>
         )}
       </div>
+      <AddNoticeDrawer 
+        isOpen={isNoticeDrawerOpen}
+        onClose={() => setIsNoticeDrawerOpen(false)}
+      />
+      <AddTenderDrawer 
+        isOpen={isTenderDrawerOpen}
+        onClose={() => setIsTenderDrawerOpen(false)}
+      />
+      <AddEventDrawer 
+        isOpen={isEventDrawerOpen}
+        onClose={() => setIsEventDrawerOpen(false)}
+      />
+      <AddLeaderDrawer 
+        isOpen={isLeaderDrawerOpen}
+        onClose={() => setIsLeaderDrawerOpen(false)}
+      />
+      <AddContactDrawer 
+        isOpen={isContactDrawerOpen}
+        onClose={() => setIsContactDrawerOpen(false)}
+      />
+      <AddDownloadDrawer 
+        isOpen={isDownloadDrawerOpen}
+        onClose={() => setIsDownloadDrawerOpen(false)}
+      />
     </div>
   );
 }

@@ -53,6 +53,8 @@ interface ApplicationActionPanelProps {
   userRole?: UserRole;
   onAction: (action: WorkflowAction, remarks?: string) => void;
   onCommentClick?: () => void;
+  onRejectClick?: () => void;
+  onObjectionClick?: () => void;
   isPending?: boolean;
 }
 
@@ -61,6 +63,8 @@ export default function ApplicationActionPanel({
   userRole, 
   onAction,
   onCommentClick,
+  onRejectClick,
+  onObjectionClick,
   isPending = false 
 }: ApplicationActionPanelProps) {
   
@@ -68,7 +72,7 @@ export default function ApplicationActionPanel({
     app.documents?.some(d => d.document_type === "GEO_TAGGED_PHOTO"), 
   [app.documents]);
 
-  const actions = useMemo(() => {
+  const workflowActions = useMemo(() => {
     if (!userRole) return [];
 
     const isNew = app.type === "NEW";
@@ -77,39 +81,40 @@ export default function ApplicationActionPanel({
 
     const actionList: React.ReactNode[] = [];
 
-    // Common Actions
-    const addComment = () => actionList.push(
-      <ActionButton key="comment" label="Comment" icon="/dashboard/icons/comment-icon.svg" variant="secondary" onClick={onCommentClick} />
-    );
-
     // Flow: NEW CONSTRUCTION
     if (isNew) {
       if (status === "SUBMITTED" && (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN")) {
         actionList.push(
-          <ActionButton key="obj" label="Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={() => onAction("OBJECT")} />,
-          <ActionButton key="rej" label="Reject" icon="/dashboard/icons/cross-round-red.svg" variant="danger" onClick={() => onAction("REJECT")} />,
+          <ActionButton key="obj" label="Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={onObjectionClick} />,
+          <ActionButton key="rej" label="Reject" icon="/dashboard/icons/cross-round-red.svg" variant="danger" onClick={onRejectClick} />,
           <ActionButton key="app" label="Approve" variant="success" onClick={() => onAction("APPROVE")} />
         );
       }
-      if (status === "APPROVED" && (userRole === "JEN" || userRole === "SUPERADMIN")) {
-        actionList.push(
-          <ActionButton 
-            key="add-phase" 
-            label="Add Phase" 
-            icon="/dashboard/icons/applications/calendar.svg" 
-            variant="primary" 
-            onClick={() => {}} 
-            disabled={!hasGeoPhotos}
-            title={!hasGeoPhotos ? "Geo tagged photos and estimate material is not available" : ""}
-          />
-        );
-      }
-      // Assuming a flag or status for Token Generation after JEN action
-      // For now, if Status is APPROVED and user is NODAL, show Generate Tokens (maybe check stages)
-      if (status === "APPROVED" && (userRole === "NODAL_OFF_RE" || userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN") && app.num_stages) {
-         actionList.push(
-           <ActionButton key="token" label="Generate Tokens" variant="success" onClick={() => onAction("GENERATE_TOKENS")} />
-         );
+      if (status === "APPROVED") {
+        if (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN") {
+          actionList.push(
+            <ActionButton key="obj" label="Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={onObjectionClick} />
+          );
+        }
+        if ((userRole === "JEN" || userRole === "SUPERADMIN")) {
+          actionList.push(
+            <ActionButton 
+              key="add-phase" 
+              label="Add Phase" 
+              icon="/dashboard/icons/applications/calendar.svg" 
+              variant="primary" 
+              onClick={() => {}} 
+              disabled={!hasGeoPhotos}
+              title={!hasGeoPhotos ? "Geo tagged photos and estimate material is not available" : ""}
+            />
+          );
+        }
+        // Assuming a flag or status for Token Generation after JEN action
+        if ((userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN") && app.num_stages) {
+           actionList.push(
+             <ActionButton key="token" label="Generate Tokens" variant="success" onClick={() => onAction("GENERATE_TOKENS")} />
+           );
+        }
       }
     }
 
@@ -123,7 +128,7 @@ export default function ApplicationActionPanel({
       if (status === "FORWARDED") {
         if (userRole === "SUPERADMIN") {
           actionList.push(
-            <ActionButton key="obj" label="Raise Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={() => onAction("OBJECT")} />
+            <ActionButton key="obj" label="Raise Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={onObjectionClick} />
           );
         }
         if (userRole === "JEN") {
@@ -141,34 +146,38 @@ export default function ApplicationActionPanel({
         }
         if (userRole === "COMMISSIONER" || userRole === "SUPERADMIN") {
           actionList.push(
-            <ActionButton key="rej" label="Reject" icon="/dashboard/icons/cross-round-red.svg" variant="danger" onClick={() => onAction("REJECT")} />,
+            <ActionButton key="rej" label="Reject" icon="/dashboard/icons/cross-round-red.svg" variant="danger" onClick={onRejectClick} />,
             <ActionButton key="app" label="Approve Application" variant="success" onClick={() => onAction("APPROVE")} />
           );
         }
       }
-      if (status === "APPROVED" && (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN")) {
-        actionList.push(
-          <ActionButton key="token" label="Generate Tokens" variant="success" onClick={() => onAction("GENERATE_TOKENS")} />
-        );
+      if (status === "APPROVED") {
+        if (userRole === "COMMISSIONER" || userRole === "SUPERADMIN") {
+          actionList.push(
+            <ActionButton key="obj" label="Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={onObjectionClick} />
+          );
+        }
+        if (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN") {
+          actionList.push(
+            <ActionButton key="token" label="Generate Tokens" variant="success" onClick={() => onAction("GENERATE_TOKENS")} />
+          );
+        }
       }
     }
 
-    // Default: Always show comment if no specific workflow actions available
-    if (actionList.length === 0) {
-      addComment();
-    } else {
-      // Prepend comment to workflow actions
-      actionList.unshift(
-        <ActionButton key="comment" label="Comment" icon="/dashboard/icons/comment-icon.svg" variant="secondary" onClick={() => {}} />
-      );
-    }
-
     return actionList;
-  }, [userRole, app.status, app.type, app.num_stages, onAction]);
+  }, [userRole, app.status, app.type, app.num_stages, app.documents, onAction, onRejectClick, onObjectionClick, hasGeoPhotos]);
 
   return (
     <div className="flex items-center gap-2">
-      {actions}
+      <ActionButton 
+        key="comment" 
+        label="Comment" 
+        icon="/dashboard/icons/comment-icon.svg" 
+        variant="secondary" 
+        onClick={onCommentClick} 
+      />
+      {workflowActions}
     </div>
   );
 }

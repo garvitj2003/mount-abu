@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import TablePagination from "@/components/ui/TablePagination";
 
 const TOKENS_DATA = [
   {
+    id: "1",
     tokenNumber: "TKN-2025-014",
     applicationNo: "APP-2025-00321",
     remainingQty: 50,
@@ -13,6 +15,7 @@ const TOKENS_DATA = [
     status: "Active",
   },
   {
+    id: "2",
     tokenNumber: "TKN-2025-014",
     applicationNo: "APP-2025-00345",
     remainingQty: 33,
@@ -20,6 +23,7 @@ const TOKENS_DATA = [
     status: "Active",
   },
   {
+    id: "3",
     tokenNumber: "TKN-2025-022",
     applicationNo: "APP-2025-00366",
     remainingQty: 67,
@@ -41,6 +45,7 @@ const ProgressBar = ({ progress }: { progress: number }) => (
 );
 
 export default function AuthorityTokensPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const limit = 10;
@@ -115,7 +120,12 @@ export default function AuthorityTokensPage() {
                 {TOKENS_DATA.map((token, idx) => (
                   <tr key={idx} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                     <td className="px-2 py-3">
-                      <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{token.tokenNumber}</span>
+                      <span 
+                        onClick={() => router.push(`/authority/tokens/${token.id}`)}
+                        className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer"
+                      >
+                        {token.tokenNumber}
+                      </span>
                     </td>
                     <td className="px-2 py-3">
                       <span className="text-sm font-normal text-[#343434] opacity-70">{token.applicationNo}</span>

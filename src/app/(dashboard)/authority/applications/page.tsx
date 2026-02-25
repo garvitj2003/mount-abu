@@ -7,6 +7,7 @@ import FilterTabDropdown from "@/components/ui/FilterTabDropdown";
 import { useUser } from "@/hooks/useUser";
 import { useApplications } from "@/hooks/useApplications";
 import { ROLE_FILTERS, type ApplicationFlag } from "@/constants/filters";
+import { useRouter } from "next/navigation";
 
 type ApplicationStatus = 
   | "PENDING"
@@ -65,6 +66,7 @@ const StatusBadge = ({ status }: { status: ApplicationStatus }) => {
 };
 
 export default function AuthorityApplicationsPage() {
+  const router = useRouter();
   const { data: user } = useUser();
   const [selectedCategory, setSelectedCategory] = useState<"All" | "New" | "Renovation">("All");
   const [selectedFlag, setSelectedFlag] = useState<ApplicationFlag>("ALL");
@@ -289,7 +291,10 @@ export default function AuthorityApplicationsPage() {
                   filteredApplications.map((app) => (
                     <tr key={app.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                       <td className="px-2 py-3">
-                        <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">
+                        <span 
+                          onClick={() => router.push(`/authority/applications/${app.id}`)}
+                          className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer"
+                        >
                           #{app.id.toString().padStart(5, '0')}
                         </span>
                       </td>
@@ -353,6 +358,7 @@ export default function AuthorityApplicationsPage() {
               className="z-[9999] flex w-max flex-col gap-2 rounded-lg border border-[#D6D9DE] bg-white p-2 shadow-[0px_6px_12px_rgba(0,0,0,0.15)] animate-in fade-in zoom-in duration-200"
             >
               <button 
+                onClick={() => router.push(`/authority/applications/${openDropdownId}`)}
                 className="flex h-10 w-full items-center gap-[11px] rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer text-sm font-normal text-[#343434]"
               >
                 <Image src="/dashboard/icons/edit-pencil.svg" alt="View" width={24} height={24} />

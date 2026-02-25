@@ -107,8 +107,8 @@ export const ApplicationService = {
     return response.data;
   },
 
-  async getComments(applicationId: number): Promise<components["schemas"]["CommentResponse"][]> {
-    const response = await api.get<components["schemas"]["CommentResponse"][]>(`/api/applications/${applicationId}/comments`);
+  async getComments(applicationId: number): Promise<components["schemas"]["backend__schemas__response__application__CommentResponse"][]> {
+    const response = await api.get<components["schemas"]["backend__schemas__response__application__CommentResponse"][]>(`/api/applications/${applicationId}/comments`);
     return response.data;
   },
 

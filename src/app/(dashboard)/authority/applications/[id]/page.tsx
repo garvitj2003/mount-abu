@@ -8,6 +8,7 @@ import { useMemo, useState } from "react";
 import { type components } from "@/types/api";
 import ApplicationActionPanel from "@/components/dashboard/authority/applications/ApplicationActionPanel";
 import CommentsDrawer from "@/components/dashboard/authority/applications/CommentsDrawer";
+import RejectApplicationModal from "@/components/dashboard/authority/applications/RejectApplicationModal";
 
 type ApplicationResponse = components["schemas"]["ApplicationResponse"];
 type UserRole = components["schemas"]["UserRole"];
@@ -56,13 +57,17 @@ const Header = ({
   userRole, 
   onBack,
   onAction,
-  onCommentClick
+  onCommentClick,
+  onRejectClick,
+  onObjectionClick
 }: { 
   app: ApplicationResponse; 
   userRole?: UserRole; 
   onBack: () => void;
   onAction: (action: WorkflowAction, remarks?: string) => void;
   onCommentClick?: () => void;
+  onRejectClick?: () => void;
+  onObjectionClick?: () => void;
 }) => {
   const warning = useMemo(() => {
     if (userRole !== 'SUPERADMIN' && userRole !== 'JEN') return null;
@@ -102,6 +107,8 @@ const Header = ({
         userRole={userRole} 
         onAction={onAction} 
         onCommentClick={onCommentClick}
+        onRejectClick={onRejectClick}
+        onObjectionClick={onObjectionClick}
       />
     </div>
   );
@@ -311,10 +318,10 @@ export default function ApplicationDetailsPage() {
   const workflowAction = useWorkflowAction();
   
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [isObjectionMode, setIsObjectionMode] = useState(false);
 
   const handleAction = async (action: WorkflowAction, remarks?: string) => {
-    if (!confirm(`Are you sure you want to ${action.toLowerCase()} this application?`)) return;
-    
     try {
       await workflowAction.mutateAsync({ 
         id, 
@@ -352,7 +359,15 @@ export default function ApplicationDetailsPage() {
         userRole={user?.role as UserRole} 
         onBack={() => router.back()} 
         onAction={handleAction}
-        onCommentClick={() => setIsCommentsOpen(true)}
+        onCommentClick={() => {
+          setIsObjectionMode(false);
+          setIsCommentsOpen(true);
+        }}
+        onRejectClick={() => setIsRejectModalOpen(true)}
+        onObjectionClick={() => {
+          setIsObjectionMode(true);
+          setIsCommentsOpen(true);
+        }}
       />
 
       <div className="flex flex-1 gap-5 p-5">
@@ -368,9 +383,24 @@ export default function ApplicationDetailsPage() {
 
       <CommentsDrawer 
         isOpen={isCommentsOpen} 
-        onClose={() => setIsCommentsOpen(false)} 
+        onClose={() => {
+          setIsCommentsOpen(false);
+          setIsObjectionMode(false);
+        }} 
         applicationId={id}
         applicationNumber={`#${app.id.toString().padStart(5, '0')}`}
+        isObjectionMode={isObjectionMode}
+        onObjectionSubmit={(remarks) => handleAction("OBJECT", remarks)}
+      />
+
+      <RejectApplicationModal
+        isOpen={isRejectModalOpen}
+        onClose={() => setIsRejectModalOpen(false)}
+        onConfirm={async (remarks) => {
+          await handleAction("REJECT", remarks);
+          setIsRejectModalOpen(false);
+        }}
+        isPending={workflowAction.isPending}
       />
     </div>
   );
