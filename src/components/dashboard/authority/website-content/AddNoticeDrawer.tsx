@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { type components } from "@/types/api";
 import DropdownSelect from "@/components/ui/DropdownSelect";
+import { useCreateNotice } from "@/hooks/useWebsiteContent";
 
 type NoticeCreate = components["schemas"]["NoticeCreate"];
 type NoticeStatus = components["schemas"]["NoticeStatus"];
@@ -13,7 +14,6 @@ type Visibility = components["schemas"]["Visibility"];
 interface AddNoticeDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd?: (notice: NoticeCreate, file: File | null) => void;
 }
 
 const NOTICE_TYPE_OPTIONS = [
@@ -24,37 +24,41 @@ const NOTICE_TYPE_OPTIONS = [
   { label: "Internal Notice", value: "Internal Notice" },
 ];
 
-export default function AddNoticeDrawer({ isOpen, onClose, onAdd }: AddNoticeDrawerProps) {
-  const [formData, setFormData] = useState<NoticeCreate & { content: string }>({
+export default function AddNoticeDrawer({ isOpen, onClose }: AddNoticeDrawerProps) {
+  const { mutateAsync: createNotice, isPending } = useCreateNotice();
+  
+  const [formData, setFormData] = useState<NoticeCreate>({
     title: "",
-    content: "",
     notice_type: "Public Notice",
-    published_on: new Date().toISOString().split('T')[0],
-    valid_till: "",
+    published_on: new Date().toISOString(),
+    valid_till: null,
     status: "ACTIVE",
     visibility: "PUBLIC",
   });
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.title.trim()) {
       alert("Please enter a notice title");
       return;
     }
-    onAdd?.(formData, selectedFile);
-    onClose();
-    // Reset form
-    setFormData({
-      title: "",
-      content: "",
-      notice_type: "Public Notice",
-      published_on: new Date().toISOString().split('T')[0],
-      valid_till: "",
-      status: "ACTIVE",
-      visibility: "PUBLIC",
-    });
-    setSelectedFile(null);
+    
+    try {
+      await createNotice(formData);
+      onClose();
+      // Reset form
+      setFormData({
+        title: "",
+        notice_type: "Public Notice",
+        published_on: new Date().toISOString(),
+        valid_till: null,
+        status: "ACTIVE",
+        visibility: "PUBLIC",
+      });
+      alert("Notice added successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add notice");
+    }
   };
 
   return (
@@ -122,41 +126,6 @@ export default function AddNoticeDrawer({ isOpen, onClose, onAdd }: AddNoticeDra
                 />
               </div>
 
-              {/* Notice Content */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#343434]">Notice Content</label>
-                <textarea 
-                  placeholder="Enter detailed notice content"
-                  className="w-full h-[120px] resize-none rounded-lg border border-[#D6D9DE] p-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                />
-              </div>
-
-              {/* File Upload */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#343434]">File upload</label>
-                <div className="bg-white border-2 border-[#D6D9DE] border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-3">
-                  <Image src="/dashboard/icons/applications/upload-cloud.svg" alt="Upload" width={36} height={36} className="opacity-60" />
-                  <div className="text-center">
-                    <p className="text-[13px] font-medium text-[#343434]">Choose a file or drag & drop it here.</p>
-                    <p className="text-[11px] text-[#343434] opacity-60 mt-0.5">only PDF format</p>
-                  </div>
-                  <label className="mt-1 cursor-pointer bg-[#F5F6F7] border border-[#D6D9DE] rounded-lg px-4 py-2 text-xs font-medium text-[#343434] hover:bg-gray-200 transition-colors">
-                    Browse File
-                    <input 
-                      type="file" 
-                      className="hidden" 
-                      accept=".pdf" 
-                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                    />
-                  </label>
-                  {selectedFile && (
-                    <p className="text-[11px] font-medium text-[#0C83FF] mt-1">{selectedFile.name}</p>
-                  )}
-                </div>
-              </div>
-
               {/* Visibility */}
               <div className="space-y-3">
                 <label className="text-sm font-medium text-[#343434]">Visibility</label>
@@ -198,8 +167,8 @@ export default function AddNoticeDrawer({ isOpen, onClose, onAdd }: AddNoticeDra
                     <input 
                       type="date"
                       className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] pr-10"
-                      value={formData.published_on || ""}
-                      onChange={(e) => setFormData({ ...formData, published_on: e.target.value })}
+                      value={formData.published_on?.split('T')[0] || ""}
+                      onChange={(e) => setFormData({ ...formData, published_on: e.target.value ? new Date(e.target.value).toISOString() : null })}
                     />
                   </div>
                 </div>
@@ -209,8 +178,8 @@ export default function AddNoticeDrawer({ isOpen, onClose, onAdd }: AddNoticeDra
                     <input 
                       type="date"
                       className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] pr-10"
-                      value={formData.valid_till || ""}
-                      onChange={(e) => setFormData({ ...formData, valid_till: e.target.value })}
+                      value={formData.valid_till?.split('T')[0] || ""}
+                      onChange={(e) => setFormData({ ...formData, valid_till: e.target.value ? new Date(e.target.value).toISOString() : null })}
                     />
                   </div>
                 </div>
@@ -220,7 +189,7 @@ export default function AddNoticeDrawer({ isOpen, onClose, onAdd }: AddNoticeDra
               <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5">
                   <p className="text-sm font-medium text-[#343434]">Status</p>
-                  <p className="text-[11px] text-[#343434] opacity-60">Inactive categories cannot be selected by citizens.</p>
+                  <p className="text-[11px] text-[#343434] opacity-60">Inactive notices will not be visible.</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input 
@@ -245,9 +214,10 @@ export default function AddNoticeDrawer({ isOpen, onClose, onAdd }: AddNoticeDra
               </button>
               <button 
                 onClick={handleSubmit}
-                className="h-[44px] rounded-lg bg-[#0C83FF] px-8 text-sm font-medium text-white hover:bg-blue-600 transition-colors"
+                disabled={isPending}
+                className="h-[44px] rounded-lg bg-[#0C83FF] px-8 text-sm font-medium text-white hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
-                Add Notice
+                {isPending ? "Adding..." : "Add Notice"}
               </button>
             </div>
           </motion.div>

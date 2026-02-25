@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { type components } from "@/types/api";
+import { useCreateLeader } from "@/hooks/useWebsiteContent";
 
 type LeaderCreate = components["schemas"]["LeaderCreate"];
 type NoticeStatus = components["schemas"]["NoticeStatus"];
@@ -11,38 +12,41 @@ type NoticeStatus = components["schemas"]["NoticeStatus"];
 interface AddLeaderDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd?: (leader: LeaderCreate, file: File | null) => void;
 }
 
-export default function AddLeaderDrawer({ isOpen, onClose, onAdd }: AddLeaderDrawerProps) {
-  const [formData, setFormData] = useState<LeaderCreate & { message: string }>({
+export default function AddLeaderDrawer({ isOpen, onClose }: AddLeaderDrawerProps) {
+  const { mutateAsync: createLeader, isPending } = useCreateLeader();
+  
+  const [formData, setFormData] = useState<LeaderCreate>({
     name: "",
     designation: "",
-    tenure_start: new Date().toISOString().split('T')[0],
+    tenure_start: new Date().toISOString(),
     tenure_end: "",
     status: "ACTIVE",
-    message: "",
   });
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.name.trim()) {
       alert("Please enter leader's name");
       return;
     }
-    onAdd?.(formData, selectedFile);
-    onClose();
-    // Reset form
-    setFormData({
-      name: "",
-      designation: "",
-      tenure_start: new Date().toISOString().split('T')[0],
-      tenure_end: "",
-      status: "ACTIVE",
-      message: "",
-    });
-    setSelectedFile(null);
+    
+    try {
+      await createLeader(formData);
+      onClose();
+      // Reset form
+      setFormData({
+        name: "",
+        designation: "",
+        tenure_start: new Date().toISOString(),
+        tenure_end: "",
+        status: "ACTIVE",
+      });
+      alert("Leader added successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add leader");
+    }
   };
 
   return (
@@ -120,7 +124,7 @@ export default function AddLeaderDrawer({ isOpen, onClose, onAdd }: AddLeaderDra
                       type="date"
                       className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF]"
                       value={formData.tenure_start?.split('T')[0] || ""}
-                      onChange={(e) => setFormData({ ...formData, tenure_start: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, tenure_start: e.target.value ? new Date(e.target.value).toISOString() : null })}
                     />
                   </div>
                 </div>
@@ -131,44 +135,9 @@ export default function AddLeaderDrawer({ isOpen, onClose, onAdd }: AddLeaderDra
                       type="date"
                       className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF]"
                       value={formData.tenure_end?.split('T')[0] || ""}
-                      onChange={(e) => setFormData({ ...formData, tenure_end: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, tenure_end: e.target.value ? new Date(e.target.value).toISOString() : null })}
                     />
                   </div>
-                </div>
-              </div>
-
-              {/* Brief Profile / Message */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#343434]">Brief Profile / Message</label>
-                <textarea 
-                  placeholder="Short profile or public message"
-                  className="w-full h-[120px] resize-none rounded-lg border border-[#D6D9DE] p-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                />
-              </div>
-
-              {/* Profile Photo */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#343434]">Profile Photo</label>
-                <div className="bg-white border-2 border-[#D6D9DE] border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-3">
-                  <Image src="/dashboard/icons/applications/upload-cloud.svg" alt="Upload" width={36} height={36} className="opacity-60" />
-                  <div className="text-center">
-                    <p className="text-[13px] font-medium text-[#343434]">Choose a file or drag & drop it here.</p>
-                    <p className="text-[11px] text-[#343434] opacity-60 mt-0.5">JPG / PNG format</p>
-                  </div>
-                  <label className="mt-1 cursor-pointer bg-[#F5F6F7] border border-[#D6D9DE] rounded-lg px-4 py-2 text-xs font-medium text-[#343434] hover:bg-gray-200 transition-colors">
-                    Browse File
-                    <input 
-                      type="file" 
-                      className="hidden" 
-                      accept="image/*" 
-                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                    />
-                  </label>
-                  {selectedFile && (
-                    <p className="text-[11px] font-medium text-[#0C83FF] mt-1">{selectedFile.name}</p>
-                  )}
                 </div>
               </div>
 
@@ -176,7 +145,7 @@ export default function AddLeaderDrawer({ isOpen, onClose, onAdd }: AddLeaderDra
               <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5">
                   <p className="text-sm font-medium text-[#343434]">Status</p>
-                  <p className="text-[11px] text-[#343434] opacity-60">Inactive categories cannot be selected by citizens.</p>
+                  <p className="text-[11px] text-[#343434] opacity-60">Inactive leaders will not be visible.</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input 
@@ -201,9 +170,10 @@ export default function AddLeaderDrawer({ isOpen, onClose, onAdd }: AddLeaderDra
               </button>
               <button 
                 onClick={handleSubmit}
+                disabled={isPending}
                 className="h-[44px] rounded-lg bg-[#0C83FF] px-8 text-sm font-medium text-white hover:bg-blue-600 transition-colors"
               >
-                Save Leader
+                {isPending ? "Saving..." : "Save Leader"}
               </button>
             </div>
           </motion.div>

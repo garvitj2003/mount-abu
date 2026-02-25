@@ -6,13 +6,13 @@ import { motion, AnimatePresence } from "motion/react";
 import { type components } from "@/types/api";
 import DropdownSelect from "@/components/ui/DropdownSelect";
 import { useDepartments } from "@/hooks/useMasterData";
+import { useCreateDownload } from "@/hooks/useWebsiteContent";
 
 type DownloadStatus = components["schemas"]["DownloadStatus"];
 
 interface AddDownloadDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd?: (download: any, file: File | null) => void;
 }
 
 const DOCUMENT_TYPE_OPTIONS = [
@@ -23,14 +23,14 @@ const DOCUMENT_TYPE_OPTIONS = [
   { label: "Report", value: "Report" },
 ];
 
-export default function AddDownloadDrawer({ isOpen, onClose, onAdd }: AddDownloadDrawerProps) {
+export default function AddDownloadDrawer({ isOpen, onClose }: AddDownloadDrawerProps) {
   const { data: departments = [] } = useDepartments();
+  const { mutateAsync: createDownload, isPending } = useCreateDownload();
   
   const [formData, setFormData] = useState({
     document_title: "",
     document_type: "Application Form",
     department_id: null as number | null,
-    description: "",
     status: "ACTIVE" as DownloadStatus,
   });
 
@@ -41,7 +41,7 @@ export default function AddDownloadDrawer({ isOpen, onClose, onAdd }: AddDownloa
     value: d.id
   }));
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.document_title.trim()) {
       alert("Please enter a document title");
       return;
@@ -50,17 +50,30 @@ export default function AddDownloadDrawer({ isOpen, onClose, onAdd }: AddDownloa
       alert("Please select a file to upload");
       return;
     }
-    onAdd?.(formData, selectedFile);
-    onClose();
-    // Reset form
-    setFormData({
-      document_title: "",
-      document_type: "Application Form",
-      department_id: null,
-      description: "",
-      status: "ACTIVE",
-    });
-    setSelectedFile(null);
+    
+    const body = new FormData();
+    body.append("document_title", formData.document_title);
+    body.append("document_type", formData.document_type);
+    if (formData.department_id) body.append("department_id", formData.department_id.toString());
+    body.append("status", formData.status);
+    body.append("file", selectedFile);
+
+    try {
+      await createDownload(body);
+      onClose();
+      // Reset form
+      setFormData({
+        document_title: "",
+        document_type: "Application Form",
+        department_id: null,
+        status: "ACTIVE",
+      });
+      setSelectedFile(null);
+      alert("Document published successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to publish document");
+    }
   };
 
   return (
@@ -110,7 +123,7 @@ export default function AddDownloadDrawer({ isOpen, onClose, onAdd }: AddDownloa
                 <label className="text-sm font-medium text-[#343434]">Document Title</label>
                 <input 
                   type="text"
-                  placeholder="Engineering Department"
+                  placeholder="e.g. Building Permission Guidelines"
                   className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
                   value={formData.document_title}
                   onChange={(e) => setFormData({ ...formData, document_title: e.target.value })}
@@ -137,17 +150,6 @@ export default function AddDownloadDrawer({ isOpen, onClose, onAdd }: AddDownloa
                   onChange={(val) => setFormData({ ...formData, department_id: val as number })}
                   className="w-full h-[44px]"
                   placeholder="Departments list"
-                />
-              </div>
-
-              {/* Document Description */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#343434]">Document Description</label>
-                <textarea 
-                  placeholder="Brief description of the document ( 250 words )"
-                  className="w-full h-[120px] resize-none rounded-lg border border-[#D6D9DE] p-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
 
@@ -178,7 +180,7 @@ export default function AddDownloadDrawer({ isOpen, onClose, onAdd }: AddDownloa
               <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5">
                   <p className="text-sm font-medium text-[#343434]">Status</p>
-                  <p className="text-[11px] text-[#343434] opacity-60">Inactive categories cannot be selected by citizens.</p>
+                  <p className="text-[11px] text-[#343434] opacity-60">Inactive documents will not be available for download.</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input 
@@ -203,9 +205,10 @@ export default function AddDownloadDrawer({ isOpen, onClose, onAdd }: AddDownloa
               </button>
               <button 
                 onClick={handleSubmit}
-                className="h-[44px] rounded-lg bg-[#0C83FF] px-8 text-sm font-medium text-white hover:bg-blue-600 transition-colors"
+                disabled={isPending}
+                className="h-[44px] rounded-lg bg-[#0C83FF] px-8 text-sm font-medium text-white hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
-                Publish Document
+                {isPending ? "Publishing..." : "Publish Document"}
               </button>
             </div>
           </motion.div>

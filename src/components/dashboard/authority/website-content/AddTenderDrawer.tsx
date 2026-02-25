@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { type components } from "@/types/api";
 import DropdownSelect from "@/components/ui/DropdownSelect";
 import { useDepartments } from "@/hooks/useMasterData";
+import { useCreateTender } from "@/hooks/useWebsiteContent";
 
 type TenderCreate = components["schemas"]["TenderCreate"];
 type TenderStatus = components["schemas"]["TenderStatus"];
@@ -13,51 +14,57 @@ type TenderStatus = components["schemas"]["TenderStatus"];
 interface AddTenderDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd?: (tender: TenderCreate, file: File | null) => void;
 }
 
-export default function AddTenderDrawer({ isOpen, onClose, onAdd }: AddTenderDrawerProps) {
+const TENDER_TYPE_OPTIONS = [
+  { label: "Standard", value: "Standard" },
+  { label: "Limited", value: "Limited" },
+  { label: "Expression of Interest", value: "Limited" },
+];
+
+export default function AddTenderDrawer({ isOpen, onClose }: AddTenderDrawerProps) {
   const { data: departments = [] } = useDepartments();
+  const { mutateAsync: createTender, isPending } = useCreateTender();
   
-  const [formData, setFormData] = useState<TenderCreate & { description: string; reference_number: string }>({
+  const [formData, setFormData] = useState<TenderCreate>({
     title: "",
-    reference_number: "",
     tender_type: "Standard",
     department_id: null,
     amount: null,
-    description: "",
-    published_on: new Date().toISOString().split('T')[0],
-    submission_deadline: "",
+    published_on: new Date().toISOString(),
+    submission_deadline: null,
     status: "ACTIVE",
   });
-
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const deptOptions = departments.map(d => ({
     label: d.name,
     value: d.id
   }));
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.title.trim()) {
       alert("Please enter a tender title");
       return;
     }
-    onAdd?.(formData, selectedFile);
-    onClose();
-    // Reset form
-    setFormData({
-      title: "",
-      reference_number: "",
-      tender_type: "Standard",
-      department_id: null,
-      amount: null,
-      description: "",
-      published_on: new Date().toISOString().split('T')[0],
-      submission_deadline: "",
-      status: "ACTIVE",
-    });
-    setSelectedFile(null);
+    
+    try {
+      await createTender(formData);
+      onClose();
+      // Reset form
+      setFormData({
+        title: "",
+        tender_type: "Standard",
+        department_id: null,
+        amount: null,
+        published_on: new Date().toISOString(),
+        submission_deadline: null,
+        status: "ACTIVE",
+      });
+      alert("Tender added successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add tender");
+    }
   };
 
   return (
@@ -114,15 +121,14 @@ export default function AddTenderDrawer({ isOpen, onClose, onAdd }: AddTenderDra
                 />
               </div>
 
-              {/* Tender ID / Reference Number */}
+              {/* Tender Type */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#343434]">Tender ID / Reference Number</label>
-                <input 
-                  type="text"
-                  placeholder="MAP/ENG/2025/06"
-                  className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
-                  value={formData.reference_number}
-                  onChange={(e) => setFormData({ ...formData, reference_number: e.target.value })}
+                <label className="text-sm font-medium text-[#343434]">Tender Type</label>
+                <DropdownSelect
+                  options={TENDER_TYPE_OPTIONS}
+                  value={formData.tender_type || ""}
+                  onChange={(val) => setFormData({ ...formData, tender_type: val as string })}
+                  className="w-full h-[44px]"
                 />
               </div>
 
@@ -150,41 +156,6 @@ export default function AddTenderDrawer({ isOpen, onClose, onAdd }: AddTenderDra
                 />
               </div>
 
-              {/* Tender Description */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#343434]">Tender Description</label>
-                <textarea 
-                  placeholder="Detailed scope of work, eligibility criteria..."
-                  className="w-full h-[120px] resize-none rounded-lg border border-[#D6D9DE] p-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-
-              {/* File Upload */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#343434]">Tender Document Upload</label>
-                <div className="bg-white border-2 border-[#D6D9DE] border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-3">
-                  <Image src="/dashboard/icons/applications/upload-cloud.svg" alt="Upload" width={36} height={36} className="opacity-60" />
-                  <div className="text-center">
-                    <p className="text-[13px] font-medium text-[#343434]">Choose a file or drag & drop it here.</p>
-                    <p className="text-[11px] text-[#343434] opacity-60 mt-0.5">only PDF format</p>
-                  </div>
-                  <label className="mt-1 cursor-pointer bg-[#F5F6F7] border border-[#D6D9DE] rounded-lg px-4 py-2 text-xs font-medium text-[#343434] hover:bg-gray-200 transition-colors">
-                    Browse File
-                    <input 
-                      type="file" 
-                      className="hidden" 
-                      accept=".pdf" 
-                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                    />
-                  </label>
-                  {selectedFile && (
-                    <p className="text-[11px] font-medium text-[#0C83FF] mt-1">{selectedFile.name}</p>
-                  )}
-                </div>
-              </div>
-
               {/* Dates */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
@@ -193,8 +164,8 @@ export default function AddTenderDrawer({ isOpen, onClose, onAdd }: AddTenderDra
                     <input 
                       type="date"
                       className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] pr-10"
-                      value={formData.published_on || ""}
-                      onChange={(e) => setFormData({ ...formData, published_on: e.target.value })}
+                      value={formData.published_on?.split('T')[0] || ""}
+                      onChange={(e) => setFormData({ ...formData, published_on: e.target.value ? new Date(e.target.value).toISOString() : null })}
                     />
                   </div>
                 </div>
@@ -204,8 +175,8 @@ export default function AddTenderDrawer({ isOpen, onClose, onAdd }: AddTenderDra
                     <input 
                       type="date"
                       className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] pr-10"
-                      value={formData.submission_deadline || ""}
-                      onChange={(e) => setFormData({ ...formData, submission_deadline: e.target.value })}
+                      value={formData.submission_deadline?.split('T')[0] || ""}
+                      onChange={(e) => setFormData({ ...formData, submission_deadline: e.target.value ? new Date(e.target.value).toISOString() : null })}
                     />
                   </div>
                 </div>
@@ -215,14 +186,14 @@ export default function AddTenderDrawer({ isOpen, onClose, onAdd }: AddTenderDra
               <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5">
                   <p className="text-sm font-medium text-[#343434]">Status</p>
-                  <p className="text-[11px] text-[#343434] opacity-60">Inactive categories cannot be selected by citizens.</p>
+                  <p className="text-[11px] text-[#343434] opacity-60">Inactive tenders will not be visible.</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input 
                     type="checkbox" 
                     className="sr-only peer"
                     checked={formData.status === "ACTIVE"}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.checked ? "ACTIVE" : "INACTIVE" })}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.checked ? "ACTIVE" : "CLOSED" })}
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0C83FF]"></div>
                 </label>
@@ -240,9 +211,10 @@ export default function AddTenderDrawer({ isOpen, onClose, onAdd }: AddTenderDra
               </button>
               <button 
                 onClick={handleSubmit}
-                className="h-[44px] rounded-lg bg-[#0C83FF] px-8 text-sm font-medium text-white hover:bg-blue-600 transition-colors"
+                disabled={isPending}
+                className="h-[44px] rounded-lg bg-[#0C83FF] px-8 text-sm font-medium text-white hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
-                Add Tender
+                {isPending ? "Adding..." : "Add Tender"}
               </button>
             </div>
           </motion.div>

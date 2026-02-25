@@ -1,18 +1,27 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import Image from "next/image";
 import DropdownSelect from "@/components/ui/DropdownSelect";
 import TablePagination from "@/components/ui/TablePagination";
 import { useCityProfile, useUpdateCityProfile } from "@/hooks/useCityProfile";
+import { 
+  useNotices, 
+  useTenders, 
+  useEvents, 
+  useLeaders, 
+  useDownloads 
+} from "@/hooks/useWebsiteContent";
 import AddNoticeDrawer from "@/components/dashboard/authority/website-content/AddNoticeDrawer";
 import AddTenderDrawer from "@/components/dashboard/authority/website-content/AddTenderDrawer";
 import AddEventDrawer from "@/components/dashboard/authority/website-content/AddEventDrawer";
 import AddLeaderDrawer from "@/components/dashboard/authority/website-content/AddLeaderDrawer";
 import AddContactDrawer from "@/components/dashboard/authority/website-content/AddContactDrawer";
 import AddDownloadDrawer from "@/components/dashboard/authority/website-content/AddDownloadDrawer";
+import { type components } from "@/types/api";
 
 type TabType = "Notices" | "Tenders" | "Events" | "Leaders Board" | "Contact Diary" | "City Profile" | "Downloads";
+type CityProfileUpdate = components["schemas"]["CityProfileUpdate"];
 
 const TABS: TabType[] = [
   "Notices", 
@@ -31,48 +40,18 @@ interface TableColumn {
   render?: (row: any) => React.ReactNode;
 }
 
-// Dummy Data Generators
-const generateNotices = () => [
-  { id: 1, title: "Guidelines for New Construction Applications", type: "Public Notice", published_on: "01 Oct 2025", valid_till: "—", status: "Active", visibility: "Public" },
-  { id: 2, title: "Temporary Closure of Delwara Road", type: "Traffic Advisory", published_on: "03 Oct 2025", valid_till: "06 Oct 2025", status: "Active", visibility: "Public" },
-  { id: 3, title: "Revised Fees for Renovation Applications", type: "Circular", published_on: "15 Sep 2025", valid_till: "—", status: "Active", visibility: "Public" },
-  { id: 4, title: "Maintenance Work at Nakki Lake Area", type: "Public Information", published_on: "05 Sep 2025", valid_till: "07 Sep 2025", status: "Expired", visibility: "Public" },
-  { id: 5, title: "Internal Review Meeting – Engineering Department", type: "Internal Notice", published_on: "20 Sep 2025", valid_till: "20 Sep 2025", status: "Inactive", visibility: "Internal" },
-];
-
-const generateTenders = () => [
-  { id: "MAP/ENG/2025/01", title: "Construction of Public Toilets at Nakki Lake", department: "Engineering", amount: "50 Cr", published_on: "01 Oct 2025", deadline: "20 Oct 2025", status: "Active" },
-  { id: "MAP/ENG/2025/02", title: "Road Repair & Resurfacing – Delwara Road", department: "Engineering", amount: "33 Cr", published_on: "28 Sep 2025", deadline: "18 Oct 2025", status: "Active" },
-  { id: "MAP/ULB/2025/03", title: "Renovation of Municipal Office Building", department: "ULB", amount: "138 Cr", published_on: "15 Sep 2025", deadline: "10 Oct 2025", status: "Closed" },
-  { id: "MAP/ENG/2025/04", title: "Supply of Electrical Fixtures for Street Lighting", department: "Engineering", amount: "8 Cr", published_on: "05 Sep 2025", deadline: "25 Sep 2025", status: "Expired" },
-  { id: "MAP/ULB/2025/05", title: "AMC for Solid Waste Collection Vehicles", department: "ULB", amount: "95 Lacs", published_on: "10 Sep 2025", deadline: "30 Sep 2025", status: "Cancelled" }
-];
-
-const generateEvents = () => [
-  { id: 1, title: "Summer Festival 2025", type: "Cultural", date: "15 May 2025", time: "10:00 AM", location: "Nakki Lake", status: "Upcoming" },
-  { id: 2, title: "Eco-Mount Abu Awareness Drive", type: "Environmental", date: "22 Apr 2025", time: "08:00 AM", location: "Main Market", status: "Completed" }
-];
-
-const generateLeaders = () => [
-  { id: 1, name: "Shri Mahant Ji", designation: "Chairman", department: "Administration", status: "Active" },
-  { id: 2, name: "Smt. Sharda Devi", designation: "Vice Chairman", department: "Administration", status: "Active" }
-];
-
-const generateContacts = () => [
-  { id: 1, name: "Rajesh Kumar", designation: "Head Clerk", department: "Revenue", mobile: "+91 9876543210", email: "rajesh@mountabu.gov.in", status: "Active" }
-];
-
-const generateCityProfile = () => [
-  { id: 1, section: "History", description: "Brief history of Mount Abu municipality...", updated_at: "01 Jan 2025", status: "Published" }
-];
-
-const generateDownloads = () => [
-  { id: 1, title: "Building Bylaws 2024", category: "Guidelines", type: "PDF", size: "2.4 MB", uploaded_at: "10 Dec 2024", status: "Active" }
-];
+const formatDate = (dateStr?: string | null) => {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+};
 
 const RenderStatus = (status: string) => {
-  const isDanger = ["Expired", "Inactive", "Cancelled", "Closed", "Rejected"].includes(status);
-  const isWarning = ["Upcoming", "Pending"].includes(status);
+  const isDanger = ["EXPIRED", "INACTIVE", "CANCELLED", "CLOSED", "REJECTED"].includes(status.toUpperCase());
+  const isWarning = ["UPCOMING", "PENDING"].includes(status.toUpperCase());
   
   let iconSrc = "/dashboard/icons/tick-round-green.svg";
   let textColor = "text-[#059669]";
@@ -88,14 +67,14 @@ const RenderStatus = (status: string) => {
   return (
     <div className="flex items-center gap-2">
       <Image src={iconSrc} alt={status} width={14} height={14} />
-      <span className={`text-sm font-normal ${textColor}`}>{status}</span>
+      <span className={`text-sm font-normal ${textColor} capitalize`}>{status.toLowerCase()}</span>
     </div>
   );
 };
 
 const RenderActions = () => (
   <div className="text-center">
-      <button className="text-[#343434] hover:bg-gray-200 rounded p-1 transition-colors">
+      <button className="text-[#343434] hover:bg-gray-200 rounded p-1 transition-colors cursor-pointer">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M8 8.66667C8.36819 8.66667 8.66667 8.36819 8.66667 8C8.66667 7.63181 8.36819 7.33333 8 7.33333C7.63181 7.33333 7.33333 7.63181 7.33333 8C7.33333 8.36819 7.63181 8.66667 8 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M13.3333 8.66667C13.7015 8.66667 14 8.36819 14 8C14 7.63181 13.7015 7.33333 13.3333 7.33333C12.9651 7.33333 12.6667 7.63181 12.6667 8C12.6667 8.36819 12.9651 8.66667 13.3333 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -106,16 +85,16 @@ const RenderActions = () => (
 );
 
 const NOTICE_COLUMNS: TableColumn[] = [
-  { header: "Notice Title", key: "title", render: (row) => <span className="text-sm font-normal text-[#0C83FF] underline decoration-solid cursor-pointer">{row.title}</span> },
-  { header: "Notice Type", key: "type" },
-  { header: "Published On", key: "published_on" },
-  { header: "Valid Till", key: "valid_till" },
+  { header: "Notice Title", key: "title", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.title}</span> },
+  { header: "Notice Type", key: "notice_type" },
+  { header: "Published On", key: "published_on", render: (row) => formatDate(row.published_on) },
+  { header: "Valid Till", key: "valid_till", render: (row) => formatDate(row.valid_till) },
   { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
   { 
     header: "Visibility", 
     key: "visibility",
     render: (row) => {
-      const isInternal = row.visibility === "Internal";
+      const isInternal = row.visibility === "INTERNAL";
       return (
         <div className="flex items-center gap-1.5">
            { !isInternal ? (
@@ -123,8 +102,8 @@ const NOTICE_COLUMNS: TableColumn[] = [
            ) : (
              <Image src="/dashboard/icons/applications/visibility-internal.svg" alt="Internal" width={20} height={20} />
            )}
-          <span className={`text-sm font-normal ${isInternal ? "text-[#F35C86]" : "text-[#404B86]"}`}>
-            {row.visibility}
+          <span className={`text-sm font-normal ${isInternal ? "text-[#F35C86]" : "text-[#404B86]"} capitalize`}>
+            {row.visibility?.toLowerCase()}
           </span>
         </div>
       );
@@ -134,58 +113,37 @@ const NOTICE_COLUMNS: TableColumn[] = [
 ];
 
 const TENDER_COLUMNS: TableColumn[] = [
-  { header: "Tender Title", key: "title", render: (row) => <span className="text-sm font-normal text-[#0C83FF] underline decoration-solid cursor-pointer">{row.title}</span> },
-  { header: "Tender ID", key: "id" },
-  { header: "Department", key: "department" },
-  { header: "Tender Amount", key: "amount" },
-  { header: "Published On", key: "published_on" },
-  { header: "Submission Deadline", key: "deadline" },
+  { header: "Tender Title", key: "title", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.title}</span> },
+  { header: "Tender Type", key: "tender_type" },
+  { header: "Tender Amount", key: "amount", render: (row) => row.amount ? `₹${row.amount}` : "—" },
+  { header: "Published On", key: "published_on", render: (row) => formatDate(row.published_on) },
+  { header: "Deadline", key: "submission_deadline", render: (row) => formatDate(row.submission_deadline) },
   { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
   { header: "", key: "actions", width: "40px", render: () => RenderActions() }
 ];
 
 const EVENT_COLUMNS: TableColumn[] = [
-  { header: "Event Title", key: "title", render: (row) => <span className="text-sm font-normal text-[#0C83FF] underline decoration-solid cursor-pointer">{row.title}</span> },
-  { header: "Event Type", key: "type" },
-  { header: "Date", key: "date" },
-  { header: "Time", key: "time" },
-  { header: "Location", key: "location" },
+  { header: "Event Title", key: "title", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.title}</span> },
+  { header: "Event Type", key: "event_type" },
+  { header: "Date", key: "date", render: (row) => formatDate(row.date) },
+  { header: "Venue", key: "venue" },
   { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
   { header: "", key: "actions", width: "40px", render: () => RenderActions() }
 ];
 
 const LEADERS_COLUMNS: TableColumn[] = [
-  { header: "Name", key: "name", render: (row) => <span className="text-sm font-normal text-[#0C83FF] underline decoration-solid cursor-pointer">{row.name}</span> },
+  { header: "Name", key: "name", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.name}</span> },
   { header: "Designation", key: "designation" },
-  { header: "Department", key: "department" },
-  { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
-  { header: "", key: "actions", width: "40px", render: () => RenderActions() }
-];
-
-const CONTACT_COLUMNS: TableColumn[] = [
-  { header: "Name", key: "name", render: (row) => <span className="text-sm font-normal text-[#0C83FF] underline decoration-solid cursor-pointer">{row.name}</span> },
-  { header: "Designation", key: "designation" },
-  { header: "Department", key: "department" },
-  { header: "Mobile Number", key: "mobile" },
-  { header: "Email", key: "email" },
-  { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
-  { header: "", key: "actions", width: "40px", render: () => RenderActions() }
-];
-
-const CITY_PROFILE_COLUMNS: TableColumn[] = [
-  { header: "Section Name", key: "section", render: (row) => <span className="text-sm font-normal text-[#0C83FF] underline decoration-solid cursor-pointer">{row.section}</span> },
-  { header: "Description", key: "description" },
-  { header: "Last Updated", key: "updated_at" },
+  { header: "Tenure Start", key: "tenure_start", render: (row) => formatDate(row.tenure_start) },
+  { header: "Tenure End", key: "tenure_end", render: (row) => formatDate(row.tenure_end) },
   { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
   { header: "", key: "actions", width: "40px", render: () => RenderActions() }
 ];
 
 const DOWNLOAD_COLUMNS: TableColumn[] = [
-  { header: "Document Title", key: "title", render: (row) => <span className="text-sm font-normal text-[#0C83FF] underline decoration-solid cursor-pointer">{row.title}</span> },
-  { header: "Category", key: "category" },
-  { header: "File Type", key: "type" },
-  { header: "File Size", key: "size" },
-  { header: "Uploaded On", key: "uploaded_at" },
+  { header: "Document Title", key: "document_title", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.document_title}</span> },
+  { header: "Category", key: "document_type" },
+  { header: "Uploaded On", key: "created_at", render: (row) => formatDate(row.created_at) },
   { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
   { header: "", key: "actions", width: "40px", render: () => RenderActions() }
 ];
@@ -196,6 +154,12 @@ export default function AuthorityWebsiteContentPage() {
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
+  // Pagination & Filters
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const limit = 10;
+  const [showRightShadow, setShowRightShadow] = useState(false);
+
   // Drawer States
   const [isNoticeDrawerOpen, setIsNoticeDrawerOpen] = useState(false);
   const [isTenderDrawerOpen, setIsTenderDrawerOpen] = useState(false);
@@ -204,46 +168,54 @@ export default function AuthorityWebsiteContentPage() {
   const [isContactDrawerOpen, setIsContactDrawerOpen] = useState(false);
   const [isDownloadDrawerOpen, setIsDownloadDrawerOpen] = useState(false);
 
-  // City Profile Data (DUMMY for now)
-  const cityProfile = {
-    area_sq_km: "21.64 sq. km",
-    no_of_wards: 25,
-    ward_boundaries: "21.64 sq. km",
-    population_estimate: 25,
-    rental_properties_of_corporation: 25,
-    number_of_slums: 0,
-    solid_waste_per_day: "9.1 Tones",
-    street_light_poles: 150,
-    employees_in_board: 135,
-    households_residential: 4500,
-    households_shops_offices: 550,
-    households_open_plots: 0,
-    birth_registration_per_year: 800,
-    birth_certificate_per_year: 900
-  };
-  const isLoadingProfile = false;
-  // const { data: cityProfile, isLoading: isLoadingProfile } = useCityProfile();
-  const updateProfile = { isPending: false }; // Mocked mutation state
+  // Data Fetching
+  const params = { limit, offset: (page - 1) * limit };
+  const { data: noticesData, isLoading: isLoadingNotices } = useNotices(params);
+  const { data: tendersData, isLoading: isLoadingTenders } = useTenders(params);
+  const { data: eventsData, isLoading: isLoadingEvents } = useEvents(params);
+  const { data: leadersData, isLoading: isLoadingLeaders } = useLeaders(params);
+  const { data: downloadsData, isLoading: isLoadingDownloads } = useDownloads(params);
+  
+  const { data: cityProfile, isLoading: isLoadingProfile } = useCityProfile();
+  const updateProfile = useUpdateCityProfile();
 
-  // City Profile Form States (Initialized with strings to ensure controlled inputs)
   const [profileForm, setProfileForm] = useState({
-    area_sq_km: "21.64 sq. km",
-    no_of_wards: "25",
-    ward_boundaries: "21.64 sq. km",
-    population_estimate: "25",
-    rental_properties_of_corporation: "25",
-    number_of_slums: "0",
-    solid_waste_per_day: "9.1 Tones",
-    street_light_poles: "150",
-    employees_in_board: "135",
-    households_residential: "4500",
-    households_shops_offices: "550",
-    households_open_plots: "0",
-    birth_registration_per_year: "800",
-    birth_certificate_per_year: "900"
+    area_sq_km: "",
+    no_of_wards: "",
+    ward_boundaries: "",
+    population_estimate: "",
+    rental_properties_of_corporation: "",
+    number_of_slums: "",
+    solid_waste_per_day: "",
+    street_light_poles: "",
+    employees_in_board: "",
+    households_residential: "",
+    households_shops_offices: "",
+    households_open_plots: "",
+    birth_registration_per_year: "",
+    birth_certificate_per_year: ""
   });
 
-  // Sync effect removed to avoid controlled input warnings and cascading renders
+  useEffect(() => {
+    if (cityProfile) {
+      setProfileForm({
+        area_sq_km: cityProfile.area_sq_km || "",
+        no_of_wards: cityProfile.no_of_wards?.toString() || "",
+        ward_boundaries: cityProfile.ward_boundaries || "",
+        population_estimate: cityProfile.population_estimate?.toString() || "",
+        rental_properties_of_corporation: cityProfile.rental_properties_of_corporation?.toString() || "",
+        number_of_slums: cityProfile.number_of_slums?.toString() || "",
+        solid_waste_per_day: cityProfile.solid_waste_per_day || "",
+        street_light_poles: cityProfile.street_light_poles?.toString() || "",
+        employees_in_board: cityProfile.employees_in_board?.toString() || "",
+        households_residential: cityProfile.households_residential?.toString() || "",
+        households_shops_offices: cityProfile.households_shops_offices?.toString() || "",
+        households_open_plots: cityProfile.households_open_plots?.toString() || "",
+        birth_registration_per_year: cityProfile.birth_registration_per_year?.toString() || "",
+        birth_certificate_per_year: cityProfile.birth_certificate_per_year?.toString() || ""
+      });
+    }
+  }, [cityProfile]);
 
   const handleProfileChange = (field: keyof typeof profileForm, value: string) => {
     setProfileForm(prev => ({ ...prev, [field]: value }));
@@ -262,7 +234,6 @@ export default function AuthorityWebsiteContentPage() {
     const updateData: any = {};
     fields.forEach(field => {
       const value = profileForm[field];
-      // Convert to number if the field is expected to be a number in schema
       if (["no_of_wards", "population_estimate", "rental_properties_of_corporation", "number_of_slums", "street_light_poles", "employees_in_board", "households_residential", "households_shops_offices", "households_open_plots", "birth_registration_per_year", "birth_certificate_per_year"].includes(field)) {
         updateData[field] = value === "" ? null : Number(value);
       } else {
@@ -271,21 +242,13 @@ export default function AuthorityWebsiteContentPage() {
     });
 
     try {
-      // await updateProfile.mutateAsync(updateData); // Commented out due to CORS/trailing slash issues
-      alert("Dummy Save: Changes would be saved to backend.");
+      await updateProfile.mutateAsync(updateData);
+      alert("City profile updated successfully!");
     } catch (err) {
       console.error("Failed to update profile", err);
       alert("Failed to save changes.");
     }
   };
-
-  // Filter States
-  const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<string | number | null>(null);
-  const [status, setStatus] = useState<string | number | null>(null);
-  const [page, setPage] = useState(1);
-  const [showRightShadow, setShowRightShadow] = useState(false);
-  const limit = 10;
 
   const checkScroll = () => {
     const el = tableContainerRef.current;
@@ -306,89 +269,53 @@ export default function AuthorityWebsiteContentPage() {
     }
   }, [activeTab]);
 
-  useEffect(() => {
-    const timer = setTimeout(checkScroll, 0);
-    window.addEventListener("resize", checkScroll);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("resize", checkScroll);
-    };
-  }, [activeTab]);
-
   const getTabData = () => {
     switch (activeTab) {
       case "Tenders":
         return { 
           columns: TENDER_COLUMNS, 
-          data: generateTenders(),
-          typeLabel: "Departments",
-          typeOptions: [
-            { label: "Engineering", value: "Engineering" },
-            { label: "ULB", value: "ULB" },
-          ]
+          data: tendersData?.tenders || [],
+          total: tendersData?.total || 0,
+          isLoading: isLoadingTenders,
+          onAdd: () => setIsTenderDrawerOpen(true)
         };
       case "Events":
         return { 
           columns: EVENT_COLUMNS, 
-          data: generateEvents(),
-          typeLabel: "Event Type",
-          typeOptions: [
-            { label: "Cultural", value: "Cultural" },
-            { label: "Sports", value: "Sports" },
-            { label: "Awareness", value: "Awareness" },
-          ]
+          data: eventsData?.events || [],
+          total: eventsData?.total || 0,
+          isLoading: isLoadingEvents,
+          onAdd: () => setIsEventDrawerOpen(true)
         };
       case "Leaders Board":
         return { 
           columns: LEADERS_COLUMNS, 
-          data: generateLeaders(),
-          typeLabel: "Departments",
-          typeOptions: [
-            { label: "Administration", value: "Administration" },
-          ]
-        };
-      case "Contact Diary":
-        return { 
-          columns: CONTACT_COLUMNS, 
-          data: generateContacts(),
-          typeLabel: "Departments",
-          typeOptions: [
-            { label: "Revenue", value: "Revenue" },
-            { label: "Engineering", value: "Engineering" },
-          ]
-        };
-      case "City Profile":
-        return { 
-          columns: CITY_PROFILE_COLUMNS, 
-          data: generateCityProfile(),
-          typeLabel: "Category",
-          typeOptions: []
+          data: leadersData?.leaders || [],
+          total: leadersData?.total || 0,
+          isLoading: isLoadingLeaders,
+          onAdd: () => setIsLeaderDrawerOpen(true)
         };
       case "Downloads":
         return { 
           columns: DOWNLOAD_COLUMNS, 
-          data: generateDownloads(),
-          typeLabel: "Category",
-          typeOptions: [
-            { label: "Guidelines", value: "Guidelines" },
-            { label: "Forms", value: "Forms" },
-          ]
+          data: downloadsData?.downloads || [],
+          total: downloadsData?.total || 0,
+          isLoading: isLoadingDownloads,
+          onAdd: () => setIsDownloadDrawerOpen(true)
         };
       case "Notices":
       default:
         return { 
           columns: NOTICE_COLUMNS, 
-          data: generateNotices(),
-          typeLabel: "Notice Type",
-          typeOptions: [
-            { label: "Public Notice", value: "Public Notice" },
-            { label: "Circular", value: "Circular" },
-          ]
+          data: noticesData?.notices || [],
+          total: noticesData?.total || 0,
+          isLoading: isLoadingNotices,
+          onAdd: () => setIsNoticeDrawerOpen(true)
         };
     }
   };
 
-  const { columns, data, typeLabel, typeOptions } = getTabData();
+  const tabContent = getTabData();
 
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest relative">
@@ -397,28 +324,20 @@ export default function AuthorityWebsiteContentPage() {
         <div className="flex flex-col gap-1">
           <h1 className="text-base font-medium text-[#343434]">Website Content Management</h1>
           <p className="text-xs font-normal text-[#343434]">
-            Create and manage system users, assign roles, and control access across municipal operations.
+            Manage notices, tenders, events, and other public-facing information.
           </p>
         </div>
-        {activeTab !== "City Profile" && (
+        {activeTab !== "City Profile" && activeTab !== "Contact Diary" && (
           <button 
-            onClick={() => {
-              if (activeTab === "Notices") setIsNoticeDrawerOpen(true);
-              if (activeTab === "Tenders") setIsTenderDrawerOpen(true);
-              if (activeTab === "Events") setIsEventDrawerOpen(true);
-              if (activeTab === "Leaders Board") setIsLeaderDrawerOpen(true);
-              if (activeTab === "Contact Diary") setIsContactDrawerOpen(true);
-              if (activeTab === "Downloads") setIsDownloadDrawerOpen(true);
-            }}
-            className="flex items-center justify-center gap-2.5 rounded-lg bg-[#0C83FF] px-4 py-3 text-sm font-medium text-white hover:bg-blue-600 transition-colors"
+            onClick={tabContent.onAdd}
+            className="flex items-center justify-center gap-2.5 rounded-lg bg-[#0C83FF] px-4 py-3 text-sm font-medium text-white hover:bg-blue-600 transition-colors cursor-pointer"
           >
             {activeTab === "Notices" ? "Add New Notice" :
              activeTab === "Tenders" ? "Add New Tender" :
              activeTab === "Events" ? "Add New Event" :
              activeTab === "Downloads" ? "Add New Download" :
              activeTab === "Leaders Board" ? "Add New Leader" :
-             activeTab === "Contact Diary" ? "Add New Contact" :
-             `Manage ${activeTab}`}
+             `Add New ${activeTab}`}
           </button>
         )}
       </div>
@@ -432,23 +351,17 @@ export default function AuthorityWebsiteContentPage() {
             onClick={() => {
               setActiveTab(tab);
               setPage(1);
-              setTypeFilter(null);
-              setStatus(null);
             }}
-            className={`flex items-center justify-center gap-2.5 px-3 py-2 text-sm transition-colors whitespace-nowrap ${
+            className={`flex items-center justify-center gap-2.5 px-3 py-2 text-sm transition-colors whitespace-nowrap cursor-pointer ${
               activeTab === tab ? "font-semibold text-[#0C83FF]" : "font-normal text-[#343434]"
             }`}
           >
             {tab}
           </button>
         ))}
-        {/* Active Tab Indicator */}
         <div 
           className="absolute bottom-0 h-1.5 rounded-t-lg bg-[#0C83FF] transition-all duration-300"
-          style={{
-            width: `${indicatorStyle.width}px`,
-            left: `${indicatorStyle.left}px`
-          }}
+          style={{ width: `${indicatorStyle.width}px`, left: `${indicatorStyle.left}px` }}
         />
       </div>
 
@@ -456,11 +369,11 @@ export default function AuthorityWebsiteContentPage() {
       <div className="flex-1 p-5 overflow-y-auto">
         {activeTab === "City Profile" ? (
           isLoadingProfile ? (
-            <div className="flex h-64 w-full items-center justify-center">
+            <div className="flex h-64 items-center justify-center">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0C83FF] border-t-transparent"></div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start pb-10">
               {/* Column 1: City Profile */}
               <div className="flex flex-col gap-6 bg-white border border-[#D6D9DE] p-5 rounded-lg shadow-sm">
                 <div className="flex justify-between items-center border-b border-[#D6D9DE] pb-3">
@@ -468,141 +381,77 @@ export default function AuthorityWebsiteContentPage() {
                   <button 
                     disabled={!isCardChanged(["area_sq_km", "no_of_wards", "ward_boundaries", "population_estimate", "rental_properties_of_corporation", "number_of_slums", "solid_waste_per_day", "street_light_poles", "employees_in_board"]) || updateProfile.isPending}
                     onClick={() => handleSave(["area_sq_km", "no_of_wards", "ward_boundaries", "population_estimate", "rental_properties_of_corporation", "number_of_slums", "solid_waste_per_day", "street_light_poles", "employees_in_board"])}
-                    className="bg-[#0C83FF] text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="bg-[#0C83FF] text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer"
                   >
                     {updateProfile.isPending ? "Saving..." : "Save"}
                   </button>
                 </div>
-                
                 <div className="grid grid-cols-2 gap-x-4 gap-y-5">
                   <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-normal text-[#343434]">Area In Sq. km.</label>
-                    <input 
-                      type="text" 
-                      value={profileForm.area_sq_km} 
-                      onChange={(e) => handleProfileChange("area_sq_km", e.target.value)}
-                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
-                    />
+                    <input type="text" value={profileForm.area_sq_km} onChange={(e) => handleProfileChange("area_sq_km", e.target.value)} className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-normal text-[#343434]">No. of wards</label>
-                    <input 
-                      type="text" 
-                      value={profileForm.no_of_wards} 
-                      onChange={(e) => handleProfileChange("no_of_wards", e.target.value)}
-                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
-                    />
+                    <input type="text" value={profileForm.no_of_wards} onChange={(e) => handleProfileChange("no_of_wards", e.target.value)} className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-normal text-[#343434]">Ward boundries</label>
-                    <input 
-                      type="text" 
-                      value={profileForm.ward_boundaries} 
-                      onChange={(e) => handleProfileChange("ward_boundaries", e.target.value)}
-                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
-                    />
+                    <input type="text" value={profileForm.ward_boundaries} onChange={(e) => handleProfileChange("ward_boundaries", e.target.value)} className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-normal text-[#343434]">Population estimate</label>
-                    <input 
-                      type="text" 
-                      value={profileForm.population_estimate} 
-                      onChange={(e) => handleProfileChange("population_estimate", e.target.value)}
-                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
-                    />
+                    <input type="text" value={profileForm.population_estimate} onChange={(e) => handleProfileChange("population_estimate", e.target.value)} className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" />
                   </div>
                 </div>
-
                 <div className="flex flex-col gap-2">
                   <label className="text-[13px] font-normal text-[#343434]">Rental Properties of corporation</label>
-                  <input 
-                    type="text" 
-                    value={profileForm.rental_properties_of_corporation} 
-                    onChange={(e) => handleProfileChange("rental_properties_of_corporation", e.target.value)}
-                    className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
-                  />
+                  <input type="text" value={profileForm.rental_properties_of_corporation} onChange={(e) => handleProfileChange("rental_properties_of_corporation", e.target.value)} className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" />
                 </div>
-
                 <div className="grid grid-cols-2 gap-x-4 gap-y-5">
                   <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-normal text-[#343434]">Number of Slums</label>
-                    <input 
-                      type="text" 
-                      value={profileForm.number_of_slums} 
-                      onChange={(e) => handleProfileChange("number_of_slums", e.target.value)}
-                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
-                    />
+                    <input type="text" value={profileForm.number_of_slums} onChange={(e) => handleProfileChange("number_of_slums", e.target.value)} className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-normal text-[#343434]">Solid waste per day</label>
-                    <input 
-                      type="text" 
-                      value={profileForm.solid_waste_per_day} 
-                      onChange={(e) => handleProfileChange("solid_waste_per_day", e.target.value)}
-                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
-                    />
+                    <input type="text" value={profileForm.solid_waste_per_day} onChange={(e) => handleProfileChange("solid_waste_per_day", e.target.value)} className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-normal text-[#343434]">Street Light poles</label>
-                    <input 
-                      type="text" 
-                      value={profileForm.street_light_poles} 
-                      onChange={(e) => handleProfileChange("street_light_poles", e.target.value)}
-                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
-                    />
+                    <input type="text" value={profileForm.street_light_poles} onChange={(e) => handleProfileChange("street_light_poles", e.target.value)} className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-normal text-[#343434]">Employees in board</label>
-                    <input 
-                      type="text" 
-                      value={profileForm.employees_in_board} 
-                      onChange={(e) => handleProfileChange("employees_in_board", e.target.value)}
-                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
-                    />
+                    <input type="text" value={profileForm.employees_in_board} onChange={(e) => handleProfileChange("employees_in_board", e.target.value)} className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" />
                   </div>
                 </div>
               </div>
 
-              {/* Column 2: No of House holds */}
+              {/* Column 2: Households */}
               <div className="flex flex-col gap-6 bg-white border border-[#D6D9DE] p-5 rounded-lg shadow-sm">
                 <div className="flex justify-between items-center border-b border-[#D6D9DE] pb-3">
                   <h2 className="text-base font-semibold text-[#343434]">No of House holds</h2>
                   <button 
                     disabled={!isCardChanged(["households_residential", "households_shops_offices", "households_open_plots"]) || updateProfile.isPending}
                     onClick={() => handleSave(["households_residential", "households_shops_offices", "households_open_plots"])}
-                    className="bg-[#0C83FF] text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="bg-[#0C83FF] text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer"
                   >
                     {updateProfile.isPending ? "Saving..." : "Save"}
                   </button>
                 </div>
-                
                 <div className="flex flex-col gap-5">
                   <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-normal text-[#343434]">Residential</label>
-                    <input 
-                      type="text" 
-                      value={profileForm.households_residential} 
-                      onChange={(e) => handleProfileChange("households_residential", e.target.value)}
-                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
-                    />
+                    <input type="text" value={profileForm.households_residential} onChange={(e) => handleProfileChange("households_residential", e.target.value)} className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-normal text-[#343434]">Shops & Offices</label>
-                    <input 
-                      type="text" 
-                      value={profileForm.households_shops_offices} 
-                      onChange={(e) => handleProfileChange("households_shops_offices", e.target.value)}
-                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
-                    />
+                    <input type="text" value={profileForm.households_shops_offices} onChange={(e) => handleProfileChange("households_shops_offices", e.target.value)} className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-normal text-[#343434]">Open Plots</label>
-                    <input 
-                      type="text" 
-                      value={profileForm.households_open_plots} 
-                      onChange={(e) => handleProfileChange("households_open_plots", e.target.value)}
-                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
-                    />
+                    <input type="text" value={profileForm.households_open_plots} onChange={(e) => handleProfileChange("households_open_plots", e.target.value)} className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" />
                   </div>
                 </div>
               </div>
@@ -614,184 +463,93 @@ export default function AuthorityWebsiteContentPage() {
                   <button 
                     disabled={!isCardChanged(["birth_registration_per_year", "birth_certificate_per_year"]) || updateProfile.isPending}
                     onClick={() => handleSave(["birth_registration_per_year", "birth_certificate_per_year"])}
-                    className="bg-[#0C83FF] text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="bg-[#0C83FF] text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer"
                   >
                     {updateProfile.isPending ? "Saving..." : "Save"}
                   </button>
                 </div>
-                
                 <div className="flex flex-col gap-5">
                   <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-normal text-[#343434]">Registration per year</label>
-                    <input 
-                      type="text" 
-                      value={profileForm.birth_registration_per_year} 
-                      onChange={(e) => handleProfileChange("birth_registration_per_year", e.target.value)}
-                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
-                    />
+                    <input type="text" value={profileForm.birth_registration_per_year} onChange={(e) => handleProfileChange("birth_registration_per_year", e.target.value)} className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-normal text-[#343434]">Certificate per year</label>
-                    <input 
-                      type="text" 
-                      value={profileForm.birth_certificate_per_year} 
-                      onChange={(e) => handleProfileChange("birth_certificate_per_year", e.target.value)}
-                      className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" 
-                    />
+                    <input type="text" value={profileForm.birth_certificate_per_year} onChange={(e) => handleProfileChange("birth_certificate_per_year", e.target.value)} className="w-full rounded-lg border border-[#D6D9DE] px-3 py-2 text-sm text-[#343434] outline-none focus:border-[#0C83FF]" />
                   </div>
                 </div>
               </div>
             </div>
           )
+        ) : activeTab === "Contact Diary" ? (
+          <div className="flex h-64 items-center justify-center text-gray-400 italic">
+            Contact Diary is coming soon.
+          </div>
         ) : (
           <div className="flex flex-col gap-4 rounded-lg border border-[#D6D9DE] bg-white p-4 min-h-[400px]">
-            {/* Filters Row */}
             <div className="flex flex-wrap items-center justify-between gap-4">
-              {/* Search */}
               <div className="flex w-[209px] items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2 h-9">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-60 shrink-0">
                   <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                <input 
-                  type="text" 
-                  placeholder="Search" 
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full border-none bg-transparent p-0 text-sm text-[#343434] outline-none placeholder:opacity-60 focus:ring-0" 
-                />
-              </div>
-
-              {/* Dropdowns & Date */}
-              <div className="flex items-center gap-2 h-9">
-                  {/* Dropdowns */}
-                  <div className="w-[160px] h-full">
-                      <DropdownSelect
-                          options={typeOptions}
-                          value={typeFilter}
-                          onChange={setTypeFilter}
-                          placeholder={typeLabel}
-                          className="h-full"
-                      />
-                  </div>
-
-                  <div className="h-6 w-[1px] bg-[#D6D9DE] mx-1"></div>
-
-                  <div className="w-[140px] h-full">
-                      <DropdownSelect
-                          options={[
-                              { label: "Active", value: "Active" },
-                              { label: "Expired", value: "Expired" },
-                              { label: "Closed", value: "Closed" },
-                              { label: "Cancelled", value: "Cancelled" },
-                              { label: "Upcoming", value: "Upcoming" },
-                              { label: "Completed", value: "Completed" },
-                              { label: "Published", value: "Published" },
-                          ]}
-                          value={status}
-                          onChange={setStatus}
-                          placeholder="All Status"
-                          className="h-full"
-                      />
-                  </div>
-
-                  <div className="h-6 w-[1px] bg-[#D6D9DE] mx-1"></div>
-
-                  {/* Date Range */}
-                  <div className="flex items-center gap-2 h-full">
-                      <div className="flex w-[124px] h-full items-center justify-between rounded-lg border border-[#D6D9DE] bg-white px-3 py-2 cursor-pointer">
-                          <span className="text-sm text-[#343434] opacity-60">From</span>
-                          <Image src="/dashboard/icons/applications/calendar.svg" alt="calendar" width={18} height={18} className="opacity-60" />
-                      </div>
-                      <span className="text-[#343434]">-</span>
-                      <div className="flex w-[124px] h-full items-center justify-between rounded-lg border border-[#D6D9DE] bg-white px-3 py-2 cursor-pointer">
-                          <span className="text-sm text-[#343434] opacity-60">To</span>
-                          <Image src="/dashboard/icons/applications/calendar.svg" alt="calendar" width={18} height={18} className="opacity-60" />
-                      </div>
-                  </div>
+                <input type="text" placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} className="w-full border-none bg-transparent p-0 text-sm outline-none" />
               </div>
             </div>
 
-            {/* Table */}
-            <div 
-              ref={tableContainerRef}
-              onScroll={checkScroll}
-              className="w-full overflow-x-auto [&::-webkit-scrollbar]:h-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#D6D9DE] [&::-webkit-scrollbar-thumb]:rounded-full"
-            >
-              <table className="w-full border-separate border-spacing-0">
-                <thead>
-                  <tr>
-                    {columns.map((col, idx) => (
-                      <th 
-                        key={idx} 
-                        className={`px-2 py-3 text-left bg-white border-b border-[#D6D9DE] ${col.key === "actions" ? "sticky right-0 z-20" : ""}`}
-                      >
-                        <div className={`flex items-center gap-2 ${idx < columns.length - 1 && col.key !== "actions" ? "border-r border-[rgba(0,0,0,0.1)]" : ""} pr-2`}>
-                          <span className="text-xs font-semibold text-[#333333] opacity-70 uppercase whitespace-nowrap">{col.header}</span>
-                        </div>
-                        {col.key === "actions" && showRightShadow && <div className="absolute inset-y-0 left-0 w-px bg-[#D6D9DE] shadow-[-2px_0_4px_rgba(0,0,0,0.05)]" />}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.map((row: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-gray-50 transition-colors group">
-                      {columns.map((col, colIdx) => (
-                        <td 
-                          key={colIdx} 
-                          className={`px-2 py-3 border-b border-[#D6D9DE] bg-white group-hover:bg-gray-50 whitespace-nowrap ${col.key === "actions" ? "sticky right-0 z-10" : ""}`}
-                        >
-                          {col.key === "actions" && showRightShadow && <div className="absolute inset-y-0 left-0 w-px bg-[#D6D9DE] shadow-[-2px_0_4px_rgba(0,0,0,0.05)]" />}
-                          {col.render ? (
-                            col.render(row)
-                          ) : (
-                            <span className={`text-sm ${colIdx === 0 ? "font-medium" : "font-normal text-[#343434] ${colIdx > 0 ? 'opacity-70' : ''}"}`}>
-                              {row[col.key] || "—"}
-                            </span>
-                          )}
-                        </td>
+            <div ref={tableContainerRef} onScroll={checkScroll} className="w-full overflow-x-auto">
+              {tabContent.isLoading ? (
+                <div className="flex h-64 items-center justify-center">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0C83FF] border-t-transparent"></div>
+                </div>
+              ) : (
+                <table className="w-full border-separate border-spacing-0">
+                  <thead>
+                    <tr>
+                      {tabContent.columns.map((col, idx) => (
+                        <th key={idx} className={`px-2 py-3 text-left bg-white border-b border-[#D6D9DE] ${col.key === "actions" ? "sticky right-0 z-20" : ""}`}>
+                          <div className={`flex items-center gap-2 ${idx < tabContent.columns.length - 1 && col.key !== "actions" ? "border-r border-[rgba(0,0,0,0.1)]" : ""} pr-2`}>
+                            <span className="text-xs font-semibold text-[#333333] opacity-70 uppercase whitespace-nowrap">{col.header}</span>
+                          </div>
+                        </th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {tabContent.data.length > 0 ? (
+                      tabContent.data.map((row: any, idx: number) => (
+                        <tr key={idx} className="hover:bg-gray-50 transition-colors group">
+                          {tabContent.columns.map((col, colIdx) => (
+                            <td key={colIdx} className={`px-2 py-3 border-b border-[#D6D9DE] bg-white group-hover:bg-gray-50 whitespace-nowrap ${col.key === "actions" ? "sticky right-0 z-10 text-center" : ""}`}>
+                              {col.render ? col.render(row) : <span className="text-sm">{row[col.key] || "—"}</span>}
+                            </td>
+                          ))}
+                        </tr>
+                      ))
+                    ) : (
+                      <tr><td colSpan={tabContent.columns.length} className="px-2 py-10 text-center text-gray-400">No data found.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </div>
             
-            {/* Pagination */}
             <TablePagination
               currentPage={page}
-              totalPages={Math.ceil(data.length / limit)}
+              totalPages={Math.ceil(tabContent.total / limit) || 1}
               limit={limit}
               onPageChange={setPage}
             />
           </div>
         )}
       </div>
-      <AddNoticeDrawer 
-        isOpen={isNoticeDrawerOpen}
-        onClose={() => setIsNoticeDrawerOpen(false)}
-      />
-      <AddTenderDrawer 
-        isOpen={isTenderDrawerOpen}
-        onClose={() => setIsTenderDrawerOpen(false)}
-      />
-      <AddEventDrawer 
-        isOpen={isEventDrawerOpen}
-        onClose={() => setIsEventDrawerOpen(false)}
-      />
-      <AddLeaderDrawer 
-        isOpen={isLeaderDrawerOpen}
-        onClose={() => setIsLeaderDrawerOpen(false)}
-      />
-      <AddContactDrawer 
-        isOpen={isContactDrawerOpen}
-        onClose={() => setIsContactDrawerOpen(false)}
-      />
-      <AddDownloadDrawer 
-        isOpen={isDownloadDrawerOpen}
-        onClose={() => setIsDownloadDrawerOpen(false)}
-      />
+
+      <AddNoticeDrawer isOpen={isNoticeDrawerOpen} onClose={() => setIsNoticeDrawerOpen(false)} />
+      <AddTenderDrawer isOpen={isTenderDrawerOpen} onClose={() => setIsTenderDrawerOpen(false)} />
+      <AddEventDrawer isOpen={isEventDrawerOpen} onClose={() => setIsEventDrawerOpen(false)} />
+      <AddLeaderDrawer isOpen={isLeaderDrawerOpen} onClose={() => setIsLeaderDrawerOpen(false)} />
+      <AddContactDrawer isOpen={isContactDrawerOpen} onClose={() => setIsContactDrawerOpen(false)} />
+      <AddDownloadDrawer isOpen={isDownloadDrawerOpen} onClose={() => setIsDownloadDrawerOpen(false)} />
     </div>
   );
 }

@@ -4,50 +4,52 @@ import { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { type components } from "@/types/api";
+import { useCreateEvent } from "@/hooks/useWebsiteContent";
 
 type EventCreate = components["schemas"]["EventCreate"];
-type TenderStatus = components["schemas"]["TenderStatus"]; // Reusing status enum
+type TenderStatus = components["schemas"]["TenderStatus"];
 
 interface AddEventDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd?: (event: EventCreate, file: File | null) => void;
 }
 
-export default function AddEventDrawer({ isOpen, onClose, onAdd }: AddEventDrawerProps) {
-  const [formData, setFormData] = useState<EventCreate & { description: string }>({
+export default function AddEventDrawer({ isOpen, onClose }: AddEventDrawerProps) {
+  const { mutateAsync: createEvent, isPending } = useCreateEvent();
+  
+  const [formData, setFormData] = useState<EventCreate>({
     title: "",
     event_type: "Public Program",
-    description: "",
+    date: new Date().toISOString(),
     venue: "",
-    date: new Date().toISOString().split('T')[0],
     status: "ACTIVE",
   });
 
   const [eventTime, setEventTime] = useState("08:00");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.title.trim()) {
       alert("Please enter an event title");
       return;
     }
     
-    // Combine date and time for backend if necessary, or send as is
-    onAdd?.(formData, selectedFile);
-    onClose();
-    
-    // Reset form
-    setFormData({
-      title: "",
-      event_type: "Public Program",
-      description: "",
-      venue: "",
-      date: new Date().toISOString().split('T')[0],
-      status: "ACTIVE",
-    });
-    setEventTime("08:00");
-    setSelectedFile(null);
+    try {
+      await createEvent(formData);
+      onClose();
+      // Reset form
+      setFormData({
+        title: "",
+        event_type: "Public Program",
+        date: new Date().toISOString(),
+        venue: "",
+        status: "ACTIVE",
+      });
+      setEventTime("08:00");
+      alert("Event added successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add event");
+    }
   };
 
   return (
@@ -124,17 +126,6 @@ export default function AddEventDrawer({ isOpen, onClose, onAdd }: AddEventDrawe
                 </div>
               </div>
 
-              {/* Event Description */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#343434]">Event Description</label>
-                <textarea 
-                  placeholder="Detailed description of the event, objectives"
-                  className="w-full h-[120px] resize-none rounded-lg border border-[#D6D9DE] p-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-
               {/* Venue */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#343434]">Venue</label>
@@ -147,30 +138,6 @@ export default function AddEventDrawer({ isOpen, onClose, onAdd }: AddEventDrawe
                 />
               </div>
 
-              {/* Attach Poster */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#343434]">Attach Poster</label>
-                <div className="bg-white border-2 border-[#D6D9DE] border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-3">
-                  <Image src="/dashboard/icons/applications/upload-cloud.svg" alt="Upload" width={36} height={36} className="opacity-60" />
-                  <div className="text-center">
-                    <p className="text-[13px] font-medium text-[#343434]">Choose a file or drag & drop it here.</p>
-                    <p className="text-[11px] text-[#343434] opacity-60 mt-0.5">only PDF format</p>
-                  </div>
-                  <label className="mt-1 cursor-pointer bg-[#F5F6F7] border border-[#D6D9DE] rounded-lg px-4 py-2 text-xs font-medium text-[#343434] hover:bg-gray-200 transition-colors">
-                    Browse File
-                    <input 
-                      type="file" 
-                      className="hidden" 
-                      accept=".pdf,.jpg,.jpeg,.png" 
-                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                    />
-                  </label>
-                  {selectedFile && (
-                    <p className="text-[11px] font-medium text-[#0C83FF] mt-1">{selectedFile.name}</p>
-                  )}
-                </div>
-              </div>
-
               {/* Date & Time */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
@@ -180,7 +147,7 @@ export default function AddEventDrawer({ isOpen, onClose, onAdd }: AddEventDrawe
                       type="date"
                       className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF]"
                       value={formData.date?.split('T')[0] || ""}
-                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, date: e.target.value ? new Date(e.target.value).toISOString() : null })}
                     />
                   </div>
                 </div>
@@ -231,9 +198,10 @@ export default function AddEventDrawer({ isOpen, onClose, onAdd }: AddEventDrawe
               </button>
               <button 
                 onClick={handleSubmit}
-                className="h-[44px] rounded-lg bg-[#0C83FF] px-8 text-sm font-medium text-white hover:bg-blue-600 transition-colors"
+                disabled={isPending}
+                className="h-[44px] rounded-lg bg-[#0C83FF] px-8 text-sm font-medium text-white hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
-                Add Event
+                {isPending ? "Adding..." : "Add Event"}
               </button>
             </div>
           </motion.div>
