@@ -98,4 +98,22 @@ export const ApplicationService = {
     const response = await api.delete(`/api/applications/${applicationId}`);
     return response.data;
   },
+
+  async workflowAction(
+    id: number,
+    data: components["schemas"]["WorkflowActionRequest"],
+  ): Promise<any> {
+    const response = await api.put(`/api/applications/${id}/action`, data);
+    return response.data;
+  },
+
+  async getComments(applicationId: number): Promise<components["schemas"]["CommentResponse"][]> {
+    const response = await api.get<components["schemas"]["CommentResponse"][]>(`/api/applications/${applicationId}/comments`);
+    return response.data;
+  },
+
+  async addComment(applicationId: number, data: components["schemas"]["CommentRequest"]): Promise<any> {
+    const response = await api.put(`/api/applications/${applicationId}/comment`, data);
+    return response.data;
+  },
 };
