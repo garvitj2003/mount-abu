@@ -120,11 +120,17 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
     }
   };
 
-  const handleResume = (app: ApplicationResponse) => {
+  const handleViewApplication = (app: ApplicationResponse) => {
     if (app.status === "PENDING") {
       setApplicationId(app.id);
       router.push("/citizen/applications/new-application");
+    } else {
+      router.push(`/citizen/applications/${app.id}`);
     }
+  };
+
+  const handleResume = (app: ApplicationResponse) => {
+    handleViewApplication(app);
   };
 
   const handleWithdraw = async (id: number) => {

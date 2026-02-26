@@ -1,16 +1,28 @@
 "use client";
 
-import {
-  AvailableQuantityChart,
-  MaterialBreakdown,
-  MaterialUsageChart,
-  StatCard,
-} from "@/components/dashboard/citizen/DashboardWidgets";
+import { StatCard } from "@/components/common/stats/StatCard";
+import { MaterialUsageChart } from "@/components/common/charts/MaterialUsageChart";
+import { AvailableQuantityChart } from "@/components/common/charts/AvailableQuantityChart";
+import { MaterialBreakdown } from "@/components/common/charts/MaterialBreakdown";
+import { PhaseTokenUsageChart } from "@/components/common/charts/PhaseTokenUsageChart";
+import { useCitizenDashboard } from "@/hooks/useDashboard";
 
 export default function DashboardCitizenPage() {
+  const { data, isLoading } = useCitizenDashboard();
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-[#F5F6F7]">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0C83FF] border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  const overview = data?.overview;
+
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest">
-      {/* Header - Full Width, Bordered, No Rounded Corners */}
+      {/* Header */}
       <div className="flex flex-col gap-1 border-b border-[#D6D9DE] bg-white px-5 py-3">
         <h1 className="text-lg font-medium text-[#343434]">Dashboard</h1>
         <p className="text-xs font-normal text-[#343434] opacity-80">
@@ -18,8 +30,8 @@ export default function DashboardCitizenPage() {
         </p>
       </div>
 
-      {/* Main Content Area with Padding */}
-      <div className="flex flex-col gap-4 p-5">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col gap-4 p-5 overflow-y-auto">
         
         {/* Overview Section */}
         <div className="flex flex-col gap-3">
@@ -27,35 +39,35 @@ export default function DashboardCitizenPage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
             <StatCard
               title="Total Applications"
-              count="03"
+              count={overview?.total_applications || 0}
               subtext="All Applications"
               iconType="applications"
               color="#0C83FF"
             />
             <StatCard
               title="Active Applications"
-              count="03"
+              count={overview?.active_applications || 0}
               subtext="Pending approvals"
               iconType="applications"
               color="#EF4444"
             />
             <StatCard
               title="Tokens Issued"
-              count="05"
+              count={overview?.tokens_issued || 0}
               subtext="Phase-wise + renovation"
               iconType="token"
               color="#059669"
             />
             <StatCard
-              title="Complains"
-              count="04"
+              title="Complaints"
+              count={overview?.total_complaints || 0}
               subtext="Total complaints"
               iconType="token"
               color="#F58646"
             />
             <StatCard
               title="Complaints Closed"
-              count="03"
+              count={overview?.closed_complaints || 0}
               subtext="Closed Complains"
               iconType="token"
               color="#059669"
@@ -64,7 +76,7 @@ export default function DashboardCitizenPage() {
         </div>
 
         {/* Analysis Section */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 pb-10">
           <h2 className="text-base font-medium text-[#343434]">
             Token & Material Analysis
           </h2>
@@ -75,8 +87,8 @@ export default function DashboardCitizenPage() {
               <h3 className="mb-3 text-xs font-medium text-[#343434]">
                 Material Usage Overview
               </h3>
-              <div className="flex flex-1 items-center justify-center">
-                <MaterialUsageChart />
+              <div className="flex flex-1 items-center justify-center min-h-[220px]">
+                <MaterialUsageChart data={data?.material_usage || []} />
               </div>
             </div>
 
@@ -85,28 +97,26 @@ export default function DashboardCitizenPage() {
               <h3 className="mb-3 text-xs font-medium text-[#343434]">
                 Available Quantity
               </h3>
-              <div className="flex flex-1 items-center justify-center">
-                <AvailableQuantityChart />
+              <div className="flex flex-1 items-center justify-center min-h-[220px]">
+                <AvailableQuantityChart data={data?.available_quantity || []} />
               </div>
             </div>
 
-            {/* Column 3: Stacked Breakdown and Placeholder */}
+            {/* Column 3: Breakdown & Token Usage */}
             <div className="flex flex-col gap-4">
-              {/* Top Material Breakdown */}
               <div className="flex flex-col rounded-lg border border-[#D6D9DE] bg-white p-4 shadow-[0px_0px_4px_0px_rgba(0,0,0,0.08)]">
                 <h3 className="mb-3 text-xs font-medium text-[#343434]">
                   Top Material Breakdown
                 </h3>
-                <MaterialBreakdown />
+                <MaterialBreakdown data={data?.material_usage || []} />
               </div>
 
-              {/* Phase-wise Token Usage */}
-              <div className="flex min-h-[80px] flex-1 flex-col rounded-lg border border-[#D6D9DE] bg-white p-4 shadow-[0px_0px_4px_0px_rgba(0,0,0,0.08)]">
-                <h3 className="mb-2 text-xs font-medium text-[#343434]">
+              <div className="flex min-h-[180px] flex-1 flex-col rounded-lg border border-[#D6D9DE] bg-white p-4 shadow-[0px_0px_4px_0px_rgba(0,0,0,0.08)]">
+                <h3 className="mb-4 text-xs font-medium text-[#343434]">
                   Phase-wise Token Usage
                 </h3>
-                <div className="flex flex-1 items-center justify-center text-center text-[10px] font-light text-[#6D727A]">
-                  Token Usage bar chart can be added here
+                <div className="flex flex-1 items-center justify-center">
+                  <PhaseTokenUsageChart data={data?.phase_token_usage || []} />
                 </div>
               </div>
             </div>

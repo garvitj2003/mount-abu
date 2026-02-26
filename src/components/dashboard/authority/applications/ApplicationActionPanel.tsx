@@ -55,6 +55,7 @@ interface ApplicationActionPanelProps {
   onCommentClick?: () => void;
   onRejectClick?: () => void;
   onObjectionClick?: () => void;
+  onAddPhaseClick?: () => void;
   isPending?: boolean;
 }
 
@@ -65,6 +66,7 @@ export default function ApplicationActionPanel({
   onCommentClick,
   onRejectClick,
   onObjectionClick,
+  onAddPhaseClick,
   isPending = false 
 }: ApplicationActionPanelProps) {
   
@@ -103,7 +105,7 @@ export default function ApplicationActionPanel({
               label="Add Phase" 
               icon="/dashboard/icons/applications/calendar.svg" 
               variant="primary" 
-              onClick={() => {}} 
+              onClick={onAddPhaseClick} 
               disabled={!hasGeoPhotos}
               title={!hasGeoPhotos ? "Geo tagged photos and estimate material is not available" : ""}
             />
@@ -138,7 +140,7 @@ export default function ApplicationActionPanel({
               label="Add Phase" 
               icon="/dashboard/icons/applications/calendar.svg" 
               variant="primary" 
-              onClick={() => {}} 
+              onClick={onAddPhaseClick} 
               disabled={!hasGeoPhotos}
               title={!hasGeoPhotos ? "Geo tagged photos and estimate material is not available" : ""}
             />

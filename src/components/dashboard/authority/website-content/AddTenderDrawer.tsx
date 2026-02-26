@@ -137,7 +137,7 @@ export default function AddTenderDrawer({ isOpen, onClose }: AddTenderDrawerProp
                 <label className="text-sm font-medium text-[#343434]">Department</label>
                 <DropdownSelect
                   options={deptOptions}
-                  value={formData.department_id}
+                  value={formData.department_id ?? null}
                   onChange={(val) => setFormData({ ...formData, department_id: val as number })}
                   className="w-full h-[44px]"
                   placeholder="Select Department"

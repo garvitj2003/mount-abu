@@ -4,28 +4,41 @@ import { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 
-interface RejectApplicationModalProps {
+interface ActionRemarksModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (remarks: string) => void;
   isPending?: boolean;
+  type: "REJECT" | "OBJECT";
 }
 
-export default function RejectApplicationModal({
+export default function ActionRemarksModal({
   isOpen,
   onClose,
   onConfirm,
   isPending = false,
-}: RejectApplicationModalProps) {
+  type,
+}: ActionRemarksModalProps) {
   const [remarks, setRemarks] = useState("");
 
   const handleConfirm = () => {
     if (!remarks.trim()) {
-      alert("Please provide a reason for rejection.");
+      alert(`Please provide a reason for ${type === "REJECT" ? "rejection" : "objection"}.`);
       return;
     }
     onConfirm(remarks);
   };
+
+  const isReject = type === "REJECT";
+  const title = isReject ? "Reject Application" : "Raise Objection";
+  const actionLabel = isReject ? "Reject" : "Raise Objection";
+  const placeholder = isReject 
+    ? "Enter your reason to reject this application." 
+    : "Describe the objection details for the applicant to address.";
+  
+  const mainColor = isReject ? "#EF4444" : "#FFD648";
+  const bgColor = isReject ? "#FEE2E2" : "#FFFBEB";
+  const iconSrc = isReject ? "/dashboard/icons/cross-round-red.svg" : "/dashboard/icons/question-mark.svg";
 
   return (
     <AnimatePresence>
@@ -50,7 +63,7 @@ export default function RejectApplicationModal({
             {/* Header */}
             <div className="flex items-center justify-between border-b border-[#D6D9DE] bg-[#F4F4F4] p-4 px-5">
               <h2 className="text-[15px] font-medium text-[#343434]">
-                Reject Application
+                {title}
               </h2>
               <button
                 onClick={onClose}
@@ -67,10 +80,10 @@ export default function RejectApplicationModal({
 
             {/* Body */}
             <div className="flex flex-col items-center gap-4 p-6 pt-8">
-              {/* Reject Icon */}
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#FEE2E2]">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EF4444]">
-                   <Image src="/dashboard/icons/cross-round-red.svg" alt="" width={24} height={24} className="invert brightness-0" />
+              {/* Icon */}
+              <div className="flex h-16 w-16 items-center justify-center rounded-full" style={{ backgroundColor: bgColor }}>
+                <div className="flex h-12 w-12 items-center justify-center rounded-full" style={{ backgroundColor: mainColor }}>
+                   <Image src={iconSrc} alt="" width={24} height={24} className={isReject ? "invert brightness-0" : ""} />
                 </div>
               </div>
 
@@ -78,16 +91,17 @@ export default function RejectApplicationModal({
                 <h3 className="text-[16px] font-semibold text-[#343434]">
                   Are you sure?
                 </h3>
-                <p className="text-[16px] font-semibold text-[#343434]">
-                  You want to reject this application?
+                <p className="text-[14px] font-medium text-[#343434] opacity-70">
+                  {isReject ? "You want to reject this application?" : "You want to raise an objection for this application?"}
                 </p>
               </div>
 
               <div className="h-px w-full bg-[#D6D9DE] my-2" />
 
               <textarea
-                placeholder="Enter your reason to reject this application."
-                className="w-full h-[160px] resize-none rounded-xl border border-[#D6D9DE] p-4 text-[13px] text-[#343434] outline-none focus:border-[#EF4444] placeholder:opacity-40 font-normal"
+                placeholder={placeholder}
+                className="w-full h-[160px] resize-none rounded-xl border border-[#D6D9DE] p-4 text-[13px] text-[#343434] outline-none placeholder:opacity-40 font-normal"
+                style={{ borderColor: remarks.trim() ? mainColor : "#D6D9DE" }}
                 value={remarks}
                 onChange={(e) => setRemarks(e.target.value)}
               />
@@ -104,10 +118,10 @@ export default function RejectApplicationModal({
               <button
                 onClick={handleConfirm}
                 disabled={isPending || !remarks.trim()}
-                className="flex-1 h-[48px] flex items-center justify-center gap-2 rounded-lg bg-[#EF4444] text-sm font-semibold text-white hover:bg-red-600 transition-colors disabled:opacity-50"
+                className="flex-1 h-[48px] flex items-center justify-center gap-2 rounded-lg text-sm font-semibold text-white transition-colors disabled:opacity-50"
+                style={{ backgroundColor: mainColor }}
               >
-                {!isPending && <Image src="/dashboard/icons/cross-round-red.svg" alt="" width={18} height={18} className="invert brightness-0" />}
-                {isPending ? "Rejecting..." : "Reject"}
+                {isPending ? "Processing..." : actionLabel}
               </button>
             </div>
           </motion.div>

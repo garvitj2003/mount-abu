@@ -6,15 +6,13 @@ import { motion, AnimatePresence } from "motion/react";
 import { useApplicationComments, useAddComment } from "@/hooks/useApplications";
 import { type components } from "@/types/api";
 
-type CommentResponse = components["schemas"]["backend__schemas__response__application__CommentResponse"];
+type CommentResponse = components["schemas"]["CommentResponse"];
 
 interface CommentsDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   applicationId: number;
   applicationNumber: string;
-  isObjectionMode?: boolean;
-  onObjectionSubmit?: (remarks: string) => Promise<void>;
 }
 
 const formatDate = (dateString?: string | null) => {
@@ -30,19 +28,20 @@ const formatDate = (dateString?: string | null) => {
 };
 
 const CommentCard = ({ comment }: { comment: CommentResponse }) => {
-  // Determine styles based on comment type or commenter (simplified for now)
   let bgColor = "bg-[#F5F6F7]";
   let titleColor = "text-[#343434]";
-  const isObjection = comment.comment_type === "GENERAL" && comment.comment.toLowerCase().includes("objection"); // Mock logic for objection badge
+  
+  // Note: Backend uses 'OBJECTION_COMMENT' for objections
+  const isObjection = comment.comment_type === ("OBJECTION_COMMENT" as any);
 
   if (comment.comment_type === "DEPT_REVIEW") {
-    bgColor = "bg-[#E6F7F5]"; // Light green for Dept
+    bgColor = "bg-[#E6F7F5]"; 
     titleColor = "text-[#008080]";
   } else if (isObjection) {
-    bgColor = "bg-[#FFF1F0]"; // Light red for Objection
+    bgColor = "bg-[#FFF1F0]"; 
     titleColor = "text-[#CF1322]";
   } else if (comment.comment_type === "OBJECTION_RESPONSE") {
-    bgColor = "bg-[#E6F4FF]"; // Light blue for Applicant response
+    bgColor = "bg-[#E6F4FF]"; 
     titleColor = "text-[#0050B3]";
   }
 
@@ -73,8 +72,6 @@ export default function CommentsDrawer({
   onClose,
   applicationId,
   applicationNumber,
-  isObjectionMode = false,
-  onObjectionSubmit,
 }: CommentsDrawerProps) {
   const { data: comments = [], isLoading } = useApplicationComments(applicationId);
   const { mutateAsync: addComment } = useAddComment();
@@ -83,7 +80,6 @@ export default function CommentsDrawer({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto scroll to bottom when comments load or new comment added
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -95,21 +91,16 @@ export default function CommentsDrawer({
 
     try {
       setIsSubmitting(true);
-      if (isObjectionMode && onObjectionSubmit) {
-        await onObjectionSubmit(newComment);
-      } else {
-        await addComment({
-          id: applicationId,
-          data: {
-            comment: newComment,
-            comment_type: "GENERAL",
-          },
-        });
-      }
+      await addComment({
+        id: applicationId,
+        data: {
+          comment: newComment,
+          comment_type: "GENERAL",
+        },
+      });
       setNewComment("");
-      if (isObjectionMode) onClose(); // Close drawer after raising objection
     } catch (error) {
-      console.error("Failed to process comment/objection", error);
+      console.error("Failed to add comment", error);
       alert("An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -120,7 +111,6 @@ export default function CommentsDrawer({
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex justify-end">
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -129,7 +119,6 @@ export default function CommentsDrawer({
             className="absolute inset-0 bg-black/20 backdrop-blur-xs"
           />
 
-          {/* Drawer Content */}
           <motion.div
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
@@ -137,25 +126,18 @@ export default function CommentsDrawer({
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
             className="relative z-10 h-full w-full max-w-[480px] bg-white shadow-2xl font-onest flex flex-col"
           >
-            {/* Header */}
             <div className="flex items-center justify-between border-b border-[#D6D9DE] bg-[#F5F6F7] px-6 py-4">
               <h2 className="text-[15px] font-medium text-[#343434]">
-                {isObjectionMode ? "Raise Objection" : "Objection & Comments"} ({applicationNumber})
+                Objection & Comments ({applicationNumber})
               </h2>
               <button
                 onClick={onClose}
                 className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md hover:bg-gray-200 transition-colors"
               >
-                <Image
-                  src="/dashboard/icons/close.svg"
-                  alt="Close"
-                  width={18}
-                  height={18}
-                />
+                <Image src="/dashboard/icons/close.svg" alt="Close" width={18} height={18} />
               </button>
             </div>
 
-            {/* Comments List */}
             <div 
               ref={scrollRef}
               className="flex-1 overflow-y-auto p-6 space-y-4 bg-white"
@@ -174,18 +156,11 @@ export default function CommentsDrawer({
               )}
             </div>
 
-            {/* Input Section */}
             <div className="border-t border-[#D6D9DE] p-4 bg-white flex flex-col gap-3">
-              {isObjectionMode && (
-                <div className="flex items-center gap-2 rounded-lg bg-red-50 p-2 px-3">
-                  <Image src="/dashboard/icons/warning.svg" alt="Objection" width={16} height={16} />
-                  <span className="text-[11px] font-medium text-red-600">You are raising an objection. This will halt the process until clarified.</span>
-                </div>
-              )}
               <div className="flex items-center gap-3 rounded-xl border border-[#D6D9DE] bg-[#F9FAFB] px-4 py-2 focus-within:border-[#0C83FF] transition-all">
                 <input
                   type="text"
-                  placeholder={isObjectionMode ? "Enter your objection detail..." : "Enter Your Comment"}
+                  placeholder="Enter Your Comment"
                   className="flex-1 bg-transparent text-sm text-[#343434] outline-none placeholder:text-gray-400"
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
@@ -198,7 +173,7 @@ export default function CommentsDrawer({
                   <button 
                     onClick={handleSend}
                     disabled={!newComment.trim() || isSubmitting}
-                    className={`flex h-8 w-8 items-center justify-center rounded-full text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${isObjectionMode ? "bg-red-500 hover:bg-red-600" : "bg-[#0C83FF] hover:bg-blue-600"}`}
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-white transition-colors bg-[#0C83FF] hover:bg-blue-600 disabled:opacity-50"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="rotate-45 ml-[-2px] mt-[-1px]">
                       <path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="currentColor" />

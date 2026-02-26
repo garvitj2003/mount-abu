@@ -1404,7 +1404,7 @@ export interface components {
              * Comments
              * @default []
              */
-            comments: components["schemas"]["backend__schemas__response__application__CommentResponse"][];
+            comments: components["schemas"]["CommentResponse"][];
             /**
              * Tokens
              * @default []
@@ -1723,20 +1723,27 @@ export interface components {
              */
             media_paths?: string[] | null;
         };
-        /** CommentResponse */
+        /**
+         * CommentResponse
+         * @description Response schema for application comments.
+         */
         CommentResponse: {
             /** Id */
             id: number;
+            /** Application Id */
+            application_id: number;
             /** Comment */
             comment: string;
+            /** Comment By */
+            comment_by: number;
+            /** Commenter Name */
+            commenter_name?: string | null;
+            /** @default GENERAL */
+            comment_type: components["schemas"]["CommentType"] | null;
+            /** Media Paths */
+            media_paths?: unknown[] | null;
             /** Created At */
             created_at?: string | null;
-            /** Comment By */
-            comment_by?: number | null;
-            /** Media Path */
-            media_path?: string | null;
-            /** Access Url */
-            access_url?: string | null;
         };
         /**
          * CommentType
@@ -1897,7 +1904,7 @@ export interface components {
              * Comments
              * @default []
              */
-            comments: components["schemas"]["CommentResponse"][];
+            comments: components["schemas"]["backend__schemas__response__complaint__CommentResponse"][];
         };
         /**
          * ComplaintRow
@@ -2522,7 +2529,7 @@ export interface components {
              * Vehicle Entries
              * @default []
              */
-            vehicle_entries: components["schemas"]["backend__schemas__response__naka__VehicleEntryResponse"][];
+            vehicle_entries: components["schemas"]["VehicleEntryResponse"][];
         };
         /** NoticeCreate */
         NoticeCreate: {
@@ -2955,7 +2962,7 @@ export interface components {
              * Vehicle Entries
              * @default []
              */
-            vehicle_entries: components["schemas"]["VehicleEntryResponse"][];
+            vehicle_entries: components["schemas"]["backend__schemas__response__application__VehicleEntryResponse"][];
         };
         /**
          * TokenMaterialResponse
@@ -3079,32 +3086,30 @@ export interface components {
             /** Error Type */
             type: string;
         };
-        /**
-         * VehicleEntryResponse
-         * @description A single vehicle / naka entry shown under the Vehicle Entries tab.
-         */
+        /** VehicleEntryResponse */
         VehicleEntryResponse: {
             /** Id */
             id: number;
+            /** Phase */
+            phase: number;
             /** Vehicle Number */
-            vehicle_number?: string | null;
-            /** Material Name */
-            material_name?: string | null;
-            /** Material Unit */
-            material_unit?: string | null;
-            /** Quantity Entered */
-            quantity_entered: number;
+            vehicle_number: string;
+            /** Driver Name */
+            driver_name: string | null;
+            /** Driver Mobile */
+            driver_mobile: string | null;
             /**
              * Entry At
              * Format: date-time
              */
             entry_at: string;
+            entered_by_user: components["schemas"]["UserSummary"] | null;
             /** Remarks */
-            remarks?: string | null;
+            remarks: string | null;
             /** Media Path */
-            media_path?: string | null;
-            /** Access Url */
-            access_url?: string | null;
+            media_path: string | null;
+            /** Materials */
+            materials: components["schemas"]["VehicleMaterialResponse"][];
         };
         /** VehicleMaterialResponse */
         VehicleMaterialResponse: {
@@ -3259,26 +3264,46 @@ export interface components {
             is_new_user: boolean;
         };
         /**
-         * CommentResponse
-         * @description Response schema for application comments.
+         * VehicleEntryResponse
+         * @description A single vehicle / naka entry shown under the Vehicle Entries tab.
          */
-        backend__schemas__response__application__CommentResponse: {
+        backend__schemas__response__application__VehicleEntryResponse: {
             /** Id */
             id: number;
-            /** Application Id */
-            application_id: number;
+            /** Vehicle Number */
+            vehicle_number?: string | null;
+            /** Material Name */
+            material_name?: string | null;
+            /** Material Unit */
+            material_unit?: string | null;
+            /** Quantity Entered */
+            quantity_entered: number;
+            /**
+             * Entry At
+             * Format: date-time
+             */
+            entry_at: string;
+            /** Remarks */
+            remarks?: string | null;
+            /** Media Path */
+            media_path?: string | null;
+            /** Access Url */
+            access_url?: string | null;
+        };
+        /** CommentResponse */
+        backend__schemas__response__complaint__CommentResponse: {
+            /** Id */
+            id: number;
             /** Comment */
             comment: string;
-            /** Comment By */
-            comment_by: number;
-            /** Commenter Name */
-            commenter_name?: string | null;
-            /** @default GENERAL */
-            comment_type: components["schemas"]["CommentType"] | null;
-            /** Media Paths */
-            media_paths?: unknown[] | null;
             /** Created At */
             created_at?: string | null;
+            /** Comment By */
+            comment_by?: number | null;
+            /** Media Path */
+            media_path?: string | null;
+            /** Access Url */
+            access_url?: string | null;
         };
         /**
          * MessageResponse
@@ -3290,31 +3315,6 @@ export interface components {
              * @description Response message
              */
             message: string;
-        };
-        /** VehicleEntryResponse */
-        backend__schemas__response__naka__VehicleEntryResponse: {
-            /** Id */
-            id: number;
-            /** Phase */
-            phase: number;
-            /** Vehicle Number */
-            vehicle_number: string;
-            /** Driver Name */
-            driver_name: string | null;
-            /** Driver Mobile */
-            driver_mobile: string | null;
-            /**
-             * Entry At
-             * Format: date-time
-             */
-            entry_at: string;
-            entered_by_user: components["schemas"]["UserSummary"] | null;
-            /** Remarks */
-            remarks: string | null;
-            /** Media Path */
-            media_path: string | null;
-            /** Materials */
-            materials: components["schemas"]["VehicleMaterialResponse"][];
         };
     };
     responses: never;
@@ -4077,7 +4077,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__application__CommentResponse"][];
+                    "application/json": components["schemas"]["CommentResponse"][];
                 };
             };
             /** @description Validation Error */

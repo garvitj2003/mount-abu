@@ -1,6 +1,6 @@
 "use client";
 
-import { useApplication, useWorkflowAction } from "@/hooks/useApplications";
+import { useAddComment, useApplication, useWorkflowAction } from "@/hooks/useApplications";
 import { useUser } from "@/hooks/useUser";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
@@ -8,7 +8,8 @@ import { useMemo, useState } from "react";
 import { type components } from "@/types/api";
 import ApplicationActionPanel from "@/components/dashboard/authority/applications/ApplicationActionPanel";
 import CommentsDrawer from "@/components/dashboard/authority/applications/CommentsDrawer";
-import RejectApplicationModal from "@/components/dashboard/authority/applications/RejectApplicationModal";
+import ActionRemarksModal from "@/components/dashboard/authority/applications/ActionRemarksModal";
+import AddPhaseDrawer from "@/components/dashboard/authority/applications/AddPhaseDrawer";
 
 type ApplicationResponse = components["schemas"]["ApplicationResponse"];
 type UserRole = components["schemas"]["UserRole"];
@@ -59,7 +60,8 @@ const Header = ({
   onAction,
   onCommentClick,
   onRejectClick,
-  onObjectionClick
+  onObjectionClick,
+  onAddPhaseClick
 }: { 
   app: ApplicationResponse; 
   userRole?: UserRole; 
@@ -68,6 +70,7 @@ const Header = ({
   onCommentClick?: () => void;
   onRejectClick?: () => void;
   onObjectionClick?: () => void;
+  onAddPhaseClick?: () => void;
 }) => {
   const warning = useMemo(() => {
     if (userRole !== 'SUPERADMIN' && userRole !== 'JEN') return null;
@@ -109,6 +112,7 @@ const Header = ({
         onCommentClick={onCommentClick}
         onRejectClick={onRejectClick}
         onObjectionClick={onObjectionClick}
+        onAddPhaseClick={onAddPhaseClick}
       />
     </div>
   );
@@ -316,18 +320,43 @@ export default function ApplicationDetailsPage() {
   const { data: user } = useUser();
   const { data: app, isLoading, error } = useApplication(id);
   const workflowAction = useWorkflowAction();
+  const { mutateAsync: addComment } = useAddComment();
   
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
-  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
-  const [isObjectionMode, setIsObjectionMode] = useState(false);
+  const [remarksModal, setRemarksModal] = useState<{ isOpen: boolean; type: "REJECT" | "OBJECT" }>({
+    isOpen: false,
+    type: "REJECT",
+  });
+  const [isAddPhaseOpen, setIsAddPhaseOpen] = useState(false);
 
-  const handleAction = async (action: WorkflowAction, remarks?: string) => {
+  const handleAction = async (
+    action: WorkflowAction, 
+    remarks?: string,
+    extra?: { num_stages?: number; phase_materials?: components["schemas"]["PhaseMaterialEntry"][] }
+  ) => {
     try {
+      // 1. Call Workflow Action API
       await workflowAction.mutateAsync({ 
         id, 
-        data: { action, remarks: remarks || `Action ${action} performed by ${user?.role}` } 
+        data: { 
+          action, 
+          remarks: remarks || `Action ${action} performed by ${user?.role}`,
+          ...extra
+        } 
       });
-      alert(`Application ${action.toLowerCase()}ed successfully.`);
+
+      // 2. If it's an Objection, also call the Comment API
+      if (action === "OBJECT" && remarks) {
+        await addComment({
+          id,
+          data: {
+            comment: remarks,
+            comment_type: "OBJECTION_COMMENT" as any, // Cast as user instructed
+          }
+        });
+      }
+
+      alert(`Application ${action === "OBJECT" ? "objection raised" : action.toLowerCase() + "ed"} successfully.`);
     } catch (err) {
       console.error("Action failed", err);
       alert("Failed to perform action. Please try again.");
@@ -359,15 +388,10 @@ export default function ApplicationDetailsPage() {
         userRole={user?.role as UserRole} 
         onBack={() => router.back()} 
         onAction={handleAction}
-        onCommentClick={() => {
-          setIsObjectionMode(false);
-          setIsCommentsOpen(true);
-        }}
-        onRejectClick={() => setIsRejectModalOpen(true)}
-        onObjectionClick={() => {
-          setIsObjectionMode(true);
-          setIsCommentsOpen(true);
-        }}
+        onCommentClick={() => setIsCommentsOpen(true)}
+        onRejectClick={() => setRemarksModal({ isOpen: true, type: "REJECT" })}
+        onObjectionClick={() => setRemarksModal({ isOpen: true, type: "OBJECT" })}
+        onAddPhaseClick={() => setIsAddPhaseOpen(true)}
       />
 
       <div className="flex flex-1 gap-5 p-5">
@@ -383,22 +407,32 @@ export default function ApplicationDetailsPage() {
 
       <CommentsDrawer 
         isOpen={isCommentsOpen} 
-        onClose={() => {
-          setIsCommentsOpen(false);
-          setIsObjectionMode(false);
-        }} 
+        onClose={() => setIsCommentsOpen(false)} 
         applicationId={id}
         applicationNumber={`#${app.id.toString().padStart(5, '0')}`}
-        isObjectionMode={isObjectionMode}
-        onObjectionSubmit={(remarks) => handleAction("OBJECT", remarks)}
       />
 
-      <RejectApplicationModal
-        isOpen={isRejectModalOpen}
-        onClose={() => setIsRejectModalOpen(false)}
+      <ActionRemarksModal
+        isOpen={remarksModal.isOpen}
+        type={remarksModal.type}
+        onClose={() => setRemarksModal({ ...remarksModal, isOpen: false })}
         onConfirm={async (remarks) => {
-          await handleAction("REJECT", remarks);
-          setIsRejectModalOpen(false);
+          await handleAction(remarksModal.type, remarks);
+          setRemarksModal({ ...remarksModal, isOpen: false });
+        }}
+        isPending={workflowAction.isPending}
+      />
+
+      <AddPhaseDrawer
+        isOpen={isAddPhaseOpen}
+        onClose={() => setIsAddPhaseOpen(false)}
+        app={app}
+        onConfirm={async (num_stages, phase_materials) => {
+          await handleAction("APPROVE", "Phase estimation completed by JEN", {
+            num_stages,
+            phase_materials
+          });
+          setIsAddPhaseOpen(false);
         }}
         isPending={workflowAction.isPending}
       />
