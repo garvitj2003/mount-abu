@@ -16,7 +16,7 @@ export default function ProfileDrawer({
   onClose,
 }: ProfileDrawerProps) {
   const { data: user } = useUser();
-  const { data: wards = [] } = useWards();
+  const { data: wards = [] } = useWards({ enabled: isOpen });
 
   const [formData, setFormData] = useState({
     name: "",

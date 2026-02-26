@@ -34,11 +34,12 @@ export function useWorkflowAction() {
   });
 }
 
-export function useApplicationComments(applicationId: number) {
+export function useApplicationComments(applicationId: number, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["application-comments", applicationId],
     queryFn: () => ApplicationService.getComments(applicationId),
     enabled: !!applicationId,
+    ...options,
   });
 }
 

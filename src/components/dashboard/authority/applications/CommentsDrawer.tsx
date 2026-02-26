@@ -73,7 +73,7 @@ export default function CommentsDrawer({
   applicationId,
   applicationNumber,
 }: CommentsDrawerProps) {
-  const { data: comments = [], isLoading } = useApplicationComments(applicationId);
+  const { data: comments = [], isLoading } = useApplicationComments(applicationId, { enabled: isOpen });
   const { mutateAsync: addComment } = useAddComment();
   
   const [newComment, setNewComment] = useState("");

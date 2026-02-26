@@ -8,11 +8,12 @@ type RoleCreate = components["schemas"]["RoleCreate"];
 type ComplaintCategoryCreate = components["schemas"]["ComplaintCategoryCreate"];
 type MaterialCreate = components["schemas"]["MaterialCreate"];
 
-export function useWards() {
+export function useWards(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["wards"],
     queryFn: () => MasterDataService.getWards(),
     staleTime: 60 * 60 * 1000,
+    ...options,
   });
 }
 
@@ -56,11 +57,12 @@ export function useCreateRole() {
   });
 }
 
-export function useComplaintCategories() {
+export function useComplaintCategories(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["complaint-categories"],
     queryFn: () => MasterDataService.getComplaintCategories(),
     staleTime: 60 * 60 * 1000,
+    ...options,
   });
 }
 
@@ -72,11 +74,12 @@ export function useCreateComplaintCategory() {
   });
 }
 
-export function useMaterials() {
+export function useMaterials(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["materials"],
     queryFn: () => MasterDataService.getMaterials(),
     staleTime: 60 * 60 * 1000,
+    ...options,
   });
 }
 
