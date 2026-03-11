@@ -21,7 +21,7 @@ import AddDownloadDrawer from "@/components/dashboard/authority/website-content/
 import { type components } from "@/types/api";
 
 type TabType = "Notices" | "Tenders" | "Events" | "Leaders Board" | "Contact Diary" | "City Profile" | "Downloads";
-type CityProfileUpdate = components["schemas"]["CityProfileUpdate"];
+type CityProfileUpdate = components["schemas"]["CityProfilePut"];
 
 const TABS: TabType[] = [
   "Notices", 
@@ -136,6 +136,16 @@ const LEADERS_COLUMNS: TableColumn[] = [
   { header: "Designation", key: "designation" },
   { header: "Tenure Start", key: "tenure_start", render: (row) => formatDate(row.tenure_start) },
   { header: "Tenure End", key: "tenure_end", render: (row) => formatDate(row.tenure_end) },
+  { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
+  { header: "", key: "actions", width: "40px", render: () => RenderActions() }
+];
+
+const CONTACT_COLUMNS: TableColumn[] = [
+  { header: "Name", key: "name", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.name}</span> },
+  { header: "Designation", key: "designation" },
+  { header: "Department", key: "department" },
+  { header: "Mobile Number", key: "mobile" },
+  { header: "Email", key: "email" },
   { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
   { header: "", key: "actions", width: "40px", render: () => RenderActions() }
 ];
@@ -295,6 +305,14 @@ export default function AuthorityWebsiteContentPage() {
           isLoading: isLoadingLeaders,
           onAdd: () => setIsLeaderDrawerOpen(true)
         };
+      case "Contact Diary":
+        return { 
+          columns: CONTACT_COLUMNS, 
+          data: [], // Still pending BE implementation for list
+          total: 0,
+          isLoading: false,
+          onAdd: () => setIsContactDrawerOpen(true)
+        };
       case "Downloads":
         return { 
           columns: DOWNLOAD_COLUMNS, 
@@ -327,7 +345,7 @@ export default function AuthorityWebsiteContentPage() {
             Manage notices, tenders, events, and other public-facing information.
           </p>
         </div>
-        {activeTab !== "City Profile" && activeTab !== "Contact Diary" && (
+        {activeTab !== "City Profile" && (
           <button 
             onClick={tabContent.onAdd}
             className="flex items-center justify-center gap-2.5 rounded-lg bg-[#0C83FF] px-4 py-3 text-sm font-medium text-white hover:bg-blue-600 transition-colors cursor-pointer"
@@ -337,6 +355,7 @@ export default function AuthorityWebsiteContentPage() {
              activeTab === "Events" ? "Add New Event" :
              activeTab === "Downloads" ? "Add New Download" :
              activeTab === "Leaders Board" ? "Add New Leader" :
+             activeTab === "Contact Diary" ? "Add New Contact" :
              `Add New ${activeTab}`}
           </button>
         )}
@@ -481,10 +500,6 @@ export default function AuthorityWebsiteContentPage() {
               </div>
             </div>
           )
-        ) : activeTab === "Contact Diary" ? (
-          <div className="flex h-64 items-center justify-center text-gray-400 italic">
-            Contact Diary is coming soon.
-          </div>
         ) : (
           <div className="flex flex-col gap-4 rounded-lg border border-[#D6D9DE] bg-white p-4 min-h-[400px]">
             <div className="flex flex-wrap items-center justify-between gap-4">

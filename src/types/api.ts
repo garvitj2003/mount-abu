@@ -343,6 +343,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/applications/{application_id}/phase-materials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Phase Materials
+         * @description JEN or SUPERADMIN updates phase materials for an application.
+         */
+        put: operations["update_phase_materials_api_applications__application_id__phase_materials_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/{application_id}/inspection": {
         parameters: {
             query?: never;
@@ -1145,6 +1165,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dashboard/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Reports Analytics
+         * @description Return purely analytical aggregated reports for authority users.
+         */
+        get: operations["get_reports_analytics_api_dashboard_reports_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/city-profile/": {
         parameters: {
             query?: never;
@@ -1154,14 +1194,31 @@ export interface paths {
         };
         /** Get Latest City Profile */
         get: operations["get_latest_city_profile_api_city_profile__get"];
-        /** Update City Profile */
-        put: operations["update_city_profile_api_city_profile__put"];
+        put?: never;
         /** Create City Profile */
         post: operations["create_city_profile_api_city_profile__post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/city-profile/{profile_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put City Profile */
+        put: operations["put_city_profile_api_city_profile__profile_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch City Profile */
+        patch: operations["patch_city_profile_api_city_profile__profile_id__patch"];
         trace?: never;
     };
     "/api/city-profile/history": {
@@ -1200,6 +1257,79 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Audit Logs */
+        get: operations["get_audit_logs_api_audit_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/contact-diary/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Contact Diaries
+         * @description Retrieve contact diary entries.
+         */
+        get: operations["get_contact_diaries_api_contact_diary__get"];
+        put?: never;
+        /**
+         * Create Contact Diary
+         * @description Create new contact diary entry.
+         */
+        post: operations["create_contact_diary_api_contact_diary__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/contact-diary/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Contact Diary
+         * @description Get contact diary entry by ID.
+         */
+        get: operations["get_contact_diary_api_contact_diary__id__get"];
+        /**
+         * Update Contact Diary
+         * @description Update a contact diary entry.
+         */
+        put: operations["update_contact_diary_api_contact_diary__id__put"];
+        post?: never;
+        /**
+         * Delete Contact Diary
+         * @description Delete a contact diary entry.
+         */
+        delete: operations["delete_contact_diary_api_contact_diary__id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Patch Contact Diary
+         * @description Patch a contact diary entry (partial update).
+         */
+        patch: operations["patch_contact_diary_api_contact_diary__id__patch"];
         trace?: never;
     };
     "/health": {
@@ -1273,11 +1403,6 @@ export interface components {
             /** @description Property Usage Type */
             property_usage: components["schemas"]["PropertyUsageType"];
             /**
-             * Department Id
-             * @description Selected Department ID
-             */
-            department_id: number;
-            /**
              * Ward Id
              * @description Ward/Zone ID
              */
@@ -1342,6 +1467,10 @@ export interface components {
             material_id: number;
             /** Quantity */
             quantity: number;
+            /** Material Name */
+            material_name?: string | null;
+            /** Unit */
+            unit?: string | null;
         };
         /**
          * ApplicationPhaseStatus
@@ -1401,10 +1530,15 @@ export interface components {
              */
             materials: components["schemas"]["ApplicationMaterialResponse"][];
             /**
+             * Phase Materials
+             * @default []
+             */
+            phase_materials: components["schemas"]["PhaseMaterialResponse"][];
+            /**
              * Comments
              * @default []
              */
-            comments: components["schemas"]["CommentResponse"][];
+            comments: components["schemas"]["backend__schemas__response__application__CommentResponse"][];
             /**
              * Tokens
              * @default []
@@ -1421,6 +1555,37 @@ export interface components {
          * @enum {string}
          */
         ApplicationType: "NEW" | "RENOVATION";
+        /**
+         * AuditAction
+         * @enum {string}
+         */
+        AuditAction: "CHANGED" | "CREATED" | "VIEWED";
+        /** AuditLogListResponse */
+        AuditLogListResponse: {
+            /** Total */
+            total: number;
+            /** Logs */
+            logs: components["schemas"]["AuditLogResponse"][];
+        };
+        /** AuditLogResponse */
+        AuditLogResponse: {
+            /** Entity Type */
+            entity_type: string;
+            action: components["schemas"]["AuditAction"];
+            /** User Id */
+            user_id: number;
+            /** Previous State */
+            previous_state?: unknown | null;
+            /** New State */
+            new_state?: unknown | null;
+            /** Id */
+            id: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /**
          * AuthorityDashboardResponse
          * @description Combined authority dashboard payload.
@@ -1627,45 +1792,41 @@ export interface components {
             /** Birth Certificate Per Year */
             birth_certificate_per_year?: number | null;
         };
+        /** CityProfilePut */
+        CityProfilePut: {
+            /** Area Sq Km */
+            area_sq_km: string;
+            /** No Of Wards */
+            no_of_wards: number;
+            /** Ward Boundaries */
+            ward_boundaries: string;
+            /** Population Estimate */
+            population_estimate: number;
+            /** Rental Properties Of Corporation */
+            rental_properties_of_corporation: number;
+            /** Number Of Slums */
+            number_of_slums: number;
+            /** Solid Waste Per Day */
+            solid_waste_per_day: string;
+            /** Street Light Poles */
+            street_light_poles: number;
+            /** Employees In Board */
+            employees_in_board: number;
+            /** Households Residential */
+            households_residential: number;
+            /** Households Shops Offices */
+            households_shops_offices: number;
+            /** Households Open Plots */
+            households_open_plots: number;
+            /** Birth Registration Per Year */
+            birth_registration_per_year: number;
+            /** Birth Certificate Per Year */
+            birth_certificate_per_year: number;
+        };
         /** CityProfileResponse */
         CityProfileResponse: {
             /** Id */
             id: number;
-            /** Area Sq Km */
-            area_sq_km: string | null;
-            /** No Of Wards */
-            no_of_wards: number | null;
-            /** Ward Boundaries */
-            ward_boundaries: string | null;
-            /** Population Estimate */
-            population_estimate: number | null;
-            /** Rental Properties Of Corporation */
-            rental_properties_of_corporation: number | null;
-            /** Number Of Slums */
-            number_of_slums: number | null;
-            /** Solid Waste Per Day */
-            solid_waste_per_day: string | null;
-            /** Street Light Poles */
-            street_light_poles: number | null;
-            /** Employees In Board */
-            employees_in_board: number | null;
-            /** Households Residential */
-            households_residential: number | null;
-            /** Households Shops Offices */
-            households_shops_offices: number | null;
-            /** Households Open Plots */
-            households_open_plots: number | null;
-            /** Birth Registration Per Year */
-            birth_registration_per_year: number | null;
-            /** Birth Certificate Per Year */
-            birth_certificate_per_year: number | null;
-            /** Created By Id */
-            created_by_id: number;
-            /** Created At */
-            created_at?: string | null;
-        };
-        /** CityProfileUpdate */
-        CityProfileUpdate: {
             /** Area Sq Km */
             area_sq_km?: string | null;
             /** No Of Wards */
@@ -1694,6 +1855,10 @@ export interface components {
             birth_registration_per_year?: number | null;
             /** Birth Certificate Per Year */
             birth_certificate_per_year?: number | null;
+            /** Created By Id */
+            created_by_id: number;
+            /** Created At */
+            created_at?: string | null;
         };
         /** CommentCreateRequest */
         CommentCreateRequest: {
@@ -1723,34 +1888,27 @@ export interface components {
              */
             media_paths?: string[] | null;
         };
-        /**
-         * CommentResponse
-         * @description Response schema for application comments.
-         */
+        /** CommentResponse */
         CommentResponse: {
             /** Id */
             id: number;
-            /** Application Id */
-            application_id: number;
             /** Comment */
             comment: string;
-            /** Comment By */
-            comment_by: number;
-            /** Commenter Name */
-            commenter_name?: string | null;
-            /** @default GENERAL */
-            comment_type: components["schemas"]["CommentType"] | null;
-            /** Media Paths */
-            media_paths?: unknown[] | null;
             /** Created At */
             created_at?: string | null;
+            /** Comment By */
+            comment_by?: number | null;
+            /** Media Path */
+            media_path?: string | null;
+            /** Access Url */
+            access_url?: string | null;
         };
         /**
          * CommentType
          * @description Types of comments on an application.
          * @enum {string}
          */
-        CommentType: "GENERAL" | "DEPT_REVIEW" | "OBJECTION_RESPONSE" | "INSPECTION_REMARK";
+        CommentType: "GENERAL" | "DEPT_REVIEW" | "OBJECTION_RESPONSE" | "OBJECTION_COMMENT" | "INSPECTION_REMARK";
         /** ComplaintCategoryCreate */
         ComplaintCategoryCreate: {
             /**
@@ -1769,6 +1927,11 @@ export interface components {
              * @default true
              */
             status: boolean;
+            /**
+             * Department Id
+             * @description Mapped Department ID
+             */
+            department_id?: number | null;
         };
         /** ComplaintCategoryResponse */
         ComplaintCategoryResponse: {
@@ -1780,6 +1943,8 @@ export interface components {
             description: string | null;
             /** Status */
             status: boolean;
+            /** Department Id */
+            department_id?: number | null;
             /** Created At */
             created_at?: string | null;
             created_by?: components["schemas"]["UserSummary"] | null;
@@ -1792,6 +1957,8 @@ export interface components {
             description?: string | null;
             /** Status */
             status?: boolean | null;
+            /** Department Id */
+            department_id?: number | null;
         };
         /** ComplaintCreateRequest */
         ComplaintCreateRequest: {
@@ -1807,8 +1974,6 @@ export interface components {
             description: string;
             /** Ward Id */
             ward_id?: number | null;
-            /** Department Id */
-            department_id?: number | null;
             /** Category Id */
             category_id?: number | null;
             /**
@@ -1877,8 +2042,6 @@ export interface components {
             status: components["schemas"]["ComplaintStatus"];
             /** Ward Id */
             ward_id: number | null;
-            /** Department Id */
-            department_id: number | null;
             /** Category Id */
             category_id: number | null;
             /** Applicant Name */
@@ -1904,7 +2067,7 @@ export interface components {
              * Comments
              * @default []
              */
-            comments: components["schemas"]["backend__schemas__response__complaint__CommentResponse"][];
+            comments: components["schemas"]["CommentResponse"][];
         };
         /**
          * ComplaintRow
@@ -1929,6 +2092,78 @@ export interface components {
          * @enum {string}
          */
         ComplaintStatus: "PENDING" | "IN_PROGRESS" | "RESOLVED" | "WITHHELD" | "REJECTED" | "WITHDRAWN";
+        /** ContactDiaryCreate */
+        ContactDiaryCreate: {
+            /** Office Department */
+            office_department: string;
+            /** Contact Person */
+            contact_person: string;
+            /** Designation */
+            designation?: string | null;
+            /** Phone Number */
+            phone_number?: string | null;
+            /** Email Address */
+            email_address?: string | null;
+            /**
+             * Status
+             * @default true
+             */
+            status: boolean | null;
+        };
+        /** ContactDiaryPut */
+        ContactDiaryPut: {
+            /** Office Department */
+            office_department: string;
+            /** Contact Person */
+            contact_person: string;
+            /** Designation */
+            designation?: string | null;
+            /** Phone Number */
+            phone_number?: string | null;
+            /** Email Address */
+            email_address?: string | null;
+            /** Status */
+            status: boolean;
+        };
+        /** ContactDiaryResponse */
+        ContactDiaryResponse: {
+            /** Id */
+            id: number;
+            /** Office Department */
+            office_department: string;
+            /** Contact Person */
+            contact_person: string;
+            /** Designation */
+            designation?: string | null;
+            /** Phone Number */
+            phone_number?: string | null;
+            /** Email Address */
+            email_address?: string | null;
+            /** Status */
+            status: boolean;
+            /** Created By */
+            created_by?: number | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ContactDiaryUpdate */
+        ContactDiaryUpdate: {
+            /** Office Department */
+            office_department?: string | null;
+            /** Contact Person */
+            contact_person?: string | null;
+            /** Designation */
+            designation?: string | null;
+            /** Phone Number */
+            phone_number?: string | null;
+            /** Email Address */
+            email_address?: string | null;
+            /** Status */
+            status?: boolean | null;
+        };
         /**
          * CreateUserRequest
          * @description Request schema for creating a new user.
@@ -2441,9 +2676,15 @@ export interface components {
              */
             message: string;
         };
-        /** MessageResponse */
+        /**
+         * MessageResponse
+         * @description Response with a message.
+         */
         MessageResponse: {
-            /** Message */
+            /**
+             * Message
+             * @description Response message
+             */
             message: string;
         };
         /**
@@ -2529,7 +2770,7 @@ export interface components {
              * Vehicle Entries
              * @default []
              */
-            vehicle_entries: components["schemas"]["VehicleEntryResponse"][];
+            vehicle_entries: components["schemas"]["backend__schemas__response__naka__VehicleEntryResponse"][];
         };
         /** NoticeCreate */
         NoticeCreate: {
@@ -2616,6 +2857,19 @@ export interface components {
             /** Mobile */
             mobile: string;
         };
+        /** PaginatedContactDiaryResponse */
+        PaginatedContactDiaryResponse: {
+            /** Items */
+            items: components["schemas"]["ContactDiaryResponse"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Size */
+            size: number;
+            /** Pages */
+            pages: number;
+        };
         /** PasswordLoginRequest */
         PasswordLoginRequest: {
             /** Username */
@@ -2643,6 +2897,26 @@ export interface components {
              * @description Permitted quantity for this phase
              */
             quantity: number;
+        };
+        /**
+         * PhaseMaterialResponse
+         * @description Response schema for phase-level materials.
+         */
+        PhaseMaterialResponse: {
+            /** Id */
+            id: number;
+            /** Application Id */
+            application_id: number;
+            /** Phase */
+            phase: number;
+            /** Material Id */
+            material_id: number;
+            /** Quantity */
+            quantity: number;
+            /** Material Name */
+            material_name?: string | null;
+            /** Unit */
+            unit?: string | null;
         };
         /**
          * PhaseResponse
@@ -2726,6 +3000,32 @@ export interface components {
             access_token: string;
             /** Token Type */
             token_type: string;
+        };
+        /**
+         * ReportsAnalyticsResponse
+         * @description Payload for the Reports & Analytics dashboard view.
+         */
+        ReportsAnalyticsResponse: {
+            /**
+             * Kpis
+             * @default []
+             */
+            kpis: components["schemas"]["KpiCard"][];
+            /**
+             * Application Status Breakdown
+             * @default []
+             */
+            application_status_breakdown: components["schemas"]["StatusCount"][];
+            /**
+             * Complaints By Category
+             * @default []
+             */
+            complaints_by_category: components["schemas"]["CategoryCount"][];
+            /**
+             * Ward Activity
+             * @default []
+             */
+            ward_activity: components["schemas"]["WardActivity"][];
         };
         /** RoleCreate */
         RoleCreate: {
@@ -2962,7 +3262,7 @@ export interface components {
              * Vehicle Entries
              * @default []
              */
-            vehicle_entries: components["schemas"]["backend__schemas__response__application__VehicleEntryResponse"][];
+            vehicle_entries: components["schemas"]["VehicleEntryResponse"][];
         };
         /**
          * TokenMaterialResponse
@@ -3067,7 +3367,7 @@ export interface components {
          * UserRole
          * @enum {string}
          */
-        UserRole: "SUPERADMIN" | "NODAL_OFFICER" | "COMMISSIONER" | "CITIZEN" | "NAKA_INCHARGE" | "DEPT_LAND" | "DEPT_LEGAL" | "DEPT_ATP" | "JEN";
+        UserRole: "SUPERADMIN" | "ADMIN" | "NODAL_OFFICER" | "COMMISSIONER" | "CITIZEN" | "NAKA_INCHARGE" | "DEPT_LAND" | "DEPT_LEGAL" | "DEPT_ATP" | "JEN";
         /** UserSummary */
         UserSummary: {
             /** Id */
@@ -3086,30 +3386,32 @@ export interface components {
             /** Error Type */
             type: string;
         };
-        /** VehicleEntryResponse */
+        /**
+         * VehicleEntryResponse
+         * @description A single vehicle / naka entry shown under the Vehicle Entries tab.
+         */
         VehicleEntryResponse: {
             /** Id */
             id: number;
-            /** Phase */
-            phase: number;
             /** Vehicle Number */
-            vehicle_number: string;
-            /** Driver Name */
-            driver_name: string | null;
-            /** Driver Mobile */
-            driver_mobile: string | null;
+            vehicle_number?: string | null;
+            /** Material Name */
+            material_name?: string | null;
+            /** Material Unit */
+            material_unit?: string | null;
+            /** Quantity Entered */
+            quantity_entered: number;
             /**
              * Entry At
              * Format: date-time
              */
             entry_at: string;
-            entered_by_user: components["schemas"]["UserSummary"] | null;
             /** Remarks */
-            remarks: string | null;
+            remarks?: string | null;
             /** Media Path */
-            media_path: string | null;
-            /** Materials */
-            materials: components["schemas"]["VehicleMaterialResponse"][];
+            media_path?: string | null;
+            /** Access Url */
+            access_url?: string | null;
         };
         /** VehicleMaterialResponse */
         VehicleMaterialResponse: {
@@ -3243,6 +3545,11 @@ export interface components {
              */
             phase_materials?: components["schemas"]["PhaseMaterialEntry"][] | null;
         };
+        /** MessageResponse */
+        backend__controllers__auth__MessageResponse: {
+            /** Message */
+            message: string;
+        };
         /** TokenResponse */
         backend__controllers__auth__TokenResponse: {
             /** Access Token */
@@ -3264,57 +3571,51 @@ export interface components {
             is_new_user: boolean;
         };
         /**
-         * VehicleEntryResponse
-         * @description A single vehicle / naka entry shown under the Vehicle Entries tab.
+         * CommentResponse
+         * @description Response schema for application comments.
          */
-        backend__schemas__response__application__VehicleEntryResponse: {
+        backend__schemas__response__application__CommentResponse: {
             /** Id */
             id: number;
+            /** Application Id */
+            application_id: number;
+            /** Comment */
+            comment: string;
+            /** Comment By */
+            comment_by: number;
+            /** Commenter Name */
+            commenter_name?: string | null;
+            /** @default GENERAL */
+            comment_type: components["schemas"]["CommentType"] | null;
+            /** Media Paths */
+            media_paths?: unknown[] | null;
+            /** Created At */
+            created_at?: string | null;
+        };
+        /** VehicleEntryResponse */
+        backend__schemas__response__naka__VehicleEntryResponse: {
+            /** Id */
+            id: number;
+            /** Phase */
+            phase: number;
             /** Vehicle Number */
-            vehicle_number?: string | null;
-            /** Material Name */
-            material_name?: string | null;
-            /** Material Unit */
-            material_unit?: string | null;
-            /** Quantity Entered */
-            quantity_entered: number;
+            vehicle_number: string;
+            /** Driver Name */
+            driver_name: string | null;
+            /** Driver Mobile */
+            driver_mobile: string | null;
             /**
              * Entry At
              * Format: date-time
              */
             entry_at: string;
+            entered_by_user: components["schemas"]["UserSummary"] | null;
             /** Remarks */
-            remarks?: string | null;
+            remarks: string | null;
             /** Media Path */
-            media_path?: string | null;
-            /** Access Url */
-            access_url?: string | null;
-        };
-        /** CommentResponse */
-        backend__schemas__response__complaint__CommentResponse: {
-            /** Id */
-            id: number;
-            /** Comment */
-            comment: string;
-            /** Created At */
-            created_at?: string | null;
-            /** Comment By */
-            comment_by?: number | null;
-            /** Media Path */
-            media_path?: string | null;
-            /** Access Url */
-            access_url?: string | null;
-        };
-        /**
-         * MessageResponse
-         * @description Response with a message.
-         */
-        backend__schemas__response__meta__MessageResponse: {
-            /**
-             * Message
-             * @description Response message
-             */
-            message: string;
+            media_path: string | null;
+            /** Materials */
+            materials: components["schemas"]["VehicleMaterialResponse"][];
         };
     };
     responses: never;
@@ -3344,7 +3645,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MessageResponse"];
+                    "application/json": components["schemas"]["backend__controllers__auth__MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -3516,7 +3817,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__meta__MessageResponse"];
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -3582,7 +3883,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__meta__MessageResponse"];
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -3927,6 +4228,41 @@ export interface operations {
             };
         };
     };
+    update_phase_materials_api_applications__application_id__phase_materials_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhaseMaterialEntry"][];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     create_inspection_api_applications__application_id__inspection_post: {
         parameters: {
             query?: never;
@@ -4077,7 +4413,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CommentResponse"][];
+                    "application/json": components["schemas"]["backend__schemas__response__application__CommentResponse"][];
                 };
             };
             /** @description Validation Error */
@@ -5867,6 +6203,42 @@ export interface operations {
             };
         };
     };
+    get_reports_analytics_api_dashboard_reports_get: {
+        parameters: {
+            query?: {
+                /** @description Period in days for KPI comparison */
+                days?: number;
+                /** @description Filter by department */
+                department_id?: number | null;
+                /** @description Filter by ward */
+                ward_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportsAnalyticsResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_latest_city_profile_api_city_profile__get: {
         parameters: {
             query?: never;
@@ -5887,7 +6259,7 @@ export interface operations {
             };
         };
     };
-    update_city_profile_api_city_profile__put: {
+    create_city_profile_api_city_profile__post: {
         parameters: {
             query?: never;
             header?: never;
@@ -5896,7 +6268,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CityProfileUpdate"];
+                "application/json": components["schemas"]["CityProfileCreate"];
             };
         };
         responses: {
@@ -5920,11 +6292,48 @@ export interface operations {
             };
         };
     };
-    create_city_profile_api_city_profile__post: {
+    put_city_profile_api_city_profile__profile_id__put: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                profile_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CityProfilePut"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CityProfileResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_city_profile_api_city_profile__profile_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: number;
+            };
             cookie?: never;
         };
         requestBody: {
@@ -5992,6 +6401,248 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_audit_logs_api_audit_get: {
+        parameters: {
+            query?: {
+                skip?: number;
+                limit?: number;
+                /** @description Filter by user ID */
+                user_id?: number | null;
+                /** @description Filter by action type */
+                action?: components["schemas"]["AuditAction"] | null;
+                /** @description Filter by entity type (e.g. APPLICATION) */
+                entity_type?: string | null;
+                /** @description Start date (ISO format) */
+                start_date?: string | null;
+                /** @description End date (ISO format) */
+                end_date?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditLogListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_contact_diaries_api_contact_diary__get: {
+        parameters: {
+            query?: {
+                search?: string | null;
+                designation?: string | null;
+                status?: boolean | null;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedContactDiaryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_contact_diary_api_contact_diary__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContactDiaryCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactDiaryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_contact_diary_api_contact_diary__id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactDiaryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_contact_diary_api_contact_diary__id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContactDiaryPut"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactDiaryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_contact_diary_api_contact_diary__id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactDiaryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_contact_diary_api_contact_diary__id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContactDiaryUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContactDiaryResponse"];
                 };
             };
             /** @description Validation Error */

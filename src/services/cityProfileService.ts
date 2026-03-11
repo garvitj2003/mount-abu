@@ -2,7 +2,7 @@ import api from "@/lib/axios";
 import { type components } from "@/types/api";
 
 type CityProfileResponse = components["schemas"]["CityProfileResponse"];
-type CityProfileUpdate = components["schemas"]["CityProfileUpdate"];
+type CityProfileUpdate = components["schemas"]["CityProfilePut"];
 
 export const CityProfileService = {
   async getLatest(): Promise<CityProfileResponse> {

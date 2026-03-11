@@ -34,6 +34,17 @@ export function useWorkflowAction() {
   });
 }
 
+export function useAddPhaseMaterials() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: components["schemas"]["PhaseMaterialEntry"][] }) => 
+      ApplicationService.addPhaseMaterials(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ["application", id] });
+    },
+  });
+}
+
 export function useApplicationComments(applicationId: number, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["application-comments", applicationId],

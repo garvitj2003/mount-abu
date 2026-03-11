@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { CityProfileService } from "@/services/cityProfileService";
 import { type components } from "@/types/api";
 
-type CityProfileUpdate = components["schemas"]["CityProfileUpdate"];
+type CityProfileUpdate = components["schemas"]["CityProfilePut"];
 
 export const useCityProfile = () => {
   return useQuery({

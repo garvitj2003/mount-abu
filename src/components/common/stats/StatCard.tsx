@@ -43,6 +43,10 @@ interface StatCardProps {
   subtext: string;
   iconType: StatIconType;
   color: string;
+  trend?: {
+    value: number;
+    isUp: boolean;
+  };
 }
 
 export const StatCard = ({
@@ -51,6 +55,7 @@ export const StatCard = ({
   subtext,
   iconType,
   color,
+  trend,
 }: StatCardProps) => {
   const displayCount = typeof count === "number" ? count.toString().padStart(2, '0') : count;
   return (
@@ -68,9 +73,23 @@ export const StatCard = ({
           </span>
           <DashboardIcon type={iconType} color={color} />
         </div>
-        <span className="text-[11px] font-light text-[#6D727A]">
-          {subtext}
-        </span>
+        
+        <div className="flex items-center gap-1.5">
+          {trend && (
+            <div className={`flex items-center gap-1 text-[11px] font-medium ${trend.isUp ? 'text-[#059669]' : 'text-[#EF4444]'}`}>
+              <Image 
+                src={trend.isUp ? "/dashboard/icons/applications/trend-up.svg" : "/dashboard/icons/applications/trend-down.svg"} 
+                alt="" 
+                width={14} 
+                height={14} 
+              />
+              {trend.value}%
+            </div>
+          )}
+          <span className={`text-[11px] font-light ${trend ? 'text-[#6D727A]' : 'text-[#6D727A]'}`}>
+            {subtext}
+          </span>
+        </div>
       </div>
     </div>
   );

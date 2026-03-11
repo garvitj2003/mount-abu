@@ -1,6 +1,6 @@
 "use client";
 
-import { useAddComment, useApplication, useWorkflowAction } from "@/hooks/useApplications";
+import { useAddComment, useApplication, useWorkflowAction, useAddPhaseMaterials } from "@/hooks/useApplications";
 import { useUser } from "@/hooks/useUser";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
@@ -282,7 +282,7 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
             <tbody>
               {app.materials?.map((mat) => (
                 <tr key={mat.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
-                  <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">{mat.material_id} {/* Map to name later */}</td>
+                  <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">{mat.material_name} {/* Map to name later */}</td>
                   <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">{mat.quantity} Units</td>
                   <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">
                     <div className="rounded border border-[#D6D9DE] px-3 py-1.5 bg-white text-xs">—</div>
@@ -320,6 +320,7 @@ export default function ApplicationDetailsPage() {
   const { data: user } = useUser();
   const { data: app, isLoading, error } = useApplication(id);
   const workflowAction = useWorkflowAction();
+  const addPhaseMaterials = useAddPhaseMaterials();
   const { mutateAsync: addComment } = useAddComment();
   
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
@@ -428,13 +429,20 @@ export default function ApplicationDetailsPage() {
         onClose={() => setIsAddPhaseOpen(false)}
         app={app}
         onConfirm={async (num_stages, phase_materials) => {
-          await handleAction("APPROVE", "Phase estimation completed by JEN", {
-            num_stages,
-            phase_materials
-          });
-          setIsAddPhaseOpen(false);
+          try {
+            // 1. Add Phase Materials via new API
+            await addPhaseMaterials.mutateAsync({
+              id,
+              data: phase_materials
+            });
+
+            setIsAddPhaseOpen(false);
+          } catch (err) {
+            console.error("Phase submission failed", err);
+            alert("Failed to submit phase details. Please try again.");
+          }
         }}
-        isPending={workflowAction.isPending}
+        isPending={addPhaseMaterials.isPending}
       />
     </div>
   );
