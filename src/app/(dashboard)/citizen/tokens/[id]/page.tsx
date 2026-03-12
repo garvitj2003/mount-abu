@@ -3,20 +3,34 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { useApplication } from "@/hooks/useApplications";
 import VehicleFilterDrawer from "@/components/dashboard/authority/vehicle-entries/VehicleFilterDrawer";
 import VehicleDetailDrawer from "@/components/dashboard/authority/vehicle-entries/VehicleDetailDrawer";
+import { useTokenDetail } from "@/hooks/useTokens";
+import { type components } from "@/types/api";
+import { QRCodeSVG } from "qrcode.react";
+
+type TokenDetailResponse = components["schemas"]["TokenDetailResponse"];
 
 // --- Components ---
 
-const StatusBadge = ({ status }: { status: string }) => (
-  <div className="flex items-center gap-1.5 rounded bg-[#059669] px-2 py-1 text-white">
-    <div className="relative size-3.5">
-      <Image src="/dashboard/icons/tick-round-green.svg" alt="" fill className="invert brightness-0" />
+const StatusBadge = ({ status }: { status: string }) => {
+  const styles: Record<string, string> = {
+    ACTIVE: "bg-[#059669]",
+    COMPLETED: "bg-gray-500",
+    TERMINATED: "bg-red-500",
+    WITHHELD: "bg-orange-500",
+    PENDING: "bg-blue-500",
+  };
+
+  return (
+    <div className={`flex items-center gap-1.5 rounded ${styles[status] || "bg-gray-500"} px-2 py-1 text-white`}>
+      <div className="relative size-3.5">
+        <Image src="/dashboard/icons/tick-round-green.svg" alt="" fill className="invert brightness-0" />
+      </div>
+      <span className="text-[12px] font-medium leading-none capitalize">{status.toLowerCase()}</span>
     </div>
-    <span className="text-[12px] font-medium leading-none">{status}</span>
-  </div>
-);
+  );
+};
 
 const DetailItem = ({ label, value }: { label: string; value: string | null | undefined }) => (
   <div className="flex flex-col gap-1">
@@ -26,118 +40,136 @@ const DetailItem = ({ label, value }: { label: string; value: string | null | un
 );
 
 const Header = ({ 
-  id, 
-  onBack,
-  validity
+  token, 
+  onBack
 }: { 
-  id: string; 
+  token: TokenDetailResponse; 
   onBack: () => void;
-  validity?: string;
-}) => (
-  <div className="sticky top-0 z-50 flex w-full items-center justify-between border-b border-[#D6D9DE] bg-white px-5 py-3 shadow-[0px_1px_3px_0px_rgba(0,0,0,0.13)]">
-    <div className="flex items-center gap-2">
-      <button onClick={onBack} className="p-1 hover:bg-gray-100 rounded-md transition-colors cursor-pointer">
-        <Image src="/dashboard/icons/applications/arrow-back.svg" alt="Back" width={24} height={24} />
-      </button>
-      <div className="flex flex-col gap-0.5">
-        <div className="flex items-center gap-2.5">
-          <h1 className="text-base font-medium text-[#343434]">{id}</h1>
-          <StatusBadge status="Active" />
+}) => {
+  const validity = token.valid_from && token.valid_till 
+    ? `${new Date(token.valid_from).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} - ${new Date(token.valid_till).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`
+    : "—";
+
+  return (
+    <div className="sticky top-0 z-50 flex w-full items-center justify-between border-b border-[#D6D9DE] bg-white px-5 py-3 shadow-[0px_1px_3px_0px_rgba(0,0,0,0.13)]">
+      <div className="flex items-center gap-2">
+        <button onClick={onBack} className="p-1 hover:bg-gray-100 rounded-md transition-colors cursor-pointer">
+          <Image src="/dashboard/icons/applications/arrow-back.svg" alt="Back" width={24} height={24} />
+        </button>
+        <div className="flex flex-col gap-0.5">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-base font-medium text-[#343434]">{token.token_number}</h1>
+            <StatusBadge status={token.status} />
+          </div>
+          <p className="text-[12px] font-normal text-[#343434] opacity-80">{validity}</p>
         </div>
-        <p className="text-[12px] font-normal text-[#343434] opacity-80">{validity || "01 Oct 2025 - 15 Oct 2025"}</p>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <button className="flex items-center gap-2.5 rounded-lg border border-[#498AA9] bg-[#E9F1F5] px-4 py-2.5 text-sm font-medium text-[#247297] hover:opacity-90 transition-opacity cursor-pointer">
+          <Image src="/dashboard/icons/applications/step-upload.svg" alt="" width={18} height={18} />
+          Share
+        </button>
+        <button className="flex items-center gap-2.5 rounded-lg border border-[#72B7FF] bg-[#E7F3FF] px-4 py-2.5 text-sm font-medium text-[#0C83FF] hover:opacity-90 transition-opacity cursor-pointer">
+          <Image src="/dashboard/icons/applications/download.svg" alt="" width={16} height={16} />
+          Download Token
+        </button>
       </div>
     </div>
+  );
+};
 
-    <div className="flex items-center gap-2">
-      <button className="flex items-center gap-2.5 rounded-lg border border-[#498AA9] bg-[#E9F1F5] px-4 py-2.5 text-sm font-medium text-[#247297] hover:opacity-90 transition-opacity cursor-pointer">
-        <Image src="/dashboard/icons/applications/step-upload.svg" alt="" width={18} height={18} />
-        Share
-      </button>
-      <button className="flex items-center gap-2.5 rounded-lg border border-[#72B7FF] bg-[#E7F3FF] px-4 py-2.5 text-sm font-medium text-[#0C83FF] hover:opacity-90 transition-opacity cursor-pointer">
-        <Image src="/dashboard/icons/applications/download.svg" alt="" width={16} height={16} />
-        Download Token
-      </button>
-    </div>
-  </div>
-);
-
-const Sidebar = ({ app }: { app: any }) => (
+const Sidebar = ({ token }: { token: TokenDetailResponse }) => (
   <div className="flex w-[238px] flex-col gap-5 rounded-lg border border-[#D6D9DE] bg-white p-4 h-fit sticky top-[80px]">
-    {/* QR Code Placeholder */}
-    <div className="relative aspect-square w-full rounded border border-[#D6D9DE] p-2 bg-white">
-      <Image src="/sample/application-main.png" alt="QR Code" fill unoptimized className="object-contain p-2" />
+    {/* QR Code */}
+    <div className="relative aspect-square w-full rounded border border-[#D6D9DE] p-4 bg-white flex items-center justify-center">
+      <QRCodeSVG 
+        value={token.transport_code} 
+        size={180}
+        level="H"
+        includeMargin={false}
+      />
     </div>
 
     <div className="flex flex-col gap-4">
-      <DetailItem label="Application Number" value={`APP-${app?.id.toString().padStart(5, '0')}`} />
-      <DetailItem label="Applicant Name" value={app?.applicant_name} />
-      <DetailItem label="Property Address" value={app?.property_address} />
+      <DetailItem label="Application Number" value={token.application_number} />
+      <DetailItem label="Applicant Name" value={token.applicant_name} />
+      <DetailItem label="Property Address" value={token.property_address} />
       
       <div className="flex gap-4">
-        <DetailItem label="Property Usage" value={app?.property_usage} />
-        <DetailItem label="Type of Work" value={app?.type} />
+        <DetailItem label="Property Usage" value={token.property_usage} />
+        <DetailItem label="Type of Work" value={token.application_type} />
       </div>
 
       <div className="h-px w-full bg-[#D6D9DE] my-1" />
       
       <p className="text-[12px] font-medium text-[#498AA9]">Authority & System Information</p>
       
-      <DetailItem label="Issued By" value="Nodal Officer (Ward 3)" />
-      <DetailItem label="Issued On" value="01 Oct 2025" />
-      <DetailItem label="Token Generated From" value="Approved Application" />
+      <DetailItem label="Issued By" value={token.authority.issued_by} />
+      <DetailItem label="Issued On" value={token.authority.issued_on ? new Date(token.authority.issued_on).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "—"} />
+      <DetailItem label="Token Generated From" value={token.authority.token_generated_from} />
     </div>
   </div>
 );
 
 const TableRow = ({ 
-  vehicle, material, qty, time, remaining, onClick 
+  entry, onClick 
 }: { 
-  vehicle: string; material: string; qty: string; time: string; remaining: string; onClick: () => void 
+  entry: components["schemas"]["VehicleEntryResponse"]; 
+  onClick: () => void 
 }) => (
   <tr className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
     <td className="p-3 text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer" onClick={onClick}>
-      {vehicle}
+      {entry.vehicle_number}
     </td>
-    <td className="p-3 text-sm font-normal text-[#343434]">{material}</td>
-    <td className="p-3 text-sm font-normal text-[#343434]">{qty}</td>
-    <td className="p-3 text-sm font-normal text-[#343434] opacity-70">{time}</td>
-    <td className="p-3 text-sm font-normal text-[#343434]">{remaining}</td>
+    <td className="p-3 text-sm font-normal text-[#343434]">{entry.material_name}</td>
+    <td className="p-3 text-sm font-normal text-[#343434]">{entry.quantity_entered} {entry.material_unit}</td>
+    <td className="p-3 text-sm font-normal text-[#343434] opacity-70">
+      {new Date(entry.entry_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+    </td>
+    <td className="p-3 text-sm font-normal text-[#343434]">—</td>
   </tr>
 );
 
 export default function CitizenTokenDetailsPage() {
   const params = useParams();
   const router = useRouter();
+  const transportCode = params.id as string;
   const [activeTab, setActiveTab] = useState<"Vehicle Entries" | "Material Summary">("Vehicle Entries");
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
+  const [search, setSearch] = useState("");
   
-  // For now using application hook to get context, ideally there would be a token hook
-  const { data: app } = useApplication(1); // Placeholder ID
+  const { data: token, isLoading, error } = useTokenDetail(transportCode);
 
   const handleEntryClick = (entry: any) => {
     setSelectedEntry(entry);
     setIsDetailDrawerOpen(true);
   };
 
-  const MOCK_ENTRIES = [
-    { vehicleNumber: "RJ24 AB 4587", materialType: "Cement", quantityEntered: "50 Bags", entryDate: "05 Oct 2025, 10:32 AM", match: true, remaining: "150 Bags" },
-    { vehicleNumber: "RJ24 CD 9214", materialType: "Cement", quantityEntered: "40 Bags", entryDate: "06 Oct 2025, 09:15 AM", match: true, remaining: "110 Bags" },
-    { vehicleNumber: "RJ38 EF 6671", materialType: "Sand", quantityEntered: "3 Ton", entryDate: "06 Oct 2025, 02:05 PM", match: false, remaining: "7 Ton" },
-    { vehicleNumber: "RJ24 GH 1123", materialType: "Steel Rods", quantityEntered: "1.5 Ton", entryDate: "07 Oct 2025, 11:40 AM", match: true, remaining: "0 Ton" },
-    { vehicleNumber: "RJ38 JK 9901", materialType: "Bricks", quantityEntered: "2,000 Units", entryDate: "07 Oct 2025, 04:10 PM", match: true, remaining: "3,000 Units" },
-  ];
+  if (isLoading) return (
+    <div className="flex h-full w-full items-center justify-center bg-[#F5F6F7]">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0C83FF] border-t-transparent"></div>
+    </div>
+  );
+
+  if (error || !token) return (
+    <div className="flex h-full w-full flex-col items-center justify-center gap-4 bg-[#F5F6F7]">
+      <p className="text-lg font-medium text-[#EF4444]">Error loading token details.</p>
+      <button onClick={() => router.back()} className="rounded-lg bg-white border border-[#D6D9DE] px-4 py-2 text-sm">Go Back</button>
+    </div>
+  );
 
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest relative overflow-y-auto">
       <Header 
-        id="TKN-2025-014" 
+        token={token} 
         onBack={() => router.back()} 
       />
 
       <div className="flex flex-1 gap-5 p-5">
-        <Sidebar app={app} />
+        <Sidebar token={token} />
 
         <div className="flex flex-1 flex-col gap-5 rounded-lg border border-[#D6D9DE] bg-white overflow-hidden h-fit">
           {/* Tabs */}
@@ -174,7 +206,13 @@ export default function CitizenTokenDetailsPage() {
                   <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                <input type="text" placeholder="Search" className="w-full border-none bg-transparent p-0 text-sm font-normal text-[#343434] outline-none placeholder:text-[#343434]/60 focus:ring-0" />
+                <input 
+                  type="text" 
+                  placeholder="Search" 
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full border-none bg-transparent p-0 text-sm font-normal text-[#343434] outline-none placeholder:text-[#343434]/60 focus:ring-0" 
+                />
               </div>
               
               <button 
@@ -200,17 +238,22 @@ export default function CitizenTokenDetailsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {MOCK_ENTRIES.map((entry, idx) => (
-                      <TableRow 
-                        key={idx}
-                        vehicle={entry.vehicleNumber}
-                        material={entry.materialType}
-                        qty={entry.quantityEntered}
-                        time={entry.entryDate}
-                        remaining={entry.remaining}
-                        onClick={() => handleEntryClick(entry)}
-                      />
-                    ))}
+                    {token.vehicle_entries
+                      .filter(entry => 
+                        !search || 
+                        entry.vehicle_number?.toLowerCase().includes(search.toLowerCase()) ||
+                        entry.material_name?.toLowerCase().includes(search.toLowerCase())
+                      )
+                      .map((entry, idx) => (
+                        <TableRow 
+                          key={idx}
+                          entry={entry}
+                          onClick={() => handleEntryClick(entry)}
+                        />
+                      ))}
+                    {token.vehicle_entries.length === 0 && (
+                      <tr><td colSpan={5} className="p-10 text-center text-sm opacity-50 italic">No vehicle entries recorded yet.</td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -227,18 +270,17 @@ export default function CitizenTokenDetailsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {[
-                      { name: "Cement", permitted: "500 Bags", consumed: "90 Bags", remaining: "410 Bags" },
-                      { name: "Sand", permitted: "10 Ton", consumed: "3 Ton", remaining: "7 Ton" },
-                      { name: "Steel Rods", permitted: "5 Ton", consumed: "1.5 Ton", remaining: "3.5 Ton" },
-                    ].map((m, i) => (
+                    {token.materials.map((m, i) => (
                       <tr key={i} className="border-b border-[#D6D9DE]">
-                        <td className="p-3 text-sm font-medium text-[#343434]">{m.name}</td>
-                        <td className="p-3 text-sm text-[#343434]">{m.permitted}</td>
-                        <td className="p-3 text-sm text-[#343434]">{m.consumed}</td>
-                        <td className="p-3 text-sm font-semibold text-[#059669]">{m.remaining}</td>
+                        <td className="p-3 text-sm font-medium text-[#343434]">{m.material_name} ({m.unit})</td>
+                        <td className="p-3 text-sm text-[#343434]">{m.approved_quantity}</td>
+                        <td className="p-3 text-sm text-[#343434]">{m.consumed_quantity}</td>
+                        <td className="p-3 text-sm font-semibold text-[#059669]">{m.remaining_quantity}</td>
                       </tr>
                     ))}
+                    {token.materials.length === 0 && (
+                      <tr><td colSpan={4} className="p-10 text-center text-sm opacity-50 italic">No material data available.</td></tr>
+                    )}
                   </tbody>
                 </table>
               </div>

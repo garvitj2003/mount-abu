@@ -275,24 +275,80 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
                 <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Material Name</th>
                 <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Estimated Material</th>
                 <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Estimated by JEN</th>
-                <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase bg-[#E7F3FF] border-r border-[#D6D9DE]">Phase 1</th>
-                <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase bg-[#FFEEB4]">Phase 2</th>
+                {Array.from({ length: app.num_stages || 0 }).map((_, i) => (
+                  <th 
+                    key={i} 
+                    className={`p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE] last:border-r-0 ${
+                      [
+                        "bg-[#E7F3FF]", // Phase 1
+                        "bg-[#FFEEB4]", // Phase 2
+                        "bg-[#E6F7F5]", // Phase 3
+                        "bg-[#FFF1F0]", // Phase 4
+                        "bg-[#F0F7FF]", // Phase 5
+                      ][i % 5]
+                    }`}
+                  >
+                    Phase {i + 1}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {app.materials?.map((mat) => (
-                <tr key={mat.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
-                  <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">{mat.material_name} {/* Map to name later */}</td>
-                  <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">{mat.quantity} Units</td>
-                  <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">
-                    <div className="rounded border border-[#D6D9DE] px-3 py-1.5 bg-white text-xs">—</div>
-                  </td>
-                  <td className="p-3 text-sm font-medium text-black bg-[#E7F3FF] border-r border-[#D6D9DE]">—</td>
-                  <td className="p-3 text-sm font-medium text-black bg-[#FFEEB4]">—</td>
-                </tr>
-              ))}
+              {app.materials?.map((mat) => {
+                const jenTotal = app.phase_materials
+                  ?.filter(pm => pm.material_id === mat.material_id)
+                  .reduce((acc, curr) => acc + curr.quantity, 0) || 0;
+
+                return (
+                  <tr key={mat.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
+                    <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">
+                      {mat.material_name} {mat.unit && `(${mat.unit})`}
+                    </td>
+                    <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">
+                      {mat.quantity} Units
+                    </td>
+                    <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">
+                      <div className={`rounded border px-3 py-1.5 text-xs font-bold ${
+                        jenTotal > 0 ? "bg-white border-[#D6D9DE] text-[#0C83FF]" : "bg-gray-50 border-transparent text-gray-400"
+                      }`}>
+                        {jenTotal > 0 ? `${jenTotal} Units` : "—"}
+                      </div>
+                    </td>
+                    {Array.from({ length: app.num_stages || 0 }).map((_, i) => {
+                      const phaseNum = i + 1;
+                      const phaseQty = app.phase_materials?.find(
+                        pm => pm.material_id === mat.material_id && pm.phase === phaseNum
+                      )?.quantity;
+
+                      return (
+                        <td 
+                          key={i} 
+                          className={`p-3 text-sm font-medium text-black border-r border-[#D6D9DE] last:border-r-0 ${
+                            [
+                              "bg-[#E7F3FF]",
+                              "bg-[#FFEEB4]",
+                              "bg-[#E6F7F5]",
+                              "bg-[#FFF1F0]",
+                              "bg-[#F0F7FF]",
+                            ][i % 5]
+                          }`}
+                        >
+                          {phaseQty !== undefined ? `${phaseQty} Units` : "—"}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
               {!app.materials?.length && (
-                <tr><td colSpan={5} className="p-10 text-center text-gray-400 text-sm italic">No material requirements specified.</td></tr>
+                <tr>
+                  <td 
+                    colSpan={3 + (app.num_stages || 0)} 
+                    className="p-10 text-center text-gray-400 text-sm italic"
+                  >
+                    No material requirements specified.
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -342,6 +398,7 @@ export default function ApplicationDetailsPage() {
         data: { 
           action, 
           remarks: remarks || `Action ${action} performed by ${user?.role}`,
+          ...(action === "GENERATE_TOKENS" ? { num_stages: app?.num_stages } : {}),
           ...extra
         } 
       });
