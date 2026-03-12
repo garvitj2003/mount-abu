@@ -7,6 +7,7 @@ import { useComplaintCategories } from "@/hooks/useMasterData";
 import { type components } from "@/types/api";
 import DropdownSelect from "@/components/ui/DropdownSelect";
 import TablePagination from "@/components/ui/TablePagination";
+import ComplaintViewDrawer from "@/components/dashboard/citizen/complaints/ComplaintViewDrawer";
 
 type ComplaintStatus = components["schemas"]["ComplaintStatus"];
 
@@ -59,6 +60,9 @@ export default function AuthorityComplaintsPage() {
   const [page, setPage] = useState(1);
   const limit = 10;
 
+  const [selectedComplaint, setSelectedComplaint] = useState<any>(null);
+  const [isViewDrawerOpen, setIsViewDrawerOpen] = useState(false);
+
   const { data: categories } = useComplaintCategories();
 
   const { data, isLoading } = useAllComplaints({
@@ -82,6 +86,11 @@ export default function AuthorityComplaintsPage() {
     { label: "All Category", value: "All" },
     ...(categories?.map((cat) => ({ label: cat.name, value: cat.id })) || [])
   ];
+
+  const handleComplaintClick = (complaint: any) => {
+    setSelectedComplaint(complaint);
+    setIsViewDrawerOpen(true);
+  };
 
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest">
@@ -196,7 +205,10 @@ export default function AuthorityComplaintsPage() {
                   filteredComplaints.map((item) => (
                     <tr key={item.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                       <td className="px-2 py-3">
-                        <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">
+                        <span 
+                          onClick={() => handleComplaintClick(item)}
+                          className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer"
+                        >
                             #CMP-{item.id.toString().padStart(4, '0')}
                         </span>
                       </td>
@@ -260,6 +272,12 @@ export default function AuthorityComplaintsPage() {
           />
         </div>
       </div>
+
+      <ComplaintViewDrawer
+        isOpen={isViewDrawerOpen}
+        onClose={() => setIsViewDrawerOpen(false)}
+        complaint={selectedComplaint}
+      />
     </div>
   );
 }

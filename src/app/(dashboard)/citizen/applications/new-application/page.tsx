@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@/hooks/useUser";
 import { useApplicationStore } from "@/store/useApplicationStore";
 import { ApplicationService } from "@/services/applicationService";
-import { useWards, useDepartments, useMaterials } from "@/hooks/useMasterData";
+import { useWards, useMaterials } from "@/hooks/useMasterData";
 import { step1Schema } from "@/lib/validations/application";
 import { type components } from "@/types/api";
 
@@ -19,10 +19,9 @@ export default function NewApplicationPage() {
   const queryClient = useQueryClient();
   const { data: user, isPending: isUserLoading } = useUser();
   const { data: wards = [], isPending: isWardsLoading } = useWards();
-  const { data: departments = [], isPending: isDeptsLoading } = useDepartments();
   const { data: dbMaterials = [], isPending: isMaterialsLoading } = useMaterials();
 
-  const isMasterDataLoading = isUserLoading || isWardsLoading || isDeptsLoading || isMaterialsLoading;
+  const isMasterDataLoading = isUserLoading || isWardsLoading || isMaterialsLoading;
 
   const { 
     formData, 
@@ -57,7 +56,6 @@ export default function NewApplicationPage() {
           contractor_name: app.contractor_name || "",
           is_agriculture_land: app.is_agriculture_land,
           property_usage: app.property_usage as any,
-          department_id: app.department_id || 0,
           ward_id: app.ward_id || 0,
         });
 
@@ -441,20 +439,6 @@ export default function NewApplicationPage() {
             </label>
           ))}
         </div>
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-5">
-          <label className="w-[228px] text-[12px] font-normal text-[#343434] font-onest">Select Department</label>
-          <div className="relative h-[34px] w-[313px]">
-            <select className={`h-full w-full appearance-none rounded-lg border ${errors.department_id ? "border-red-500" : "border-[#D6D9DE]"} bg-white px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] font-onest`} value={formData.department_id || ""} onChange={(e) => updateFormData({ department_id: Number(e.target.value) })}>
-              <option value="">Select Department</option>
-              {departments.map(dept => <option key={dept.id} value={dept.id}>{dept.name}</option>)}
-            </select>
-            <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"><Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} /></div>
-          </div>
-        </div>
-        {errors.department_id && <p className="ml-[248px] text-[10px] text-red-500">{errors.department_id}</p>}
       </div>
 
       <div className="flex flex-col gap-1">

@@ -12,7 +12,6 @@ export const step1Schema = z.object({
   contractor_name: z.string().optional().nullable(),
   is_agriculture_land: z.boolean(),
   property_usage: z.enum(["DOMESTIC", "COMMERCIAL", "HOTEL"] as const),
-  department_id: z.number({ message: "Please select a department" }).min(1, "Please select a department"),
   ward_id: z.number({ message: "Please select a ward/zone" }).min(1, "Please select a ward/zone"),
   title: z.string(),
 });

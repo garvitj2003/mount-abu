@@ -34,7 +34,6 @@ const initialFormData: ApplicationFormData = {
   contractor_name: "",
   is_agriculture_land: false,
   property_usage: "DOMESTIC",
-  department_id: 0,
   ward_id: 0,
   title: "Construction/Renovation Permit Request",
 };

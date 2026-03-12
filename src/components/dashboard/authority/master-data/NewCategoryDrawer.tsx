@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
-import { useCreateComplaintCategory } from "@/hooks/useMasterData";
+import { useCreateComplaintCategory, useDepartments } from "@/hooks/useMasterData";
 
 interface NewCategoryDrawerProps {
   isOpen: boolean;
@@ -15,10 +15,12 @@ export default function NewCategoryDrawer({
   onClose,
 }: NewCategoryDrawerProps) {
   const { mutate: createCategory, isPending } = useCreateComplaintCategory();
+  const { data: departments = [] } = useDepartments();
   
   const [formData, setFormData] = useState({
     name: "",
     description: "",
+    department_id: "" as string | number,
     status: true,
   });
 
@@ -27,11 +29,21 @@ export default function NewCategoryDrawer({
       alert("Name is required");
       return;
     }
-    createCategory(formData, {
+    if (!formData.department_id) {
+      alert("Department is required");
+      return;
+    }
+
+    const submitData = {
+      ...formData,
+      department_id: Number(formData.department_id)
+    };
+
+    createCategory(submitData, {
       onSuccess: () => {
         alert("Category created successfully!");
         onClose();
-        setFormData({ name: "", description: "", status: true });
+        setFormData({ name: "", description: "", department_id: "", status: true });
       },
       onError: (err: any) => {
         alert(err.response?.data?.detail || "Failed to create category");
@@ -62,6 +74,20 @@ export default function NewCategoryDrawer({
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-[#343434]">Mapped Department</label>
+                <select
+                  className="w-full h-[38px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] bg-white"
+                  value={formData.department_id}
+                  onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
+                >
+                  <option value="">Select Department</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>{dept.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="space-y-1.5">

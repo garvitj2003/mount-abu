@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { 
   useComplaintCategories, 
@@ -38,96 +38,6 @@ const formatDate = (dateStr: string) => {
 
 
 
-const CATEGORY_COLUMNS: TableColumn[] = [
-  { 
-    header: "Code", 
-    key: "code",
-    render: (row) => <span className="text-sm font-medium text-[#343434]">CMP-{row.id.toString().padStart(3, '0')}</span>
-  },
-  { header: "Name", key: "name" },
-  { header: "Description", key: "description" },
-  { header: "Status", key: "status" },
-  { 
-    header: "Created by", 
-    key: "created_by",
-    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{row.created_by?.name || "System"}</span>
-  },
-  { 
-    header: "Created On", 
-    key: "created_at",
-    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatDate(row.created_at)}</span>
-  },
-];
-
-const WARD_COLUMNS: TableColumn[] = [
-  { header: "Code", key: "code" },
-  { header: "Ward / Zone Name", key: "name" },
-  { header: "Type", key: "type" },
-  { header: "Status", key: "status" },
-  { 
-    header: "Created by", 
-    key: "created_by",
-    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{row.created_by?.name || "System"}</span>
-  },
-  { 
-    header: "Created On", 
-    key: "created_at",
-    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatDate(row.created_at)}</span>
-  },
-];
-
-const DEPARTMENT_COLUMNS: TableColumn[] = [
-  { header: "Code", key: "code" },
-  { header: "Department Name", key: "name" },
-  { header: "Type", key: "type" },
-  { header: "Status", key: "status" },
-  { 
-    header: "Created by", 
-    key: "created_by",
-    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{row.created_by?.name || "System"}</span>
-  },
-  { 
-    header: "Created On", 
-    key: "created_at",
-    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatDate(row.created_at)}</span>
-  },
-];
-
-const ROLE_COLUMNS: TableColumn[] = [
-  { header: "Code", key: "code" },
-  { header: "Role Name", key: "name" },
-  { header: "Status", key: "status" },
-  { 
-    header: "Created by", 
-    key: "created_by",
-    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{row.created_by?.name || "System"}</span>
-  },
-  { 
-    header: "Created On", 
-    key: "created_at",
-    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatDate(row.created_at)}</span>
-  },
-];
-
-const MATERIAL_COLUMNS: TableColumn[] = [
-  { 
-    header: "Code", 
-    key: "code",
-    render: (row) => <span className="text-sm font-medium text-[#343434]">MAT-{row.id.toString().padStart(3, '0')}</span>
-  },
-  { header: "Material Name", key: "name" },
-  { header: "Unit", key: "unit" },
-  { 
-    header: "Created by", 
-    key: "created_by",
-    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{row.created_by?.name || "System"}</span>
-  },
-  { 
-    header: "Created On", 
-    key: "created_at",
-    render: (row) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatDate(row.created_at)}</span>
-  },
-];
 
 export default function AuthorityMasterDataPage() {
   const [activeTab, setActiveTab] = useState<TabType>("Complaint Categories");
@@ -152,6 +62,105 @@ export default function AuthorityMasterDataPage() {
   const { data: departments = [], isLoading: isLoadingDepts } = useDepartments();
   const { data: roles = [], isLoading: isLoadingRoles } = useRoles();
   const { data: materials = [], isLoading: isLoadingMaterials } = useMaterials();
+
+  const CATEGORY_COLUMNS: TableColumn[] = useMemo(() => [
+    { 
+      header: "Code", 
+      key: "code",
+      render: (row: any) => <span className="text-sm font-medium text-[#343434]">CMP-{row.id.toString().padStart(3, '0')}</span>
+    },
+    { header: "Name", key: "name" },
+    { 
+      header: "Department", 
+      key: "department_id",
+      render: (row: any) => {
+        const dept = departments.find(d => d.id === row.department_id);
+        return <span className="text-sm">{dept?.name || "—"}</span>;
+      }
+    },
+    { header: "Description", key: "description" },
+    { header: "Status", key: "status" },
+    { 
+      header: "Created by", 
+      key: "created_by",
+      render: (row: any) => <span className="text-sm font-normal text-[#343434] opacity-70">{row.created_by?.name || "System"}</span>
+    },
+    { 
+      header: "Created On", 
+      key: "created_at",
+      render: (row: any) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatDate(row.created_at)}</span>
+    },
+  ], [departments]);
+
+  const WARD_COLUMNS: TableColumn[] = [
+    { header: "Code", key: "code" },
+    { header: "Ward / Zone Name", key: "name" },
+    { header: "Type", key: "type" },
+    { header: "Status", key: "status" },
+    { 
+      header: "Created by", 
+      key: "created_by",
+      render: (row: any) => <span className="text-sm font-normal text-[#343434] opacity-70">{row.created_by?.name || "System"}</span>
+    },
+    { 
+      header: "Created On", 
+      key: "created_at",
+      render: (row: any) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatDate(row.created_at)}</span>
+    },
+  ];
+
+  const DEPARTMENT_COLUMNS: TableColumn[] = [
+    { header: "Code", key: "code" },
+    { header: "Department Name", key: "name" },
+    { header: "Type", key: "type" },
+    { header: "Status", key: "status" },
+    { 
+      header: "Created by", 
+      key: "created_by",
+      render: (row: any) => <span className="text-sm font-normal text-[#343434] opacity-70">{row.created_by?.name || "System"}</span>
+    },
+    { 
+      header: "Created On", 
+      key: "created_at",
+      render: (row: any) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatDate(row.created_at)}</span>
+    },
+  ];
+
+  const ROLE_COLUMNS: TableColumn[] = [
+    { header: "Code", key: "code" },
+    { header: "Role Name", key: "name" },
+    { header: "Status", key: "status" },
+    { 
+      header: "Created by", 
+      key: "created_by",
+      render: (row: any) => <span className="text-sm font-normal text-[#343434] opacity-70">{row.created_by?.name || "System"}</span>
+    },
+    { 
+      header: "Created On", 
+      key: "created_at",
+      render: (row: any) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatDate(row.created_at)}</span>
+    },
+  ];
+
+  const MATERIAL_COLUMNS: TableColumn[] = [
+    { 
+      header: "Code", 
+      key: "code",
+      render: (row: any) => <span className="text-sm font-medium text-[#343434]">MAT-{row.id.toString().padStart(3, '0')}</span>
+    },
+    { header: "Material Name", key: "name" },
+    { header: "Unit", key: "unit" },
+    { 
+      header: "Created by", 
+      key: "created_by",
+      render: (row: any) => <span className="text-sm font-normal text-[#343434] opacity-70">{row.created_by?.name || "System"}</span>
+    },
+    { 
+      header: "Created On", 
+      key: "created_at",
+      render: (row: any) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatDate(row.created_at)}</span>
+    },
+  ];
 
   useEffect(() => {
     const activeTabIdx = TABS.indexOf(activeTab);
@@ -281,7 +290,7 @@ export default function AuthorityMasterDataPage() {
                 <thead>
                   <tr className="border-b border-[#D6D9DE]">
                     {columns.map((col, idx) => (
-                      <th key={idx} className="px-2 py-3 text-left">
+                      <th key={idx} className="px-2 py-3 text-left whitespace-nowrap">
                         <div className={`flex items-center gap-2 ${idx < columns.length - 1 ? "border-r border-[rgba(0,0,0,0.1)]" : ""} pr-2`}>
                           <span className="text-xs font-semibold text-[#333333] opacity-70 uppercase">{col.header}</span>
                         </div>
@@ -294,7 +303,7 @@ export default function AuthorityMasterDataPage() {
                     data.map((row: any, idx: number) => (
                       <tr key={idx} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                         {columns.map((col, colIdx) => (
-                          <td key={colIdx} className="px-2 py-3">
+                          <td key={colIdx} className="px-2 py-3 whitespace-nowrap">
                             {col.render ? (
                               col.render(row)
                             ) : col.key === "status" ? (
@@ -314,7 +323,7 @@ export default function AuthorityMasterDataPage() {
                       </tr>
                     ))
                   ) : (
-                    <tr><td colSpan={columns.length} className="px-2 py-10 text-center text-gray-400 font-medium font-onest">No data found.</td></tr>
+                    <tr><td colSpan={columns.length} className="px-2 py-10 text-center text-gray-400 font-medium font-onest whitespace-nowrap">No data found.</td></tr>
                   )}
                 </tbody>
               </table>
