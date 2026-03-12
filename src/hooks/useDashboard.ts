@@ -7,3 +7,10 @@ export function useCitizenDashboard() {
     queryFn: () => DashboardService.getCitizenDashboard(),
   });
 }
+
+export function useAuthorityDashboard() {
+  return useQuery({
+    queryKey: ["dashboard-authority"],
+    queryFn: () => DashboardService.getAuthorityDashboard(),
+  });
+}

@@ -3,39 +3,46 @@
 import { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
+import { useCreateContact } from "@/hooks/useWebsiteContent";
 
 interface AddContactDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd?: (contact: any) => void;
 }
 
-export default function AddContactDrawer({ isOpen, onClose, onAdd }: AddContactDrawerProps) {
+export default function AddContactDrawer({ isOpen, onClose }: AddContactDrawerProps) {
+  const createContact = useCreateContact();
   const [formData, setFormData] = useState({
-    department_name: "",
-    person_name: "",
+    office_department: "",
+    contact_person: "",
     designation: "",
     phone_number: "",
-    email: "",
+    email_address: "",
     status: true,
   });
 
-  const handleSubmit = () => {
-    if (!formData.department_name.trim() || !formData.person_name.trim()) {
+  const handleSubmit = async () => {
+    if (!formData.office_department.trim() || !formData.contact_person.trim()) {
       alert("Please fill in the required fields");
       return;
     }
-    onAdd?.(formData);
-    onClose();
-    // Reset form
-    setFormData({
-      department_name: "",
-      person_name: "",
-      designation: "",
-      phone_number: "",
-      email: "",
-      status: true,
-    });
+    
+    try {
+      await createContact.mutateAsync(formData);
+      onClose();
+      // Reset form
+      setFormData({
+        office_department: "",
+        contact_person: "",
+        designation: "",
+        phone_number: "",
+        email_address: "",
+        status: true,
+      });
+    } catch (err) {
+      console.error("Failed to create contact", err);
+      alert("Failed to save contact. Please try again.");
+    }
   };
 
   return (
@@ -87,8 +94,8 @@ export default function AddContactDrawer({ isOpen, onClose, onAdd }: AddContactD
                   type="text"
                   placeholder="Engineering Department"
                   className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
-                  value={formData.department_name}
-                  onChange={(e) => setFormData({ ...formData, department_name: e.target.value })}
+                  value={formData.office_department}
+                  onChange={(e) => setFormData({ ...formData, office_department: e.target.value })}
                 />
               </div>
 
@@ -99,8 +106,8 @@ export default function AddContactDrawer({ isOpen, onClose, onAdd }: AddContactD
                   type="text"
                   placeholder="Shri Ramesh Kumar"
                   className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
-                  value={formData.person_name}
-                  onChange={(e) => setFormData({ ...formData, person_name: e.target.value })}
+                  value={formData.contact_person}
+                  onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
                 />
               </div>
 
@@ -135,8 +142,8 @@ export default function AddContactDrawer({ isOpen, onClose, onAdd }: AddContactD
                   type="email"
                   placeholder="info@mountabu.gov.in"
                   className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  value={formData.email_address}
+                  onChange={(e) => setFormData({ ...formData, email_address: e.target.value })}
                 />
               </div>
 

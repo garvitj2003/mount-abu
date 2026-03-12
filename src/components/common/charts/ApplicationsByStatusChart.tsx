@@ -42,6 +42,7 @@ export const ApplicationsByStatusChart = ({ data }: ApplicationsByStatusChartPro
               outerRadius={85}
               paddingAngle={0}
               dataKey="count"
+              nameKey="status"
               stroke="none"
             >
               {data.map((entry, index) => (
@@ -50,7 +51,7 @@ export const ApplicationsByStatusChart = ({ data }: ApplicationsByStatusChartPro
             </Pie>
             <Tooltip 
               contentStyle={{ fontSize: '10px', borderRadius: '8px' }}
-              formatter={(value: any) => [`${value}`, 'Applications']}
+              formatter={(value: any, name?: string) => [`${value}`, name || '']}
             />
           </PieChart>
         </ResponsiveContainer>

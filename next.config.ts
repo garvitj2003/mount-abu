@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
         destination: "http://localhost:8000/api/city-profile/",
       },
       {
+        source: "/api/proxy/api/contact-diary",
+        destination: "http://localhost:8000/api/contact-diary/",
+      },
+      {
         source: "/api/proxy/:path*",
         destination: "http://localhost:8000/:path*",
       },

@@ -20,6 +20,10 @@ type LeadersListResponse = components["schemas"]["LeadersListResponse"];
 type DownloadResponse = components["schemas"]["DownloadResponse"];
 type DownloadsListResponse = components["schemas"]["DownloadsListResponse"];
 
+type ContactDiaryCreate = components["schemas"]["ContactDiaryCreate"];
+type ContactDiaryResponse = components["schemas"]["ContactDiaryResponse"];
+type PaginatedContactDiaryResponse = components["schemas"]["PaginatedContactDiaryResponse"];
+
 export const WebsiteContentService = {
   // Notices
   async getNotices(params?: { limit?: number; offset?: number }): Promise<NoticesListResponse> {
@@ -70,6 +74,16 @@ export const WebsiteContentService = {
     const response = await api.post<DownloadResponse>("/api/downloads", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
+    return response.data;
+  },
+
+  // Contact Diary
+  async getContacts(params?: { page?: number; size?: number }): Promise<PaginatedContactDiaryResponse> {
+    const response = await api.get<PaginatedContactDiaryResponse>("/api/contact-diary", { params });
+    return response.data;
+  },
+  async createContact(data: ContactDiaryCreate): Promise<ContactDiaryResponse> {
+    const response = await api.post<ContactDiaryResponse>("/api/contact-diary", data);
     return response.data;
   },
 };

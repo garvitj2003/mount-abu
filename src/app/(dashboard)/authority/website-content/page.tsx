@@ -10,7 +10,8 @@ import {
   useTenders, 
   useEvents, 
   useLeaders, 
-  useDownloads 
+  useDownloads,
+  useContacts
 } from "@/hooks/useWebsiteContent";
 import AddNoticeDrawer from "@/components/dashboard/authority/website-content/AddNoticeDrawer";
 import AddTenderDrawer from "@/components/dashboard/authority/website-content/AddTenderDrawer";
@@ -141,12 +142,12 @@ const LEADERS_COLUMNS: TableColumn[] = [
 ];
 
 const CONTACT_COLUMNS: TableColumn[] = [
-  { header: "Name", key: "name", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.name}</span> },
+  { header: "Name", key: "contact_person", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.contact_person}</span> },
   { header: "Designation", key: "designation" },
-  { header: "Department", key: "department" },
-  { header: "Mobile Number", key: "mobile" },
-  { header: "Email", key: "email" },
-  { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
+  { header: "Department", key: "office_department" },
+  { header: "Mobile Number", key: "phone_number" },
+  { header: "Email", key: "email_address" },
+  { header: "Status", key: "status", render: (row) => RenderStatus(row.status ? "ACTIVE" : "INACTIVE") },
   { header: "", key: "actions", width: "40px", render: () => RenderActions() }
 ];
 
@@ -185,6 +186,7 @@ export default function AuthorityWebsiteContentPage() {
   const { data: eventsData, isLoading: isLoadingEvents } = useEvents(params);
   const { data: leadersData, isLoading: isLoadingLeaders } = useLeaders(params);
   const { data: downloadsData, isLoading: isLoadingDownloads } = useDownloads(params);
+  const { data: contactsData, isLoading: isLoadingContacts } = useContacts({ page, size: limit });
   
   const { data: cityProfile, isLoading: isLoadingProfile } = useCityProfile();
   const updateProfile = useUpdateCityProfile();
@@ -308,9 +310,9 @@ export default function AuthorityWebsiteContentPage() {
       case "Contact Diary":
         return { 
           columns: CONTACT_COLUMNS, 
-          data: [], // Still pending BE implementation for list
-          total: 0,
-          isLoading: false,
+          data: contactsData?.items || [],
+          total: contactsData?.total || 0,
+          isLoading: isLoadingContacts,
           onAdd: () => setIsContactDrawerOpen(true)
         };
       case "Downloads":

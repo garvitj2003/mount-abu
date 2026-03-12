@@ -6,6 +6,7 @@ type NoticeCreate = components["schemas"]["NoticeCreate"];
 type TenderCreate = components["schemas"]["TenderCreate"];
 type EventCreate = components["schemas"]["EventCreate"];
 type LeaderCreate = components["schemas"]["LeaderCreate"];
+type ContactDiaryCreate = components["schemas"]["ContactDiaryCreate"];
 
 export function useNotices(params?: { limit?: number; offset?: number }) {
   return useQuery({
@@ -79,5 +80,20 @@ export function useCreateDownload() {
   return useMutation({
     mutationFn: (formData: FormData) => WebsiteContentService.createDownload(formData),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["downloads"] }),
+  });
+}
+
+export function useContacts(params?: { page?: number; size?: number }) {
+  return useQuery({
+    queryKey: ["contacts", params],
+    queryFn: () => WebsiteContentService.getContacts(params),
+  });
+}
+
+export function useCreateContact() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: ContactDiaryCreate) => WebsiteContentService.createContact(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contacts"] }),
   });
 }

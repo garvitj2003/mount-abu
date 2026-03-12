@@ -1,119 +1,174 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import { StatCard } from "@/components/common/stats/StatCard";
 import { ApplicationsByStatusChart } from "@/components/common/charts/ApplicationsByStatusChart";
 import { ComplaintsByCategoryChart } from "@/components/common/charts/ComplaintsByCategoryChart";
 import { WardWiseActivityChart } from "@/components/common/charts/WardWiseActivityChart";
 import { WardSummaryTable } from "@/components/common/charts/WardSummaryTable";
-import { MaterialUsageChart } from "@/components/common/charts/MaterialUsageChart";
-import { AvailableQuantityChart } from "@/components/common/charts/AvailableQuantityChart";
-import { MaterialBreakdown } from "@/components/common/charts/MaterialBreakdown";
-import { PhaseTokenUsageChart } from "@/components/common/charts/PhaseTokenUsageChart";
+import { useAuthorityDashboard } from "@/hooks/useDashboard";
+import { useUser } from "@/hooks/useUser";
+import { 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, Legend, Cell, PieChart, Pie
+} from "recharts";
 
-const DUMMY_KPI_DATA = [
-  { title: "Total Applications", count: 635, subtext: "vs last period", iconType: "applications", color: "#0C83FF", trend: { value: 12, isUp: true } },
-  { title: "Approved", count: 320, subtext: "vs last period", iconType: "applications", color: "#059669", trend: { value: 12, isUp: true } },
-  { title: "Tokens Issued", count: 285, subtext: "vs last period", iconType: "token", color: "#F35C86", trend: { value: 15, isUp: true } },
-  { title: "Complains", count: 313, subtext: "vs last period", iconType: "token", color: "#F58646", trend: { value: 5, isUp: false } },
-  { title: "Complaints Closed", count: 267, subtext: "vs last period", iconType: "token", color: "#059669", trend: { value: 18, isUp: true } },
-];
+const STATUS_COLORS: Record<string, string> = {
+  "PENDING": "#FFD648", // Yellow
+  "SUBMITTED": "#3B83F6", // Blue
+  "APPROVED": "#059669", // Green
+  "FORWARDED": "#8B5CF6", // Purple
+  "WITHHELD": "#F59E0B", // Orange
+  "OBJECTED": "#F43F5E", // Rose/Pink
+  "REJECTED": "#EF4444", // Red
+  "TOKEN_GENERATED": "#10B981", // Emerald
+  "WITHDRAWN": "#94A3B8", // Gray
+  "IN_PROGRESS": "#0284C7", // Sky Blue
+  "RESOLVED": "#059669", // Green
+  "ACTIVE": "#059669", // Green
+  "COMPLETED": "#15803D", // Dark Green
+  "TERMINATED": "#B91C1C", // Dark Red
+};
 
-const DUMMY_STATUS_DATA = [
-  { status: "Approved", count: 320, color: "#059669" },
-  { status: "Pending", count: 150, color: "#3B83F6" },
-  { status: "Under Review", count: 100, color: "#FFD648" },
-  { status: "Rejected", count: 65, color: "#EF4444" },
-];
+const KPI_ICONS: Record<string, string> = {
+  "Total Applications": "applications",
+  "Tokens Issued": "token",
+  "Complaints": "token",
+  "Approved": "applications",
+  "Complaints Closed": "token",
+  "Assigned": "applications",
+  "Verified": "applications",
+  "Total Entries": "token",
+  "Received": "token",
+  "Resolved": "token",
+  "Tokens Generated": "token",
+  "Utilized": "token",
+};
 
-const DUMMY_COMPLAINT_DATA = [
-  { category: "Sanitation", count: 20 },
-  { category: "Engineering", count: 115 },
-  { category: "Water Supply", count: 90 },
-  { category: "Road Repair", count: 55 },
-];
+const KPI_COLORS: Record<string, string> = {
+  "Total Applications": "#0C83FF",
+  "Approved": "#059669",
+  "Tokens Issued": "#F35C86",
+  "Complaints": "#F58646",
+  "Complaints Closed": "#059669",
+  "Assigned": "#0C83FF",
+  "Verified": "#059669",
+  "Pending": "#EF4444",
+  "Total Entries": "#8B5CF6",
+  "Received": "#3B83F6",
+  "Resolved": "#10B981",
+  "Tokens Generated": "#F35C86",
+  "Utilized": "#F59E0B",
+};
 
-const DUMMY_WARD_ACTIVITY = [
-  { ward: "Ward 1", applications: 65, approved: 52, complaints: 40, tokens: 30 },
-  { ward: "Ward 2", applications: 65, approved: 32, complaints: 45, tokens: 30 },
-  { ward: "Ward 3", applications: 65, approved: 52, complaints: 40, tokens: 30 },
-  { ward: "Ward 4", applications: 65, approved: 52, complaints: 40, tokens: 30 },
-];
-
-const DUMMY_WARD_SUMMARY = [
-  { ward: "Ward 1", applications: 45, approved: 32, tokensIssued: 28, complaints: 18 },
-  { ward: "Ward 2", applications: 38, approved: 26, tokensIssued: 24, complaints: 22 },
-  { ward: "Ward 3", applications: 52, approved: 41, tokensIssued: 38, complaints: 15 },
-  { ward: "Ward 4", applications: 41, approved: 29, tokensIssued: 25, complaints: 19 },
-];
-
-const DUMMY_MATERIAL_USAGE = [
-  { material_name: "Cement", unit: "bags", permitted_quantity: 500, used_quantity: 250, usage_percent: 50 },
-  { material_name: "Bricks", unit: "nos", permitted_quantity: 400, used_quantity: 200, usage_percent: 50 },
-  { material_name: "Steel", unit: "kg", permitted_quantity: 200, used_quantity: 100, usage_percent: 50 },
-  { material_name: "Sand", unit: "bags", permitted_quantity: 800, used_quantity: 400, usage_percent: 50 },
-];
-
-const DUMMY_AVAILABLE_QUANTITY = [
-  { material_name: "Cement", available_quantity: 250 },
-  { material_name: "Sand", available_quantity: 400 },
-  { material_name: "Bricks", available_quantity: 200 },
-  { material_name: "Steel", available_quantity: 100 },
-  { material_name: "Concrete", available_quantity: 150 },
-  { material_name: "Others", available_quantity: 50 },
-];
+const formatStatus = (status: string) => {
+  return status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+};
 
 export default function DashboardAuthorityPage() {
-  const [view, setView] = useState<"empty" | "main">("main");
+  const { data: user } = useUser();
+  const { data: dashboard, isLoading, error } = useAuthorityDashboard();
+
+  const role = user?.role;
+
+  const kpiData = useMemo(() => {
+    if (!dashboard?.kpis) return [];
+    return dashboard.kpis.map(kpi => ({
+      title: kpi.label,
+      count: kpi.value,
+      subtext: (kpi.percent_change !== null && kpi.percent_change !== undefined) 
+        ? `${kpi.percent_change > 0 ? '+' : ''}${kpi.percent_change}% vs last period` 
+        : "vs last period",
+      iconType: (KPI_ICONS[kpi.label] || "applications") as any,
+      color: KPI_COLORS[kpi.label] || "#0C83FF",
+      trend: (kpi.percent_change !== null && kpi.percent_change !== undefined) 
+        ? { value: Math.abs(kpi.percent_change), isUp: kpi.percent_change > 0 } 
+        : undefined
+    }));
+  }, [dashboard?.kpis]);
+
+  const statusData = useMemo(() => {
+    if (!dashboard?.application_status_breakdown) return [];
+    return dashboard.application_status_breakdown.map(item => ({
+      status: formatStatus(item.status),
+      count: item.count,
+      color: STATUS_COLORS[item.status] || "#94A3B8"
+    }));
+  }, [dashboard?.application_status_breakdown]);
+
+  const wardActivityData = useMemo(() => {
+    if (!dashboard?.ward_activity) return [];
+    return dashboard.ward_activity.map(item => ({
+      ward: item.ward_name,
+      applications: item.applications,
+      approved: item.approved,
+      complaints: item.complaints,
+      tokens: item.tokens_issued
+    }));
+  }, [dashboard?.ward_activity]);
+
+  const wardSummaryData = useMemo(() => {
+    if (!dashboard?.ward_activity) return [];
+    return dashboard.ward_activity.map(item => ({
+      ward: item.ward_name,
+      applications: item.applications,
+      approved: item.approved,
+      tokensIssued: item.tokens_issued,
+      complaints: item.complaints
+    }));
+  }, [dashboard?.ward_activity]);
+
+  const complaintsByCategory = useMemo(() => {
+    if (!dashboard?.complaints_by_category) return [];
+    return dashboard.complaints_by_category.map(item => ({
+      category: item.category_name,
+      count: item.count
+    }));
+  }, [dashboard?.complaints_by_category]);
+
+  if (isLoading) return (
+    <div className="flex h-full w-full items-center justify-center bg-[#F5F6F7]">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0C83FF] border-t-transparent"></div>
+    </div>
+  );
+
+  if (error || !dashboard) return (
+    <div className="flex h-full w-full flex-col items-center justify-center gap-4 bg-[#F5F6F7]">
+      <p className="text-lg font-medium text-[#EF4444]">Error loading dashboard data.</p>
+    </div>
+  );
 
   return (
-    <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest">
+    <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest relative overflow-y-auto">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-[#D6D9DE] bg-white px-8 py-3 shadow-sm sticky top-0 z-10">
+      <div className="sticky top-0 z-50 flex w-full items-center justify-between border-b border-[#D6D9DE] bg-white px-5 py-3 shadow-[0px_1px_3px_0px_rgba(0,0,0,0.13)]">
         <div className="flex flex-col gap-1">
-          <h1 className="text-lg font-medium text-[#343434]">Reports & Analytics</h1>
-          <p className="text-xs font-normal text-[#343434] opacity-80">
-            Track role-specific performance and operational trends.
+          <h1 className="text-base font-medium text-[#343434]">Reports & Analytics</h1>
+          <p className="text-[12px] font-normal text-[#343434] opacity-80 leading-tight">
+            Track role-specific performance and operational trends for {role?.replace('_', ' ').toLowerCase()}.
           </p>
         </div>
 
-        {/* View Toggle */}
-        <div className="flex items-center rounded-md border border-[#D6D9DE] bg-[#F5F6F7] p-1">
-          <button
-            onClick={() => setView("empty")}
-            className={`rounded px-4 py-1.5 text-sm font-medium transition-all ${
-              view === "empty"
-                ? "bg-white text-[#0C83FF] shadow-sm"
-                : "text-[#343434] hover:bg-gray-200 opacity-60"
-            }`}
-          >
-            Empty Dashboard
+        <div className="flex items-center gap-3">
+          <button className="flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-2 text-sm font-medium text-[#343434] hover:bg-gray-200 transition-colors cursor-pointer">
+            <Image src="/dashboard/icons/applications/download.svg" alt="" width={14} height={14} className="opacity-60" />
+            Export PDF
           </button>
-          <button
-            onClick={() => setView("main")}
-            className={`rounded px-4 py-1.5 text-sm font-medium transition-all ${
-              view === "main"
-                ? "bg-white text-[#0C83FF] shadow-sm"
-                : "text-[#343434] hover:bg-gray-200 opacity-60"
-            }`}
-          >
-            Main Dashboard
+          <div className="h-6 w-px bg-[#D6D9DE] mx-1" />
+          <button className="flex items-center gap-2 rounded-lg bg-[#0C83FF] px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 transition-colors cursor-pointer">
+            <Image src="/dashboard/icons/applications/download.svg" alt="" width={14} height={14} className="invert brightness-0" />
+            Export Excel
           </button>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto p-5">
-        {view === "empty" ? (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-4 opacity-40">
-             <Image src="/dashboard/icons/dashboard.svg" alt="" width={64} height={64} className="grayscale" />
-             <p className="text-sm font-medium text-[#343434]">No analytics data to display</p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-6 pb-10">
-            
-            {/* Filters Row */}
+        <div className="flex flex-col gap-6 pb-10">
+          
+          {/* Filters Row (Only for Super Admin/Dept heads) */}
+          {(role === "SUPERADMIN" || role === "ADMIN") && (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2 text-sm text-[#343434] cursor-pointer hover:bg-gray-50 transition-colors">
@@ -131,101 +186,245 @@ export default function DashboardAuthorityPage() {
                   <Image src="/dashboard/icons/applications/chevron-down.svg" alt="" width={10} height={6} />
                 </div>
               </div>
-
-              <div className="flex items-center gap-3">
-                <button className="flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-2 text-sm font-medium text-[#343434] hover:bg-gray-200 transition-colors cursor-pointer">
-                  <Image src="/dashboard/icons/applications/download.svg" alt="" width={14} height={14} className="opacity-60" />
-                  Export PDF
-                </button>
-                <div className="h-6 w-px bg-[#C6CAD1]" />
-                <button className="flex items-center gap-2 rounded-lg bg-[#0C83FF] px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 transition-colors cursor-pointer">
-                  <Image src="/dashboard/icons/applications/download.svg" alt="" width={14} height={14} className="invert brightness-0" />
-                  Export Excel
-                </button>
-              </div>
             </div>
+          )}
 
-            {/* Top KPI Grid */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
-              {DUMMY_KPI_DATA.map((kpi, idx) => (
-                <StatCard 
-                  key={idx}
-                  title={kpi.title}
-                  count={kpi.count}
-                  subtext={kpi.subtext}
-                  iconType={kpi.iconType as any}
-                  color={kpi.color}
-                  trend={kpi.trend}
-                />
-              ))}
-            </div>
+          {/* KPI Grid */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+            {kpiData.map((kpi, idx) => (
+              <StatCard 
+                key={idx}
+                title={kpi.title}
+                count={kpi.count}
+                subtext={kpi.subtext}
+                iconType={kpi.iconType}
+                color={kpi.color}
+                trend={kpi.trend}
+              />
+            ))}
+          </div>
 
-            {/* Row 1: Charts */}
-            <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-              <div className="col-span-1 rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
-                <h3 className="text-xs font-medium text-[#343434] mb-2">Applications by Status</h3>
-                <ApplicationsByStatusChart data={DUMMY_STATUS_DATA} />
-              </div>
-              <div className="col-span-2 rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
-                <h3 className="text-xs font-medium text-[#343434] mb-2">Complaints by Category</h3>
-                <ComplaintsByCategoryChart data={DUMMY_COMPLAINT_DATA} />
-              </div>
-            </div>
-
-            {/* Row 2: Ward Distribution */}
-            <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
-              <h3 className="text-xs font-medium text-[#343434] mb-2">Ward-wise Activity Distribution</h3>
-              <WardWiseActivityChart data={DUMMY_WARD_ACTIVITY} />
-            </div>
-
-            {/* Row 3: Ward Summary Table */}
-            <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
-              <h3 className="text-xs font-medium text-[#343434] mb-4">Ward Summary</h3>
-              <WardSummaryTable data={DUMMY_WARD_SUMMARY} />
-            </div>
-
-            {/* Row 4: Secondary KPIs */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 mt-4">
-              <StatCard title="Total Applications" count="03" subtext="All Applications" iconType="applications" color="#0C83FF" />
-              <StatCard title="Active Applications" count="03" subtext="Pending approvals" iconType="applications" color="#EF4444" />
-              <StatCard title="Tokens Issued" count="05" subtext="Phase-wise + renovation" iconType="token" color="#059669" />
-              <StatCard title="Complains" count="04" subtext="Total complaints" iconType="token" color="#F58646" />
-              <StatCard title="Complaints Closed" count="03" subtext="Closed Complains" iconType="token" color="#059669" />
-            </div>
-
-            {/* Row 5: Material Analysis */}
-            <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-              <div className="flex h-full flex-col rounded-lg border border-[#D6D9DE] bg-white p-4 shadow-sm">
-                <h3 className="mb-3 text-xs font-medium text-[#343434]">Material Usage Overview</h3>
-                <div className="flex flex-1 items-center justify-center min-h-[220px]">
-                  <MaterialUsageChart data={DUMMY_MATERIAL_USAGE} />
+          {/* Role-Specific Views */}
+          
+          {(role === "SUPERADMIN" || role === "ADMIN" || role === "COMMISSIONER") && (
+            <>
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+                <div className="col-span-1 rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
+                  <h3 className="text-xs font-medium text-[#343434] mb-2">
+                    {role === "COMMISSIONER" ? "Resolution Status" : "Applications by Status"}
+                  </h3>
+                  <ApplicationsByStatusChart data={
+                    role === "COMMISSIONER" 
+                      ? (dashboard.complaint_resolution_status?.map(s => ({ status: formatStatus(s.status), count: s.count, color: STATUS_COLORS[s.status] || "#94A3B8" })) || [])
+                      : statusData
+                  } />
+                </div>
+                <div className="col-span-2 rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
+                  <h3 className="text-xs font-medium text-[#343434] mb-2">Complaints by Category</h3>
+                  <ComplaintsByCategoryChart data={complaintsByCategory} />
                 </div>
               </div>
 
-              <div className="flex h-full flex-col rounded-lg border border-[#D6D9DE] bg-white p-4 shadow-sm">
-                <h3 className="mb-3 text-xs font-medium text-[#343434]">Available Quantity</h3>
-                <div className="flex flex-1 items-center justify-center min-h-[220px]">
-                  <AvailableQuantityChart data={DUMMY_AVAILABLE_QUANTITY} />
+              {(role === "SUPERADMIN" || role === "ADMIN") && (
+                <>
+                  <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
+                    <h3 className="text-xs font-medium text-[#343434] mb-2">Ward-wise Activity Distribution</h3>
+                    <WardWiseActivityChart data={wardActivityData} />
+                  </div>
+                  <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
+                    <h3 className="text-xs font-medium text-[#343434] mb-4">Ward Summary</h3>
+                    <WardSummaryTable data={wardSummaryData} />
+                  </div>
+                </>
+              )}
+
+              {role === "COMMISSIONER" && dashboard.complaint_list && (
+                <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
+                  <h3 className="text-xs font-medium text-[#343434] mb-4">Recent Complaints</h3>
+                  <div className="w-full overflow-x-auto rounded-lg border border-[#D6D9DE]">
+                    <table className="w-full text-left border-collapse min-w-[600px]">
+                      <thead>
+                        <tr className="border-b border-[#D6D9DE] bg-gray-50 text-[11px] font-bold text-[#333333] opacity-70 uppercase">
+                          <th className="p-3 border-r border-[#D6D9DE]">Complaint ID</th>
+                          <th className="p-3 border-r border-[#D6D9DE]">Applicant</th>
+                          <th className="p-3 border-r border-[#D6D9DE]">Category</th>
+                          <th className="p-3">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dashboard.complaint_list.map((c, i) => (
+                          <tr key={i} className="border-b border-[#D6D9DE] last:border-0 hover:bg-gray-50 text-[13px]">
+                            <td className="p-3 font-medium text-[#0C83FF] underline border-r border-[#D6D9DE]">#{c.complaint_id}</td>
+                            <td className="p-3 border-r border-[#D6D9DE]">{c.applicant_name}</td>
+                            <td className="p-3 border-r border-[#D6D9DE]">{c.category_name}</td>
+                            <td className="p-3">{c.status}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {role === "JEN" && (
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
+                <h3 className="text-xs font-medium text-[#343434] mb-2">Verification Status</h3>
+                <ApplicationsByStatusChart data={
+                  dashboard.verification_status?.map(s => ({ status: formatStatus(s.status), count: s.count, color: STATUS_COLORS[s.status] || "#94A3B8" })) || []
+                } />
+              </div>
+              <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
+                <h3 className="text-xs font-medium text-[#343434] mb-2">Avg Verification Time Trend</h3>
+                <div className="h-[250px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={dashboard.avg_verification_time_trend || []}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="period" tick={{fontSize: 10}} />
+                      <YAxis tick={{fontSize: 10}} />
+                      <Tooltip />
+                      <Line type="monotone" dataKey="avg_hours" stroke="#0C83FF" strokeWidth={2} />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
-
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col rounded-lg border border-[#D6D9DE] bg-white p-4 shadow-sm">
-                  <h3 className="mb-3 text-xs font-medium text-[#343434]">Top Material Breakdown</h3>
-                  <MaterialBreakdown data={DUMMY_MATERIAL_USAGE} />
+              {dashboard.latest_applications && (
+                <div className="col-span-full rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
+                  <h3 className="text-xs font-medium text-[#343434] mb-4">Assigned Applications</h3>
+                  <div className="w-full overflow-x-auto rounded-lg border border-[#D6D9DE]">
+                    <table className="w-full text-left border-collapse min-w-[600px]">
+                      <thead>
+                        <tr className="border-b border-[#D6D9DE] bg-gray-50 text-[11px] font-bold text-[#333333] opacity-70 uppercase">
+                          <th className="p-3 border-r border-[#D6D9DE]">ID</th>
+                          <th className="p-3 border-r border-[#D6D9DE]">Applicant</th>
+                          <th className="p-3 border-r border-[#D6D9DE]">Type</th>
+                          <th className="p-3">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dashboard.latest_applications.map((app, i) => (
+                          <tr key={i} className="border-b border-[#D6D9DE] last:border-0 hover:bg-gray-50 text-[13px]">
+                            <td className="p-3 font-medium text-[#0C83FF] underline border-r border-[#D6D9DE]">#{app.application_id}</td>
+                            <td className="p-3 border-r border-[#D6D9DE]">{app.applicant_name}</td>
+                            <td className="p-3 border-r border-[#D6D9DE]">{app.application_type}</td>
+                            <td className="p-3">{app.status}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
+              )}
+            </div>
+          )}
 
-                <div className="flex min-h-[180px] flex-1 flex-col rounded-lg border border-[#D6D9DE] bg-white p-4 shadow-sm">
-                  <h3 className="mb-4 text-xs font-medium text-[#343434]">Phase-wise Token Usage</h3>
-                  <div className="flex flex-1 items-center justify-center">
-                    <PhaseTokenUsageChart data={[]} /> {/* Empty for placeholder check */}
+          {role === "NAKA_INCHARGE" && (
+            <div className="grid grid-cols-1 gap-5">
+              <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
+                <h3 className="text-xs font-medium text-[#343434] mb-2">Entries by Naka</h3>
+                <div className="h-[250px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={dashboard.entries_by_naka || []}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="naka_name" tick={{fontSize: 10}} />
+                      <YAxis tick={{fontSize: 10}} />
+                      <Tooltip />
+                      <Bar dataKey="entries" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              {dashboard.vehicle_entry_list && (
+                <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
+                  <h3 className="text-xs font-medium text-[#343434] mb-4">Recent Entries</h3>
+                  <div className="w-full overflow-x-auto rounded-lg border border-[#D6D9DE]">
+                    <table className="w-full text-left border-collapse min-w-[600px]">
+                      <thead>
+                        <tr className="border-b border-[#D6D9DE] bg-gray-50 text-[11px] font-bold text-[#333333] opacity-70 uppercase">
+                          <th className="p-3 border-r border-[#D6D9DE]">Vehicle</th>
+                          <th className="p-3 border-r border-[#D6D9DE]">Material</th>
+                          <th className="p-3 border-r border-[#D6D9DE]">Qty</th>
+                          <th className="p-3">Time</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dashboard.vehicle_entry_list.map((entry, i) => (
+                          <tr key={i} className="border-b border-[#D6D9DE] last:border-0 hover:bg-gray-50 text-[13px]">
+                            <td className="p-3 font-medium border-r border-[#D6D9DE]">{entry.vehicle_number}</td>
+                            <td className="p-3 border-r border-[#D6D9DE]">{entry.material_name}</td>
+                            <td className="p-3 border-r border-[#D6D9DE]">{entry.quantity_brought}</td>
+                            <td className="p-3">{entry.entry_at}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {role === "NODAL_OFFICER" && (
+            <div className="grid grid-cols-1 gap-5">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
+                  <h3 className="text-xs font-medium text-[#343434] mb-2">Token Status</h3>
+                  <ApplicationsByStatusChart data={
+                    dashboard.token_status?.map(s => ({ status: formatStatus(s.status), count: s.count, color: STATUS_COLORS[s.status] || "#94A3B8" })) || []
+                  } />
+                </div>
+                <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
+                  <h3 className="text-xs font-medium text-[#343434] mb-2">Material Approved vs Used</h3>
+                  <div className="h-[250px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={dashboard.material_approved_vs_used || []}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="material_name" tick={{fontSize: 10}} />
+                        <YAxis tick={{fontSize: 10}} />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="approved_quantity" name="Approved" fill="#3B83F6" />
+                        <Bar dataKey="used_quantity" name="Used" fill="#EF4444" />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
               </div>
+              {dashboard.token_utilization_list && (
+                <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
+                  <h3 className="text-xs font-medium text-[#343434] mb-4">Token Utilization</h3>
+                  <div className="w-full overflow-x-auto rounded-lg border border-[#D6D9DE]">
+                    <table className="w-full text-left border-collapse min-w-[600px]">
+                      <thead>
+                        <tr className="border-b border-[#D6D9DE] bg-gray-50 text-[11px] font-bold text-[#333333] opacity-70 uppercase">
+                          <th className="p-3 border-r border-[#D6D9DE]">Applicant</th>
+                          <th className="p-3 border-r border-[#D6D9DE]">Phase</th>
+                          <th className="p-3 border-r border-[#D6D9DE]">Material</th>
+                          <th className="p-3 border-r border-[#D6D9DE]">Permitted</th>
+                          <th className="p-3">Used</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dashboard.token_utilization_list.map((row, i) => (
+                          <tr key={i} className="border-b border-[#D6D9DE] last:border-0 hover:bg-gray-50 text-[13px]">
+                            <td className="p-3 font-medium border-r border-[#D6D9DE]">{row.applicant_name}</td>
+                            <td className="p-3 border-r border-[#D6D9DE]">Phase {row.phase}</td>
+                            <td className="p-3 border-r border-[#D6D9DE]">{row.material_name}</td>
+                            <td className="p-3 border-r border-[#D6D9DE]">{row.permitted_quantity}</td>
+                            <td className="p-3">{row.used_quantity}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
+          )}
 
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
