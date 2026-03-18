@@ -71,8 +71,8 @@ export default function ApplicationActionPanel({
 }: ApplicationActionPanelProps) {
   
   const hasGeoPhotos = useMemo(() => 
-    app.documents?.some(d => d.document_type === "GEO_TAGGED_PHOTO"), 
-  [app.documents]);
+    app.inspections && app.inspections.length > 0, 
+  [app.inspections]);
 
   const workflowActions = useMemo(() => {
     if (!userRole) return [];
@@ -168,7 +168,7 @@ export default function ApplicationActionPanel({
     }
 
     return actionList;
-  }, [userRole, app.status, app.type, app.num_stages, app.documents, onAction, onRejectClick, onObjectionClick, hasGeoPhotos]);
+  }, [userRole, app.status, app.type, app.num_stages, app.inspections, onAction, onRejectClick, onObjectionClick, hasGeoPhotos]);
 
   return (
     <div className="flex items-center gap-2">

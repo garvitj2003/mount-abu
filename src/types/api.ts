@@ -1540,6 +1540,11 @@ export interface components {
              */
             comments: components["schemas"]["backend__schemas__response__application__CommentResponse"][];
             /**
+             * Inspections
+             * @default []
+             */
+            inspections: components["schemas"]["InspectionReportResponse"][];
+            /**
              * Tokens
              * @default []
              */
@@ -2433,6 +2438,37 @@ export interface components {
             phase_materials?: components["schemas"]["PhaseMaterialEntry"][] | null;
         };
         /**
+         * InspectionReportResponse
+         * @description Response for an inspection report.
+         */
+        InspectionReportResponse: {
+            /** Id */
+            id: number;
+            /** Application Id */
+            application_id: number;
+            /** Inspected By */
+            inspected_by: number;
+            /** Inspector Name */
+            inspector_name?: string | null;
+            /**
+             * Inspected At
+             * Format: date-time
+             */
+            inspected_at: string;
+            /** Latitude */
+            latitude?: number | null;
+            /** Longitude */
+            longitude?: number | null;
+            /** Remarks */
+            remarks: string;
+            /** Media Paths */
+            media_paths?: unknown[] | null;
+            /** Access Urls */
+            access_urls?: string[] | null;
+            /** Recommended Phases */
+            recommended_phases?: number | null;
+        };
+        /**
          * JenApplicationRow
          * @description Compact application record for JEN's latest-applications table.
          */
@@ -2676,15 +2712,9 @@ export interface components {
              */
             message: string;
         };
-        /**
-         * MessageResponse
-         * @description Response with a message.
-         */
+        /** MessageResponse */
         MessageResponse: {
-            /**
-             * Message
-             * @description Response message
-             */
+            /** Message */
             message: string;
         };
         /**
@@ -3545,11 +3575,6 @@ export interface components {
              */
             phase_materials?: components["schemas"]["PhaseMaterialEntry"][] | null;
         };
-        /** MessageResponse */
-        backend__controllers__auth__MessageResponse: {
-            /** Message */
-            message: string;
-        };
         /** TokenResponse */
         backend__controllers__auth__TokenResponse: {
             /** Access Token */
@@ -3591,6 +3616,17 @@ export interface components {
             media_paths?: unknown[] | null;
             /** Created At */
             created_at?: string | null;
+        };
+        /**
+         * MessageResponse
+         * @description Response with a message.
+         */
+        backend__schemas__response__meta__MessageResponse: {
+            /**
+             * Message
+             * @description Response message
+             */
+            message: string;
         };
         /** VehicleEntryResponse */
         backend__schemas__response__naka__VehicleEntryResponse: {
@@ -3645,7 +3681,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__controllers__auth__MessageResponse"];
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -3817,7 +3853,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MessageResponse"];
+                    "application/json": components["schemas"]["backend__schemas__response__meta__MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -3883,7 +3919,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MessageResponse"];
+                    "application/json": components["schemas"]["backend__schemas__response__meta__MessageResponse"];
                 };
             };
             /** @description Validation Error */

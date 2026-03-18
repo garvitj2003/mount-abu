@@ -75,7 +75,7 @@ const Header = ({
   const warning = useMemo(() => {
     if (userRole !== 'SUPERADMIN' && userRole !== 'JEN') return null;
 
-    const hasGeo = app.documents?.some(d => d.document_type === 'GEO_TAGGED_PHOTO');
+    const hasGeo = app.inspections && app.inspections.length > 0;
     const hasJen = app.num_stages !== null && app.num_stages > 0;
     
     if (!hasGeo && !hasJen) return "Missing Geo-Photos & JEN Estimates";
@@ -220,9 +220,16 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
     });
   }, [app.documents]);
 
-  const geoTaggedDocs = useMemo(() => {
-    return app.documents?.filter((d) => d.document_type === "GEO_TAGGED_PHOTO") || [];
-  }, [app.documents]);
+  const inspectionPhotos = useMemo(() => {
+    return app.inspections?.flatMap(ins => 
+      (ins.access_urls || []).map(url => ({
+        url,
+        remarks: ins.remarks,
+        inspector: ins.inspector_name,
+        date: ins.inspected_at
+      }))
+    ) || [];
+  }, [app.inspections]);
 
   return (
     <div className="flex flex-1 flex-col gap-5 rounded-lg border border-[#D6D9DE] bg-white p-5">
@@ -249,18 +256,22 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
 
       {/* Geo-Tagged Pictures */}
       <div className="flex flex-col gap-3">
-        <h3 className="text-[12px] font-semibold text-[#4BB5AB] uppercase">Geo-Tagged Pictures</h3>
+        <h3 className="text-[12px] font-semibold text-[#4BB5AB] uppercase">Geo-Tagged Pictures (from Inspection)</h3>
         <div className="grid grid-cols-4 gap-3">
-          {geoTaggedDocs.map((doc) => (
-            <div key={doc.id} className="aspect-video relative rounded-lg border border-[#D6D9DE] overflow-hidden bg-gray-100 group cursor-pointer hover:border-[#0C83FF] transition-all">
-               <Image src={doc.access_url || "/sample/application-main.png"} alt="Geo-tagged" fill unoptimized className="object-cover" />
+          {inspectionPhotos.map((photo, idx) => (
+            <div key={idx} className="aspect-video relative rounded-lg border border-[#D6D9DE] overflow-hidden bg-gray-100 group cursor-pointer hover:border-[#0C83FF] transition-all">
+               <Image src={photo.url || "/sample/application-main.png"} alt="Geo-tagged" fill unoptimized className="object-cover" />
                <div className="absolute bottom-2 right-2 p-1 bg-white rounded-full shadow-sm">
                   <Image src="/dashboard/icons/applications/visibility-public.svg" alt="" width={12} height={12} />
                </div>
+               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity p-2 flex flex-col justify-end">
+                  <p className="text-[8px] text-white font-medium line-clamp-2">{photo.remarks}</p>
+                  <p className="text-[7px] text-white/70 italic">By {photo.inspector} on {new Date(photo.date).toLocaleDateString()}</p>
+               </div>
             </div>
           ))}
-          {!geoTaggedDocs.length && (
-            <p className="text-xs text-gray-400 col-span-4 italic py-4">No geo-tagged pictures available.</p>
+          {!inspectionPhotos.length && (
+            <p className="text-xs text-gray-400 col-span-4 italic py-4">No inspection pictures available.</p>
           )}
         </div>
       </div>
