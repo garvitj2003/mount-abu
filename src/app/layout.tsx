@@ -3,6 +3,7 @@ import { Montserrat, Onest } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import OverlappingFrames from "@/components/landing/overLappingFrames";
+import QueryProvider from "@/components/providers/QueryProvider";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -65,8 +66,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${montserrat.variable} ${onest.variable} ${baronNeue.variable} antialiased`}>
-        <OverlappingFrames />
-        {children}
+        <QueryProvider>
+          <OverlappingFrames />
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );
