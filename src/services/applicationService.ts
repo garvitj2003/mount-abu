@@ -95,7 +95,7 @@ export const ApplicationService = {
   },
 
   async deleteApplication(applicationId: number): Promise<any> {
-    const response = await api.delete(`/api/applications/${applicationId}`);
+    const response = await api.post(`/api/applications/${applicationId}/withdraw`);
     return response.data;
   },
 

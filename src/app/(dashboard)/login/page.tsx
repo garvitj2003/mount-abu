@@ -51,6 +51,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]); // 6 digits
   const [isLoading, setIsLoading] = useState(false);
+  const [resendLogin, setResendLogin] = useState(false)
   const [error, setError] = useState<string | null>(null);
 
   const handleOtpChange = (index: number, value: string) => {
@@ -102,6 +103,25 @@ export default function LoginPage() {
     }
   };
 
+  const handleResendOtp = async () => {
+    setError(null);
+    const validation = mobileSchema.safeParse(mobile);
+    if (!validation.success) {
+      setError(validation.error.issues[0]?.message || "Invalid mobile number");
+      return;
+    }
+
+    setResendLogin(true);
+    try {
+      await AuthService.sendOtp(mobile);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || "Failed to send OTP. Please try again.");
+    } finally {
+      setResendLogin(false);
+    }
+  };
+  
+  
   const handleLoginWithOtp = async () => {
     setError(null);
     const otpString = otp.join("");
@@ -274,7 +294,7 @@ export default function LoginPage() {
             <div className="flex justify-between items-center text-sm">
               <span className="text-[#343434]">Didn’t received OTP?</span>
               <button onClick={handleGetOtp} className="font-bold text-[#0C83FF] disabled:opacity-50" disabled={isLoading}>
-                {isLoading ? "Sending..." : "Resend Now"}
+                {resendLogin ? "Sending..." : "Resend Now"}
               </button>
             </div>
 

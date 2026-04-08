@@ -120,7 +120,7 @@ export default function ApplicationMaterialsDrawer({
                             />
                           </td>
                           <td className="p-2 text-[13px] font-medium text-[#343434] border-r border-[#D6D9DE]">
-                            Material {mat.material_id}
+                            {mat.material_name}
                           </td>
                           <td className="p-2 text-[13px] font-medium text-[#343434] border-r border-[#D6D9DE]">
                             {mat.quantity} Units

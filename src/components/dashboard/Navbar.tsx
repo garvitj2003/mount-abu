@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
 import { logoutAction } from "@/app/actions/auth";
 import ProfileDrawer from "./ProfileDrawer";
+import Link from "next/link";
 
 export default function Navbar() {
   const router = useRouter();
@@ -64,7 +65,7 @@ export default function Navbar() {
     <header className="flex h-[69px] w-full items-center border-b border-[#D6D9DE] bg-white font-onest">
       {/* Left Section - Aligned with Sidebar width */}
       <div className="flex w-[230px] items-center justify-between pl-5 pr-0">
-        <div className="flex items-center gap-4">
+        <Link className="flex items-center gap-4" href={"/"}>
           <Image
             src="/images/footer/logo.png"
             alt="Mount Abu Nagar Parishad"
@@ -80,7 +81,7 @@ export default function Navbar() {
               nagar parishad
             </span>
           </div>
-        </div>
+        </Link>
         {/* Hanging Divider aligned to sidebar border (230px) */}
         <div className="h-6 w-[1px] bg-[#C6CAD1]" />
       </div>
