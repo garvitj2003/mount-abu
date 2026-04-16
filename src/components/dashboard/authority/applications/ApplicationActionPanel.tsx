@@ -112,7 +112,7 @@ export default function ApplicationActionPanel({
           );
         }
         // Assuming a flag or status for Token Generation after JEN action
-        if ((userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN") && app.num_stages) {
+        if ((userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN") && app.phase_materials.length > 0 ) {
            actionList.push(
              <ActionButton key="token" label="Generate Tokens" variant="success" onClick={() => onAction("GENERATE_TOKENS")} />
            );
@@ -159,7 +159,7 @@ export default function ApplicationActionPanel({
             <ActionButton key="obj" label="Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={onObjectionClick} />
           );
         }
-        if (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN") {
+        if (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN" && app.phase_materials.length > 0) {
           actionList.push(
             <ActionButton key="token" label="Generate Tokens" variant="success" onClick={() => onAction("GENERATE_TOKENS")} />
           );

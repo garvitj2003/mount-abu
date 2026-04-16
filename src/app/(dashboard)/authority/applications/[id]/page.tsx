@@ -74,13 +74,12 @@ const Header = ({
 }) => {
   const warning = useMemo(() => {
     if (userRole !== 'SUPERADMIN' && userRole !== 'JEN') return null;
-
-    const hasGeo = app.inspections && app.inspections.length > 0;
-    const hasJen = app.num_stages !== null && app.num_stages > 0;
     
-    if (!hasGeo && !hasJen) return "Missing Geo-Photos & JEN Estimates";
-    if (!hasGeo) return "Missing Geo-Photos";
-    if (!hasJen) return "Pending JEN Estimates";
+    const noInspection = app.inspections.length == 0;
+    const noEstimates = app.phase_materials.length == 0;
+    
+    if (noInspection) return "Missing Geo-Photos & JEN Estimates";
+    if (noEstimates) return "Pending JEN Estimates";
     return null;
   }, [app, userRole]);
 
@@ -409,7 +408,7 @@ export default function ApplicationDetailsPage() {
         data: { 
           action, 
           remarks: remarks || `Action ${action} performed by ${user?.role}`,
-          ...(action === "GENERATE_TOKENS" ? { num_stages: app?.num_stages } : {}),
+          ...(action === "GENERATE_TOKENS" ? { num_stages: app?.inspections[0].recommended_phases } : {}),
           ...extra
         } 
       });

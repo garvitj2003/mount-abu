@@ -28,7 +28,7 @@ export default function AddPhaseDrawer({
   const { data: masterMaterials = [] } = useMaterials({ enabled: isOpen });
   
   // Total phases is fixed to what comes from the application response
-  const totalPhases = app.num_stages || 1;
+  const totalPhases = app.inspections[0]?.recommended_phases || 1;
   const [activeStage, setActiveStage] = useState(1);
   
   // State to store JEN's estimates: { [stageNumber]: { [materialId]: quantity } }
