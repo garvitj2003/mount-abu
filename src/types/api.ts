@@ -698,6 +698,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/master/jens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Jens
+         * @description List all users with the JEN role. Only accessible by superadmin.
+         */
+        get: operations["list_jens_api_master_jens_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/media/upload": {
         parameters: {
             query?: never;
@@ -1061,6 +1081,26 @@ export interface paths {
          *     Allowed only if status is PENDING.
          */
         post: operations["withdraw_complaint_api_complaints__id__withdraw_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/complaints/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resolve Complaint
+         * @description Resolve a complaint. Only JEN role can resolve.
+         */
+        post: operations["resolve_complaint_api_complaints__id__resolve_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1519,6 +1559,8 @@ export interface components {
             type: components["schemas"]["ApplicationType"];
             /** Num Stages */
             num_stages: number | null;
+            /** Created At */
+            created_at?: string | null;
             /**
              * Documents
              * @default []
@@ -1538,7 +1580,7 @@ export interface components {
              * Comments
              * @default []
              */
-            comments: components["schemas"]["backend__schemas__response__application__CommentResponse"][];
+            comments: components["schemas"]["CommentResponse"][];
             /**
              * Inspections
              * @default []
@@ -1624,7 +1666,7 @@ export interface components {
             /** Entries By Naka */
             entries_by_naka?: components["schemas"]["EntriesByNaka"][] | null;
             /** Vehicle Entry List */
-            vehicle_entry_list?: components["schemas"]["NakaEntryRow"][] | null;
+            vehicle_entry_list?: (components["schemas"]["NodalVehicleEntryRow"] | components["schemas"]["NakaEntryRow"])[] | null;
             /** Complaint Resolution Status */
             complaint_resolution_status?: components["schemas"]["StatusCount"][] | null;
             /** Complaint List */
@@ -1893,20 +1935,27 @@ export interface components {
              */
             media_paths?: string[] | null;
         };
-        /** CommentResponse */
+        /**
+         * CommentResponse
+         * @description Response schema for application comments.
+         */
         CommentResponse: {
             /** Id */
             id: number;
+            /** Application Id */
+            application_id: number;
             /** Comment */
             comment: string;
+            /** Comment By */
+            comment_by: number;
+            /** Commenter Name */
+            commenter_name?: string | null;
+            /** @default GENERAL */
+            comment_type: components["schemas"]["CommentType"] | null;
+            /** Media Paths */
+            media_paths?: unknown[] | null;
             /** Created At */
             created_at?: string | null;
-            /** Comment By */
-            comment_by?: number | null;
-            /** Media Path */
-            media_path?: string | null;
-            /** Access Url */
-            access_url?: string | null;
         };
         /**
          * CommentType
@@ -2034,6 +2083,19 @@ export interface components {
              */
             media_keys: string[];
         };
+        /** ComplaintResolveRequest */
+        ComplaintResolveRequest: {
+            /**
+             * Remarks
+             * @description Resolution remarks
+             */
+            remarks?: string | null;
+            /**
+             * Media Keys
+             * @description Proof/evidence media keys
+             */
+            media_keys?: string[];
+        };
         /** ComplaintResponse */
         ComplaintResponse: {
             /** Id */
@@ -2059,6 +2121,9 @@ export interface components {
             longitude: number | null;
             /** Location Address */
             location_address: string | null;
+            /** Assigned To Id */
+            assigned_to_id?: number | null;
+            assigned_to?: components["schemas"]["UserSummary"] | null;
             /** Created At */
             created_at?: string | null;
             /** Updated At */
@@ -2072,7 +2137,7 @@ export interface components {
              * Comments
              * @default []
              */
-            comments: components["schemas"]["CommentResponse"][];
+            comments: components["schemas"]["backend__schemas__response__complaint__CommentResponse"][];
         };
         /**
          * ComplaintRow
@@ -2220,6 +2285,11 @@ export interface components {
              * @default true
              */
             status: boolean;
+            /**
+             * Jen Id
+             * @description Primary JEN User ID
+             */
+            jen_id?: number | null;
         };
         /** DepartmentResponse */
         DepartmentResponse: {
@@ -2233,6 +2303,9 @@ export interface components {
             type: string;
             /** Status */
             status: boolean;
+            /** Jen Id */
+            jen_id?: number | null;
+            jen?: components["schemas"]["UserSummary"] | null;
             /** Created At */
             created_at?: string | null;
             created_by?: components["schemas"]["UserSummary"] | null;
@@ -2247,6 +2320,8 @@ export interface components {
             type?: string | null;
             /** Status */
             status?: boolean | null;
+            /** Jen Id */
+            jen_id?: number | null;
         };
         /**
          * DocumentUploadResponse
@@ -2712,9 +2787,15 @@ export interface components {
              */
             message: string;
         };
-        /** MessageResponse */
+        /**
+         * MessageResponse
+         * @description Response with a message.
+         */
         MessageResponse: {
-            /** Message */
+            /**
+             * Message
+             * @description Response message
+             */
             message: string;
         };
         /**
@@ -2723,15 +2804,10 @@ export interface components {
          */
         NakaEntryCreate: {
             /**
-             * Material Id
-             * @description Material ID
+             * Materials
+             * @description Materials brought
              */
-            material_id: number;
-            /**
-             * Quantity Brought
-             * @description Quantity brought
-             */
-            quantity_brought: number;
+            materials: components["schemas"]["NakaMaterialItem"][];
             /**
              * Vehicle Number
              * @description Vehicle number
@@ -2765,6 +2841,22 @@ export interface components {
             quantity_brought: number;
             /** Entry At */
             entry_at?: string | null;
+        };
+        /**
+         * NakaMaterialItem
+         * @description Single material + quantity in a naka entry.
+         */
+        NakaMaterialItem: {
+            /**
+             * Material Id
+             * @description Material ID
+             */
+            material_id: number;
+            /**
+             * Quantity Brought
+             * @description Quantity brought
+             */
+            quantity_brought: number;
         };
         /**
          * NakaMaterialSummary
@@ -2801,6 +2893,36 @@ export interface components {
              * @default []
              */
             vehicle_entries: components["schemas"]["backend__schemas__response__naka__VehicleEntryResponse"][];
+        };
+        /**
+         * NodalVehicleEntryRow
+         * @description Vehicle entry row for Nodal Officer dashboard.
+         */
+        NodalVehicleEntryRow: {
+            /** Token Number */
+            token_number: string;
+            /** Vehicle Number */
+            vehicle_number?: string | null;
+            /** Naka Incharge */
+            naka_incharge?: string | null;
+            /** Material Type */
+            material_type?: string | null;
+            /**
+             * Quantity Entered
+             * @default 0
+             */
+            quantity_entered: number;
+            /** Entry At */
+            entry_at?: string | null;
+            /** Ai Recognition */
+            ai_recognition?: string | null;
+            /**
+             * Remaining Quantity
+             * @default 0
+             */
+            remaining_quantity: number;
+            /** Media Path */
+            media_path?: string | null;
         };
         /** NoticeCreate */
         NoticeCreate: {
@@ -3575,6 +3697,11 @@ export interface components {
              */
             phase_materials?: components["schemas"]["PhaseMaterialEntry"][] | null;
         };
+        /** MessageResponse */
+        backend__controllers__auth__MessageResponse: {
+            /** Message */
+            message: string;
+        };
         /** TokenResponse */
         backend__controllers__auth__TokenResponse: {
             /** Access Token */
@@ -3595,38 +3722,20 @@ export interface components {
              */
             is_new_user: boolean;
         };
-        /**
-         * CommentResponse
-         * @description Response schema for application comments.
-         */
-        backend__schemas__response__application__CommentResponse: {
+        /** CommentResponse */
+        backend__schemas__response__complaint__CommentResponse: {
             /** Id */
             id: number;
-            /** Application Id */
-            application_id: number;
             /** Comment */
             comment: string;
-            /** Comment By */
-            comment_by: number;
-            /** Commenter Name */
-            commenter_name?: string | null;
-            /** @default GENERAL */
-            comment_type: components["schemas"]["CommentType"] | null;
-            /** Media Paths */
-            media_paths?: unknown[] | null;
             /** Created At */
             created_at?: string | null;
-        };
-        /**
-         * MessageResponse
-         * @description Response with a message.
-         */
-        backend__schemas__response__meta__MessageResponse: {
-            /**
-             * Message
-             * @description Response message
-             */
-            message: string;
+            /** Comment By */
+            comment_by?: number | null;
+            /** Media Path */
+            media_path?: string | null;
+            /** Access Url */
+            access_url?: string | null;
         };
         /** VehicleEntryResponse */
         backend__schemas__response__naka__VehicleEntryResponse: {
@@ -3681,7 +3790,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MessageResponse"];
+                    "application/json": components["schemas"]["backend__controllers__auth__MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -3853,7 +3962,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__meta__MessageResponse"];
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -3919,7 +4028,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__meta__MessageResponse"];
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4449,7 +4558,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__application__CommentResponse"][];
+                    "application/json": components["schemas"]["CommentResponse"][];
                 };
             };
             /** @description Validation Error */
@@ -4962,6 +5071,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_jens_api_master_jens_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserSummary"][];
                 };
             };
         };
@@ -6096,6 +6225,41 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComplaintResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_complaint_api_complaints__id__resolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ComplaintResolveRequest"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

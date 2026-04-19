@@ -353,8 +353,12 @@ export default function DashboardAuthorityPage() {
                         {dashboard.vehicle_entry_list.map((entry, i) => (
                           <tr key={i} className="border-b border-[#D6D9DE] last:border-0 hover:bg-gray-50 text-[13px]">
                             <td className="p-3 font-medium border-r border-[#D6D9DE]">{entry.vehicle_number}</td>
-                            <td className="p-3 border-r border-[#D6D9DE]">{entry.material_name}</td>
-                            <td className="p-3 border-r border-[#D6D9DE]">{entry.quantity_brought}</td>
+                            <td className="p-3 border-r border-[#D6D9DE]">
+                              {"material_name" in entry ? entry.material_name : (entry as any).material_type}
+                            </td>
+                            <td className="p-3 border-r border-[#D6D9DE]">
+                              {"quantity_brought" in entry ? entry.quantity_brought : (entry as any).quantity_entered}
+                            </td>
                             <td className="p-3">{entry.entry_at}</td>
                           </tr>
                         ))}

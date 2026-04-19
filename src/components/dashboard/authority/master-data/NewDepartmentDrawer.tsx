@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
-import { useCreateDepartment } from "@/hooks/useMasterData";
+import { useCreateDepartment, useJens } from "@/hooks/useMasterData";
 
 interface NewDepartmentDrawerProps {
   isOpen: boolean;
@@ -15,12 +15,14 @@ export default function NewDepartmentDrawer({
   onClose,
 }: NewDepartmentDrawerProps) {
   const { mutate: createDept, isPending } = useCreateDepartment();
+  const { data: jens } = useJens();
   
   const [formData, setFormData] = useState({
     name: "",
     code: "",
     type: "Municipal",
     status: true,
+    jen_id: "" as string | number,
   });
 
   const handleSubmit = () => {
@@ -28,11 +30,17 @@ export default function NewDepartmentDrawer({
       alert("Name and Code are required");
       return;
     }
-    createDept(formData, {
+    
+    const payload = {
+      ...formData,
+      jen_id: formData.jen_id === "" ? null : Number(formData.jen_id),
+    };
+
+    createDept(payload, {
       onSuccess: () => {
         alert("Department created successfully!");
         onClose();
-        setFormData({ name: "", code: "", type: "Municipal", status: true });
+        setFormData({ name: "", code: "", type: "Municipal", status: true, jen_id: "" });
       },
       onError: (err: any) => {
         alert(err.response?.data?.detail || "Failed to create department");
@@ -76,21 +84,42 @@ export default function NewDepartmentDrawer({
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#343434]">Department Type</label>
-                <div className="relative">
-                  <select 
-                    className="w-full h-[38px] appearance-none rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] bg-white"
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  >
-                    <option value="Municipal">Municipal</option>
-                    <option value="Planning">Planning</option>
-                    <option value="Engineering">Engineering</option>
-                    <option value="Regulatory">Regulatory</option>
-                  </select>
-                  <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                    <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-[#343434]">Department Type</label>
+                  <div className="relative">
+                    <select 
+                      className="w-full h-[38px] appearance-none rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] bg-white"
+                      value={formData.type}
+                      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                    >
+                      <option value="Municipal">Municipal</option>
+                      <option value="Planning">Planning</option>
+                      <option value="Engineering">Engineering</option>
+                      <option value="Regulatory">Regulatory</option>
+                    </select>
+                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                      <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-[#343434]">Assign JEN</label>
+                  <div className="relative">
+                    <select 
+                      className="w-full h-[38px] appearance-none rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] bg-white"
+                      value={formData.jen_id}
+                      onChange={(e) => setFormData({ ...formData, jen_id: e.target.value })}
+                    >
+                      <option value="">Select JEN</option>
+                      {jens?.map((jen) => (
+                        <option key={jen.id} value={jen.id}>{jen.name}</option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                      <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} />
+                    </div>
                   </div>
                 </div>
               </div>

@@ -11,6 +11,7 @@ type ComplaintCategoryCreate = components["schemas"]["ComplaintCategoryCreate"];
 type ComplaintCategoryResponse = components["schemas"]["ComplaintCategoryResponse"];
 type MaterialCreate = components["schemas"]["MaterialCreate"];
 type MaterialResponse = components["schemas"]["MaterialResponse"];
+type UserSummary = components["schemas"]["UserSummary"];
 
 export const MasterDataService = {
   // Wards
@@ -20,6 +21,12 @@ export const MasterDataService = {
   },
   async createWard(data: WardCreate): Promise<WardResponse> {
     const response = await api.post<WardResponse>("/api/master/wards", data);
+    return response.data;
+  },
+
+  // Jens
+  async getJens(): Promise<UserSummary[]> {
+    const response = await api.get<UserSummary[]>("/api/master/jens");
     return response.data;
   },
 

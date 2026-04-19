@@ -25,6 +25,14 @@ export function useCreateWard() {
   });
 }
 
+export function useJens() {
+  return useQuery({
+    queryKey: ["jens"],
+    queryFn: () => MasterDataService.getJens(),
+    staleTime: 60 * 60 * 1000,
+  });
+}
+
 export function useDepartments() {
   return useQuery({
     queryKey: ["departments"],

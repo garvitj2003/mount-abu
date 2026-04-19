@@ -36,8 +36,8 @@ export default function ComplaintViewDrawer({
     },
     { 
       label: "Assigned to authority", 
-      date: displayData?.status !== "PENDING" ? new Date(displayData?.updated_at || "").toLocaleString() : "Pending", 
-      completed: displayData?.status !== "PENDING" 
+      date: complaint?.assigned_to?.name, 
+      completed: complaint?.assigned_to
     },
     { 
       label: "Resolved", 
