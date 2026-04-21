@@ -563,7 +563,7 @@ export default function LoginPage() {
           
           <div className="space-y-6 text-white max-w-2xl">
             <h1 className="text-4xl font-bold leading-tight sm:text-5xl lg:text-[3.5rem] tracking-tight">
-              Mount Abu Nagar Parishad Digital Governance System
+              Mount Abu Nagar Palika Digital Governance System
             </h1>
             <p className="text-lg text-gray-200 sm:text-xl leading-relaxed opacity-90">
               A unified digital platform to process construction and renovation

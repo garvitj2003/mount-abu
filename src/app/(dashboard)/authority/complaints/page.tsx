@@ -228,15 +228,8 @@ export default function AuthorityComplaintsPage() {
                         </span>
                       </td>
                       <td className="px-2 py-3">
-                        {/* API response for getAllComplaints might not have assignedTo yet. 
-                            ComplaintRow schema has: complaint_id, title, category_name, status, applicant_name, created_at.
-                            It does NOT have assignedTo. I'll put "-" for now or applicant_name if that's what we want.
-                            Wait, the mock had "Assigned To". The citizen view shows "Ward No", "Location".
-                            The authority view shows "Assigned To".
-                            If the API doesn't return it, I can't show it. I'll use "—" for now.
-                        */}
                         <span className="text-sm font-normal text-[#343434]">
-                            —
+                            {item.assigned_to?.name}
                         </span>
                       </td>
                       <td className="px-2 py-3">

@@ -2,7 +2,7 @@ import api from "@/lib/axios";
 import { type components } from "@/types/api";
 
 type CityProfileResponse = components["schemas"]["CityProfileResponse"];
-type CityProfileUpdate = components["schemas"]["CityProfilePut"];
+type CityProfileCreate = components["schemas"]["CityProfileCreate"];
 
 export const CityProfileService = {
   async getLatest(): Promise<CityProfileResponse> {
@@ -10,9 +10,9 @@ export const CityProfileService = {
     return response.data;
   },
 
-  async update(data: CityProfileUpdate): Promise<CityProfileResponse> {
-    const response = await api.put<CityProfileResponse>(
-      "/api/city-profile",
+  async update(id: number, data: CityProfileCreate): Promise<CityProfileResponse> {
+    const response = await api.patch<CityProfileResponse>(
+      `/api/city-profile/${id}`,
       data,
     );
     return response.data;

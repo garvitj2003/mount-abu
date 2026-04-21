@@ -15,7 +15,7 @@ export const UserService = {
   },
 
   async createUser(data: CreateUserRequest): Promise<UserResponse> {
-    const response = await api.post<UserResponse>("/api/superadmin/users", data);
+    const response = await api.post<UserResponse>("/superadmin/users", data);
     return response.data;
   },
 

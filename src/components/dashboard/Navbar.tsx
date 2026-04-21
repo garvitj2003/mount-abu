@@ -4,12 +4,14 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
+import { useQueryClient } from "@tanstack/react-query";
 import { logoutAction } from "@/app/actions/auth";
 import ProfileDrawer from "./ProfileDrawer";
 import Link from "next/link";
 
 export default function Navbar() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const pathname = usePathname();
   const { data: user } = useUser();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -57,6 +59,7 @@ export default function Navbar() {
   };
 
   const handleLogout = async () => {
+    queryClient.clear();
     await logoutAction();
     router.push("/login");
   };

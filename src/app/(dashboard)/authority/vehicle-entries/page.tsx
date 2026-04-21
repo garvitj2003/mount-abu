@@ -6,55 +6,8 @@ import { motion, AnimatePresence } from "motion/react";
 import TablePagination from "@/components/ui/TablePagination";
 import VehicleFilterDrawer from "@/components/dashboard/authority/vehicle-entries/VehicleFilterDrawer";
 import VehicleDetailDrawer from "@/components/dashboard/authority/vehicle-entries/VehicleDetailDrawer";
-
-const ENTRIES_DATA = [
-  {
-    tokenNumber: "TKN-2025-014",
-    hasWarning: true,
-    warningText: "Dumping Pictures are not added.",
-    vehicleNumber: "RJ24 AB 4587",
-    naakaIncharge: "Kanhaiya Lal",
-    materialType: "Cement",
-    quantityEntered: "50 Bags",
-    entryDate: "05 Oct 2025",
-  },
-  {
-    tokenNumber: "TKN-2025-014",
-    hasWarning: false,
-    vehicleNumber: "RJ24 CD 9214",
-    naakaIncharge: "Kanhaiya Lal",
-    materialType: "Cement",
-    quantityEntered: "40 Bags",
-    entryDate: "06 Oct 2025",
-  },
-  {
-    tokenNumber: "TKN-2025-019",
-    hasWarning: false,
-    vehicleNumber: "RJ38 EF 6671",
-    naakaIncharge: "Bhavani Singh",
-    materialType: "Sand",
-    quantityEntered: "3 Ton",
-    entryDate: "06 Oct 2025",
-  },
-  {
-    tokenNumber: "TKN-2025-022",
-    hasWarning: false,
-    vehicleNumber: "RJ24 GH 1123",
-    naakaIncharge: "Prithviraj Rathore",
-    materialType: "Steel Rods",
-    quantityEntered: "1.5 Ton",
-    entryDate: "07 Oct 2025",
-  },
-  {
-    tokenNumber: "TKN-2025-025",
-    hasWarning: false,
-    vehicleNumber: "RJ38 JK 9901",
-    naakaIncharge: "Bhavani Singh",
-    materialType: "Bricks",
-    quantityEntered: "2,000 Units",
-    entryDate: "07 Oct 2025",
-  },
-];
+import { useVehicleEntries } from "@/hooks/useVehicleEntries";
+import { format } from "date-fns";
 
 const WarningTooltip = ({ text }: { text: string }) => {
   return (
@@ -78,17 +31,25 @@ const WarningTooltip = ({ text }: { text: string }) => {
 
 export default function AuthorityVehicleEntriesPage() {
   const [search, setSearch] = useState("");
-  const [hoveredToken, setHoveredToken] = useState<string | null>(null);
+  const [hoveredToken, setHoveredToken] = useState<number | null>(null);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
-  const [selectedEntry, setSelectedEntry] = useState<any>(null);
+  const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  const handleEntryClick = (entry: any) => {
-    setSelectedEntry(entry);
+  const { data: entries, isLoading } = useVehicleEntries();
+
+  const handleEntryClick = (id: number) => {
+    setSelectedEntryId(id);
     setIsDetailDrawerOpen(true);
   };
+
+  const filteredEntries = entries?.filter((entry) => 
+    entry.token_number?.toLowerCase().includes(search.toLowerCase()) ||
+    entry.vehicle_number.toLowerCase().includes(search.toLowerCase()) ||
+    entry.material_name.toLowerCase().includes(search.toLowerCase())
+  ) || [];
 
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest">
@@ -157,55 +118,71 @@ export default function AuthorityVehicleEntriesPage() {
                 </tr>
               </thead>
               <tbody>
-                {ENTRIES_DATA.map((item, idx) => (
-                  <tr key={idx} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
-                    <td className="px-2 py-3">
-                      <div className="flex items-center gap-2">
-                        <span 
-                          onClick={() => handleEntryClick(item)}
-                          className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer"
-                        >
-                          {item.tokenNumber}
-                        </span>
-                        {item.hasWarning && (
-                          <div 
-                            className="relative flex items-center"
-                            onMouseEnter={() => setHoveredToken(`${item.tokenNumber}-${idx}`)}
-                            onMouseLeave={() => setHoveredToken(null)}
-                          >
-                            <Image 
-                              src="/dashboard/icons/warning.svg" 
-                              alt="Warning" 
-                              width={15} 
-                              height={13} 
-                              className="cursor-help"
-                            />
-                            <AnimatePresence>
-                              {hoveredToken === `${item.tokenNumber}-${idx}` && (
-                                <WarningTooltip text={item.warningText || ""} />
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-2 py-3 font-inter">
-                      <span className="text-sm font-normal text-[#343434] opacity-70">{item.vehicleNumber}</span>
-                    </td>
-                    <td className="px-2 py-3">
-                      <span className="text-sm font-normal text-[#343434] opacity-70">{item.naakaIncharge}</span>
-                    </td>
-                    <td className="px-2 py-3">
-                      <span className="text-sm font-normal text-[#343434] opacity-70">{item.materialType}</span>
-                    </td>
-                    <td className="px-2 py-3">
-                      <span className="text-sm font-normal text-[#343434] opacity-70">{item.quantityEntered}</span>
-                    </td>
-                    <td className="px-2 py-3">
-                      <span className="text-sm font-normal text-[#343434] opacity-70">{item.entryDate}</span>
+                {isLoading ? (
+                   <tr>
+                     <td colSpan={6} className="px-2 py-8 text-center text-sm text-[#343434]/60">
+                       Loading vehicle entries...
+                     </td>
+                   </tr>
+                ) : filteredEntries.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-2 py-8 text-center text-sm text-[#343434]/60">
+                      No vehicle entries found.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredEntries.map((item) => (
+                    <tr key={item.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
+                      <td className="px-2 py-3">
+                        <div className="flex items-center gap-2">
+                          <span 
+                            onClick={() => handleEntryClick(item.vehicle_entry_id)}
+                            className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer"
+                          >
+                            {item.token_number || "N/A"}
+                          </span>
+                          {!item.has_dumping_photos && (
+                            <div 
+                              className="relative flex items-center"
+                              onMouseEnter={() => setHoveredToken(item.id)}
+                              onMouseLeave={() => setHoveredToken(null)}
+                            >
+                              <Image 
+                                src="/dashboard/icons/warning.svg" 
+                                alt="Warning" 
+                                width={15} 
+                                height={13} 
+                                className="cursor-help"
+                              />
+                              <AnimatePresence>
+                                {hoveredToken === item.id && (
+                                  <WarningTooltip text="Dumping Pictures are not added." />
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-2 py-3 font-inter">
+                        <span className="text-sm font-normal text-[#343434] opacity-70">{item.vehicle_number}</span>
+                      </td>
+                      <td className="px-2 py-3">
+                        <span className="text-sm font-normal text-[#343434] opacity-70">{item.naka_incharge_name}</span>
+                      </td>
+                      <td className="px-2 py-3">
+                        <span className="text-sm font-normal text-[#343434] opacity-70">{item.material_name}</span>
+                      </td>
+                      <td className="px-2 py-3">
+                        <span className="text-sm font-normal text-[#343434] opacity-70">{item.material_quantity}</span>
+                      </td>
+                      <td className="px-2 py-3">
+                        <span className="text-sm font-normal text-[#343434] opacity-70">
+                          {format(new Date(item.entry_at), "dd MMM yyyy hh:mm a")}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -213,7 +190,7 @@ export default function AuthorityVehicleEntriesPage() {
           {/* Pagination */}
           <TablePagination
             currentPage={page}
-            totalPages={10} // Mocked
+            totalPages={1} // TODO: Update based on API if pagination is added
             limit={limit}
             onPageChange={setPage}
           />
@@ -227,8 +204,11 @@ export default function AuthorityVehicleEntriesPage() {
 
       <VehicleDetailDrawer 
         isOpen={isDetailDrawerOpen}
-        onClose={() => setIsDetailDrawerOpen(false)}
-        data={selectedEntry}
+        onClose={() => {
+          setIsDetailDrawerOpen(false);
+          setSelectedEntryId(null);
+        }}
+        entryId={selectedEntryId}
       />
     </div>
   );

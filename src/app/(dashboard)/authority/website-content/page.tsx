@@ -243,6 +243,8 @@ export default function AuthorityWebsiteContentPage() {
   };
 
   const handleSave = async (fields: (keyof typeof profileForm)[]) => {
+    if (!cityProfile?.id) return;
+
     const updateData: any = {};
     fields.forEach(field => {
       const value = profileForm[field];
@@ -254,7 +256,7 @@ export default function AuthorityWebsiteContentPage() {
     });
 
     try {
-      await updateProfile.mutateAsync(updateData);
+      await updateProfile.mutateAsync({ id: cityProfile.id, data: updateData });
       alert("City profile updated successfully!");
     } catch (err) {
       console.error("Failed to update profile", err);

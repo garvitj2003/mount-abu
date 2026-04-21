@@ -205,6 +205,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/vehicle-entries/{entry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Vehicle Entry Detail
+         * @description Get full details of a specific vehicle entry.
+         */
+        get: operations["get_vehicle_entry_detail_api_vehicle_entries__entry_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/authority/vehicle-entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get All Vehicle Entries
+         * @description Get all vehicle entries for authority view.
+         */
+        get: operations["get_all_vehicle_entries_api_authority_vehicle_entries_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/{application_id}/document": {
         parameters: {
             query?: never;
@@ -224,6 +264,26 @@ export interface paths {
          * @description Delete a document from an application.
          */
         delete: operations["delete_document_api_applications__application_id__document_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/{application_id}/vehicle-entries/{entry_id}/dumping-photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload Dumping Photo
+         * @description Upload a dumping photo for a vehicle entry.
+         */
+        post: operations["upload_dumping_photo_api_applications__application_id__vehicle_entries__entry_id__dumping_photo_post"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1489,7 +1549,17 @@ export interface components {
              * Material Id
              * @description Material ID
              */
-            material_id: number;
+            material_id?: number | null;
+            /**
+             * Custom Name
+             * @description Custom Material Name
+             */
+            custom_name?: string | null;
+            /**
+             * Custom Unit
+             * @description Custom Material Unit
+             */
+            custom_unit?: string | null;
             /**
              * Material Qty
              * @description Material Quantity
@@ -1504,7 +1574,11 @@ export interface components {
             /** Id */
             id: number;
             /** Material Id */
-            material_id: number;
+            material_id?: number | null;
+            /** Custom Name */
+            custom_name?: string | null;
+            /** Custom Unit */
+            custom_unit?: string | null;
             /** Quantity */
             quantity: number;
             /** Material Name */
@@ -1580,7 +1654,7 @@ export interface components {
              * Comments
              * @default []
              */
-            comments: components["schemas"]["CommentResponse"][];
+            comments: components["schemas"]["backend__schemas__response__application__CommentResponse"][];
             /**
              * Inspections
              * @default []
@@ -1590,7 +1664,7 @@ export interface components {
              * Tokens
              * @default []
              */
-            tokens: components["schemas"]["TokenResponse"][];
+            tokens: components["schemas"]["backend__schemas__response__application__TokenResponse"][];
         };
         /**
          * ApplicationStatus
@@ -1679,6 +1753,43 @@ export interface components {
             token_utilization_list?: components["schemas"]["TokenUtilizationRow"][] | null;
         };
         /**
+         * AuthorityVehicleEntryResponse
+         * @description Flattened response for authority view of vehicle entries.
+         */
+        AuthorityVehicleEntryResponse: {
+            /** Id */
+            id: number;
+            /** Vehicle Entry Id */
+            vehicle_entry_id: number;
+            /** Application Id */
+            application_id: number;
+            /** Token Number */
+            token_number?: string | null;
+            /** Vehicle Number */
+            vehicle_number: string;
+            /** Material Name */
+            material_name: string;
+            /** Material Quantity */
+            material_quantity: number;
+            /**
+             * Entry At
+             * Format: date-time
+             */
+            entry_at: string;
+            /** Naka Incharge Name */
+            naka_incharge_name: string;
+            /** Has Dumping Photos */
+            has_dumping_photos: boolean;
+            /** Media */
+            media?: {
+                [key: string]: unknown;
+            } | null;
+            /** Access Urls */
+            access_urls?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /**
          * AvgVerificationTimeTrend
          * @description Average verification turnaround bucket (for line chart).
          */
@@ -1717,6 +1828,14 @@ export interface components {
              */
             document: string;
             document_type: components["schemas"]["ApplicationDocumentType"];
+        };
+        /** Body_upload_dumping_photo_api_applications__application_id__vehicle_entries__entry_id__dumping_photo_post */
+        Body_upload_dumping_photo_api_applications__application_id__vehicle_entries__entry_id__dumping_photo_post: {
+            /**
+             * Document
+             * Format: binary
+             */
+            document: string;
         };
         /** Body_upload_media_api_media_upload_post */
         Body_upload_media_api_media_upload_post: {
@@ -1935,27 +2054,20 @@ export interface components {
              */
             media_paths?: string[] | null;
         };
-        /**
-         * CommentResponse
-         * @description Response schema for application comments.
-         */
+        /** CommentResponse */
         CommentResponse: {
             /** Id */
             id: number;
-            /** Application Id */
-            application_id: number;
             /** Comment */
             comment: string;
-            /** Comment By */
-            comment_by: number;
-            /** Commenter Name */
-            commenter_name?: string | null;
-            /** @default GENERAL */
-            comment_type: components["schemas"]["CommentType"] | null;
-            /** Media Paths */
-            media_paths?: unknown[] | null;
             /** Created At */
             created_at?: string | null;
+            /** Comment By */
+            comment_by?: number | null;
+            /** Media Path */
+            media_path?: string | null;
+            /** Access Url */
+            access_url?: string | null;
         };
         /**
          * CommentType
@@ -2137,7 +2249,7 @@ export interface components {
              * Comments
              * @default []
              */
-            comments: components["schemas"]["backend__schemas__response__complaint__CommentResponse"][];
+            comments: components["schemas"]["CommentResponse"][];
         };
         /**
          * ComplaintRow
@@ -2393,6 +2505,23 @@ export interface components {
             downloads: components["schemas"]["DownloadResponse"][];
             /** Total */
             total: number | null;
+        };
+        /**
+         * DumpingPhotoResponse
+         * @description Response for a dumping photo.
+         */
+        DumpingPhotoResponse: {
+            /** Id */
+            id: number;
+            /** Photo Path */
+            photo_path: string;
+            /**
+             * Uploaded At
+             * Format: date-time
+             */
+            uploaded_at: string;
+            /** Access Url */
+            access_url?: string | null;
         };
         /**
          * EntriesByNaka
@@ -2787,15 +2916,9 @@ export interface components {
              */
             message: string;
         };
-        /**
-         * MessageResponse
-         * @description Response with a message.
-         */
+        /** MessageResponse */
         MessageResponse: {
-            /**
-             * Message
-             * @description Response message
-             */
+            /** Message */
             message: string;
         };
         /**
@@ -2814,15 +2937,35 @@ export interface components {
              */
             vehicle_number?: string | null;
             /**
+             * Vehicle Type
+             * @description Vehicle type
+             */
+            vehicle_type?: string | null;
+            /**
+             * Latitude
+             * @description GPS Latitude
+             */
+            latitude?: number | null;
+            /**
+             * Longitude
+             * @description GPS Longitude
+             */
+            longitude?: number | null;
+            /**
              * Remarks
              * @description Remarks
              */
             remarks?: string | null;
             /**
-             * Media Path
-             * @description Photo/media path
+             * Vehicle Plate Image
+             * @description Vehicle number plate image path
              */
-            media_path?: string | null;
+            vehicle_plate_image?: string | null;
+            /**
+             * Entry Proof Images
+             * @description Entry proof image paths
+             */
+            entry_proof_images?: string[];
         };
         /**
          * NakaEntryRow
@@ -2851,7 +2994,17 @@ export interface components {
              * Material Id
              * @description Material ID
              */
-            material_id: number;
+            material_id?: number | null;
+            /**
+             * Custom Name
+             * @description Custom Material Name
+             */
+            custom_name?: string | null;
+            /**
+             * Custom Unit
+             * @description Custom Material Unit
+             */
+            custom_unit?: string | null;
             /**
              * Quantity Brought
              * @description Quantity brought
@@ -2864,7 +3017,7 @@ export interface components {
          */
         NakaMaterialSummary: {
             /** Material Id */
-            material_id: number;
+            material_id?: number | null;
             /** Material Name */
             material_name: string;
             /** Unit */
@@ -2892,7 +3045,7 @@ export interface components {
              * Vehicle Entries
              * @default []
              */
-            vehicle_entries: components["schemas"]["backend__schemas__response__naka__VehicleEntryResponse"][];
+            vehicle_entries: components["schemas"]["VehicleEntryResponse"][];
         };
         /**
          * NodalVehicleEntryRow
@@ -3043,7 +3196,17 @@ export interface components {
              * Material Id
              * @description Material ID
              */
-            material_id: number;
+            material_id?: number | null;
+            /**
+             * Custom Name
+             * @description Custom Material Name
+             */
+            custom_name?: string | null;
+            /**
+             * Custom Unit
+             * @description Custom Material Unit
+             */
+            custom_unit?: string | null;
             /**
              * Quantity
              * @description Permitted quantity for this phase
@@ -3062,7 +3225,11 @@ export interface components {
             /** Phase */
             phase: number;
             /** Material Id */
-            material_id: number;
+            material_id?: number | null;
+            /** Custom Name */
+            custom_name?: string | null;
+            /** Custom Unit */
+            custom_unit?: string | null;
             /** Quantity */
             quantity: number;
             /** Material Name */
@@ -3414,7 +3581,7 @@ export interface components {
              * Vehicle Entries
              * @default []
              */
-            vehicle_entries: components["schemas"]["VehicleEntryResponse"][];
+            vehicle_entries: components["schemas"]["backend__schemas__response__application__VehicleEntryResponse"][];
         };
         /**
          * TokenMaterialResponse
@@ -3422,7 +3589,11 @@ export interface components {
          */
         TokenMaterialResponse: {
             /** Material Id */
-            material_id: number;
+            material_id?: number | null;
+            /** Custom Name */
+            custom_name?: string | null;
+            /** Custom Unit */
+            custom_unit?: string | null;
             /** Material Name */
             material_name?: string | null;
             /** Unit */
@@ -3434,25 +3605,25 @@ export interface components {
             /** Remaining Quantity */
             remaining_quantity: number;
         };
-        /**
-         * TokenResponse
-         * @description Lightweight token for the token-list table.
-         *
-         *     Only the 5 columns shown in the listing screen + transport_code
-         *     (the unique token identifier used in URLs).
-         */
+        /** TokenResponse */
         TokenResponse: {
-            /** Transport Code */
-            transport_code: string;
-            /** Token Number */
-            token_number: string;
-            /** Application Number */
-            application_number: string;
-            /** Remaining Quantity Pct */
-            remaining_quantity_pct?: number | null;
-            /** Valid Till */
-            valid_till?: string | null;
-            status: components["schemas"]["ApplicationPhaseStatus"];
+            /** Access Token */
+            access_token: string;
+            /** Refresh Token */
+            refresh_token: string;
+            /** Token Type */
+            token_type: string;
+            /** Role */
+            role: string;
+            /** User Id */
+            user_id: number;
+            /** Name */
+            name: string;
+            /**
+             * Is New User
+             * @default false
+             */
+            is_new_user: boolean;
         };
         /**
          * TokenUtilizationRow
@@ -3539,31 +3710,77 @@ export interface components {
             type: string;
         };
         /**
-         * VehicleEntryResponse
-         * @description A single vehicle / naka entry shown under the Vehicle Entries tab.
+         * VehicleEntryDetailResponse
+         * @description Detailed response for a single vehicle entry.
          */
-        VehicleEntryResponse: {
+        VehicleEntryDetailResponse: {
             /** Id */
             id: number;
+            /** Token Number */
+            token_number: string;
+            /** Issued By */
+            issued_by?: string | null;
+            /** Application Number */
+            application_number: string;
+            /** Token Validity */
+            token_validity?: string | null;
             /** Vehicle Number */
-            vehicle_number?: string | null;
-            /** Material Name */
-            material_name?: string | null;
-            /** Material Unit */
-            material_unit?: string | null;
-            /** Quantity Entered */
-            quantity_entered: number;
+            vehicle_number: string;
+            /** Vehicle Type */
+            vehicle_type?: string | null;
+            /** Latitude */
+            latitude?: number | null;
+            /** Longitude */
+            longitude?: number | null;
             /**
              * Entry At
              * Format: date-time
              */
             entry_at: string;
+            /** Naka Incharge Name */
+            naka_incharge_name: string;
+            /**
+             * Material Entry Details
+             * @default []
+             */
+            material_entry_details: components["schemas"]["TokenMaterialResponse"][];
+            /** Vehicle Image */
+            vehicle_image?: string | null;
+            /**
+             * Entry Proof
+             * @default []
+             */
+            entry_proof: string[];
+            /**
+             * Dumping Photos
+             * @default []
+             */
+            dumping_photos: components["schemas"]["DumpingPhotoResponse"][];
+        };
+        /** VehicleEntryResponse */
+        VehicleEntryResponse: {
+            /** Id */
+            id: number;
+            /** Phase */
+            phase: number;
+            /** Vehicle Number */
+            vehicle_number: string;
+            /** Driver Name */
+            driver_name: string | null;
+            /** Driver Mobile */
+            driver_mobile: string | null;
+            /**
+             * Entry At
+             * Format: date-time
+             */
+            entry_at: string;
+            entered_by_user: components["schemas"]["UserSummary"] | null;
             /** Remarks */
-            remarks?: string | null;
+            remarks: string | null;
             /** Media Path */
-            media_path?: string | null;
-            /** Access Url */
-            access_url?: string | null;
+            media_path: string | null;
+            /** Materials */
+            materials: components["schemas"]["VehicleMaterialResponse"][];
         };
         /** VehicleMaterialResponse */
         VehicleMaterialResponse: {
@@ -3697,70 +3914,95 @@ export interface components {
              */
             phase_materials?: components["schemas"]["PhaseMaterialEntry"][] | null;
         };
-        /** MessageResponse */
-        backend__controllers__auth__MessageResponse: {
-            /** Message */
-            message: string;
-        };
-        /** TokenResponse */
-        backend__controllers__auth__TokenResponse: {
-            /** Access Token */
-            access_token: string;
-            /** Refresh Token */
-            refresh_token: string;
-            /** Token Type */
-            token_type: string;
-            /** Role */
-            role: string;
-            /** User Id */
-            user_id: number;
-            /** Name */
-            name: string;
-            /**
-             * Is New User
-             * @default false
-             */
-            is_new_user: boolean;
-        };
-        /** CommentResponse */
-        backend__schemas__response__complaint__CommentResponse: {
+        /**
+         * CommentResponse
+         * @description Response schema for application comments.
+         */
+        backend__schemas__response__application__CommentResponse: {
             /** Id */
             id: number;
+            /** Application Id */
+            application_id: number;
             /** Comment */
             comment: string;
+            /** Comment By */
+            comment_by: number;
+            /** Commenter Name */
+            commenter_name?: string | null;
+            /** @default GENERAL */
+            comment_type: components["schemas"]["CommentType"] | null;
+            /** Media Paths */
+            media_paths?: unknown[] | null;
             /** Created At */
             created_at?: string | null;
-            /** Comment By */
-            comment_by?: number | null;
-            /** Media Path */
-            media_path?: string | null;
-            /** Access Url */
-            access_url?: string | null;
         };
-        /** VehicleEntryResponse */
-        backend__schemas__response__naka__VehicleEntryResponse: {
+        /**
+         * TokenResponse
+         * @description Lightweight token for the token-list table.
+         *
+         *     Only the 5 columns shown in the listing screen + transport_code
+         *     (the unique token identifier used in URLs).
+         */
+        backend__schemas__response__application__TokenResponse: {
+            /** Transport Code */
+            transport_code: string;
+            /** Token Number */
+            token_number: string;
+            /** Application Number */
+            application_number: string;
+            /** Remaining Quantity Pct */
+            remaining_quantity_pct?: number | null;
+            /** Valid Till */
+            valid_till?: string | null;
+            status: components["schemas"]["ApplicationPhaseStatus"];
+        };
+        /**
+         * VehicleEntryResponse
+         * @description A single vehicle / naka entry shown under the Vehicle Entries tab.
+         */
+        backend__schemas__response__application__VehicleEntryResponse: {
             /** Id */
             id: number;
-            /** Phase */
-            phase: number;
             /** Vehicle Number */
-            vehicle_number: string;
-            /** Driver Name */
-            driver_name: string | null;
-            /** Driver Mobile */
-            driver_mobile: string | null;
+            vehicle_number?: string | null;
+            /** Material Id */
+            material_id?: number | null;
+            /** Custom Name */
+            custom_name?: string | null;
+            /** Custom Unit */
+            custom_unit?: string | null;
+            /** Material Name */
+            material_name?: string | null;
+            /** Material Unit */
+            material_unit?: string | null;
+            /** Quantity Entered */
+            quantity_entered: number;
             /**
              * Entry At
              * Format: date-time
              */
             entry_at: string;
-            entered_by_user: components["schemas"]["UserSummary"] | null;
             /** Remarks */
-            remarks: string | null;
-            /** Media Path */
-            media_path: string | null;
-            /** Materials */
-            materials: components["schemas"]["VehicleMaterialResponse"][];
+            remarks?: string | null;
+            /** Media */
+            media?: {
+                [key: string]: unknown;
+            } | null;
+            /** Access Urls */
+            access_urls?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /**
+         * MessageResponse
+         * @description Response with a message.
+         */
+        backend__schemas__response__meta__MessageResponse: {
+            /**
+             * Message
+             * @description Response message
+             */
+            message: string;
         };
     };
     responses: never;
@@ -3790,7 +4032,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__controllers__auth__MessageResponse"];
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -3823,7 +4065,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__controllers__auth__TokenResponse"];
+                    "application/json": components["schemas"]["TokenResponse"];
                 };
             };
             /** @description Validation Error */
@@ -3856,7 +4098,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__controllers__auth__TokenResponse"];
+                    "application/json": components["schemas"]["TokenResponse"];
                 };
             };
             /** @description Validation Error */
@@ -3962,7 +4204,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MessageResponse"];
+                    "application/json": components["schemas"]["backend__schemas__response__meta__MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4028,7 +4270,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MessageResponse"];
+                    "application/json": components["schemas"]["backend__schemas__response__meta__MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4111,6 +4353,57 @@ export interface operations {
             };
         };
     };
+    get_vehicle_entry_detail_api_vehicle_entries__entry_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VehicleEntryDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_all_vehicle_entries_api_authority_vehicle_entries_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthorityVehicleEntryResponse"][];
+                };
+            };
+        };
+    };
     upload_document_api_applications__application_id__document_post: {
         parameters: {
             query?: never;
@@ -4164,6 +4457,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_dumping_photo_api_applications__application_id__vehicle_entries__entry_id__dumping_photo_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+                entry_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_dumping_photo_api_applications__application_id__vehicle_entries__entry_id__dumping_photo_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentUploadResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4558,7 +4887,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CommentResponse"][];
+                    "application/json": components["schemas"]["backend__schemas__response__application__CommentResponse"][];
                 };
             };
             /** @description Validation Error */
@@ -4594,7 +4923,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TokenResponse"][];
+                    "application/json": components["schemas"]["backend__schemas__response__application__TokenResponse"][];
                 };
             };
             /** @description Validation Error */
@@ -4625,7 +4954,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TokenResponse"][];
+                    "application/json": components["schemas"]["backend__schemas__response__application__TokenResponse"][];
                 };
             };
             /** @description Validation Error */
