@@ -115,14 +115,14 @@ const Sidebar = ({ token }: { token: TokenDetailResponse }) => (
 const TableRow = ({ 
   entry, onClick 
 }: { 
-  entry: components["schemas"]["VehicleEntryResponse"]; 
+  entry: components["schemas"]["backend__schemas__response__application__VehicleEntryResponse"]; 
   onClick: () => void 
 }) => (
   <tr className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
     <td className="p-3 text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer" onClick={onClick}>
       {entry.vehicle_number}
     </td>
-    <td className="p-3 text-sm font-normal text-[#343434]">{entry.material_name}</td>
+    <td className="p-3 text-sm font-normal text-[#343434]">{entry.material_name || "—"}</td>
     <td className="p-3 text-sm font-normal text-[#343434]">{entry.quantity_entered} {entry.material_unit}</td>
     <td className="p-3 text-sm font-normal text-[#343434] opacity-70">
       {new Date(entry.entry_at).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -138,13 +138,13 @@ export default function CitizenTokenDetailsPage() {
   const [activeTab, setActiveTab] = useState<"Vehicle Entries" | "Material Summary">("Vehicle Entries");
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
-  const [selectedEntry, setSelectedEntry] = useState<any>(null);
+  const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   
   const { data: token, isLoading, error } = useTokenDetail(transportCode);
 
-  const handleEntryClick = (entry: any) => {
-    setSelectedEntry(entry);
+  const handleEntryClick = (id: number) => {
+    setSelectedEntryId(id);
     setIsDetailDrawerOpen(true);
   };
 
@@ -248,7 +248,7 @@ export default function CitizenTokenDetailsPage() {
                         <TableRow 
                           key={idx}
                           entry={entry}
-                          onClick={() => handleEntryClick(entry)}
+                          onClick={() => handleEntryClick(entry.id)}
                         />
                       ))}
                     {token.vehicle_entries.length === 0 && (
@@ -296,8 +296,11 @@ export default function CitizenTokenDetailsPage() {
 
       <VehicleDetailDrawer 
         isOpen={isDetailDrawerOpen}
-        onClose={() => setIsDetailDrawerOpen(false)}
-        data={selectedEntry}
+        onClose={() => {
+          setIsDetailDrawerOpen(false);
+          setSelectedEntryId(null);
+        }}
+        entryId={selectedEntryId}
       />
     </div>
   );

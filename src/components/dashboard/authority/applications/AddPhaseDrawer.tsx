@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { type components } from "@/types/api";
-import { useMaterials } from "@/hooks/useMasterData";
 
 type ApplicationResponse = components["schemas"]["ApplicationResponse"];
 type PhaseMaterialEntry = components["schemas"]["PhaseMaterialEntry"];
@@ -24,14 +23,12 @@ export default function AddPhaseDrawer({
   onConfirm,
   isPending = false,
 }: AddPhaseDrawerProps) {
-  // Only fetch materials when drawer is open
-  const { data: masterMaterials = [] } = useMaterials({ enabled: isOpen });
   
   // Total phases is fixed to what comes from the application response
   const totalPhases = app.inspections[0]?.recommended_phases || 1;
   const [activeStage, setActiveStage] = useState(1);
   
-  // State to store JEN's estimates: { [stageNumber]: { [materialId]: quantity } }
+  // State to store JEN's estimates: { [stageNumber]: { [requirementId]: quantity } }
   const [estimates, setEstimates] = useState<Record<number, Record<number, number>>>({});
 
   // Initialize/Reset estimates when drawer opens or app data changes
@@ -42,7 +39,7 @@ export default function AddPhaseDrawer({
         initialEstimates[s] = {};
         app.materials.forEach(mat => {
           // Initialize Stage 1 with full requested qty, others with 0
-          initialEstimates[s][mat.material_id] = s === 1 ? mat.quantity : 0;
+          initialEstimates[s][mat.id] = s === 1 ? mat.quantity : 0;
         });
       }
       setEstimates(initialEstimates);
@@ -50,13 +47,13 @@ export default function AddPhaseDrawer({
     }
   }, [isOpen, app.materials, totalPhases]);
 
-  const handleQtyChange = (stage: number, materialId: number, val: string) => {
+  const handleQtyChange = (stage: number, reqId: number, val: string) => {
     const qty = parseInt(val) || 0;
     setEstimates(prev => ({
       ...prev,
       [stage]: {
         ...prev[stage],
-        [materialId]: qty
+        [reqId]: qty
       }
     }));
   };
@@ -66,13 +63,19 @@ export default function AddPhaseDrawer({
     
     Object.entries(estimates).forEach(([stageStr, mats]) => {
       const stage = parseInt(stageStr);
-      Object.entries(mats).forEach(([matIdStr, qty]) => {
+      Object.entries(mats).forEach(([reqIdStr, qty]) => {
         if (qty > 0) {
-          phase_materials.push({
-            phase: stage,
-            material_id: parseInt(matIdStr),
-            quantity: qty
-          });
+          const reqId = parseInt(reqIdStr);
+          const originalMat = app.materials.find(m => m.id === reqId);
+          if (originalMat) {
+            phase_materials.push({
+              phase: stage,
+              material_id: originalMat.material_id,
+              custom_name: originalMat.custom_name,
+              custom_unit: originalMat.custom_unit,
+              quantity: qty
+            });
+          }
         }
       });
     });
@@ -84,11 +87,6 @@ export default function AddPhaseDrawer({
 
     // Pass the fixed totalPhases as num_stages
     await onConfirm(totalPhases, phase_materials);
-  };
-
-  const getMaterialName = (id: number) => {
-    const mat = masterMaterials.find(m => m.id === id);
-    return mat ? `${mat.name} (${mat.unit})` : `Material ${id}`;
   };
 
   return (
@@ -161,9 +159,9 @@ export default function AddPhaseDrawer({
                       </thead>
                       <tbody>
                         {app.materials?.map((mat) => (
-                          <tr key={mat.material_id} className="border-b border-[#D6D9DE] last:border-0 hover:bg-gray-50 transition-colors">
+                          <tr key={mat.id} className="border-b border-[#D6D9DE] last:border-0 hover:bg-gray-50 transition-colors">
                             <td className="p-3 text-[13px] font-medium text-[#343434] border-r border-[#D6D9DE]">
-                              {getMaterialName(mat.material_id)}
+                              {mat.material_name || "Unknown Material"} ({mat.unit || "Unit"})
                             </td>
                             <td className="p-3 text-[13px] font-medium text-[#343434] border-r border-[#D6D9DE] opacity-60">
                               {mat.quantity} Units
@@ -171,8 +169,8 @@ export default function AddPhaseDrawer({
                             <td className="p-3">
                               <input 
                                 type="number" 
-                                value={estimates[activeStage]?.[mat.material_id] ?? 0}
-                                onChange={(e) => handleQtyChange(activeStage, mat.material_id, e.target.value)}
+                                value={estimates[activeStage]?.[mat.id] ?? 0}
+                                onChange={(e) => handleQtyChange(activeStage, mat.id, e.target.value)}
                                 className="w-full h-[34px] rounded-lg border border-[#D6D9DE] bg-white px-3 text-sm font-medium outline-none focus:border-[#0C83FF]"
                               />
                             </td>
@@ -190,11 +188,11 @@ export default function AddPhaseDrawer({
                   <p className="text-[12px] font-bold text-[#0C83FF] uppercase tracking-wider">Overall Distribution Summary</p>
                   <div className="grid grid-cols-1 gap-2">
                     {app.materials?.map(mat => {
-                      const totalEstimated = Object.values(estimates).reduce((acc, curr) => acc + (curr[mat.material_id] || 0), 0);
+                      const totalEstimated = Object.values(estimates).reduce((acc, curr) => acc + (curr[mat.id] || 0), 0);
                       const isOver = totalEstimated > mat.quantity;
                       return (
-                        <div key={mat.material_id} className="flex items-center justify-between text-[12px]">
-                          <span className="text-[#343434] font-medium">{getMaterialName(mat.material_id)}</span>
+                        <div key={mat.id} className="flex items-center justify-between text-[12px]">
+                          <span className="text-[#343434] font-medium">{mat.material_name || "Unknown Material"}</span>
                           <div className="flex items-center gap-2">
                             <span className={`font-bold ${isOver ? "text-red-500" : "text-[#059669]"}`}>
                               {totalEstimated}

@@ -176,11 +176,11 @@ export default function VehicleDetailDrawer({
                               <p className="text-[11px] font-medium text-[#343434] opacity-50 uppercase">Material Category</p>
                             </div>
                             <div className="space-y-0.5">
-                              <p className="text-[15px] font-semibold text-[#343434]">{material.total_quantity} {material.unit}</p>
+                              <p className="text-[15px] font-semibold text-[#343434]">{material.approved_quantity} {material.unit}</p>
                               <p className="text-[11px] font-medium text-[#343434] opacity-50 uppercase">Total Permitted Quantity</p>
                             </div>
                             <div className="text-center space-y-0.5">
-                              <p className="text-[15px] font-semibold text-[#343434]">{material.entered_quantity} {material.unit}</p>
+                              <p className="text-[15px] font-semibold text-[#343434]">{material.consumed_quantity} {material.unit}</p>
                               <p className="text-[11px] font-medium text-[#343434] opacity-50 uppercase">Quantity Entered</p>
                             </div>
                             <div className="text-right space-y-0.5">
@@ -238,7 +238,7 @@ export default function VehicleDetailDrawer({
                     <div className="grid grid-cols-3 gap-2 pb-6">
                       {data.dumping_photos.map((photo, i) => (
                         <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden border border-[#D6D9DE] bg-gray-100 shadow-sm">
-                          <Image src={photo.access_url} alt={`Dumping ${i}`} fill className="object-cover" unoptimized />
+                          <Image src={photo.access_url || ""} alt={`Dumping ${i}`} fill className="object-cover" unoptimized />
                         </div>
                       ))}
                       {data.dumping_photos.length === 0 && (

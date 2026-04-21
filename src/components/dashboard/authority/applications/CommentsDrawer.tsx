@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useApplicationComments, useAddComment } from "@/hooks/useApplications";
 import { type components } from "@/types/api";
 
-type CommentResponse = components["schemas"]["CommentResponse"];
+type CommentResponse = components["schemas"]["backend__schemas__response__application__CommentResponse"];
 
 interface CommentsDrawerProps {
   isOpen: boolean;
@@ -32,7 +32,7 @@ const CommentCard = ({ comment }: { comment: CommentResponse }) => {
   let titleColor = "text-[#343434]";
   
   // Note: Backend uses 'OBJECTION_COMMENT' for objections
-  const isObjection = comment.comment_type === ("OBJECTION_COMMENT" as any);
+  const isObjection = comment.comment_type === "OBJECTION_COMMENT";
 
   if (comment.comment_type === "DEPT_REVIEW") {
     bgColor = "bg-[#E6F7F5]"; 

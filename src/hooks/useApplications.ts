@@ -46,7 +46,7 @@ export function useAddPhaseMaterials() {
 }
 
 export function useApplicationComments(applicationId: number, options?: { enabled?: boolean }) {
-  return useQuery({
+  return useQuery<components["schemas"]["backend__schemas__response__application__CommentResponse"][]>({
     queryKey: ["application-comments", applicationId],
     queryFn: () => ApplicationService.getComments(applicationId),
     enabled: !!applicationId,
