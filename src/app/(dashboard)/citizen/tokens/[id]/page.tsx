@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import VehicleFilterDrawer from "@/components/dashboard/authority/vehicle-entries/VehicleFilterDrawer";
@@ -8,6 +8,8 @@ import VehicleDetailDrawer from "@/components/dashboard/authority/vehicle-entrie
 import { useTokenDetail } from "@/hooks/useTokens";
 import { type components } from "@/types/api";
 import { QRCodeSVG } from "qrcode.react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 type TokenDetailResponse = components["schemas"]["TokenDetailResponse"];
 
@@ -41,10 +43,14 @@ const DetailItem = ({ label, value }: { label: string; value: string | null | un
 
 const Header = ({ 
   token, 
-  onBack
+  onBack,
+  onDownload,
+  isDownloading
 }: { 
   token: TokenDetailResponse; 
   onBack: () => void;
+  onDownload: () => void;
+  isDownloading: boolean;
 }) => {
   const validity = token.valid_from && token.valid_till 
     ? `${new Date(token.valid_from).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} - ${new Date(token.valid_till).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`
@@ -70,17 +76,25 @@ const Header = ({
           <Image src="/dashboard/icons/applications/step-upload.svg" alt="" width={18} height={18} />
           Share
         </button>
-        <button className="flex items-center gap-2.5 rounded-lg border border-[#72B7FF] bg-[#E7F3FF] px-4 py-2.5 text-sm font-medium text-[#0C83FF] hover:opacity-90 transition-opacity cursor-pointer">
-          <Image src="/dashboard/icons/applications/download.svg" alt="" width={16} height={16} />
-          Download Token
+        <button 
+          onClick={onDownload}
+          disabled={isDownloading}
+          className="flex items-center gap-2.5 rounded-lg border border-[#72B7FF] bg-[#E7F3FF] px-4 py-2.5 text-sm font-medium text-[#0C83FF] hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50"
+        >
+          {isDownloading ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#0C83FF] border-t-transparent" />
+          ) : (
+            <Image src="/dashboard/icons/applications/download.svg" alt="" width={16} height={16} />
+          )}
+          {isDownloading ? "Downloading..." : "Download Token"}
         </button>
       </div>
     </div>
   );
 };
 
-const Sidebar = ({ token }: { token: TokenDetailResponse }) => (
-  <div className="flex w-[238px] flex-col gap-5 rounded-lg border border-[#D6D9DE] bg-white p-4 h-fit sticky top-[80px]">
+const Sidebar = ({ token, sidebarRef }: { token: TokenDetailResponse; sidebarRef: React.RefObject<HTMLDivElement | null> }) => (
+  <div ref={sidebarRef} className="flex w-[238px] flex-col gap-5 rounded-lg border border-[#D6D9DE] bg-white p-4 h-fit sticky top-[80px]">
     {/* QR Code */}
     <div className="relative aspect-square w-full rounded border border-[#D6D9DE] p-4 bg-white flex items-center justify-center">
       <QRCodeSVG 
@@ -140,12 +154,42 @@ export default function CitizenTokenDetailsPage() {
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
+  const [isDownloading, setIsDownloading] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
   
   const { data: token, isLoading, error } = useTokenDetail(transportCode);
 
   const handleEntryClick = (id: number) => {
     setSelectedEntryId(id);
     setIsDetailDrawerOpen(true);
+  };
+
+  const handleDownload = async () => {
+    if (!sidebarRef.current || !token) return;
+    
+    try {
+      setIsDownloading(true);
+      
+      const canvas = await html2canvas(sidebarRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+      });
+      
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: [canvas.width / 2, canvas.height / 2],
+      });
+      
+      pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
+      pdf.save(`token-${token.token_number}.pdf`);
+    } catch (err) {
+      console.error("Failed to download token:", err);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   if (isLoading) return (
@@ -166,10 +210,12 @@ export default function CitizenTokenDetailsPage() {
       <Header 
         token={token} 
         onBack={() => router.back()} 
+        onDownload={handleDownload}
+        isDownloading={isDownloading}
       />
 
       <div className="flex flex-1 gap-5 p-5">
-        <Sidebar token={token} />
+        <Sidebar token={token} sidebarRef={sidebarRef} />
 
         <div className="flex flex-1 flex-col gap-5 rounded-lg border border-[#D6D9DE] bg-white overflow-hidden h-fit">
           {/* Tabs */}
