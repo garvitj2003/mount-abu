@@ -62,7 +62,8 @@ export default function ApplicationStepper({ app }: ApplicationStepperProps) {
         currentIndex = 4;
       } else if (isObjection) {
         // If it was already approved once, it might be at inspection
-        currentIndex = status === "APPROVED" ? 2 : 1;
+        // Default to Approval step for NEW
+        currentIndex = 1;
       }
     } else {
       // RENOVATION: Submitted -> Forward to Dept -> Dept Comments -> Approval -> Inspection -> Token Generated
@@ -77,9 +78,8 @@ export default function ApplicationStepper({ app }: ApplicationStepperProps) {
       } else if (status === "TOKEN_GENERATED") {
         currentIndex = 6;
       } else if (isObjection) {
-        if (status === "APPROVED") currentIndex = 4;
-        else if (status === "FORWARDED") currentIndex = 2;
-        else currentIndex = 1;
+        // Default to 'Forward to Dept' step for RENOVATION
+        currentIndex = 1;
       }
     }
 
