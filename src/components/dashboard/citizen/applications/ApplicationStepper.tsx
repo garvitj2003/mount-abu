@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useMemo } from "react";
 import { type components } from "@/types/api";
 
-type ApplicationStatus = components["schemas"]["ApplicationStatus"];
+type ApplicationResponse = components["schemas"]["ApplicationResponse"];
 
 interface Step {
   id: number;
@@ -15,40 +15,97 @@ interface Step {
 }
 
 interface ApplicationStepperProps {
-  status: ApplicationStatus;
-  isObjection?: boolean;
+  app: ApplicationResponse;
 }
 
-export default function ApplicationStepper({ status, isObjection }: ApplicationStepperProps) {
+export default function ApplicationStepper({ app }: ApplicationStepperProps) {
   const steps: Step[] = useMemo(() => {
-    const s: Step[] = [
-      { id: 1, label: "Submitted", role: "Applicant", status: "pending" },
-      { id: 2, label: "Land Verification", role: "Land Officer", status: "pending" },
-      { id: 3, label: "Legal Check", role: "Legal Department", status: "pending" },
-      { id: 4, label: "ATP Review", role: "ATP Authority", status: "pending" },
-      { id: 5, label: "JEN Approval", role: "JEN", status: "pending" },
-      { id: 6, label: "Nodal Officer approval", role: "Nodal Officer", status: "pending" },
-      { id: 7, label: "Token Generated", role: "System", status: "pending" },
-    ];
+    const isNew = app.type === "NEW";
+    const status = app.status;
+    const isObjection = status === "OBJECTED";
+    const inspectionDone = app.inspections.length > 0;
 
-    // Status mapping logic
+    let s: Omit<Step, "id" | "status">[] = [];
+
+    if (isNew) {
+      s = [
+        { label: "Submitted", role: "Applicant" },
+        { label: "Approval", role: "Nodal Officer" },
+        { label: "Inspection", role: "JEN" },
+        { label: "Token Generated", role: "Nodal Officer" },
+      ];
+    } else {
+      s = [
+        { label: "Submitted", role: "Applicant" },
+        { label: "Forward to Dept", role: "Commissioner" },
+        { label: "Dept Comments", role: "Departments" },
+        { label: "Approval", role: "Commissioner" },
+        { label: "Inspection", role: "JEN" },
+        { label: "Token Generated", role: "Nodal Officer" },
+      ];
+    }
+
+    const finalSteps: Step[] = s.map((step, idx) => ({
+      ...step,
+      id: idx + 1,
+      status: "pending",
+    }));
+
     let currentIndex = 0;
-    if (status === "SUBMITTED") currentIndex = 1;
-    else if (status === "FORWARDED") currentIndex = 3; // Simplified for now
-    else if (status === "APPROVED") currentIndex = 6;
-    else if (status === "TOKEN_GENERATED") currentIndex = 7;
-    else if (status === "OBJECTED") {
-        currentIndex = 5; // Usually at Nodal or Jenkins stage
-        s[5].status = "objection";
+
+    if (isNew) {
+      // NEW: Submitted -> Approval -> Inspection -> Token Generated
+      if (status === "SUBMITTED") currentIndex = 1;
+      else if (status === "APPROVED") {
+        currentIndex = inspectionDone ? 3 : 2;
+      } else if (status === "TOKEN_GENERATED") {
+        currentIndex = 4;
+      } else if (isObjection) {
+        // If it was already approved once, it might be at inspection
+        currentIndex = status === "APPROVED" ? 2 : 1;
+      }
+    } else {
+      // RENOVATION: Submitted -> Forward to Dept -> Dept Comments -> Approval -> Inspection -> Token Generated
+      if (status === "SUBMITTED") currentIndex = 1;
+      else if (status === "FORWARDED") {
+        const hasDeptComments = app.comments.some(
+          (c) => c.comment_type !== "GENERAL" && c.commenter_name !== app.applicant_name
+        );
+        currentIndex = hasDeptComments ? 3 : 2;
+      } else if (status === "APPROVED") {
+        currentIndex = inspectionDone ? 5 : 4;
+      } else if (status === "TOKEN_GENERATED") {
+        currentIndex = 6;
+      } else if (isObjection) {
+        if (status === "APPROVED") currentIndex = 4;
+        else if (status === "FORWARDED") currentIndex = 2;
+        else currentIndex = 1;
+      }
     }
 
-    for (let i = 0; i < s.length; i++) {
-      if (i < currentIndex) s[i].status = "completed";
-      else if (i === currentIndex && s[i].status !== "objection") s[i].status = "active";
+    for (let i = 0; i < finalSteps.length; i++) {
+      if (i < currentIndex) {
+        finalSteps[i].status = "completed";
+      } else if (i === currentIndex) {
+        if (isObjection) {
+          finalSteps[i].status = "objection";
+        } else {
+          finalSteps[i].status = "active";
+        }
+      }
     }
 
-    return s;
-  }, [status, isObjection]);
+    // Special case for Token Generated: everything is completed
+    if (status === "TOKEN_GENERATED") {
+      finalSteps.forEach(step => step.status = "completed");
+    }
+
+    return finalSteps;
+  }, [app]);
+
+  const completedCount = steps.filter((s) => s.status === "completed").length;
+  const totalGaps = steps.length - 1;
+  const progressWidth = totalGaps > 0 ? (completedCount / totalGaps) * 100 : 100;
 
   return (
     <div className="flex w-full flex-col gap-5 rounded-lg border border-[#D6D9DE] bg-white p-5 shadow-[0px_0px_4px_0px_rgba(0,0,0,0.08)] overflow-x-auto no-scrollbar">
@@ -57,10 +114,10 @@ export default function ApplicationStepper({ status, isObjection }: ApplicationS
         <div className="absolute top-[18px] left-[60px] right-[60px] h-[2px] bg-[#D6D9DE]" />
         <div 
           className="absolute top-[18px] left-[60px] h-[2px] bg-[#0C83FF] transition-all duration-500" 
-          style={{ width: `${(steps.filter(s => s.status === 'completed').length / (steps.length - 1)) * 85}%` }}
+          style={{ width: `${Math.min(progressWidth, 100) * 0.85}%` }}
         />
 
-        {steps.map((step, idx) => (
+        {steps.map((step) => (
           <div key={step.id} className="relative z-10 flex flex-col items-center gap-2 text-center w-[120px]">
             {/* Circle Icon */}
             <div className={`flex size-9 items-center justify-center rounded-full border-2 transition-colors ${
@@ -105,7 +162,7 @@ export default function ApplicationStepper({ status, isObjection }: ApplicationS
         ))}
       </div>
 
-      {isObjection && (
+      {app.status === "OBJECTED" && (
         <p className="text-[10px] font-normal text-[#EF4444] text-center mt-2">
           Maximum 3 Objection can be raised. after that your application will be rejected automatically.
         </p>

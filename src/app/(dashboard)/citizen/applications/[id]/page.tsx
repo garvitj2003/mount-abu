@@ -187,7 +187,7 @@ export default function CitizenApplicationDetailsPage() {
           </div>
         )}
 
-        <ApplicationStepper status={app.status} isObjection={app.status === "OBJECTED"} />
+        <ApplicationStepper app={app} />
 
         <DetailsCard app={app} />
       </div>
