@@ -7,6 +7,7 @@ interface UserMenuProps {
   onDelete?: () => void;
   onDeactivate?: () => void;
   onResetPassword?: () => void;
+  is_active?: boolean;
 }
 
 export default function UserMenu({
@@ -14,6 +15,7 @@ export default function UserMenu({
   onDelete,
   onDeactivate,
   onResetPassword,
+  is_active = true,
 }: UserMenuProps) {
   return (
     <div className="flex w-[189px] flex-col gap-2 rounded-lg border border-[#D6D9DE] bg-white p-2 shadow-[0px_6px_12px_0px_rgba(0,0,0,0.15)] font-onest">
@@ -49,20 +51,22 @@ export default function UserMenu({
         <span className="text-sm font-normal text-[#EF4444]">Delete</span>
       </button>
 
-      {/* Deactivate User */}
+      {/* Deactivate User / Activate User */}
       <button 
         onClick={onDeactivate}
         className="flex w-full items-center gap-[11px] rounded-lg p-2 hover:bg-gray-50 transition-colors text-left"
       >
         <div className="relative h-6 w-6 shrink-0">
           <Image 
-            src="/dashboard/icons/users/block.svg" 
-            alt="Deactivate" 
+            src={is_active ? "/dashboard/icons/users/block.svg" : "/dashboard/icons/users/unblock.svg"} 
+            alt={is_active ? "Deactivate" : "Activate"} 
             fill 
             className="object-contain"
           />
         </div>
-        <span className="text-sm font-normal text-[#343434]">Deactivate User</span>
+        <span className="text-sm font-normal text-[#343434]">
+            {is_active ? "Deactivate User" : "Activate User"}
+        </span>
       </button>
 
       {/* Divider */}

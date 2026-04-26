@@ -1,31 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { type components } from "@/types/api";
-import { useCreateEvent } from "@/hooks/useWebsiteContent";
+import DropdownSelect from "@/components/ui/DropdownSelect";
+import { useCreateEvent, useUpdateEvent } from "@/hooks/useWebsiteContent";
 
 type EventCreate = components["schemas"]["EventCreate"];
-type TenderStatus = components["schemas"]["TenderStatus"];
+type EventUpdate = components["schemas"]["EventUpdate"];
+type EventResponse = components["schemas"]["EventResponse"];
 
 interface AddEventDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  data?: EventResponse | null;
 }
 
-export default function AddEventDrawer({ isOpen, onClose }: AddEventDrawerProps) {
-  const { mutateAsync: createEvent, isPending } = useCreateEvent();
+const EVENT_TYPE_OPTIONS = [
+  { label: "Cultural", value: "Cultural" },
+  { label: "Sports", value: "Sports" },
+  { label: "Religious", value: "Religious" },
+  { label: "Official", value: "Official" },
+  { label: "Other", value: "Other" },
+];
+
+export default function AddEventDrawer({ isOpen, onClose, data }: AddEventDrawerProps) {
+  const { mutateAsync: createEvent, isPending: isCreating } = useCreateEvent();
+  const { mutateAsync: updateEvent, isPending: isUpdating } = useUpdateEvent();
   
+  const isPending = isCreating || isUpdating;
+  const isEdit = !!data;
+
   const [formData, setFormData] = useState<EventCreate>({
     title: "",
-    event_type: "Public Program",
+    event_type: "Cultural",
     date: new Date().toISOString(),
     venue: "",
     status: "ACTIVE",
   });
 
-  const [eventTime, setEventTime] = useState("08:00");
+  useEffect(() => {
+    if (data) {
+      setFormData({
+        title: data.title,
+        event_type: data.event_type || "Cultural",
+        date: data.date || new Date().toISOString(),
+        venue: data.venue || "",
+        status: data.status,
+      });
+    } else {
+      setFormData({
+        title: "",
+        event_type: "Cultural",
+        date: new Date().toISOString(),
+        venue: "",
+        status: "ACTIVE",
+      });
+    }
+  }, [data, isOpen]);
 
   const handleSubmit = async () => {
     if (!formData.title.trim()) {
@@ -34,21 +67,24 @@ export default function AddEventDrawer({ isOpen, onClose }: AddEventDrawerProps)
     }
     
     try {
-      await createEvent(formData);
+      if (isEdit && data) {
+        const updateData: EventUpdate = {
+          title: formData.title,
+          event_type: formData.event_type,
+          date: formData.date,
+          venue: formData.venue,
+          status: formData.status,
+        };
+        await updateEvent({ id: data.id, data: updateData });
+        alert("Event updated successfully!");
+      } else {
+        await createEvent(formData);
+        alert("Event added successfully!");
+      }
       onClose();
-      // Reset form
-      setFormData({
-        title: "",
-        event_type: "Public Program",
-        date: new Date().toISOString(),
-        venue: "",
-        status: "ACTIVE",
-      });
-      setEventTime("08:00");
-      alert("Event added successfully!");
     } catch (err) {
       console.error(err);
-      alert("Failed to add event");
+      alert(`Failed to ${isEdit ? "update" : "add"} event`);
     }
   };
 
@@ -76,7 +112,7 @@ export default function AddEventDrawer({ isOpen, onClose }: AddEventDrawerProps)
             {/* Header */}
             <div className="flex items-center justify-between border-b border-[#D6D9DE] bg-[#F5F6F7] px-6 py-4">
               <h2 className="text-[15px] font-medium text-[#343434]">
-                Add New Event
+                {isEdit ? "Edit Event" : "Add New Event"}
               </h2>
               <button
                 onClick={onClose}
@@ -99,7 +135,7 @@ export default function AddEventDrawer({ isOpen, onClose }: AddEventDrawerProps)
                 <label className="text-sm font-medium text-[#343434]">Event Title</label>
                 <input 
                   type="text"
-                  placeholder="Public Awareness Program on Water Conservation"
+                  placeholder="Mount Abu Summer Festival 2024"
                   className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -109,21 +145,23 @@ export default function AddEventDrawer({ isOpen, onClose }: AddEventDrawerProps)
               {/* Event Type */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#343434]">Event Type</label>
-                <div className="relative">
-                  <select 
-                    className="w-full h-[44px] appearance-none rounded-lg border border-[#D6D9DE] bg-white px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF]"
-                    value={formData.event_type || ""}
-                    onChange={(e) => setFormData({ ...formData, event_type: e.target.value })}
-                  >
-                    <option value="Public Program">Public Program</option>
-                    <option value="Cultural">Cultural</option>
-                    <option value="Sports">Sports</option>
-                    <option value="Awareness">Awareness</option>
-                  </select>
-                  <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                    <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} className="opacity-60" />
-                  </div>
-                </div>
+                <DropdownSelect
+                  options={EVENT_TYPE_OPTIONS}
+                  value={formData.event_type || ""}
+                  onChange={(val) => setFormData({ ...formData, event_type: val as string })}
+                  className="w-full h-[44px]"
+                />
+              </div>
+
+              {/* Event Date */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-[#343434]">Event Date & Time</label>
+                <input 
+                  type="datetime-local"
+                  className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF]"
+                  value={formData.date ? new Date(new Date(formData.date).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ""}
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value ? new Date(e.target.value).toISOString() : null })}
+                />
               </div>
 
               {/* Venue */}
@@ -131,59 +169,28 @@ export default function AddEventDrawer({ isOpen, onClose }: AddEventDrawerProps)
                 <label className="text-sm font-medium text-[#343434]">Venue</label>
                 <input 
                   type="text"
-                  placeholder="Municipal Town Hall, Nakki Lake"
+                  placeholder="Nakki Lake Ground, Mount Abu"
                   className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
                   value={formData.venue || ""}
                   onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
                 />
               </div>
 
-              {/* Date & Time */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-[#343434]">Event Date</label>
-                  <div className="relative">
-                    <input 
-                      type="date"
-                      className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF]"
-                      value={formData.date?.split('T')[0] || ""}
-                      onChange={(e) => setFormData({ ...formData, date: e.target.value ? new Date(e.target.value).toISOString() : null })}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-[#343434]">Event Time</label>
-                  <div className="relative">
-                    <input 
-                      type="time"
-                      className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF]"
-                      value={eventTime}
-                      onChange={(e) => setEventTime(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-
               {/* Status */}
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-[#343434]">Status</label>
-                <div className="flex flex-col gap-3">
-                  {["ACTIVE", "COMPLETED", "CANCELLED"].map((s) => (
-                    <label key={s} className="flex items-center gap-2 cursor-pointer group">
-                      <input 
-                        type="radio" 
-                        name="status" 
-                        className="hidden"
-                        checked={formData.status === s}
-                        onChange={() => setFormData({ ...formData, status: s as TenderStatus })}
-                      />
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${formData.status === s ? "border-[#0C83FF]" : "border-[#D6D9DE]"}`}>
-                        {formData.status === s && <div className="w-2.5 h-2.5 rounded-full bg-[#0C83FF]" />}
-                      </div>
-                      <span className="text-[13px] text-[#343434] font-normal capitalize">{s.toLowerCase()}</span>
-                    </label>
-                  ))}
+              <div className="flex items-center justify-between py-2">
+                <div className="space-y-0.5">
+                  <p className="text-sm font-medium text-[#343434]">Status</p>
+                  <p className="text-[11px] text-[#343434] opacity-60">Inactive events will not be visible.</p>
                 </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer"
+                    checked={formData.status === "ACTIVE"}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.checked ? "ACTIVE" : "CLOSED" })}
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0C83FF]"></div>
+                </label>
               </div>
 
             </div>
@@ -201,7 +208,7 @@ export default function AddEventDrawer({ isOpen, onClose }: AddEventDrawerProps)
                 disabled={isPending}
                 className="h-[44px] rounded-lg bg-[#0C83FF] px-8 text-sm font-medium text-white hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
-                {isPending ? "Adding..." : "Add Event"}
+                {isPending ? (isEdit ? "Updating..." : "Adding...") : (isEdit ? "Update Event" : "Add Event")}
               </button>
             </div>
           </motion.div>

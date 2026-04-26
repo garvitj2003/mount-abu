@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { useUsers } from "@/hooks/useUser";
+import { useUsers, useUpdateUser, useDeleteUser } from "@/hooks/useUser";
 import { useDepartments } from "@/hooks/useMasterData";
 import { type components } from "@/types/api";
 import NewUserDrawer from "@/components/dashboard/authority/users/NewUserDrawer";
@@ -45,6 +45,9 @@ export default function AuthorityUserManagementPage() {
   // Fetch only OFFICIAL users as per requirement
   const { data: usersData, isLoading } = useUsers("OFFICIAL");
   const { data: departments } = useDepartments();
+
+  const { mutateAsync: updateUser } = useUpdateUser();
+  const { mutateAsync: deleteUser } = useDeleteUser();
 
   const users = usersData || [];
 
@@ -104,6 +107,32 @@ export default function AuthorityUserManagementPage() {
     }
   };
 
+  const handleToggleStatus = async (user: UserResponse) => {
+    try {
+      await updateUser({
+        userId: user.id,
+        data: { is_active: !user.is_active }
+      });
+      alert(`User ${user.is_active ? "deactivated" : "activated"} successfully!`);
+    } catch (error) {
+      console.error("Failed to toggle user status", error);
+      alert("Failed to update user status.");
+    }
+    setOpenDropdownId(null);
+  };
+
+  const handleDeleteUser = async (user: UserResponse) => {
+    if (!confirm(`Are you sure you want to delete user "${user.name}"?`)) return;
+    try {
+      await deleteUser(user.id);
+      alert("User deleted successfully!");
+    } catch (error) {
+      console.error("Failed to delete user", error);
+      alert("Failed to delete user.");
+    }
+    setOpenDropdownId(null);
+  };
+
   // Prepare Options
   const roleOptions = [
     { label: "All Role", value: "All" },
@@ -132,7 +161,10 @@ export default function AuthorityUserManagementPage() {
           </p>
         </div>
         <button 
-          onClick={() => setIsDrawerOpen(true)}
+          onClick={() => {
+            setSelectedUser(null);
+            setIsDrawerOpen(true);
+          }}
           className="rounded-lg cursor-pointer bg-[#0C83FF] px-4 py-3 text-sm font-medium text-white hover:bg-blue-600 transition-colors"
         >
           Add New User
@@ -281,15 +313,14 @@ export default function AuthorityUserManagementPage() {
                         </td>
                         <td className="px-2 py-3">
                         <div className="flex items-center gap-1.5">
-                            {/* API doesn't have status, assume Active for now */}
                             <Image 
-                            src="/dashboard/icons/tick-round-green.svg"
-                            alt="Active" 
+                            src={user.is_active ? "/dashboard/icons/tick-round-green.svg" : "/dashboard/icons/cross-round-red.svg"}
+                            alt={user.is_active ? "Active" : "Inactive"} 
                             width={14} 
                             height={14} 
                             />
-                            <span className="text-sm font-normal text-[#059669]">
-                            Active
+                            <span className={`text-sm font-normal ${user.is_active ? "text-[#059669]" : "text-[#EF4444]"}`}>
+                            {user.is_active ? "Active" : "Inactive"}
                             </span>
                         </div>
                         </td>
@@ -326,28 +357,27 @@ export default function AuthorityUserManagementPage() {
               }}
               className="animate-in fade-in zoom-in duration-200"
             >
-              <UserMenu 
-                onEdit={() => {
-                  console.log("Edit user", openDropdownId);
-                  setOpenDropdownId(null);
-                }}
-                onDelete={() => {
-                  console.log("Delete user", openDropdownId);
-                  setOpenDropdownId(null);
-                }}
-                onDeactivate={() => {
-                  console.log("Deactivate user", openDropdownId);
-                  setOpenDropdownId(null);
-                }}
-                onResetPassword={() => {
-                  const user = users.find(u => u.id === openDropdownId);
-                  if (user) {
-                    setSelectedUser(user);
-                    setIsResetPasswordOpen(true);
-                  }
-                  setOpenDropdownId(null);
-                }}
-              />
+              {(() => {
+                const user = users.find(u => u.id === openDropdownId);
+                if (!user) return null;
+                return (
+                  <UserMenu 
+                    onEdit={() => {
+                      setSelectedUser(user);
+                      setIsDrawerOpen(true);
+                      setOpenDropdownId(null);
+                    }}
+                    onDelete={() => handleDeleteUser(user)}
+                    onDeactivate={() => handleToggleStatus(user)}
+                    onResetPassword={() => {
+                      setSelectedUser(user);
+                      setIsResetPasswordOpen(true);
+                      setOpenDropdownId(null);
+                    }}
+                    is_active={user.is_active}
+                  />
+                );
+              })()}
             </div>
           )}
 
@@ -364,7 +394,11 @@ export default function AuthorityUserManagementPage() {
       {/* New User Drawer */}
       <NewUserDrawer 
         isOpen={isDrawerOpen} 
-        onClose={() => setIsDrawerOpen(false)} 
+        onClose={() => {
+          setIsDrawerOpen(false);
+          setSelectedUser(null);
+        }} 
+        user={selectedUser}
       />
 
       {/* Reset Password Drawer */}

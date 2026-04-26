@@ -13,6 +13,11 @@ type MaterialCreate = components["schemas"]["MaterialCreate"];
 type MaterialResponse = components["schemas"]["MaterialResponse"];
 type UserSummary = components["schemas"]["UserSummary"];
 
+type WardUpdate = components["schemas"]["WardUpdate"];
+type DepartmentUpdate = components["schemas"]["DepartmentUpdate"];
+type RoleUpdate = components["schemas"]["RoleUpdate"];
+type ComplaintCategoryUpdate = components["schemas"]["ComplaintCategoryUpdate"];
+
 export const MasterDataService = {
   // Wards
   async getWards(): Promise<WardResponse[]> {
@@ -21,6 +26,10 @@ export const MasterDataService = {
   },
   async createWard(data: WardCreate): Promise<WardResponse> {
     const response = await api.post<WardResponse>("/api/master/wards", data);
+    return response.data;
+  },
+  async updateWard(wardId: number, data: WardUpdate): Promise<WardResponse> {
+    const response = await api.put<WardResponse>(`/api/master/wards/${wardId}`, data);
     return response.data;
   },
 
@@ -39,6 +48,10 @@ export const MasterDataService = {
     const response = await api.post<DepartmentResponse>("/api/master/departments", data);
     return response.data;
   },
+  async updateDepartment(deptId: number, data: DepartmentUpdate): Promise<DepartmentResponse> {
+    const response = await api.put<DepartmentResponse>(`/api/master/departments/${deptId}`, data);
+    return response.data;
+  },
 
   // Roles
   async getRoles(): Promise<RoleResponse[]> {
@@ -49,6 +62,10 @@ export const MasterDataService = {
     const response = await api.post<RoleResponse>("/api/master/roles", data);
     return response.data;
   },
+  async updateRole(roleId: number, data: RoleUpdate): Promise<RoleResponse> {
+    const response = await api.put<RoleResponse>(`/api/master/roles/${roleId}`, data);
+    return response.data;
+  },
 
   // Complaint Categories
   async getComplaintCategories(): Promise<ComplaintCategoryResponse[]> {
@@ -57,6 +74,10 @@ export const MasterDataService = {
   },
   async createComplaintCategory(data: ComplaintCategoryCreate): Promise<ComplaintCategoryResponse> {
     const response = await api.post<ComplaintCategoryResponse>("/api/master/complaint-categories", data);
+    return response.data;
+  },
+  async updateComplaintCategory(categoryId: number, data: ComplaintCategoryUpdate): Promise<ComplaintCategoryResponse> {
+    const response = await api.put<ComplaintCategoryResponse>(`/api/master/complaint-categories/${categoryId}`, data);
     return response.data;
   },
 

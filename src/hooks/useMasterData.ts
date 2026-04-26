@@ -3,9 +3,13 @@ import { MasterDataService } from "@/services/masterDataService";
 import { type components } from "@/types/api";
 
 type WardCreate = components["schemas"]["WardCreate"];
+type WardUpdate = components["schemas"]["WardUpdate"];
 type DepartmentCreate = components["schemas"]["DepartmentCreate"];
+type DepartmentUpdate = components["schemas"]["DepartmentUpdate"];
 type RoleCreate = components["schemas"]["RoleCreate"];
+type RoleUpdate = components["schemas"]["RoleUpdate"];
 type ComplaintCategoryCreate = components["schemas"]["ComplaintCategoryCreate"];
+type ComplaintCategoryUpdate = components["schemas"]["ComplaintCategoryUpdate"];
 type MaterialCreate = components["schemas"]["MaterialCreate"];
 
 export function useWards(options?: { enabled?: boolean }) {
@@ -21,6 +25,15 @@ export function useCreateWard() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: WardCreate) => MasterDataService.createWard(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wards"] }),
+  });
+}
+
+export function useUpdateWard() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: WardUpdate }) => 
+      MasterDataService.updateWard(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wards"] }),
   });
 }
@@ -49,6 +62,15 @@ export function useCreateDepartment() {
   });
 }
 
+export function useUpdateDepartment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: DepartmentUpdate }) => 
+      MasterDataService.updateDepartment(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["departments"] }),
+  });
+}
+
 export function useRoles() {
   return useQuery({
     queryKey: ["roles"],
@@ -61,6 +83,15 @@ export function useCreateRole() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: RoleCreate) => MasterDataService.createRole(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["roles"] }),
+  });
+}
+
+export function useUpdateRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: RoleUpdate }) => 
+      MasterDataService.updateRole(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["roles"] }),
   });
 }
@@ -78,6 +109,15 @@ export function useCreateComplaintCategory() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: ComplaintCategoryCreate) => MasterDataService.createComplaintCategory(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["complaint-categories"] }),
+  });
+}
+
+export function useUpdateComplaintCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: ComplaintCategoryUpdate }) => 
+      MasterDataService.updateComplaintCategory(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["complaint-categories"] }),
   });
 }

@@ -1,51 +1,81 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { type components } from "@/types/api";
-import { useCreateLeader } from "@/hooks/useWebsiteContent";
+import { useCreateLeader, useUpdateLeader } from "@/hooks/useWebsiteContent";
 
 type LeaderCreate = components["schemas"]["LeaderCreate"];
-type NoticeStatus = components["schemas"]["NoticeStatus"];
+type LeaderUpdate = components["schemas"]["LeaderUpdate"];
+type LeaderResponse = components["schemas"]["LeaderResponse"];
 
 interface AddLeaderDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  data?: LeaderResponse | null;
 }
 
-export default function AddLeaderDrawer({ isOpen, onClose }: AddLeaderDrawerProps) {
-  const { mutateAsync: createLeader, isPending } = useCreateLeader();
+export default function AddLeaderDrawer({ isOpen, onClose, data }: AddLeaderDrawerProps) {
+  const { mutateAsync: createLeader, isPending: isCreating } = useCreateLeader();
+  const { mutateAsync: updateLeader, isPending: isUpdating } = useUpdateLeader();
   
+  const isPending = isCreating || isUpdating;
+  const isEdit = !!data;
+
   const [formData, setFormData] = useState<LeaderCreate>({
     name: "",
     designation: "",
-    tenure_start: new Date().toISOString(),
-    tenure_end: "",
+    tenure_start: null,
+    tenure_end: null,
     status: "ACTIVE",
   });
 
+  useEffect(() => {
+    if (data) {
+      setFormData({
+        name: data.name,
+        designation: data.designation || "",
+        tenure_start: data.tenure_start,
+        tenure_end: data.tenure_end,
+        status: data.status,
+      });
+    } else {
+      setFormData({
+        name: "",
+        designation: "",
+        tenure_start: null,
+        tenure_end: null,
+        status: "ACTIVE",
+      });
+    }
+  }, [data, isOpen]);
+
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
-      alert("Please enter leader's name");
+      alert("Please enter a name");
       return;
     }
     
     try {
-      await createLeader(formData);
+      if (isEdit && data) {
+        const updateData: LeaderUpdate = {
+          name: formData.name,
+          designation: formData.designation,
+          tenure_start: formData.tenure_start,
+          tenure_end: formData.tenure_end,
+          status: formData.status,
+        };
+        await updateLeader({ id: data.id, data: updateData });
+        alert("Leader updated successfully!");
+      } else {
+        await createLeader(formData);
+        alert("Leader added successfully!");
+      }
       onClose();
-      // Reset form
-      setFormData({
-        name: "",
-        designation: "",
-        tenure_start: new Date().toISOString(),
-        tenure_end: "",
-        status: "ACTIVE",
-      });
-      alert("Leader added successfully!");
     } catch (err) {
       console.error(err);
-      alert("Failed to add leader");
+      alert(`Failed to ${isEdit ? "update" : "add"} leader`);
     }
   };
 
@@ -53,7 +83,6 @@ export default function AddLeaderDrawer({ isOpen, onClose }: AddLeaderDrawerProp
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex justify-end">
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -62,7 +91,6 @@ export default function AddLeaderDrawer({ isOpen, onClose }: AddLeaderDrawerProp
             className="absolute inset-0 bg-black/20 backdrop-blur-xs"
           />
 
-          {/* Drawer Content */}
           <motion.div
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
@@ -70,10 +98,9 @@ export default function AddLeaderDrawer({ isOpen, onClose }: AddLeaderDrawerProp
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
             className="relative z-10 h-full w-full max-w-[480px] bg-white shadow-2xl font-onest flex flex-col"
           >
-            {/* Header */}
             <div className="flex items-center justify-between border-b border-[#D6D9DE] bg-[#F5F6F7] px-6 py-4">
               <h2 className="text-[15px] font-medium text-[#343434]">
-                Add New Leader
+                {isEdit ? "Edit Leader" : "Add New Leader"}
               </h2>
               <button
                 onClick={onClose}
@@ -88,64 +115,54 @@ export default function AddLeaderDrawer({ isOpen, onClose }: AddLeaderDrawerProp
               </button>
             </div>
 
-            {/* Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-5">
-              
-              {/* Full Name */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#343434]">Full Name</label>
                 <input 
                   type="text"
-                  placeholder="Shri Ramesh Kumar"
+                  placeholder="Shri. Rajesh Kumar"
                   className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
 
-              {/* Designation */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#343434]">Designation</label>
                 <input 
                   type="text"
-                  placeholder="Chairman, Nagar Parishad"
+                  placeholder="Commissioner / Chairman"
                   className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
                   value={formData.designation || ""}
                   onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
                 />
               </div>
 
-              {/* Tenure */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-[#343434]">Tenure From</label>
-                  <div className="relative">
-                    <input 
-                      type="date"
-                      className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF]"
-                      value={formData.tenure_start?.split('T')[0] || ""}
-                      onChange={(e) => setFormData({ ...formData, tenure_start: e.target.value ? new Date(e.target.value).toISOString() : null })}
-                    />
-                  </div>
+                  <label className="text-sm font-medium text-[#343434]">Tenure Start</label>
+                  <input 
+                    type="date"
+                    className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF]"
+                    value={formData.tenure_start?.split('T')[0] || ""}
+                    onChange={(e) => setFormData({ ...formData, tenure_start: e.target.value ? new Date(e.target.value).toISOString() : null })}
+                  />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-[#343434]">Tenure To</label>
-                  <div className="relative">
-                    <input 
-                      type="date"
-                      className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF]"
-                      value={formData.tenure_end?.split('T')[0] || ""}
-                      onChange={(e) => setFormData({ ...formData, tenure_end: e.target.value ? new Date(e.target.value).toISOString() : null })}
-                    />
-                  </div>
+                  <label className="text-sm font-medium text-[#343434]">Tenure End</label>
+                  <input 
+                    type="date"
+                    className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF]"
+                    value={formData.tenure_end?.split('T')[0] || ""}
+                    onChange={(e) => setFormData({ ...formData, tenure_end: e.target.value ? new Date(e.target.value).toISOString() : null })}
+                  />
                 </div>
               </div>
 
-              {/* Status */}
               <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5">
                   <p className="text-sm font-medium text-[#343434]">Status</p>
-                  <p className="text-[11px] text-[#343434] opacity-60">Inactive leaders will not be visible.</p>
+                  <p className="text-[11px] text-[#343434] opacity-60">Inactive leaders will be shown in history.</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input 
@@ -160,7 +177,6 @@ export default function AddLeaderDrawer({ isOpen, onClose }: AddLeaderDrawerProp
 
             </div>
 
-            {/* Footer */}
             <div className="flex items-center justify-end gap-3 border-t border-[#D6D9DE] p-4 bg-white">
               <button 
                 onClick={onClose}
@@ -171,9 +187,9 @@ export default function AddLeaderDrawer({ isOpen, onClose }: AddLeaderDrawerProp
               <button 
                 onClick={handleSubmit}
                 disabled={isPending}
-                className="h-[44px] rounded-lg bg-[#0C83FF] px-8 text-sm font-medium text-white hover:bg-blue-600 transition-colors"
+                className="h-[44px] rounded-lg bg-[#0C83FF] px-8 text-sm font-medium text-white hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
-                {isPending ? "Saving..." : "Save Leader"}
+                {isPending ? (isEdit ? "Updating..." : "Adding...") : (isEdit ? "Update Leader" : "Add Leader")}
               </button>
             </div>
           </motion.div>

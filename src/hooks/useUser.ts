@@ -5,6 +5,7 @@ import { type components } from "@/types/api";
 
 type UserFilter = components["schemas"]["UserFilter"];
 type CreateUserRequest = components["schemas"]["CreateUserRequest"];
+type UpdateUserRequest = components["schemas"]["UpdateUserRequest"];
 type ChangePasswordRequest = components["schemas"]["ChangePasswordRequest"];
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -38,6 +39,27 @@ export function useCreateUser() {
     mutationFn: (data: CreateUserRequest) => UserService.createUser(data),
     onSuccess: () => {
       // Invalidate both lists just in case
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+}
+
+export function useUpdateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, data }: { userId: number; data: UpdateUserRequest }) => 
+      UserService.updateUser(userId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+}
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: number) => UserService.deleteUser(userId),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
   });

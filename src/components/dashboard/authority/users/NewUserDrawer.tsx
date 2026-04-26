@@ -1,18 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
-import { useCreateUser } from "@/hooks/useUser";
+import { useCreateUser, useUpdateUser } from "@/hooks/useUser";
 import { type components } from "@/types/api";
 import DropdownSelect from "@/components/ui/DropdownSelect";
 
 type CreateUserRequest = components["schemas"]["CreateUserRequest"];
+type UpdateUserRequest = components["schemas"]["UpdateUserRequest"];
+type UserResponse = components["schemas"]["UserResponse"];
 type UserRole = components["schemas"]["UserRole"];
 
 interface NewUserDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  user?: UserResponse | null;
 }
 
 const ROLE_OPTIONS: { label: string; value: UserRole }[] = [
@@ -26,9 +29,13 @@ const ROLE_OPTIONS: { label: string; value: UserRole }[] = [
   { label: "Junior Engineer", value: "JEN" },
 ];
 
-export default function NewUserDrawer({ isOpen, onClose }: NewUserDrawerProps) {
-  const { mutateAsync: createUser, isPending } = useCreateUser();
+export default function NewUserDrawer({ isOpen, onClose, user }: NewUserDrawerProps) {
+  const { mutateAsync: createUser, isPending: isCreating } = useCreateUser();
+  const { mutateAsync: updateUser, isPending: isUpdating } = useUpdateUser();
   
+  const isPending = isCreating || isUpdating;
+  const isEdit = !!user;
+
   const [formData, setFormData] = useState<CreateUserRequest>({
     name: "",
     mobile: "",
@@ -36,6 +43,26 @@ export default function NewUserDrawer({ isOpen, onClose }: NewUserDrawerProps) {
     username: "",
     password: "",
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name,
+        mobile: user.mobile,
+        role: user.role,
+        username: user.username || "",
+        password: "",
+      });
+    } else {
+      setFormData({
+        name: "",
+        mobile: "",
+        role: "JEN",
+        username: "",
+        password: "",
+      });
+    }
+  }, [user, isOpen]);
 
   const [errors, setErrors] = useState<Partial<Record<keyof CreateUserRequest, string>>>({});
 
@@ -46,7 +73,7 @@ export default function NewUserDrawer({ isOpen, onClose }: NewUserDrawerProps) {
     else if (!/^\d{10}$/.test(formData.mobile)) newErrors.mobile = "Mobile must be 10 digits";
     
     // Username/Password are optional in schema but usually good to have validation if entered
-    if (formData.password && formData.password.length < 6) {
+    if (!isEdit && formData.password && formData.password.length < 6) {
         newErrors.password = "Password must be at least 6 chars";
     }
 
@@ -58,22 +85,24 @@ export default function NewUserDrawer({ isOpen, onClose }: NewUserDrawerProps) {
     if (!validate()) return;
 
     try {
-      await createUser(formData);
+      if (isEdit && user) {
+        const updateData: UpdateUserRequest = {
+          name: formData.name,
+          mobile: formData.mobile,
+          username: formData.username,
+        };
+        await updateUser({ userId: user.id, data: updateData });
+        alert("User updated successfully!");
+      } else {
+        await createUser(formData);
+        alert("User created successfully!");
+      }
       onClose();
-      // Reset form
-      setFormData({
-        name: "",
-        mobile: "",
-        role: "JEN",
-        username: "",
-        password: "",
-      });
-      alert("User created successfully!");
     } catch (error: any) {
-      console.error("Failed to create user", error);
+      console.error(`Failed to ${isEdit ? "update" : "create"} user`, error);
       const detail = error?.response?.data?.detail;
       const message = Array.isArray(detail) ? detail[0]?.msg : detail;
-      alert(`Failed to create user: ${message || "Please try again."}`);
+      alert(`Failed to ${isEdit ? "update" : "create"} user: ${message || "Please try again."}`);
     }
   };
 
@@ -101,7 +130,7 @@ export default function NewUserDrawer({ isOpen, onClose }: NewUserDrawerProps) {
             {/* Header */}
             <div className="flex items-center justify-between border-b border-[#D6D9DE] bg-[#F5F6F7] px-6 py-4">
               <h2 className="text-[15px] font-medium text-[#343434]">
-                Add New User
+                {isEdit ? "Edit User" : "Add New User"}
               </h2>
               <button
                 onClick={onClose}
@@ -163,18 +192,20 @@ export default function NewUserDrawer({ isOpen, onClose }: NewUserDrawerProps) {
               </div>
 
                {/* Password */}
-               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#343434]">Password</label>
-                <input 
-                  type="password"
-                  placeholder="Enter password"
-                  className={`w-full h-[44px] rounded-lg border ${errors.password ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40`}
-                  value={formData.password || ""}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                />
-                {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
-                <p className="text-xs text-gray-500">Optional. User can set via OTP if left blank.</p>
-              </div>
+               {!isEdit && (
+                 <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-[#343434]">Password</label>
+                  <input 
+                    type="password"
+                    placeholder="Enter password"
+                    className={`w-full h-[44px] rounded-lg border ${errors.password ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40`}
+                    value={formData.password || ""}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  />
+                  {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
+                  <p className="text-xs text-gray-500">Optional. User can set via OTP if left blank.</p>
+                </div>
+               )}
 
               {/* Role */}
               <div className="space-y-1.5">
@@ -184,7 +215,9 @@ export default function NewUserDrawer({ isOpen, onClose }: NewUserDrawerProps) {
                   value={formData.role}
                   onChange={(val) => setFormData({ ...formData, role: val as UserRole })}
                   className="w-full h-[44px]"
+                  disabled={isEdit}
                 />
+                {isEdit && <p className="text-xs text-gray-400">Role cannot be changed after creation.</p>}
               </div>
 
             </div>
@@ -202,7 +235,7 @@ export default function NewUserDrawer({ isOpen, onClose }: NewUserDrawerProps) {
                 disabled={isPending}
                 className="h-[44px] rounded-lg bg-[#0C83FF] px-8 text-sm font-medium text-white hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
-                {isPending ? "Creating..." : "Create User"}
+                {isPending ? (isEdit ? "Updating..." : "Creating...") : (isEdit ? "Update User" : "Create User")}
               </button>
             </div>
           </motion.div>

@@ -1,19 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { type components } from "@/types/api";
 import DropdownSelect from "@/components/ui/DropdownSelect";
 import { useDepartments } from "@/hooks/useMasterData";
-import { useCreateTender } from "@/hooks/useWebsiteContent";
+import { useCreateTender, useUpdateTender } from "@/hooks/useWebsiteContent";
 
 type TenderCreate = components["schemas"]["TenderCreate"];
+type TenderUpdate = components["schemas"]["TenderUpdate"];
+type TenderResponse = components["schemas"]["TenderResponse"];
 type TenderStatus = components["schemas"]["TenderStatus"];
 
 interface AddTenderDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  data?: TenderResponse | null;
 }
 
 const TENDER_TYPE_OPTIONS = [
@@ -22,10 +25,14 @@ const TENDER_TYPE_OPTIONS = [
   { label: "Expression of Interest", value: "Limited" },
 ];
 
-export default function AddTenderDrawer({ isOpen, onClose }: AddTenderDrawerProps) {
+export default function AddTenderDrawer({ isOpen, onClose, data }: AddTenderDrawerProps) {
   const { data: departments = [] } = useDepartments();
-  const { mutateAsync: createTender, isPending } = useCreateTender();
+  const { mutateAsync: createTender, isPending: isCreating } = useCreateTender();
+  const { mutateAsync: updateTender, isPending: isUpdating } = useUpdateTender();
   
+  const isPending = isCreating || isUpdating;
+  const isEdit = !!data;
+
   const [formData, setFormData] = useState<TenderCreate>({
     title: "",
     tender_type: "Standard",
@@ -35,6 +42,30 @@ export default function AddTenderDrawer({ isOpen, onClose }: AddTenderDrawerProp
     submission_deadline: null,
     status: "ACTIVE",
   });
+
+  useEffect(() => {
+    if (data) {
+      setFormData({
+        title: data.title,
+        tender_type: data.tender_type || "Standard",
+        department_id: data.department_id,
+        amount: data.amount,
+        published_on: data.published_on || new Date().toISOString(),
+        submission_deadline: data.submission_deadline,
+        status: data.status,
+      });
+    } else {
+      setFormData({
+        title: "",
+        tender_type: "Standard",
+        department_id: null,
+        amount: null,
+        published_on: new Date().toISOString(),
+        submission_deadline: null,
+        status: "ACTIVE",
+      });
+    }
+  }, [data, isOpen]);
 
   const deptOptions = departments.map(d => ({
     label: d.name,
@@ -48,22 +79,26 @@ export default function AddTenderDrawer({ isOpen, onClose }: AddTenderDrawerProp
     }
     
     try {
-      await createTender(formData);
+      if (isEdit && data) {
+        const updateData: TenderUpdate = {
+          title: formData.title,
+          tender_type: formData.tender_type,
+          department_id: formData.department_id,
+          amount: formData.amount,
+          published_on: formData.published_on,
+          submission_deadline: formData.submission_deadline,
+          status: formData.status,
+        };
+        await updateTender({ id: data.id, data: updateData });
+        alert("Tender updated successfully!");
+      } else {
+        await createTender(formData);
+        alert("Tender added successfully!");
+      }
       onClose();
-      // Reset form
-      setFormData({
-        title: "",
-        tender_type: "Standard",
-        department_id: null,
-        amount: null,
-        published_on: new Date().toISOString(),
-        submission_deadline: null,
-        status: "ACTIVE",
-      });
-      alert("Tender added successfully!");
     } catch (err) {
       console.error(err);
-      alert("Failed to add tender");
+      alert(`Failed to ${isEdit ? "update" : "add"} tender`);
     }
   };
 
@@ -91,7 +126,7 @@ export default function AddTenderDrawer({ isOpen, onClose }: AddTenderDrawerProp
             {/* Header */}
             <div className="flex items-center justify-between border-b border-[#D6D9DE] bg-[#F5F6F7] px-6 py-4">
               <h2 className="text-[15px] font-medium text-[#343434]">
-                Add New Tender
+                {isEdit ? "Edit Tender" : "Add New Tender"}
               </h2>
               <button
                 onClick={onClose}
@@ -214,7 +249,7 @@ export default function AddTenderDrawer({ isOpen, onClose }: AddTenderDrawerProp
                 disabled={isPending}
                 className="h-[44px] rounded-lg bg-[#0C83FF] px-8 text-sm font-medium text-white hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
-                {isPending ? "Adding..." : "Add Tender"}
+                {isPending ? (isEdit ? "Updating..." : "Adding...") : (isEdit ? "Update Tender" : "Add Tender")}
               </button>
             </div>
           </motion.div>

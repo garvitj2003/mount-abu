@@ -21,8 +21,15 @@ type DownloadResponse = components["schemas"]["DownloadResponse"];
 type DownloadsListResponse = components["schemas"]["DownloadsListResponse"];
 
 type ContactDiaryCreate = components["schemas"]["ContactDiaryCreate"];
+type ContactDiaryUpdate = components["schemas"]["ContactDiaryUpdate"];
 type ContactDiaryResponse = components["schemas"]["ContactDiaryResponse"];
 type PaginatedContactDiaryResponse = components["schemas"]["PaginatedContactDiaryResponse"];
+
+type NoticeUpdate = components["schemas"]["NoticeUpdate"];
+type TenderUpdate = components["schemas"]["TenderUpdate"];
+type EventUpdate = components["schemas"]["EventUpdate"];
+type LeaderUpdate = components["schemas"]["LeaderUpdate"];
+type DownloadUpdate = components["schemas"]["DownloadUpdate"];
 
 export const WebsiteContentService = {
   // Notices
@@ -32,6 +39,14 @@ export const WebsiteContentService = {
   },
   async createNotice(data: NoticeCreate): Promise<NoticeResponse> {
     const response = await api.post<NoticeResponse>("/api/notices", data);
+    return response.data;
+  },
+  async updateNotice(id: number, data: NoticeUpdate): Promise<NoticeResponse> {
+    const response = await api.put<NoticeResponse>(`/api/notices/${id}`, data);
+    return response.data;
+  },
+  async deleteNotice(id: number): Promise<any> {
+    const response = await api.delete(`/api/notices/${id}`);
     return response.data;
   },
 
@@ -44,6 +59,14 @@ export const WebsiteContentService = {
     const response = await api.post<TenderResponse>("/api/tenders", data);
     return response.data;
   },
+  async updateTender(id: number, data: TenderUpdate): Promise<TenderResponse> {
+    const response = await api.put<TenderResponse>(`/api/tenders/${id}`, data);
+    return response.data;
+  },
+  async deleteTender(id: number): Promise<any> {
+    const response = await api.delete(`/api/tenders/${id}`);
+    return response.data;
+  },
 
   // Events
   async getEvents(params?: { limit?: number; offset?: number }): Promise<EventsListResponse> {
@@ -54,6 +77,14 @@ export const WebsiteContentService = {
     const response = await api.post<EventResponse>("/api/events", data);
     return response.data;
   },
+  async updateEvent(id: number, data: EventUpdate): Promise<EventResponse> {
+    const response = await api.put<EventResponse>(`/api/events/${id}`, data);
+    return response.data;
+  },
+  async deleteEvent(id: number): Promise<any> {
+    const response = await api.delete(`/api/events/${id}`);
+    return response.data;
+  },
 
   // Leaders
   async getLeaders(params?: { limit?: number; offset?: number }): Promise<LeadersListResponse> {
@@ -62,6 +93,14 @@ export const WebsiteContentService = {
   },
   async createLeader(data: LeaderCreate): Promise<LeaderResponse> {
     const response = await api.post<LeaderResponse>("/api/leaders", data);
+    return response.data;
+  },
+  async updateLeader(id: number, data: LeaderUpdate): Promise<LeaderResponse> {
+    const response = await api.put<LeaderResponse>(`/api/leaders/${id}`, data);
+    return response.data;
+  },
+  async deleteLeader(id: number): Promise<any> {
+    const response = await api.delete(`/api/leaders/${id}`);
     return response.data;
   },
 
@@ -76,6 +115,14 @@ export const WebsiteContentService = {
     });
     return response.data;
   },
+  async updateDownload(id: number, data: DownloadUpdate): Promise<DownloadResponse> {
+    const response = await api.put<DownloadResponse>(`/api/downloads/${id}`, data);
+    return response.data;
+  },
+  async deleteDownload(id: number): Promise<any> {
+    const response = await api.delete(`/api/downloads/${id}`);
+    return response.data;
+  },
 
   // Contact Diary
   async getContacts(params?: { page?: number; size?: number }): Promise<PaginatedContactDiaryResponse> {
@@ -86,4 +133,13 @@ export const WebsiteContentService = {
     const response = await api.post<ContactDiaryResponse>("/api/contact-diary", data);
     return response.data;
   },
+  async updateContact(id: number, data: ContactDiaryUpdate): Promise<ContactDiaryResponse> {
+    const response = await api.put<ContactDiaryResponse>(`/api/contact-diary/${id}`, data);
+    return response.data;
+  },
+  async deleteContact(id: number): Promise<any> {
+    const response = await api.delete(`/api/contact-diary/${id}`);
+    return response.data;
+  },
 };
+

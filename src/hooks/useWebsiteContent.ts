@@ -3,11 +3,18 @@ import { WebsiteContentService } from "@/services/websiteContentService";
 import { type components } from "@/types/api";
 
 type NoticeCreate = components["schemas"]["NoticeCreate"];
+type NoticeUpdate = components["schemas"]["NoticeUpdate"];
 type TenderCreate = components["schemas"]["TenderCreate"];
+type TenderUpdate = components["schemas"]["TenderUpdate"];
 type EventCreate = components["schemas"]["EventCreate"];
+type EventUpdate = components["schemas"]["EventUpdate"];
 type LeaderCreate = components["schemas"]["LeaderCreate"];
+type LeaderUpdate = components["schemas"]["LeaderUpdate"];
 type ContactDiaryCreate = components["schemas"]["ContactDiaryCreate"];
+type ContactDiaryUpdate = components["schemas"]["ContactDiaryUpdate"];
+type DownloadUpdate = components["schemas"]["DownloadUpdate"];
 
+// Notices
 export function useNotices(params?: { limit?: number; offset?: number }) {
   return useQuery({
     queryKey: ["notices", params],
@@ -23,6 +30,24 @@ export function useCreateNotice() {
   });
 }
 
+export function useUpdateNotice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: NoticeUpdate }) => 
+      WebsiteContentService.updateNotice(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notices"] }),
+  });
+}
+
+export function useDeleteNotice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => WebsiteContentService.deleteNotice(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notices"] }),
+  });
+}
+
+// Tenders
 export function useTenders(params?: { limit?: number; offset?: number }) {
   return useQuery({
     queryKey: ["tenders", params],
@@ -38,6 +63,24 @@ export function useCreateTender() {
   });
 }
 
+export function useUpdateTender() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: TenderUpdate }) => 
+      WebsiteContentService.updateTender(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tenders"] }),
+  });
+}
+
+export function useDeleteTender() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => WebsiteContentService.deleteTender(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tenders"] }),
+  });
+}
+
+// Events
 export function useEvents(params?: { limit?: number; offset?: number }) {
   return useQuery({
     queryKey: ["events", params],
@@ -53,6 +96,24 @@ export function useCreateEvent() {
   });
 }
 
+export function useUpdateEvent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: EventUpdate }) => 
+      WebsiteContentService.updateEvent(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["events"] }),
+  });
+}
+
+export function useDeleteEvent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => WebsiteContentService.deleteEvent(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["events"] }),
+  });
+}
+
+// Leaders
 export function useLeaders(params?: { limit?: number; offset?: number }) {
   return useQuery({
     queryKey: ["leaders", params],
@@ -68,6 +129,24 @@ export function useCreateLeader() {
   });
 }
 
+export function useUpdateLeader() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: LeaderUpdate }) => 
+      WebsiteContentService.updateLeader(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["leaders"] }),
+  });
+}
+
+export function useDeleteLeader() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => WebsiteContentService.deleteLeader(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["leaders"] }),
+  });
+}
+
+// Downloads
 export function useDownloads(params?: { limit?: number; offset?: number }) {
   return useQuery({
     queryKey: ["downloads", params],
@@ -83,6 +162,24 @@ export function useCreateDownload() {
   });
 }
 
+export function useUpdateDownload() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: DownloadUpdate }) => 
+      WebsiteContentService.updateDownload(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["downloads"] }),
+  });
+}
+
+export function useDeleteDownload() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => WebsiteContentService.deleteDownload(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["downloads"] }),
+  });
+}
+
+// Contact Diary
 export function useContacts(params?: { page?: number; size?: number }) {
   return useQuery({
     queryKey: ["contacts", params],
@@ -94,6 +191,23 @@ export function useCreateContact() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: ContactDiaryCreate) => WebsiteContentService.createContact(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contacts"] }),
+  });
+}
+
+export function useUpdateContact() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: ContactDiaryUpdate }) => 
+      WebsiteContentService.updateContact(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contacts"] }),
+  });
+}
+
+export function useDeleteContact() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => WebsiteContentService.deleteContact(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contacts"] }),
   });
 }

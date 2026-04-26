@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect, useMemo } from "react";
 import Image from "next/image";
-import DropdownSelect from "@/components/ui/DropdownSelect";
 import TablePagination from "@/components/ui/TablePagination";
 import { useCityProfile, useUpdateCityProfile } from "@/hooks/useCityProfile";
 import { 
@@ -11,7 +10,19 @@ import {
   useEvents, 
   useLeaders, 
   useDownloads,
-  useContacts
+  useContacts,
+  useUpdateNotice,
+  useDeleteNotice,
+  useUpdateTender,
+  useDeleteTender,
+  useUpdateEvent,
+  useDeleteEvent,
+  useUpdateLeader,
+  useDeleteLeader,
+  useUpdateDownload,
+  useDeleteDownload,
+  useUpdateContact,
+  useDeleteContact
 } from "@/hooks/useWebsiteContent";
 import AddNoticeDrawer from "@/components/dashboard/authority/website-content/AddNoticeDrawer";
 import AddTenderDrawer from "@/components/dashboard/authority/website-content/AddTenderDrawer";
@@ -19,6 +30,7 @@ import AddEventDrawer from "@/components/dashboard/authority/website-content/Add
 import AddLeaderDrawer from "@/components/dashboard/authority/website-content/AddLeaderDrawer";
 import AddContactDrawer from "@/components/dashboard/authority/website-content/AddContactDrawer";
 import AddDownloadDrawer from "@/components/dashboard/authority/website-content/AddDownloadDrawer";
+import MasterDataMenu from "@/components/dashboard/authority/master-data/MasterDataMenu";
 import { type components } from "@/types/api";
 
 type TabType = "Notices" | "Tenders" | "Events" | "Leaders Board" | "Contact Diary" | "City Profile" | "Downloads";
@@ -73,92 +85,6 @@ const RenderStatus = (status: string) => {
   );
 };
 
-const RenderActions = () => (
-  <div className="text-center">
-      <button className="text-[#343434] hover:bg-gray-200 rounded p-1 transition-colors cursor-pointer">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 8.66667C8.36819 8.66667 8.66667 8.36819 8.66667 8C8.66667 7.63181 8.36819 7.33333 8 7.33333C7.63181 7.33333 7.33333 7.63181 7.33333 8C7.33333 8.36819 7.63181 8.66667 8 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M13.3333 8.66667C13.7015 8.66667 14 8.36819 14 8C14 7.63181 13.7015 7.33333 13.3333 7.33333C12.9651 7.33333 12.6667 7.63181 12.6667 8C12.6667 8.36819 12.9651 8.66667 13.3333 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M2.66667 8.66667C3.03486 8.66667 3.33333 8.36819 3.33333 8C3.33333 7.63181 3.03486 7.33333 2.66667 7.33333C2.29848 7.33333 2 7.63181 2 8C2 8.36819 2.29848 8.66667 2.66667 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-      </button>
-  </div>
-);
-
-const NOTICE_COLUMNS: TableColumn[] = [
-  { header: "Notice Title", key: "title", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.title}</span> },
-  { header: "Notice Type", key: "notice_type" },
-  { header: "Published On", key: "published_on", render: (row) => formatDate(row.published_on) },
-  { header: "Valid Till", key: "valid_till", render: (row) => formatDate(row.valid_till) },
-  { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
-  { 
-    header: "Visibility", 
-    key: "visibility",
-    render: (row) => {
-      const isInternal = row.visibility === "INTERNAL";
-      return (
-        <div className="flex items-center gap-1.5">
-           { !isInternal ? (
-             <Image src="/dashboard/icons/applications/visibility-public.svg" alt="Public" width={20} height={20} />
-           ) : (
-             <Image src="/dashboard/icons/applications/visibility-internal.svg" alt="Internal" width={20} height={20} />
-           )}
-          <span className={`text-sm font-normal ${isInternal ? "text-[#F35C86]" : "text-[#404B86]"} capitalize`}>
-            {row.visibility?.toLowerCase()}
-          </span>
-        </div>
-      );
-    }
-  },
-  { header: "", key: "actions", width: "40px", render: () => RenderActions() }
-];
-
-const TENDER_COLUMNS: TableColumn[] = [
-  { header: "Tender Title", key: "title", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.title}</span> },
-  { header: "Tender Type", key: "tender_type" },
-  { header: "Tender Amount", key: "amount", render: (row) => row.amount ? `₹${row.amount}` : "—" },
-  { header: "Published On", key: "published_on", render: (row) => formatDate(row.published_on) },
-  { header: "Deadline", key: "submission_deadline", render: (row) => formatDate(row.submission_deadline) },
-  { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
-  { header: "", key: "actions", width: "40px", render: () => RenderActions() }
-];
-
-const EVENT_COLUMNS: TableColumn[] = [
-  { header: "Event Title", key: "title", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.title}</span> },
-  { header: "Event Type", key: "event_type" },
-  { header: "Date", key: "date", render: (row) => formatDate(row.date) },
-  { header: "Venue", key: "venue" },
-  { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
-  { header: "", key: "actions", width: "40px", render: () => RenderActions() }
-];
-
-const LEADERS_COLUMNS: TableColumn[] = [
-  { header: "Name", key: "name", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.name}</span> },
-  { header: "Designation", key: "designation" },
-  { header: "Tenure Start", key: "tenure_start", render: (row) => formatDate(row.tenure_start) },
-  { header: "Tenure End", key: "tenure_end", render: (row) => formatDate(row.tenure_end) },
-  { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
-  { header: "", key: "actions", width: "40px", render: () => RenderActions() }
-];
-
-const CONTACT_COLUMNS: TableColumn[] = [
-  { header: "Name", key: "contact_person", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.contact_person}</span> },
-  { header: "Designation", key: "designation" },
-  { header: "Department", key: "office_department" },
-  { header: "Mobile Number", key: "phone_number" },
-  { header: "Email", key: "email_address" },
-  { header: "Status", key: "status", render: (row) => RenderStatus(row.status ? "ACTIVE" : "INACTIVE") },
-  { header: "", key: "actions", width: "40px", render: () => RenderActions() }
-];
-
-const DOWNLOAD_COLUMNS: TableColumn[] = [
-  { header: "Document Title", key: "document_title", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.document_title}</span> },
-  { header: "Category", key: "document_type" },
-  { header: "Uploaded On", key: "created_at", render: (row) => formatDate(row.created_at) },
-  { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
-  { header: "", key: "actions", width: "40px", render: () => RenderActions() }
-];
-
 export default function AuthorityWebsiteContentPage() {
   const [activeTab, setActiveTab] = useState<TabType>("Notices");
   const [indicatorStyle, setIndicatorStyle] = useState({ width: 0, left: 0 });
@@ -179,6 +105,13 @@ export default function AuthorityWebsiteContentPage() {
   const [isContactDrawerOpen, setIsContactDrawerOpen] = useState(false);
   const [isDownloadDrawerOpen, setIsDownloadDrawerOpen] = useState(false);
 
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
+  const [dropdownPos, setDropdownPosition] = useState({ top: 0, left: 0 });
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRefs = useRef<Record<number, HTMLButtonElement | null>>({});
+
   // Data Fetching
   const params = { limit, offset: (page - 1) * limit };
   const { data: noticesData, isLoading: isLoadingNotices } = useNotices(params);
@@ -190,6 +123,192 @@ export default function AuthorityWebsiteContentPage() {
   
   const { data: cityProfile, isLoading: isLoadingProfile } = useCityProfile();
   const updateProfile = useUpdateCityProfile();
+
+  // Mutations
+  const { mutateAsync: updateNotice } = useUpdateNotice();
+  const { mutateAsync: deleteNotice } = useDeleteNotice();
+  const { mutateAsync: updateTender } = useUpdateTender();
+  const { mutateAsync: deleteTender } = useDeleteTender();
+  const { mutateAsync: updateEvent } = useUpdateEvent();
+  const { mutateAsync: deleteEvent } = useDeleteEvent();
+  const { mutateAsync: updateLeader } = useUpdateLeader();
+  const { mutateAsync: deleteLeader } = useDeleteLeader();
+  const { mutateAsync: updateDownload } = useUpdateDownload();
+  const { mutateAsync: deleteDownload } = useDeleteDownload();
+  const { mutateAsync: updateContact } = useUpdateContact();
+  const { mutateAsync: deleteContact } = useDeleteContact();
+
+  const handleActionClick = (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    if (openDropdownId === id) {
+      setOpenDropdownId(null);
+    } else {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 8,
+        left: rect.right - 160, 
+      });
+      setOpenDropdownId(id);
+    }
+  };
+
+  const handleToggleStatus = async (item: any) => {
+    try {
+      if (activeTab === "Notices") {
+        const newStatus = item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+        await updateNotice({ id: item.id, data: { status: newStatus } });
+      } else if (activeTab === "Tenders") {
+        const newStatus = item.status === "ACTIVE" ? "CLOSED" : "ACTIVE";
+        await updateTender({ id: item.id, data: { status: newStatus } });
+      } else if (activeTab === "Events") {
+        const newStatus = item.status === "ACTIVE" ? "CLOSED" : "ACTIVE";
+        await updateEvent({ id: item.id, data: { status: newStatus } });
+      } else if (activeTab === "Leaders Board") {
+        const newStatus = item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+        await updateLeader({ id: item.id, data: { status: newStatus } });
+      } else if (activeTab === "Downloads") {
+        const newStatus = item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+        await updateDownload({ id: item.id, data: { status: newStatus } });
+      } else if (activeTab === "Contact Diary") {
+        const newStatus = !item.status;
+        await updateContact({ id: item.id, data: { status: newStatus } });
+      }
+      alert("Status updated successfully!");
+    } catch (error) {
+      console.error("Failed to update status", error);
+      alert("Failed to update status.");
+    }
+    setOpenDropdownId(null);
+  };
+
+  const handleDelete = async (item: any) => {
+    const itemName = item.title || item.name || item.document_title || item.contact_person || "this item";
+    if (!confirm(`Are you sure you want to delete "${itemName}"?`)) return;
+
+    try {
+      if (activeTab === "Notices") await deleteNotice(item.id);
+      else if (activeTab === "Tenders") await deleteTender(item.id);
+      else if (activeTab === "Events") await deleteEvent(item.id);
+      else if (activeTab === "Leaders Board") await deleteLeader(item.id);
+      else if (activeTab === "Downloads") await deleteDownload(item.id);
+      else if (activeTab === "Contact Diary") await deleteContact(item.id);
+      alert("Deleted successfully!");
+    } catch (error) {
+      console.error("Failed to delete", error);
+      alert("Failed to delete.");
+    }
+    setOpenDropdownId(null);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openDropdownId !== null && triggerRefs.current[openDropdownId]?.contains(event.target as Node)) {
+        return;
+      }
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpenDropdownId(null);
+      }
+    };
+    const handleScroll = () => setOpenDropdownId(null);
+
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", handleScroll, true);
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
+    };
+  }, [openDropdownId]);
+
+  const RenderActions = (row: any) => (
+    <div className="text-center">
+        <button 
+          ref={el => { triggerRefs.current[row.id] = el }}
+          onClick={(e) => handleActionClick(e, row.id)}
+          className="text-[#343434] hover:bg-gray-200 rounded p-1 transition-colors cursor-pointer"
+        >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 8.66667C8.36819 8.66667 8.66667 8.36819 8.66667 8C8.66667 7.63181 8.36819 7.33333 8 7.33333C7.63181 7.33333 7.33333 7.63181 7.33333 8C7.33333 8.36819 7.63181 8.66667 8 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M13.3333 8.66667C13.7015 8.66667 14 8.36819 14 8C14 7.63181 13.7015 7.33333 13.3333 7.33333C12.9651 7.33333 12.6667 7.63181 12.6667 8C12.6667 8.36819 12.9651 8.66667 13.3333 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M2.66667 8.66667C3.03486 8.66667 3.33333 8.36819 3.33333 8C3.33333 7.63181 3.03486 7.33333 2.66667 7.33333C2.29848 7.33333 2 7.63181 2 8C2 8.36819 2.29848 8.66667 2.66667 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+        </button>
+    </div>
+  );
+
+  const NOTICE_COLUMNS: TableColumn[] = [
+    { header: "Notice Title", key: "title", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.title}</span> },
+    { header: "Notice Type", key: "notice_type" },
+    { header: "Published On", key: "published_on", render: (row) => formatDate(row.published_on) },
+    { header: "Valid Till", key: "valid_till", render: (row) => formatDate(row.valid_till) },
+    { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
+    { 
+      header: "Visibility", 
+      key: "visibility",
+      render: (row) => {
+        const isInternal = row.visibility === "INTERNAL";
+        return (
+          <div className="flex items-center gap-1.5">
+             { !isInternal ? (
+               <Image src="/dashboard/icons/applications/visibility-public.svg" alt="Public" width={20} height={20} />
+             ) : (
+               <Image src="/dashboard/icons/applications/visibility-internal.svg" alt="Internal" width={20} height={20} />
+             )}
+            <span className={`text-sm font-normal ${isInternal ? "text-[#F35C86]" : "text-[#404B86]"} capitalize`}>
+              {row.visibility?.toLowerCase()}
+            </span>
+          </div>
+        );
+      }
+    },
+    { header: "", key: "actions", width: "40px", render: (row) => RenderActions(row) }
+  ];
+
+  const TENDER_COLUMNS: TableColumn[] = [
+    { header: "Tender Title", key: "title", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.title}</span> },
+    { header: "Tender Type", key: "tender_type" },
+    { header: "Tender Amount", key: "amount", render: (row) => row.amount ? `₹${row.amount}` : "—" },
+    { header: "Published On", key: "published_on", render: (row) => formatDate(row.published_on) },
+    { header: "Deadline", key: "submission_deadline", render: (row) => formatDate(row.submission_deadline) },
+    { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
+    { header: "", key: "actions", width: "40px", render: (row) => RenderActions(row) }
+  ];
+
+  const EVENT_COLUMNS: TableColumn[] = [
+    { header: "Event Title", key: "title", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.title}</span> },
+    { header: "Event Type", key: "event_type" },
+    { header: "Date", key: "date", render: (row) => formatDate(row.date) },
+    { header: "Venue", key: "venue" },
+    { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
+    { header: "", key: "actions", width: "40px", render: (row) => RenderActions(row) }
+  ];
+
+  const LEADERS_COLUMNS: TableColumn[] = [
+    { header: "Name", key: "name", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.name}</span> },
+    { header: "Designation", key: "designation" },
+    { header: "Tenure Start", key: "tenure_start", render: (row) => formatDate(row.tenure_start) },
+    { header: "Tenure End", key: "tenure_end", render: (row) => formatDate(row.tenure_end) },
+    { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
+    { header: "", key: "actions", width: "40px", render: (row) => RenderActions(row) }
+  ];
+
+  const CONTACT_COLUMNS: TableColumn[] = [
+    { header: "Name", key: "contact_person", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.contact_person}</span> },
+    { header: "Designation", key: "designation" },
+    { header: "Department", key: "office_department" },
+    { header: "Mobile Number", key: "phone_number" },
+    { header: "Email", key: "email_address" },
+    { header: "Status", key: "status", render: (row) => RenderStatus(row.status ? "ACTIVE" : "INACTIVE") },
+    { header: "", key: "actions", width: "40px", render: (row) => RenderActions(row) }
+  ];
+
+  const DOWNLOAD_COLUMNS: TableColumn[] = [
+    { header: "Document Title", key: "document_title", render: (row) => <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">{row.document_title}</span> },
+    { header: "Category", key: "document_type" },
+    { header: "Uploaded On", key: "created_at", render: (row) => formatDate(row.created_at) },
+    { header: "Status", key: "status", render: (row) => RenderStatus(row.status) },
+    { header: "", key: "actions", width: "40px", render: (row) => RenderActions(row) }
+  ];
 
   const [profileForm, setProfileForm] = useState({
     area_sq_km: "",
@@ -291,7 +410,10 @@ export default function AuthorityWebsiteContentPage() {
           data: tendersData?.tenders || [],
           total: tendersData?.total || 0,
           isLoading: isLoadingTenders,
-          onAdd: () => setIsTenderDrawerOpen(true)
+          onAdd: () => {
+            setSelectedItem(null);
+            setIsTenderDrawerOpen(true);
+          }
         };
       case "Events":
         return { 
@@ -299,7 +421,10 @@ export default function AuthorityWebsiteContentPage() {
           data: eventsData?.events || [],
           total: eventsData?.total || 0,
           isLoading: isLoadingEvents,
-          onAdd: () => setIsEventDrawerOpen(true)
+          onAdd: () => {
+            setSelectedItem(null);
+            setIsEventDrawerOpen(true);
+          }
         };
       case "Leaders Board":
         return { 
@@ -307,7 +432,10 @@ export default function AuthorityWebsiteContentPage() {
           data: leadersData?.leaders || [],
           total: leadersData?.total || 0,
           isLoading: isLoadingLeaders,
-          onAdd: () => setIsLeaderDrawerOpen(true)
+          onAdd: () => {
+            setSelectedItem(null);
+            setIsLeaderDrawerOpen(true);
+          }
         };
       case "Contact Diary":
         return { 
@@ -315,7 +443,10 @@ export default function AuthorityWebsiteContentPage() {
           data: contactsData?.items || [],
           total: contactsData?.total || 0,
           isLoading: isLoadingContacts,
-          onAdd: () => setIsContactDrawerOpen(true)
+          onAdd: () => {
+            setSelectedItem(null);
+            setIsContactDrawerOpen(true);
+          }
         };
       case "Downloads":
         return { 
@@ -323,7 +454,10 @@ export default function AuthorityWebsiteContentPage() {
           data: downloadsData?.downloads || [],
           total: downloadsData?.total || 0,
           isLoading: isLoadingDownloads,
-          onAdd: () => setIsDownloadDrawerOpen(true)
+          onAdd: () => {
+            setSelectedItem(null);
+            setIsDownloadDrawerOpen(true);
+          }
         };
       case "Notices":
       default:
@@ -332,7 +466,10 @@ export default function AuthorityWebsiteContentPage() {
           data: noticesData?.notices || [],
           total: noticesData?.total || 0,
           isLoading: isLoadingNotices,
-          onAdd: () => setIsNoticeDrawerOpen(true)
+          onAdd: () => {
+            setSelectedItem(null);
+            setIsNoticeDrawerOpen(true);
+          }
         };
     }
   };
@@ -374,6 +511,7 @@ export default function AuthorityWebsiteContentPage() {
             onClick={() => {
               setActiveTab(tab);
               setPage(1);
+              setOpenDropdownId(null);
             }}
             className={`flex items-center justify-center gap-2.5 px-3 py-2 text-sm transition-colors whitespace-nowrap cursor-pointer ${
               activeTab === tab ? "font-semibold text-[#0C83FF]" : "font-normal text-[#343434]"
@@ -553,6 +691,43 @@ export default function AuthorityWebsiteContentPage() {
               )}
             </div>
             
+            {/* Action Menu */}
+            {openDropdownId && (
+              <div 
+                ref={dropdownRef}
+                style={{ 
+                  position: 'fixed', 
+                  top: dropdownPos.top, 
+                  left: dropdownPos.left,
+                  zIndex: 9999 
+                }}
+                className="animate-in fade-in zoom-in duration-200"
+              >
+                {(() => {
+                  const item = tabContent.data.find((i: any) => i.id === openDropdownId);
+                  if (!item) return null;
+                  const isActive = activeTab === "Contact Diary" ? Boolean(item.status) : item.status === "ACTIVE";
+                  return (
+                    <MasterDataMenu 
+                      is_active={isActive}
+                      onDeactivate={() => handleToggleStatus(item)}
+                      onDelete={() => handleDelete(item)}
+                      onEdit={() => {
+                        setSelectedItem(item);
+                        if (activeTab === "Notices") setIsNoticeDrawerOpen(true);
+                        else if (activeTab === "Tenders") setIsTenderDrawerOpen(true);
+                        else if (activeTab === "Events") setIsEventDrawerOpen(true);
+                        else if (activeTab === "Leaders Board") setIsLeaderDrawerOpen(true);
+                        else if (activeTab === "Contact Diary") setIsContactDrawerOpen(true);
+                        else if (activeTab === "Downloads") setIsDownloadDrawerOpen(true);
+                        setOpenDropdownId(null);
+                      }}
+                    />
+                  );
+                })()}
+              </div>
+            )}
+
             <TablePagination
               currentPage={page}
               totalPages={Math.ceil(tabContent.total / limit) || 1}
@@ -563,12 +738,54 @@ export default function AuthorityWebsiteContentPage() {
         )}
       </div>
 
-      <AddNoticeDrawer isOpen={isNoticeDrawerOpen} onClose={() => setIsNoticeDrawerOpen(false)} />
-      <AddTenderDrawer isOpen={isTenderDrawerOpen} onClose={() => setIsTenderDrawerOpen(false)} />
-      <AddEventDrawer isOpen={isEventDrawerOpen} onClose={() => setIsEventDrawerOpen(false)} />
-      <AddLeaderDrawer isOpen={isLeaderDrawerOpen} onClose={() => setIsLeaderDrawerOpen(false)} />
-      <AddContactDrawer isOpen={isContactDrawerOpen} onClose={() => setIsContactDrawerOpen(false)} />
-      <AddDownloadDrawer isOpen={isDownloadDrawerOpen} onClose={() => setIsDownloadDrawerOpen(false)} />
+      <AddNoticeDrawer 
+        isOpen={isNoticeDrawerOpen} 
+        onClose={() => {
+          setIsNoticeDrawerOpen(false);
+          setSelectedItem(null);
+        }} 
+        data={selectedItem}
+      />
+      <AddTenderDrawer 
+        isOpen={isTenderDrawerOpen} 
+        onClose={() => {
+          setIsTenderDrawerOpen(false);
+          setSelectedItem(null);
+        }} 
+        data={selectedItem}
+      />
+      <AddEventDrawer 
+        isOpen={isEventDrawerOpen} 
+        onClose={() => {
+          setIsEventDrawerOpen(false);
+          setSelectedItem(null);
+        }} 
+        data={selectedItem}
+      />
+      <AddLeaderDrawer 
+        isOpen={isLeaderDrawerOpen} 
+        onClose={() => {
+          setIsLeaderDrawerOpen(false);
+          setSelectedItem(null);
+        }} 
+        data={selectedItem}
+      />
+      <AddContactDrawer 
+        isOpen={isContactDrawerOpen} 
+        onClose={() => {
+          setIsContactDrawerOpen(false);
+          setSelectedItem(null);
+        }} 
+        data={selectedItem}
+      />
+      <AddDownloadDrawer 
+        isOpen={isDownloadDrawerOpen} 
+        onClose={() => {
+          setIsDownloadDrawerOpen(false);
+          setSelectedItem(null);
+        }} 
+        data={selectedItem}
+      />
     </div>
   );
 }

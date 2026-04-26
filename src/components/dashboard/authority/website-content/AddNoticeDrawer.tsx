@@ -1,19 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { type components } from "@/types/api";
 import DropdownSelect from "@/components/ui/DropdownSelect";
-import { useCreateNotice } from "@/hooks/useWebsiteContent";
+import { useCreateNotice, useUpdateNotice } from "@/hooks/useWebsiteContent";
 
 type NoticeCreate = components["schemas"]["NoticeCreate"];
+type NoticeUpdate = components["schemas"]["NoticeUpdate"];
+type NoticeResponse = components["schemas"]["NoticeResponse"];
 type NoticeStatus = components["schemas"]["NoticeStatus"];
 type Visibility = components["schemas"]["Visibility"];
 
 interface AddNoticeDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  data?: NoticeResponse | null;
 }
 
 const NOTICE_TYPE_OPTIONS = [
@@ -24,9 +27,13 @@ const NOTICE_TYPE_OPTIONS = [
   { label: "Internal Notice", value: "Internal Notice" },
 ];
 
-export default function AddNoticeDrawer({ isOpen, onClose }: AddNoticeDrawerProps) {
-  const { mutateAsync: createNotice, isPending } = useCreateNotice();
+export default function AddNoticeDrawer({ isOpen, onClose, data }: AddNoticeDrawerProps) {
+  const { mutateAsync: createNotice, isPending: isCreating } = useCreateNotice();
+  const { mutateAsync: updateNotice, isPending: isUpdating } = useUpdateNotice();
   
+  const isPending = isCreating || isUpdating;
+  const isEdit = !!data;
+
   const [formData, setFormData] = useState<NoticeCreate>({
     title: "",
     notice_type: "Public Notice",
@@ -36,16 +43,17 @@ export default function AddNoticeDrawer({ isOpen, onClose }: AddNoticeDrawerProp
     visibility: "PUBLIC",
   });
 
-  const handleSubmit = async () => {
-    if (!formData.title.trim()) {
-      alert("Please enter a notice title");
-      return;
-    }
-    
-    try {
-      await createNotice(formData);
-      onClose();
-      // Reset form
+  useEffect(() => {
+    if (data) {
+      setFormData({
+        title: data.title,
+        notice_type: data.notice_type || "Public Notice",
+        published_on: data.published_on || new Date().toISOString(),
+        valid_till: data.valid_till,
+        status: data.status,
+        visibility: data.visibility || "PUBLIC",
+      });
+    } else {
       setFormData({
         title: "",
         notice_type: "Public Notice",
@@ -54,10 +62,35 @@ export default function AddNoticeDrawer({ isOpen, onClose }: AddNoticeDrawerProp
         status: "ACTIVE",
         visibility: "PUBLIC",
       });
-      alert("Notice added successfully!");
+    }
+  }, [data, isOpen]);
+
+  const handleSubmit = async () => {
+    if (!formData.title.trim()) {
+      alert("Please enter a notice title");
+      return;
+    }
+    
+    try {
+      if (isEdit && data) {
+        const updateData: NoticeUpdate = {
+          title: formData.title,
+          notice_type: formData.notice_type,
+          published_on: formData.published_on,
+          valid_till: formData.valid_till,
+          status: formData.status,
+          visibility: formData.visibility,
+        };
+        await updateNotice({ id: data.id, data: updateData });
+        alert("Notice updated successfully!");
+      } else {
+        await createNotice(formData);
+        alert("Notice added successfully!");
+      }
+      onClose();
     } catch (err) {
       console.error(err);
-      alert("Failed to add notice");
+      alert(`Failed to ${isEdit ? "update" : "add"} notice`);
     }
   };
 
@@ -85,7 +118,7 @@ export default function AddNoticeDrawer({ isOpen, onClose }: AddNoticeDrawerProp
             {/* Header */}
             <div className="flex items-center justify-between border-b border-[#D6D9DE] bg-[#F5F6F7] px-6 py-4">
               <h2 className="text-[15px] font-medium text-[#343434]">
-                Add New Notice
+                {isEdit ? "Edit Notice" : "Add New Notice"}
               </h2>
               <button
                 onClick={onClose}
@@ -217,7 +250,7 @@ export default function AddNoticeDrawer({ isOpen, onClose }: AddNoticeDrawerProp
                 disabled={isPending}
                 className="h-[44px] rounded-lg bg-[#0C83FF] px-8 text-sm font-medium text-white hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
-                {isPending ? "Adding..." : "Add Notice"}
+                {isPending ? (isEdit ? "Updating..." : "Adding...") : (isEdit ? "Update Notice" : "Add Notice")}
               </button>
             </div>
           </motion.div>

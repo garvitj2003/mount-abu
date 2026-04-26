@@ -1,18 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
-import { useCreateContact } from "@/hooks/useWebsiteContent";
+import { type components } from "@/types/api";
+import { useCreateContact, useUpdateContact } from "@/hooks/useWebsiteContent";
+
+type ContactDiaryCreate = components["schemas"]["ContactDiaryCreate"];
+type ContactDiaryUpdate = components["schemas"]["ContactDiaryUpdate"];
+type ContactDiaryResponse = components["schemas"]["ContactDiaryResponse"];
 
 interface AddContactDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  data?: ContactDiaryResponse | null;
 }
 
-export default function AddContactDrawer({ isOpen, onClose }: AddContactDrawerProps) {
-  const createContact = useCreateContact();
-  const [formData, setFormData] = useState({
+export default function AddContactDrawer({ isOpen, onClose, data }: AddContactDrawerProps) {
+  const { mutateAsync: createContact, isPending: isCreating } = useCreateContact();
+  const { mutateAsync: updateContact, isPending: isUpdating } = useUpdateContact();
+  
+  const isPending = isCreating || isUpdating;
+  const isEdit = !!data;
+
+  const [formData, setFormData] = useState<ContactDiaryCreate>({
     office_department: "",
     contact_person: "",
     designation: "",
@@ -21,16 +32,17 @@ export default function AddContactDrawer({ isOpen, onClose }: AddContactDrawerPr
     status: true,
   });
 
-  const handleSubmit = async () => {
-    if (!formData.office_department.trim() || !formData.contact_person.trim()) {
-      alert("Please fill in the required fields");
-      return;
-    }
-    
-    try {
-      await createContact.mutateAsync(formData);
-      onClose();
-      // Reset form
+  useEffect(() => {
+    if (data) {
+      setFormData({
+        office_department: data.office_department,
+        contact_person: data.contact_person,
+        designation: data.designation || "",
+        phone_number: data.phone_number || "",
+        email_address: data.email_address || "",
+        status: data.status,
+      });
+    } else {
       setFormData({
         office_department: "",
         contact_person: "",
@@ -39,9 +51,35 @@ export default function AddContactDrawer({ isOpen, onClose }: AddContactDrawerPr
         email_address: "",
         status: true,
       });
+    }
+  }, [data, isOpen]);
+
+  const handleSubmit = async () => {
+    if (!formData.office_department.trim() || !formData.contact_person.trim()) {
+      alert("Please enter department and contact person");
+      return;
+    }
+    
+    try {
+      if (isEdit && data) {
+        const updateData: ContactDiaryUpdate = {
+          office_department: formData.office_department,
+          contact_person: formData.contact_person,
+          designation: formData.designation,
+          phone_number: formData.phone_number,
+          email_address: formData.email_address,
+          status: formData.status,
+        };
+        await updateContact({ id: data.id, data: updateData });
+        alert("Contact updated successfully!");
+      } else {
+        await createContact(formData);
+        alert("Contact added successfully!");
+      }
+      onClose();
     } catch (err) {
-      console.error("Failed to create contact", err);
-      alert("Failed to save contact. Please try again.");
+      console.error(err);
+      alert(`Failed to ${isEdit ? "update" : "add"} contact`);
     }
   };
 
@@ -69,7 +107,7 @@ export default function AddContactDrawer({ isOpen, onClose }: AddContactDrawerPr
             {/* Header */}
             <div className="flex items-center justify-between border-b border-[#D6D9DE] bg-[#F5F6F7] px-6 py-4">
               <h2 className="text-[15px] font-medium text-[#343434]">
-                Add New Contact
+                {isEdit ? "Edit Contact" : "Add New Contact"}
               </h2>
               <button
                 onClick={onClose}
@@ -87,77 +125,71 @@ export default function AddContactDrawer({ isOpen, onClose }: AddContactDrawerPr
             {/* Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-5">
               
-              {/* Office / Department Name */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#343434]">Office / Department Name</label>
+                <label className="text-sm font-medium text-[#343434]">Office / Department</label>
                 <input 
                   type="text"
-                  placeholder="Engineering Department"
+                  placeholder="Municipal Corporation Office"
                   className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
                   value={formData.office_department}
                   onChange={(e) => setFormData({ ...formData, office_department: e.target.value })}
                 />
               </div>
 
-              {/* Contact Person Name */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#343434]">Contact Person Name</label>
+                <label className="text-sm font-medium text-[#343434]">Contact Person</label>
                 <input 
                   type="text"
-                  placeholder="Shri Ramesh Kumar"
+                  placeholder="Shri. Rajesh Kumar"
                   className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
                   value={formData.contact_person}
                   onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
                 />
               </div>
 
-              {/* Designation */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#343434]">Designation</label>
                 <input 
                   type="text"
-                  placeholder="Chairman, Nagar Parishad"
+                  placeholder="Assistant Engineer"
                   className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
-                  value={formData.designation}
+                  value={formData.designation || ""}
                   onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
                 />
               </div>
 
-              {/* Phone Number */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#343434]">Phone Number</label>
                 <input 
                   type="text"
-                  placeholder="02974-23XXXX or 98XXXXXXXX"
+                  placeholder="98XXXXXXXX"
                   className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
-                  value={formData.phone_number}
+                  value={formData.phone_number || ""}
                   onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
                 />
               </div>
 
-              {/* Email Address */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#343434]">Email Address</label>
                 <input 
                   type="email"
-                  placeholder="info@mountabu.gov.in"
+                  placeholder="office@mountabu.gov.in"
                   className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
-                  value={formData.email_address}
+                  value={formData.email_address || ""}
                   onChange={(e) => setFormData({ ...formData, email_address: e.target.value })}
                 />
               </div>
 
-              {/* Status */}
               <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5">
                   <p className="text-sm font-medium text-[#343434]">Status</p>
-                  <p className="text-[11px] text-[#343434] opacity-60">Inactive categories cannot be selected by citizens.</p>
+                  <p className="text-[11px] text-[#343434] opacity-60">Inactive contacts will not be visible.</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input 
                     type="checkbox" 
                     className="sr-only peer"
-                    checked={formData.status}
+                    checked={!!formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.checked })}
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0C83FF]"></div>
@@ -176,9 +208,10 @@ export default function AddContactDrawer({ isOpen, onClose }: AddContactDrawerPr
               </button>
               <button 
                 onClick={handleSubmit}
-                className="h-[44px] rounded-lg bg-[#0C83FF] px-8 text-sm font-medium text-white hover:bg-blue-600 transition-colors"
+                disabled={isPending}
+                className="h-[44px] rounded-lg bg-[#0C83FF] px-8 text-sm font-medium text-white hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
-                Save Contact
+                {isPending ? (isEdit ? "Updating..." : "Adding...") : (isEdit ? "Update Contact" : "Add Contact")}
               </button>
             </div>
           </motion.div>

@@ -4,6 +4,7 @@ import { type components } from "@/types/api";
 type UserResponse = components["schemas"]["UserResponse"];
 type UserFilter = components["schemas"]["UserFilter"];
 type CreateUserRequest = components["schemas"]["CreateUserRequest"];
+type UpdateUserRequest = components["schemas"]["UpdateUserRequest"];
 type ChangePasswordRequest = components["schemas"]["ChangePasswordRequest"];
 
 export const UserService = {
@@ -16,6 +17,16 @@ export const UserService = {
 
   async createUser(data: CreateUserRequest): Promise<UserResponse> {
     const response = await api.post<UserResponse>("/superadmin/users", data);
+    return response.data;
+  },
+
+  async updateUser(userId: number, data: UpdateUserRequest): Promise<any> {
+    const response = await api.put(`/superadmin/users/${userId}`, data);
+    return response.data;
+  },
+
+  async deleteUser(userId: number): Promise<any> {
+    const response = await api.delete(`/superadmin/users/${userId}`);
     return response.data;
   },
 

@@ -7,13 +7,18 @@ import {
   useWards, 
   useDepartments, 
   useRoles, 
-  useMaterials 
+  useMaterials,
+  useUpdateWard,
+  useUpdateDepartment,
+  useUpdateRole,
+  useUpdateComplaintCategory
 } from "@/hooks/useMasterData";
 import NewCategoryDrawer from "@/components/dashboard/authority/master-data/NewCategoryDrawer";
 import NewWardDrawer from "@/components/dashboard/authority/master-data/NewWardDrawer";
 import NewDepartmentDrawer from "@/components/dashboard/authority/master-data/NewDepartmentDrawer";
 import NewRoleDrawer from "@/components/dashboard/authority/master-data/NewRoleDrawer";
 import NewMaterialDrawer from "@/components/dashboard/authority/master-data/NewMaterialDrawer";
+import MasterDataMenu from "@/components/dashboard/authority/master-data/MasterDataMenu";
 import TablePagination from "@/components/ui/TablePagination";
 
 type TabType = "Complaint Categories" | "Wards/Zones" | "Departments" | "Roles" | "Materials";
@@ -36,9 +41,6 @@ const formatDate = (dateStr: string) => {
   });
 };
 
-
-
-
 export default function AuthorityMasterDataPage() {
   const [activeTab, setActiveTab] = useState<TabType>("Complaint Categories");
   const [indicatorStyle, setIndicatorStyle] = useState({ width: 0, left: 0 });
@@ -54,7 +56,13 @@ export default function AuthorityMasterDataPage() {
   const [isRoleDrawerOpen, setIsRoleDrawerOpen] = useState(false);
   const [isMaterialDrawerOpen, setIsMaterialDrawerOpen] = useState(false);
   
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
+  const [dropdownPos, setDropdownPosition] = useState({ top: 0, left: 0 });
+
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRefs = useRef<Record<number, HTMLButtonElement | null>>({});
 
   // Hooks
   const { data: categories = [], isLoading: isLoadingCategories } = useComplaintCategories();
@@ -62,6 +70,84 @@ export default function AuthorityMasterDataPage() {
   const { data: departments = [], isLoading: isLoadingDepts } = useDepartments();
   const { data: roles = [], isLoading: isLoadingRoles } = useRoles();
   const { data: materials = [], isLoading: isLoadingMaterials } = useMaterials();
+
+  // Mutations
+  const { mutateAsync: updateWard } = useUpdateWard();
+  const { mutateAsync: updateDept } = useUpdateDepartment();
+  const { mutateAsync: updateRole } = useUpdateRole();
+  const { mutateAsync: updateCategory } = useUpdateComplaintCategory();
+
+  const handleActionClick = (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    if (openDropdownId === id) {
+      setOpenDropdownId(null);
+    } else {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 8,
+        left: rect.right - 160, 
+      });
+      setOpenDropdownId(id);
+    }
+  };
+
+  const handleToggleStatus = async (item: any) => {
+    try {
+      const newStatus = !item.status;
+      if (activeTab === "Wards/Zones") {
+        await updateWard({ id: item.id, data: { status: newStatus } });
+      } else if (activeTab === "Departments") {
+        await updateDept({ id: item.id, data: { status: newStatus } });
+      } else if (activeTab === "Roles") {
+        await updateRole({ id: item.id, data: { status: newStatus } });
+      } else if (activeTab === "Complaint Categories") {
+        await updateCategory({ id: item.id, data: { status: newStatus } });
+      }
+      alert("Status updated successfully!");
+    } catch (error) {
+      console.error("Failed to update status", error);
+      alert("Failed to update status.");
+    }
+    setOpenDropdownId(null);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openDropdownId !== null && triggerRefs.current[openDropdownId]?.contains(event.target as Node)) {
+        return;
+      }
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpenDropdownId(null);
+      }
+    };
+    const handleScroll = () => setOpenDropdownId(null);
+
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", handleScroll, true);
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
+    };
+  }, [openDropdownId]);
+
+  const ACTION_COLUMN: TableColumn = {
+    header: "",
+    key: "actions",
+    render: (row: any) => (
+      <button 
+        ref={el => { triggerRefs.current[row.id] = el }}
+        onClick={(e) => handleActionClick(e, row.id)}
+        className="text-[#343434] hover:bg-gray-200 rounded p-1 transition-colors"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 8.66667C8.36819 8.66667 8.66667 8.36819 8.66667 8C8.66667 7.63181 8.36819 7.33333 8 7.33333C7.63181 7.33333 7.33333 7.63181 7.33333 8C7.33333 8.36819 7.63181 8.66667 8 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M13.3333 8.66667C13.7015 8.66667 14 8.36819 14 8C14 7.63181 13.7015 7.33333 13.3333 7.33333C12.9651 7.33333 12.6667 7.63181 12.6667 8C12.6667 8.36819 12.9651 8.66667 13.3333 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M2.66667 8.66667C3.03486 8.66667 3.33333 8.36819 3.33333 8C3.33333 7.63181 3.03486 7.33333 2.66667 7.33333C2.29848 7.33333 2 7.63181 2 8C2 8.36819 2.29848 8.66667 2.66667 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+    )
+  };
 
   const CATEGORY_COLUMNS: TableColumn[] = useMemo(() => [
     { 
@@ -90,7 +176,8 @@ export default function AuthorityMasterDataPage() {
       key: "created_at",
       render: (row: any) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatDate(row.created_at)}</span>
     },
-  ], [departments]);
+    ACTION_COLUMN
+  ], [departments, ACTION_COLUMN]);
 
   const WARD_COLUMNS: TableColumn[] = [
     { header: "Code", key: "code" },
@@ -107,6 +194,7 @@ export default function AuthorityMasterDataPage() {
       key: "created_at",
       render: (row: any) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatDate(row.created_at)}</span>
     },
+    ACTION_COLUMN
   ];
 
   const DEPARTMENT_COLUMNS: TableColumn[] = [
@@ -124,6 +212,7 @@ export default function AuthorityMasterDataPage() {
       key: "created_at",
       render: (row: any) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatDate(row.created_at)}</span>
     },
+    ACTION_COLUMN
   ];
 
   const ROLE_COLUMNS: TableColumn[] = [
@@ -140,6 +229,7 @@ export default function AuthorityMasterDataPage() {
       key: "created_at",
       render: (row: any) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatDate(row.created_at)}</span>
     },
+    ACTION_COLUMN
   ];
 
   const MATERIAL_COLUMNS: TableColumn[] = [
@@ -181,7 +271,10 @@ export default function AuthorityMasterDataPage() {
           data: categories, 
           buttonText: "Add New Category",
           isLoading: isLoadingCategories,
-          onAdd: () => setIsCategoryDrawerOpen(true)
+          onAdd: () => {
+            setSelectedItem(null);
+            setIsCategoryDrawerOpen(true);
+          }
         };
       case "Wards/Zones":
         return { 
@@ -189,7 +282,10 @@ export default function AuthorityMasterDataPage() {
           data: wards, 
           buttonText: "New Ward/Zone",
           isLoading: isLoadingWards,
-          onAdd: () => setIsWardDrawerOpen(true) 
+          onAdd: () => {
+            setSelectedItem(null);
+            setIsWardDrawerOpen(true);
+          }
         };
       case "Departments":
         return { 
@@ -197,7 +293,10 @@ export default function AuthorityMasterDataPage() {
           data: departments, 
           buttonText: "New Department",
           isLoading: isLoadingDepts,
-          onAdd: () => setIsDepartmentDrawerOpen(true)
+          onAdd: () => {
+            setSelectedItem(null);
+            setIsDepartmentDrawerOpen(true);
+          }
         };
       case "Roles":
         return { 
@@ -205,7 +304,10 @@ export default function AuthorityMasterDataPage() {
           data: roles, 
           buttonText: "New Role",
           isLoading: isLoadingRoles,
-          onAdd: () => setIsRoleDrawerOpen(true)
+          onAdd: () => {
+            setSelectedItem(null);
+            setIsRoleDrawerOpen(true);
+          }
         };
       case "Materials":
         return { 
@@ -213,7 +315,10 @@ export default function AuthorityMasterDataPage() {
           data: materials, 
           buttonText: "New Material",
           isLoading: isLoadingMaterials,
-          onAdd: () => setIsMaterialDrawerOpen(true)
+          onAdd: () => {
+            setSelectedItem(null);
+            setIsMaterialDrawerOpen(true);
+          }
         };
       default:
         return { columns: [], data: [], buttonText: "", isLoading: false, onAdd: () => {} };
@@ -249,7 +354,11 @@ export default function AuthorityMasterDataPage() {
           <button
             key={tab}
             ref={(el) => { tabsRef.current[idx] = el; }}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => {
+              setActiveTab(tab);
+              setPage(1);
+              setOpenDropdownId(null);
+            }}
             className={`flex items-center justify-center gap-2.5 px-3 py-2 text-sm transition-colors whitespace-nowrap ${
               activeTab === tab ? "font-semibold text-[#0C83FF]" : "font-normal text-[#343434]"
             }`}
@@ -330,6 +439,38 @@ export default function AuthorityMasterDataPage() {
             )}
           </div>
           
+            {openDropdownId && activeTab !== "Materials" && (
+              <div 
+                ref={dropdownRef}
+                style={{ 
+                  position: 'fixed', 
+                  top: dropdownPos.top, 
+                  left: dropdownPos.left,
+                  zIndex: 9999 
+                }}
+                className="animate-in fade-in zoom-in duration-200"
+              >
+                {(() => {
+                  const item = allData.find(i => i.id === openDropdownId);
+                  if (!item) return null;
+                  return (
+                    <MasterDataMenu 
+                      is_active={(item as any).status ?? true}
+                      onDeactivate={() => handleToggleStatus(item)}
+                      onEdit={() => {
+                        setSelectedItem(item);
+                        if (activeTab === "Wards/Zones") setIsWardDrawerOpen(true);
+                        else if (activeTab === "Departments") setIsDepartmentDrawerOpen(true);
+                        else if (activeTab === "Roles") setIsRoleDrawerOpen(true);
+                        else if (activeTab === "Complaint Categories") setIsCategoryDrawerOpen(true);
+                        setOpenDropdownId(null);
+                      }}
+                    />
+                  );
+                })()}
+              </div>
+            )}
+
           {/* Pagination */}
           <TablePagination
             currentPage={page}
@@ -340,11 +481,46 @@ export default function AuthorityMasterDataPage() {
         </div>
       </div>
 
-      <NewCategoryDrawer isOpen={isCategoryDrawerOpen} onClose={() => setIsCategoryDrawerOpen(false)} />
-      <NewWardDrawer isOpen={isWardDrawerOpen} onClose={() => setIsWardDrawerOpen(false)} />
-      <NewDepartmentDrawer isOpen={isDepartmentDrawerOpen} onClose={() => setIsDepartmentDrawerOpen(false)} />
-      <NewRoleDrawer isOpen={isRoleDrawerOpen} onClose={() => setIsRoleDrawerOpen(false)} />
-      <NewMaterialDrawer isOpen={isMaterialDrawerOpen} onClose={() => setIsMaterialDrawerOpen(false)} />
+      <NewCategoryDrawer 
+        isOpen={isCategoryDrawerOpen} 
+        onClose={() => {
+          setIsCategoryDrawerOpen(false);
+          setSelectedItem(null);
+        }} 
+        data={selectedItem}
+      />
+      <NewWardDrawer 
+        isOpen={isWardDrawerOpen} 
+        onClose={() => {
+          setIsWardDrawerOpen(false);
+          setSelectedItem(null);
+        }} 
+        data={selectedItem}
+      />
+      <NewDepartmentDrawer 
+        isOpen={isDepartmentDrawerOpen} 
+        onClose={() => {
+          setIsDepartmentDrawerOpen(false);
+          setSelectedItem(null);
+        }} 
+        data={selectedItem}
+      />
+      <NewRoleDrawer 
+        isOpen={isRoleDrawerOpen} 
+        onClose={() => {
+          setIsRoleDrawerOpen(false);
+          setSelectedItem(null);
+        }} 
+        data={selectedItem}
+      />
+      <NewMaterialDrawer 
+        isOpen={isMaterialDrawerOpen} 
+        onClose={() => {
+          setIsMaterialDrawerOpen(false);
+          setSelectedItem(null);
+        }} 
+        data={selectedItem}
+      />
     </div>
   );
 }
