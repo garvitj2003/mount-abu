@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { type components } from "@/types/api";
 
-type TokenResponse = components["schemas"]["backend__controllers__auth__TokenResponse"];
+type TokenResponse = components["schemas"]["TokenResponse"];
 type RefreshTokenResponse = components["schemas"]["RefreshTokenResponse"];
 
 const API_URL = process.env.INTERNAL_API_URL || "http://localhost:8000";

@@ -71,7 +71,7 @@ export default function Navbar() {
         <Link className="flex items-center gap-4" href={"/"}>
           <Image
             src="/images/footer/logo.png"
-            alt="Mount Abu Nagar Parishad"
+            alt="Mount Abu Nagar Palika"
             width={31}
             height={35}
             className="h-[35px] w-[31px] object-contain"
@@ -81,7 +81,7 @@ export default function Navbar() {
               Mount abu
             </span>
             <span className="text-[13px] font-medium uppercase leading-tight text-black">
-              nagar parishad
+              nagar palkia
             </span>
           </div>
         </Link>

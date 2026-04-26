@@ -312,7 +312,7 @@ export default function AuthorityApplicationsPage() {
                       </td>
                       <td className="px-2 py-3">
                         <span className="text-sm font-normal text-[#343434]">
-                          {new Date().toLocaleDateString("en-GB")} {/* Date from DB? */}
+                          {app.created_at ? new Date(app.created_at).toLocaleDateString("en-GB") : "—"}
                         </span>
                       </td>
                       <td className="px-2 py-3">

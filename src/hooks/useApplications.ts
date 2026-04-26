@@ -45,6 +45,25 @@ export function useAddPhaseMaterials() {
   });
 }
 
+export function useUpdatePhaseStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ 
+      applicationId, 
+      phase, 
+      status 
+    }: { 
+      applicationId: number; 
+      phase: number; 
+      status: components["schemas"]["ApplicationPhaseStatus"] 
+    }) => ApplicationService.updatePhaseStatus(applicationId, phase, status),
+    onSuccess: (_, { applicationId }) => {
+      queryClient.invalidateQueries({ queryKey: ["token"] });
+      queryClient.invalidateQueries({ queryKey: ["application", applicationId] });
+    },
+  });
+}
+
 export function useApplicationComments(applicationId: number, options?: { enabled?: boolean }) {
   return useQuery<components["schemas"]["CommentResponse"][]>({
     queryKey: ["application-comments", applicationId],

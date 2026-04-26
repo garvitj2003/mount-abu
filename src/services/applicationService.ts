@@ -118,6 +118,18 @@ export const ApplicationService = {
     return response.data;
   },
 
+  async updatePhaseStatus(
+    applicationId: number,
+    phase: number,
+    status: components["schemas"]["ApplicationPhaseStatus"],
+  ): Promise<any> {
+    const response = await api.put(
+      `/api/applications/${applicationId}/phases/${phase}/status`,
+      { status }
+    );
+    return response.data;
+  },
+
   async getComments(applicationId: number): Promise<components["schemas"]["CommentResponse"][]> {
     const response = await api.get<components["schemas"]["CommentResponse"][]>(`/api/applications/${applicationId}/comments`);
     return response.data;

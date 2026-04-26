@@ -7,6 +7,7 @@ import VehicleFilterDrawer from "@/components/dashboard/authority/vehicle-entrie
 import VehicleDetailDrawer from "@/components/dashboard/authority/vehicle-entries/VehicleDetailDrawer";
 import TokenActionModal from "@/components/dashboard/authority/tokens/TokenActionModal";
 import { useTokenDetail } from "@/hooks/useTokens";
+import { useUpdatePhaseStatus } from "@/hooks/useApplications";
 import { type components } from "@/types/api";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -126,7 +127,7 @@ const Sidebar = ({ token }: { token: TokenDetailResponse }) => (
 const TableRow = ({ 
   entry, onClick 
 }: { 
-  entry: components["schemas"]["VehicleEntryResponse"]; 
+  entry: components["schemas"]["backend__schemas__response__application__VehicleEntryResponse"]; 
   onClick: () => void 
 }) => (
   <tr className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
@@ -159,6 +160,7 @@ export default function TokenDetailsPage() {
   const [search, setSearch] = useState("");
   
   const { data: token, isLoading, error } = useTokenDetail(transportCode);
+  const { mutate: updateStatus } = useUpdatePhaseStatus();
 
   const [modalConfig, setModalConfig] = useState<{ isOpen: boolean; type: "HOLD" | "TERMINATE" }>({
     isOpen: false,
@@ -171,9 +173,24 @@ export default function TokenDetailsPage() {
   };
 
   const handleTokenAction = (remarks: string) => {
-    console.log(`Action: ${modalConfig.type}, Reason: ${remarks}`);
-    alert(`Token ${modalConfig.type === "HOLD" ? "held" : "terminated"} successfully.`);
-    setModalConfig({ ...modalConfig, isOpen: false });
+    if (!token) return;
+    
+    const newStatus = modalConfig.type === "HOLD" ? "WITHHELD" : "TERMINATED";
+    
+    updateStatus({
+      applicationId: token.application_id,
+      phase: token.phase,
+      status: newStatus
+    }, {
+      onSuccess: () => {
+        alert(`Token ${modalConfig.type === "HOLD" ? "held" : "terminated"} successfully.`);
+        setModalConfig({ ...modalConfig, isOpen: false });
+      },
+      onError: (err: any) => {
+        console.error("Failed to update token status", err);
+        alert("Failed to update token status. Please try again.");
+      }
+    });
   };
 
   if (isLoading) return (
