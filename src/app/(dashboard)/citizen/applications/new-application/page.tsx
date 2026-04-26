@@ -71,6 +71,15 @@ export default function NewApplicationPage() {
             };
           });
           setMaterials(mergedMaterials);
+
+          // Populate extra materials
+          const extra = app.materials?.filter(am => am.material_id === null).map(am => ({
+            id: am.id,
+            name: am.custom_name || "",
+            unit: am.custom_unit || "",
+            qty: am.quantity.toString()
+          })) || [];
+          setExtraMaterials(extra);
         }
 
         // 3. Determine Step
@@ -204,9 +213,27 @@ export default function NewApplicationPage() {
         setCurrentStep(2);
         return;
       }
+
+      const initialRequirements: any[] = [];
+      materials.forEach(m => {
+        if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
+          initialRequirements.push({ material_id: m.id, material_qty: Number(m.qty) });
+        }
+      });
+      extraMaterials.forEach(m => {
+        if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
+          initialRequirements.push({ 
+            material_id: null, 
+            custom_name: m.name,
+            custom_unit: m.unit,
+            material_qty: Number(m.qty) 
+          });
+        }
+      });
+
       const response = await ApplicationService.createApplication({
         ...formData,
-        material_requirements: []
+        material_requirements: initialRequirements
       });
       setApplicationId(response.id);
       queryClient.invalidateQueries({ queryKey: ["applications"] });
@@ -273,11 +300,26 @@ export default function NewApplicationPage() {
     if (!applicationId) return;
     try {
       const requirements: any[] = [];
+      
+      // Standard materials from master data
       materials.forEach(m => {
-        if (m.qty && !isNaN(Number(m.qty))) {
+        if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
           requirements.push({ material_id: m.id, material_qty: Number(m.qty) });
         }
       });
+
+      // Additional (Extra) materials
+      extraMaterials.forEach(m => {
+        if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
+          requirements.push({ 
+            material_id: null, 
+            custom_name: m.name,
+            custom_unit: m.unit,
+            material_qty: Number(m.qty) 
+          });
+        }
+      });
+
       if (requirements.length === 0) {
         alert("Please enter at least one material quantity.");
         return;
@@ -312,9 +354,25 @@ export default function NewApplicationPage() {
           return;
         }
         if (!applicationId) {
+          const initialRequirements: any[] = [];
+          materials.forEach(m => {
+            if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
+              initialRequirements.push({ material_id: m.id, material_qty: Number(m.qty) });
+            }
+          });
+          extraMaterials.forEach(m => {
+            if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
+              initialRequirements.push({ 
+                material_id: null, 
+                custom_name: m.name,
+                custom_unit: m.unit,
+                material_qty: Number(m.qty) 
+              });
+            }
+          });
           const response = await ApplicationService.createApplication({
             ...formData,
-            material_requirements: []
+            material_requirements: initialRequirements
           });
           setApplicationId(response.id);
           queryClient.invalidateQueries({ queryKey: ["applications"] });

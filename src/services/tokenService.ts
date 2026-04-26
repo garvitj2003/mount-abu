@@ -1,7 +1,7 @@
 import api from "@/lib/axios";
 import { type components } from "@/types/api";
 
-type ConstructionTokenResponse = components["schemas"]["backend__schemas__response__application__TokenResponse"];
+type ConstructionTokenResponse = components["schemas"]["TokenResponse"];
 
 export const TokenService = {
   async getTokens(params: { offset?: number; limit?: number; search?: string; citizen_user_id?: number }): Promise<ConstructionTokenResponse[]> {
