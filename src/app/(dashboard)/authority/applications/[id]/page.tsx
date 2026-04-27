@@ -3,8 +3,8 @@
 import { useAddComment, useApplication, useWorkflowAction, useAddPhaseMaterials } from "@/hooks/useApplications";
 import { useUser } from "@/hooks/useUser";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useState, useEffect } from "react";
 import { type components } from "@/types/api";
 import ApplicationActionPanel from "@/components/dashboard/authority/applications/ApplicationActionPanel";
 import CommentsDrawer from "@/components/dashboard/authority/applications/CommentsDrawer";
@@ -381,6 +381,7 @@ const NotificationBanner = () => (
 
 export default function ApplicationDetailsPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const id = Number(params.id);
   const { data: user } = useUser();
@@ -390,6 +391,13 @@ export default function ApplicationDetailsPage() {
   const { mutateAsync: addComment } = useAddComment();
   
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("comment") === "true") {
+      setIsCommentsOpen(true);
+    }
+  }, [searchParams]);
+
   const [remarksModal, setRemarksModal] = useState<{ isOpen: boolean; type: "REJECT" | "OBJECT" }>({
     isOpen: false,
     type: "REJECT",

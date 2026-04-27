@@ -52,5 +52,10 @@ export const ComplaintService = {
       },
     });
     return response.data;
+  },
+
+  async withdrawComplaint(id: number): Promise<any> {
+    const response = await api.post(`/api/complaints/${id}/withdraw`);
+    return response.data;
   }
 };

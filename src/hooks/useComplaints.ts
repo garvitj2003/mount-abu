@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ComplaintService } from "@/services/complaintService";
 import { type components } from "@/types/api";
 
@@ -33,5 +33,15 @@ export function useComplaint(id: number | null) {
     queryFn: () => ComplaintService.getComplaint(id!),
     enabled: !!id,
     staleTime: 30 * 1000,
+  });
+}
+
+export function useWithdrawComplaint() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => ComplaintService.withdrawComplaint(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["complaints"] });
+    },
   });
 }

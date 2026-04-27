@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { useMyComplaints } from "@/hooks/useComplaints";
+import { useMyComplaints, useWithdrawComplaint } from "@/hooks/useComplaints";
 import { useUser } from "@/hooks/useUser";
 import { type components } from "@/types/api";
 import TablePagination from "@/components/ui/TablePagination";
@@ -70,6 +70,20 @@ export default function ComplaintsTable({ onComplaintClick }: ComplaintsTablePro
   });
 
   const complaints = data?.items || [];
+
+  const { mutateAsync: withdrawComplaint } = useWithdrawComplaint();
+
+  const handleWithdraw = async (id: number) => {
+    if (!confirm("Are you sure you want to withdraw this complaint?")) return;
+    try {
+      await withdrawComplaint(id);
+      alert("Complaint withdrawn successfully!");
+      setOpenDropdownId(null);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to withdraw complaint.");
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -244,7 +258,7 @@ export default function ComplaintsTable({ onComplaintClick }: ComplaintsTablePro
           <button 
             onClick={(e) => {
               e.stopPropagation();
-              setOpenDropdownId(null);
+              if (openDropdownId) handleWithdraw(openDropdownId);
             }}
             className="flex h-10 w-full items-center gap-[11px] rounded-lg p-2 hover:bg-red-50 transition-colors cursor-pointer"
           >

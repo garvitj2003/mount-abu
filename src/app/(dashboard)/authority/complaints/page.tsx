@@ -182,13 +182,12 @@ export default function AuthorityComplaintsPage() {
                       </div>
                     </th>
                   ))}
-                  <th className="px-2 py-3 text-left w-[40px]"></th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={8} className="px-2 py-10 text-center">
+                    <td colSpan={7} className="px-2 py-10 text-center">
                       <div className="flex justify-center items-center gap-2">
                          <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#0C83FF] border-t-transparent"></div>
                          <span className="text-sm text-gray-500">Loading complaints...</span>
@@ -197,7 +196,7 @@ export default function AuthorityComplaintsPage() {
                   </tr>
                 ) : filteredComplaints.length === 0 ? (
                     <tr>
-                        <td colSpan={8} className="px-2 py-10 text-center text-sm text-gray-500">
+                        <td colSpan={7} className="px-2 py-10 text-center text-sm text-gray-500">
                             No complaints found.
                         </td>
                     </tr>
@@ -239,15 +238,6 @@ export default function AuthorityComplaintsPage() {
                       </td>
                       <td className="px-2 py-3">
                         <StatusBadge status={item.status} />
-                      </td>
-                      <td className="px-2 py-3 text-center">
-                        <button className="text-[#343434] hover:bg-gray-200 rounded p-1 transition-colors">
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path d="M8 8.66667C8.36819 8.66667 8.66667 8.36819 8.66667 8C8.66667 7.63181 8.36819 7.33333 8 7.33333C7.63181 7.33333 7.33333 7.63181 7.33333 8C7.33333 8.36819 7.63181 8.66667 8 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M13.3333 8.66667C13.7015 8.66667 14 8.36819 14 8C14 7.63181 13.7015 7.33333 13.3333 7.33333C12.9651 7.33333 12.6667 7.63181 12.6667 8C12.6667 8.36819 12.9651 8.66667 13.3333 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M2.66667 8.66667C3.03486 8.66667 3.33333 8.36819 3.33333 8C3.33333 7.63181 3.03486 7.33333 2.66667 7.33333C2.29848 7.33333 2 7.63181 2 8C2 8.36819 2.29848 8.66667 2.66667 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        </button>
                       </td>
                     </tr>
                   ))

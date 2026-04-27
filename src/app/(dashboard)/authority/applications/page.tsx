@@ -5,7 +5,7 @@ import Image from "next/image";
 import TablePagination from "@/components/ui/TablePagination";
 import FilterTabDropdown from "@/components/ui/FilterTabDropdown";
 import { useUser } from "@/hooks/useUser";
-import { useApplications } from "@/hooks/useApplications";
+import { useApplications, useWorkflowAction } from "@/hooks/useApplications";
 import { ROLE_FILTERS, type ApplicationFlag } from "@/constants/filters";
 import { useRouter } from "next/navigation";
 
@@ -85,6 +85,8 @@ export default function AuthorityApplicationsPage() {
     limit,
   });
 
+  const { mutateAsync: performAction } = useWorkflowAction();
+
   const roleFilters = useMemo(() => {
     if (!user?.role) return null;
     return ROLE_FILTERS[user.role] || null;
@@ -93,6 +95,11 @@ export default function AuthorityApplicationsPage() {
   const canViewAll = useMemo(() => {
      if (!user?.role) return false;
      return ["SUPERADMIN", "COMMISSIONER", "NODAL_OFFICER"].includes(user.role);
+  }, [user?.role]);
+
+  const isNodalOrAdmin = useMemo(() => {
+    if (!user?.role) return false;
+    return ["SUPERADMIN", "NODAL_OFFICER"].includes(user.role);
   }, [user?.role]);
 
   useEffect(() => {
@@ -142,6 +149,24 @@ export default function AuthorityApplicationsPage() {
         left: rect.right - 195,
       });
       setOpenDropdownId(id);
+    }
+  };
+
+  const handleQuickApprove = async (id: number) => {
+    if (!confirm("Are you sure you want to approve this application?")) return;
+    try {
+      await performAction({
+        id,
+        data: {
+          action: "APPROVE",
+          remarks: "Quick Approved from management list"
+        }
+      });
+      alert("Application approved successfully!");
+      setOpenDropdownId(null);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to approve application.");
     }
   };
 
@@ -357,26 +382,40 @@ export default function AuthorityApplicationsPage() {
               }}
               className="z-[9999] flex w-max flex-col gap-2 rounded-lg border border-[#D6D9DE] bg-white p-2 shadow-[0px_6px_12px_rgba(0,0,0,0.15)] animate-in fade-in zoom-in duration-200"
             >
-              <button 
-                onClick={() => router.push(`/authority/applications/${openDropdownId}`)}
-                className="flex h-10 w-full items-center gap-[11px] rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer text-sm font-normal text-[#343434]"
-              >
-                <Image src="/dashboard/icons/edit-pencil.svg" alt="View" width={24} height={24} />
-                View Application
-              </button>
-              <button 
-                className="flex h-10 w-full items-center gap-[11px] rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer text-sm font-normal text-[#343434]"
-              >
-                <Image src="/dashboard/icons/comment-icon.svg" alt="Comment" width={24} height={24} />
-                Comment
-              </button>
-              <button 
-                className="flex h-10 w-full items-center gap-[11px] rounded-lg p-2 hover:bg-[#99D4C2]/20 transition-colors cursor-pointer text-sm font-medium text-[#059669]"
-              >
-                {/* Note: using tick-round-green instead of blue done-tick to match design reference visually */}
-                <Image src="/dashboard/icons/tick-round-green.svg" alt="Approve" width={20} height={20} className="mx-0.5" />
-                Quick Approve
-              </button>
+              {(() => {
+                const app = applications.find(a => a.id.toString() === openDropdownId);
+                if (!app) return null;
+                
+                const isUnderReview = app.status === "SUBMITTED" || app.status === "FORWARDED";
+                
+                return (
+                  <>
+                    <button 
+                      onClick={() => router.push(`/authority/applications/${app.id}`)}
+                      className="flex h-10 w-full items-center gap-[11px] rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer text-sm font-normal text-[#343434]"
+                    >
+                      <Image src="/dashboard/icons/edit-pencil.svg" alt="View" width={24} height={24} />
+                      View Application
+                    </button>
+                    <button 
+                      onClick={() => router.push(`/authority/applications/${app.id}?comment=true`)}
+                      className="flex h-10 w-full items-center gap-[11px] rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer text-sm font-normal text-[#343434]"
+                    >
+                      <Image src="/dashboard/icons/comment-icon.svg" alt="Comment" width={24} height={24} />
+                      Comment
+                    </button>
+                    {isNodalOrAdmin && isUnderReview && (
+                      <button 
+                        onClick={() => handleQuickApprove(app.id)}
+                        className="flex h-10 w-full items-center gap-[11px] rounded-lg p-2 hover:bg-[#99D4C2]/20 transition-colors cursor-pointer text-sm font-medium text-[#059669]"
+                      >
+                        <Image src="/dashboard/icons/tick-round-green.svg" alt="Approve" width={20} height={20} className="mx-0.5" />
+                        Quick Approve
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           )}
 

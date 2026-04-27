@@ -40,7 +40,7 @@ export default function MasterDataMenu({
       >
         <div className="relative h-5 w-5 shrink-0">
           <Image 
-            src={is_active ? "/dashboard/icons/users/block.svg" : "/dashboard/icons/users/unblock.svg"} 
+            src={is_active ? "/dashboard/icons/users/block.svg" : "/dashboard/icons/done-tick.svg"} 
             alt={is_active ? "Deactivate" : "Activate"} 
             fill 
             className="object-contain"
