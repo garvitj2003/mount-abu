@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { CityProfileService } from "@/services/cityProfileService";
 import { type components } from "@/types/api";
 
@@ -6,6 +6,13 @@ type CityProfileCreate = components["schemas"]["CityProfileCreate"];
 
 export const useCityProfile = () => {
   return useQuery({
+    queryKey: ["city-profile"],
+    queryFn: () => CityProfileService.getLatest(),
+  });
+};
+
+export const useSuspenseCityProfile = () => {
+  return useSuspenseQuery({
     queryKey: ["city-profile"],
     queryFn: () => CityProfileService.getLatest(),
   });

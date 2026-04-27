@@ -2,30 +2,7 @@
 
 import { motion } from "motion/react";
 import Image from "next/image";
-
-// --- Data Constants ---
-const areaStats = [
-    { label: "Area In Sq. km.", value: "21.64 sq. km" },
-    { label: "No. of wards", value: "25" },
-    { label: "Population estimate", value: "30,545" },
-    { label: "Ward boundries", value: "Attached", isLink: true },
-    { label: "Rental Properties of corporation", value: "25" },
-    { label: "Number of Slums", value: "0" },
-    { label: "Solid waste per day", value: "9.1 Tones" },
-    { label: "Street Light poles", value: "150" },
-    { label: "No. of employee in the municipal board", value: "135" },
-];
-
-const houseHoldsStats = [
-    { label: "Residential", value: "4500" },
-    { label: "Shops & Offices", value: "550" },
-    { label: "Open Plots", value: "0" },
-];
-
-const birthDeathStats = [
-    { label: "Registration per year", value: "800" },
-    { label: "Certificate per year", value: "900" },
-];
+import { useSuspenseCityProfile } from "@/hooks/useCityProfile";
 
 // --- Helper: Individual Slot Digit ---
 function SlotDigit({
@@ -80,7 +57,6 @@ function SlotCounter({ value }: { value: string }) {
     const chars = numericPart.split("");
 
     return (
-        // Changed from <span> to <div> with inline-flex to be valid parent for div children
         <div className="inline-flex items-baseline overflow-hidden">
             {chars.map((char, index) => {
                 const isDigit = /\d/.test(char);
@@ -173,6 +149,31 @@ function StatCard({
 }
 
 export default function CityProfileSection() {
+    const { data } = useSuspenseCityProfile();
+
+    const areaStats = [
+        { label: "Area In Sq. km.", value: data.area_sq_km || "0" },
+        { label: "No. of wards", value: (data.no_of_wards || 0).toString() },
+        { label: "Population estimate", value: (data.population_estimate || 0).toLocaleString() },
+        { label: "Ward boundries", value: data.ward_boundaries || "Attached", isLink: true },
+        { label: "Rental Properties of corporation", value: (data.rental_properties_of_corporation || 0).toString() },
+        { label: "Number of Slums", value: (data.number_of_slums || 0).toString() },
+        { label: "Solid waste per day", value: data.solid_waste_per_day || "0 Tones" },
+        { label: "Street Light poles", value: (data.street_light_poles || 0).toString() },
+        { label: "No. of employee in the municipal board", value: (data.employees_in_board || 0).toString() },
+    ];
+
+    const houseHoldsStats = [
+        { label: "Residential", value: (data.households_residential || 0).toString() },
+        { label: "Shops & Offices", value: (data.households_shops_offices || 0).toString() },
+        { label: "Open Plots", value: (data.households_open_plots || 0).toString() },
+    ];
+
+    const birthDeathStats = [
+        { label: "Registration per year", value: (data.birth_registration_per_year || 0).toString() },
+        { label: "Certificate per year", value: (data.birth_certificate_per_year || 0).toString() },
+    ];
+
     return (
         <section id="city-profile" className="relative w-full min-h-screen bg-[#17261e] overflow-hidden flex items-center justify-center py-16 md:py-24">
             {/* Background Image */}
