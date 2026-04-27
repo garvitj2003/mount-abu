@@ -10,6 +10,7 @@ import { ApplicationService } from "@/services/applicationService";
 import { useWards, useMaterials } from "@/hooks/useMasterData";
 import { step1Schema } from "@/lib/validations/application";
 import { type components } from "@/types/api";
+import WardMapModal from "@/components/dashboard/WardMapModal";
 
 type WardResponse = components["schemas"]["WardResponse"];
 type DepartmentResponse = components["schemas"]["DepartmentResponse"];
@@ -35,6 +36,7 @@ export default function NewApplicationPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isWardModalOpen, setIsWardModalOpen] = useState(false);
 
   // Resume Application Logic
   useEffect(() => {
@@ -502,12 +504,21 @@ export default function NewApplicationPage() {
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-5">
           <label className="w-[228px] text-[12px] font-normal text-[#343434] font-onest">Select Ward/Zone</label>
-          <div className="relative h-[34px] w-[313px]">
-            <select className={`h-full w-full appearance-none rounded-lg border ${errors.ward_id ? "border-red-500" : "border-[#D6D9DE]"} bg-white px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] font-onest`} value={formData.ward_id || ""} onChange={(e) => updateFormData({ ward_id: Number(e.target.value) })}>
-              <option value="">Select Ward</option>
-              {wards.map(ward => <option key={ward.id} value={ward.id}>{ward.name}</option>)}
-            </select>
-            <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"><Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} /></div>
+          <div className="flex flex-col gap-1.5">
+            <div className="relative h-[34px] w-[313px]">
+              <select className={`h-full w-full appearance-none rounded-lg border ${errors.ward_id ? "border-red-500" : "border-[#D6D9DE]"} bg-white px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] font-onest`} value={formData.ward_id || ""} onChange={(e) => updateFormData({ ward_id: Number(e.target.value) })}>
+                <option value="">Select Ward</option>
+                {wards.map(ward => <option key={ward.id} value={ward.id}>{ward.name}</option>)}
+              </select>
+              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"><Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} /></div>
+            </div>
+            <button 
+              type="button"
+              onClick={() => setIsWardModalOpen(true)}
+              className="w-fit text-[11px] font-medium text-[#0C83FF] hover:underline cursor-pointer"
+            >
+              Know your ward
+            </button>
           </div>
         </div>
         {errors.ward_id && <p className="ml-[248px] text-[10px] text-red-500">{errors.ward_id}</p>}
@@ -517,6 +528,11 @@ export default function NewApplicationPage() {
         <div className="w-[228px]" />
         <button onClick={onNextStep1} className="flex items-center justify-center gap-2 rounded-lg bg-[#0C83FF] px-6 py-3 text-sm font-medium text-white hover:bg-blue-600 transition-colors font-onest">Next <Image src="/dashboard/icons/applications/step-arrow.svg" alt="next" width={14} height={14} className="invert brightness-0" /></button>
       </div>
+
+      <WardMapModal 
+        isOpen={isWardModalOpen} 
+        onClose={() => setIsWardModalOpen(false)} 
+      />
     </div>
   );
 

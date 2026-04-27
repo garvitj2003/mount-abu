@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { useUser } from "@/hooks/useUser";
 import { useWards } from "@/hooks/useMasterData";
+import WardMapModal from "./WardMapModal";
 
 interface ProfileDrawerProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export default function ProfileDrawer({
 }: ProfileDrawerProps) {
   const { data: user } = useUser();
   const { data: wards = [] } = useWards({ enabled: isOpen });
+  const [isWardModalOpen, setIsWardModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -43,12 +45,14 @@ export default function ProfileDrawer({
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-[100] flex justify-end">
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
+    <>
+      <AnimatePresence>
+        {isOpen && (
+          <div className="fixed inset-0 z-[100] flex justify-end">
+            {/* Backdrop */}
+            <motion.div
+              key="profile-drawer-backdrop"
+              initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
@@ -57,6 +61,7 @@ export default function ProfileDrawer({
 
           {/* Drawer Content */}
           <motion.div
+            key="profile-drawer-content"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
@@ -132,7 +137,10 @@ export default function ProfileDrawer({
                       <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} />
                     </div>
                   </div>
-                  <button className="h-[38px] whitespace-nowrap rounded-lg border border-[#0C83FF] bg-[#E7F3FF] px-4 text-xs font-medium text-[#0C83FF] hover:bg-[#D6E9FF] transition-colors">
+                  <button 
+                    onClick={() => setIsWardModalOpen(true)}
+                    className="h-[38px] whitespace-nowrap rounded-lg border border-[#0C83FF] bg-[#E7F3FF] px-4 text-xs font-medium text-[#0C83FF] hover:bg-[#D6E9FF] transition-colors cursor-pointer"
+                  >
                     Know Your Ward
                   </button>
                 </div>
@@ -158,5 +166,11 @@ export default function ProfileDrawer({
         </div>
       )}
     </AnimatePresence>
-  );
+
+    <WardMapModal 
+      isOpen={isWardModalOpen} 
+      onClose={() => setIsWardModalOpen(false)} 
+    />
+  </>
+);
 }
