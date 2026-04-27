@@ -173,19 +173,21 @@ export default function CitizenTokenDetailsPage() {
       setIsDownloading(true);
       
       const canvas = await html2canvas(pdfRef.current, {
-        scale: 2,
+        scale: 1.5, // Reduced from 2 to 1.5 for smaller file size
         useCORS: true,
         backgroundColor: "#ffffff",
+        logging: false,
       });
       
-      const imgData = canvas.toDataURL("image/png");
+      // Use JPEG with 0.7 compression instead of PNG
+      const imgData = canvas.toDataURL("image/jpeg", 0.7);
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "px",
-        format: [canvas.width / 2, canvas.height / 2],
+        format: [canvas.width / 1.5, canvas.height / 1.5],
       });
       
-      pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
+      pdf.addImage(imgData, "JPEG", 0, 0, canvas.width / 1.5, canvas.height / 1.5, undefined, 'FAST');
       pdf.save(`token-${token.token_number}.pdf`);
     } catch (err) {
       console.error("Failed to download token:", err);
