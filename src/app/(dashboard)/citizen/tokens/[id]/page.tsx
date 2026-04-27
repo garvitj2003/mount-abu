@@ -10,6 +10,7 @@ import { type components } from "@/types/api";
 import { QRCodeSVG } from "qrcode.react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import TokenPDF from "@/components/dashboard/citizen/tokens/TokenPDF";
 
 type TokenDetailResponse = components["schemas"]["TokenDetailResponse"];
 
@@ -156,6 +157,7 @@ export default function CitizenTokenDetailsPage() {
   const [search, setSearch] = useState("");
   const [isDownloading, setIsDownloading] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const pdfRef = useRef<HTMLDivElement>(null);
   
   const { data: token, isLoading, error } = useTokenDetail(transportCode);
 
@@ -165,12 +167,12 @@ export default function CitizenTokenDetailsPage() {
   };
 
   const handleDownload = async () => {
-    if (!sidebarRef.current || !token) return;
+    if (!pdfRef.current || !token) return;
     
     try {
       setIsDownloading(true);
       
-      const canvas = await html2canvas(sidebarRef.current, {
+      const canvas = await html2canvas(pdfRef.current, {
         scale: 2,
         useCORS: true,
         backgroundColor: "#ffffff",
@@ -348,6 +350,8 @@ export default function CitizenTokenDetailsPage() {
         }}
         entryId={selectedEntryId}
       />
+
+      {token && <TokenPDF token={token} componentRef={pdfRef} />}
     </div>
   );
 }
