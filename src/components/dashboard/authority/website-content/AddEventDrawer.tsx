@@ -8,7 +8,7 @@ import DropdownSelect from "@/components/ui/DropdownSelect";
 import { useCreateEvent, useUpdateEvent } from "@/hooks/useWebsiteContent";
 
 type EventCreate = components["schemas"]["Body_create_event_api_events_post"];
-type EventUpdate = components["schemas"]["EventUpdate"];
+type EventUpdate = components["schemas"]["Body_update_event_api_events__event_id__put"];
 type EventResponse = components["schemas"]["EventResponse"];
 
 interface AddEventDrawerProps {

@@ -3,13 +3,13 @@ import { WebsiteContentService } from "@/services/websiteContentService";
 import { type components } from "@/types/api";
 
 type NoticeCreate = components["schemas"]["Body_create_notice_api_notices_post"];
-type NoticeUpdate = components["schemas"]["NoticeUpdate"];
+type NoticeUpdate = components["schemas"]["Body_update_notice_api_notices__notice_id__put"];
 type TenderCreate = components["schemas"]["Body_create_tender_api_tenders_post"];
-type TenderUpdate = components["schemas"]["TenderUpdate"];
+type TenderUpdate = components["schemas"]["Body_update_tender_api_tenders__tender_id__put"];
 type EventCreate = components["schemas"]["Body_create_event_api_events_post"];
-type EventUpdate = components["schemas"]["EventUpdate"];
+type EventUpdate = components["schemas"]["Body_update_event_api_events__event_id__put"];
 type LeaderCreate = components["schemas"]["Body_create_leader_api_leaders_post"];
-type LeaderUpdate = components["schemas"]["LeaderUpdate"];
+type LeaderUpdate = components["schemas"]["Body_update_leader_api_leaders__leader_id__put"];
 type ContactDiaryCreate = components["schemas"]["ContactDiaryCreate"];
 type ContactDiaryUpdate = components["schemas"]["ContactDiaryUpdate"];
 type DownloadUpdate = components["schemas"]["DownloadUpdate"];

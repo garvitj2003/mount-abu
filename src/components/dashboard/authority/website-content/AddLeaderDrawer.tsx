@@ -7,7 +7,7 @@ import { type components } from "@/types/api";
 import { useCreateLeader, useUpdateLeader } from "@/hooks/useWebsiteContent";
 
 type LeaderCreate = components["schemas"]["Body_create_leader_api_leaders_post"];
-type LeaderUpdate = components["schemas"]["LeaderUpdate"];
+type LeaderUpdate = components["schemas"]["Body_update_leader_api_leaders__leader_id__put"];
 type LeaderResponse = components["schemas"]["LeaderResponse"];
 
 interface AddLeaderDrawerProps {

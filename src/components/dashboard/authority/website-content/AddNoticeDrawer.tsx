@@ -8,7 +8,7 @@ import DropdownSelect from "@/components/ui/DropdownSelect";
 import { useCreateNotice, useUpdateNotice } from "@/hooks/useWebsiteContent";
 
 type NoticeCreate = components["schemas"]["Body_create_notice_api_notices_post"];
-type NoticeUpdate = components["schemas"]["NoticeUpdate"];
+type NoticeUpdate = components["schemas"]["Body_update_notice_api_notices__notice_id__put"];
 type NoticeResponse = components["schemas"]["NoticeResponse"];
 type NoticeStatus = components["schemas"]["NoticeStatus"];
 type Visibility = components["schemas"]["Visibility"];
@@ -104,7 +104,7 @@ export default function AddNoticeDrawer({ isOpen, onClose, data }: AddNoticeDraw
           payload.append("image", imageFile);
         }
         if (pdfFile) {
-          payload.append("pdf", pdfFile);
+          payload.append("document", pdfFile);
         }
         
         await createNotice(payload);

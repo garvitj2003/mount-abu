@@ -9,7 +9,7 @@ import { useDepartments } from "@/hooks/useMasterData";
 import { useCreateTender, useUpdateTender } from "@/hooks/useWebsiteContent";
 
 type TenderCreate = components["schemas"]["Body_create_tender_api_tenders_post"];
-type TenderUpdate = components["schemas"]["TenderUpdate"];
+type TenderUpdate = components["schemas"]["Body_update_tender_api_tenders__tender_id__put"];
 type TenderResponse = components["schemas"]["TenderResponse"];
 type TenderStatus = components["schemas"]["TenderStatus"];
 
@@ -106,7 +106,7 @@ export default function AddTenderDrawer({ isOpen, onClose, data }: AddTenderDraw
         payload.append("status", formData.status || "ACTIVE");
 
         if (pdfFile) {
-          payload.append("pdf", pdfFile);
+          payload.append("document", pdfFile);
         }
 
         await createTender(payload);

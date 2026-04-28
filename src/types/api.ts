@@ -1711,7 +1711,7 @@ export interface components {
              * Tokens
              * @default []
              */
-            tokens: components["schemas"]["TokenResponse"][];
+            tokens: components["schemas"]["backend__schemas__response__application__TokenResponse"][];
         };
         /**
          * ApplicationStatus
@@ -1932,8 +1932,71 @@ export interface components {
             submission_deadline?: string | null;
             /** @default ACTIVE */
             status: components["schemas"]["TenderStatus"] | null;
-            /** File */
-            file?: string | null;
+            /** Document */
+            document?: string | null;
+        };
+        /** Body_update_event_api_events__event_id__put */
+        Body_update_event_api_events__event_id__put: {
+            /** Title */
+            title?: string | null;
+            /** Event Type */
+            event_type?: string | null;
+            /** Date */
+            date?: string | null;
+            /** Venue */
+            venue?: string | null;
+            status?: components["schemas"]["TenderStatus"] | null;
+            /** Image */
+            image?: string | null;
+        };
+        /** Body_update_leader_api_leaders__leader_id__put */
+        Body_update_leader_api_leaders__leader_id__put: {
+            /** Name */
+            name?: string | null;
+            /** Designation */
+            designation?: string | null;
+            /** Tenure Start */
+            tenure_start?: string | null;
+            /** Tenure End */
+            tenure_end?: string | null;
+            status?: components["schemas"]["NoticeStatus"] | null;
+            /** Image */
+            image?: string | null;
+        };
+        /** Body_update_notice_api_notices__notice_id__put */
+        Body_update_notice_api_notices__notice_id__put: {
+            /** Title */
+            title?: string | null;
+            /** Notice Type */
+            notice_type?: string | null;
+            /** Published On */
+            published_on?: string | null;
+            /** Valid Till */
+            valid_till?: string | null;
+            status?: components["schemas"]["NoticeStatus"] | null;
+            visibility?: components["schemas"]["Visibility"] | null;
+            /** Image */
+            image?: string | null;
+            /** Document */
+            document?: string | null;
+        };
+        /** Body_update_tender_api_tenders__tender_id__put */
+        Body_update_tender_api_tenders__tender_id__put: {
+            /** Title */
+            title?: string | null;
+            /** Tender Type */
+            tender_type?: string | null;
+            /** Department Id */
+            department_id?: number | null;
+            /** Amount */
+            amount?: number | null;
+            /** Published On */
+            published_on?: string | null;
+            /** Submission Deadline */
+            submission_deadline?: string | null;
+            status?: components["schemas"]["TenderStatus"] | null;
+            /** Document */
+            document?: string | null;
         };
         /** Body_upload_document_api_applications__application_id__document_post */
         Body_upload_document_api_applications__application_id__document_post: {
@@ -2672,18 +2735,6 @@ export interface components {
             /** Created At */
             created_at?: string | null;
         };
-        /** EventUpdate */
-        EventUpdate: {
-            /** Title */
-            title?: string | null;
-            /** Event Type */
-            event_type?: string | null;
-            /** Date */
-            date?: string | null;
-            /** Venue */
-            venue?: string | null;
-            status?: components["schemas"]["TenderStatus"] | null;
-        };
         /** EventsListResponse */
         EventsListResponse: {
             /**
@@ -2826,18 +2877,6 @@ export interface components {
             created_by: number | null;
             /** Created At */
             created_at?: string | null;
-        };
-        /** LeaderUpdate */
-        LeaderUpdate: {
-            /** Name */
-            name?: string | null;
-            /** Designation */
-            designation?: string | null;
-            /** Tenure Start */
-            tenure_start?: string | null;
-            /** Tenure End */
-            tenure_end?: string | null;
-            status?: components["schemas"]["NoticeStatus"] | null;
         };
         /** LeadersListResponse */
         LeadersListResponse: {
@@ -3132,7 +3171,7 @@ export interface components {
              * Vehicle Entries
              * @default []
              */
-            vehicle_entries: components["schemas"]["VehicleEntryResponse"][];
+            vehicle_entries: components["schemas"]["backend__schemas__response__naka__VehicleEntryResponse"][];
         };
         /**
          * NodalVehicleEntryRow
@@ -3196,19 +3235,6 @@ export interface components {
          * @enum {string}
          */
         NoticeStatus: "ACTIVE" | "EXPIRED" | "INACTIVE";
-        /** NoticeUpdate */
-        NoticeUpdate: {
-            /** Title */
-            title?: string | null;
-            /** Notice Type */
-            notice_type?: string | null;
-            /** Published On */
-            published_on?: string | null;
-            /** Valid Till */
-            valid_till?: string | null;
-            status?: components["schemas"]["NoticeStatus"] | null;
-            visibility?: components["schemas"]["Visibility"] | null;
-        };
         /** NoticesListResponse */
         NoticesListResponse: {
             /**
@@ -3546,22 +3572,6 @@ export interface components {
          * @enum {string}
          */
         TenderStatus: "ACTIVE" | "EXPIRED" | "CANCELLED" | "CLOSED";
-        /** TenderUpdate */
-        TenderUpdate: {
-            /** Title */
-            title?: string | null;
-            /** Tender Type */
-            tender_type?: string | null;
-            /** Department Id */
-            department_id?: number | null;
-            /** Amount */
-            amount?: number | null;
-            /** Published On */
-            published_on?: string | null;
-            /** Submission Deadline */
-            submission_deadline?: string | null;
-            status?: components["schemas"]["TenderStatus"] | null;
-        };
         /** TendersListResponse */
         TendersListResponse: {
             /**
@@ -3628,7 +3638,7 @@ export interface components {
              * Vehicle Entries
              * @default []
              */
-            vehicle_entries: components["schemas"]["backend__schemas__response__application__VehicleEntryResponse"][];
+            vehicle_entries: components["schemas"]["VehicleEntryResponse"][];
         };
         /**
          * TokenMaterialResponse
@@ -3652,24 +3662,25 @@ export interface components {
             /** Remaining Quantity */
             remaining_quantity: number;
         };
-        /**
-         * TokenResponse
-         * @description Lightweight token for the token-list table.
-         */
+        /** TokenResponse */
         TokenResponse: {
-            /** Transport Code */
-            transport_code: string;
-            /** Token Number */
-            token_number: string;
-            /** Application Number */
-            application_number: string;
-            /** Phase */
-            phase: number;
-            /** Remaining Quantity Pct */
-            remaining_quantity_pct?: number | null;
-            /** Valid Till */
-            valid_till?: string | null;
-            status: components["schemas"]["ApplicationPhaseStatus"];
+            /** Access Token */
+            access_token: string;
+            /** Refresh Token */
+            refresh_token: string;
+            /** Token Type */
+            token_type: string;
+            /** Role */
+            role: string;
+            /** User Id */
+            user_id: number;
+            /** Name */
+            name: string;
+            /**
+             * Is New User
+             * @default false
+             */
+            is_new_user: boolean;
         };
         /**
          * TokenUtilizationRow
@@ -3829,30 +3840,42 @@ export interface components {
              */
             dumping_photos: components["schemas"]["DumpingPhotoResponse"][];
         };
-        /** VehicleEntryResponse */
+        /**
+         * VehicleEntryResponse
+         * @description A single vehicle / naka entry shown under the Vehicle Entries tab.
+         */
         VehicleEntryResponse: {
             /** Id */
             id: number;
-            /** Phase */
-            phase: number;
             /** Vehicle Number */
-            vehicle_number: string;
-            /** Driver Name */
-            driver_name: string | null;
-            /** Driver Mobile */
-            driver_mobile: string | null;
+            vehicle_number?: string | null;
+            /** Material Id */
+            material_id?: number | null;
+            /** Custom Name */
+            custom_name?: string | null;
+            /** Custom Unit */
+            custom_unit?: string | null;
+            /** Material Name */
+            material_name?: string | null;
+            /** Material Unit */
+            material_unit?: string | null;
+            /** Quantity Entered */
+            quantity_entered: number;
             /**
              * Entry At
              * Format: date-time
              */
             entry_at: string;
-            entered_by_user: components["schemas"]["UserSummary"] | null;
             /** Remarks */
-            remarks: string | null;
-            /** Media Path */
-            media_path: string | null;
-            /** Materials */
-            materials: components["schemas"]["VehicleMaterialResponse"][];
+            remarks?: string | null;
+            /** Media */
+            media?: {
+                [key: string]: unknown;
+            } | null;
+            /** Access Urls */
+            access_urls?: {
+                [key: string]: unknown;
+            } | null;
         };
         /** VehicleMaterialResponse */
         VehicleMaterialResponse: {
@@ -3991,26 +4014,6 @@ export interface components {
             /** Message */
             message: string;
         };
-        /** TokenResponse */
-        backend__controllers__auth__TokenResponse: {
-            /** Access Token */
-            access_token: string;
-            /** Refresh Token */
-            refresh_token: string;
-            /** Token Type */
-            token_type: string;
-            /** Role */
-            role: string;
-            /** User Id */
-            user_id: number;
-            /** Name */
-            name: string;
-            /**
-             * Is New User
-             * @default false
-             */
-            is_new_user: boolean;
-        };
         /**
          * CommentResponse
          * @description Response schema for application comments.
@@ -4034,41 +4037,52 @@ export interface components {
             created_at?: string | null;
         };
         /**
-         * VehicleEntryResponse
-         * @description A single vehicle / naka entry shown under the Vehicle Entries tab.
+         * TokenResponse
+         * @description Lightweight token for the token-list table.
          */
-        backend__schemas__response__application__VehicleEntryResponse: {
+        backend__schemas__response__application__TokenResponse: {
+            /** Transport Code */
+            transport_code: string;
+            /** Token Number */
+            token_number: string;
+            /** Application Number */
+            application_number: string;
+            /** Applicant Name */
+            applicant_name?: string | null;
+            /** Mobile */
+            mobile?: string | null;
+            /** Phase */
+            phase: number;
+            /** Remaining Quantity Pct */
+            remaining_quantity_pct?: number | null;
+            /** Valid Till */
+            valid_till?: string | null;
+            status: components["schemas"]["ApplicationPhaseStatus"];
+        };
+        /** VehicleEntryResponse */
+        backend__schemas__response__naka__VehicleEntryResponse: {
             /** Id */
             id: number;
+            /** Phase */
+            phase: number;
             /** Vehicle Number */
-            vehicle_number?: string | null;
-            /** Material Id */
-            material_id?: number | null;
-            /** Custom Name */
-            custom_name?: string | null;
-            /** Custom Unit */
-            custom_unit?: string | null;
-            /** Material Name */
-            material_name?: string | null;
-            /** Material Unit */
-            material_unit?: string | null;
-            /** Quantity Entered */
-            quantity_entered: number;
+            vehicle_number: string;
+            /** Driver Name */
+            driver_name: string | null;
+            /** Driver Mobile */
+            driver_mobile: string | null;
             /**
              * Entry At
              * Format: date-time
              */
             entry_at: string;
+            entered_by_user: components["schemas"]["UserSummary"] | null;
             /** Remarks */
-            remarks?: string | null;
-            /** Media */
-            media?: {
-                [key: string]: unknown;
-            } | null;
-            /** Access Urls */
-            access_urls?: {
-                [key: string]: unknown;
-            } | null;
+            remarks: string | null;
+            /** Media Path */
+            media_path: string | null;
+            /** Materials */
+            materials: components["schemas"]["VehicleMaterialResponse"][];
         };
     };
     responses: never;
@@ -4131,7 +4145,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__controllers__auth__TokenResponse"];
+                    "application/json": components["schemas"]["TokenResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4164,7 +4178,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__controllers__auth__TokenResponse"];
+                    "application/json": components["schemas"]["TokenResponse"];
                 };
             };
             /** @description Validation Error */
@@ -5080,7 +5094,7 @@ export interface operations {
             query?: {
                 /** @description Filter by token status: ACTIVE, PENDING, COMPLETED */
                 status?: string | null;
-                /** @description Search by token number or application number */
+                /** @description Search by token number, application number, applicant name, or mobile */
                 search?: string | null;
                 offset?: number;
                 limit?: number;
@@ -5097,7 +5111,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TokenResponse"][];
+                    "application/json": components["schemas"]["backend__schemas__response__application__TokenResponse"][];
                 };
             };
             /** @description Validation Error */
@@ -5128,7 +5142,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TokenResponse"][];
+                    "application/json": components["schemas"]["backend__schemas__response__application__TokenResponse"][];
                 };
             };
             /** @description Validation Error */
@@ -5967,9 +5981,9 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
-                "application/json": components["schemas"]["NoticeUpdate"];
+                "multipart/form-data": components["schemas"]["Body_update_notice_api_notices__notice_id__put"];
             };
         };
         responses: {
@@ -6129,9 +6143,9 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
-                "application/json": components["schemas"]["TenderUpdate"];
+                "multipart/form-data": components["schemas"]["Body_update_tender_api_tenders__tender_id__put"];
             };
         };
         responses: {
@@ -6291,9 +6305,9 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
-                "application/json": components["schemas"]["EventUpdate"];
+                "multipart/form-data": components["schemas"]["Body_update_event_api_events__event_id__put"];
             };
         };
         responses: {
@@ -6453,9 +6467,9 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
+        requestBody?: {
             content: {
-                "application/json": components["schemas"]["LeaderUpdate"];
+                "multipart/form-data": components["schemas"]["Body_update_leader_api_leaders__leader_id__put"];
             };
         };
         responses: {

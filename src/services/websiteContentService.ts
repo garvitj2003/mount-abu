@@ -25,10 +25,10 @@ type ContactDiaryUpdate = components["schemas"]["ContactDiaryUpdate"];
 type ContactDiaryResponse = components["schemas"]["ContactDiaryResponse"];
 type PaginatedContactDiaryResponse = components["schemas"]["PaginatedContactDiaryResponse"];
 
-type NoticeUpdate = components["schemas"]["NoticeUpdate"];
-type TenderUpdate = components["schemas"]["TenderUpdate"];
-type EventUpdate = components["schemas"]["EventUpdate"];
-type LeaderUpdate = components["schemas"]["LeaderUpdate"];
+type NoticeUpdate = components["schemas"]["Body_update_notice_api_notices__notice_id__put"];
+type TenderUpdate = components["schemas"]["Body_update_tender_api_tenders__tender_id__put"];
+type EventUpdate = components["schemas"]["Body_update_event_api_events__event_id__put"];
+type LeaderUpdate = components["schemas"]["Body_update_leader_api_leaders__leader_id__put"];
 type DownloadUpdate = components["schemas"]["DownloadUpdate"];
 
 export const WebsiteContentService = {
