@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import TablePagination from "@/components/ui/TablePagination";
@@ -36,7 +36,7 @@ export default function AuthorityVehicleEntriesPage() {
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
   const [page, setPage] = useState(1);
-  const limit = 10;
+  const [limit, setLimit] = useState(10);
 
   const { data: entries, isLoading } = useVehicleEntries();
 
@@ -45,11 +45,19 @@ export default function AuthorityVehicleEntriesPage() {
     setIsDetailDrawerOpen(true);
   };
 
-  const filteredEntries = entries?.filter((entry) => 
-    entry.token_number?.toLowerCase().includes(search.toLowerCase()) ||
-    entry.vehicle_number.toLowerCase().includes(search.toLowerCase()) ||
-    entry.material_name.toLowerCase().includes(search.toLowerCase())
-  ) || [];
+  const filteredEntries = useMemo(() => {
+    if (!entries) return [];
+    const lowerSearch = search.toLowerCase();
+    return entries.filter((entry) => 
+      entry.token_number?.toLowerCase().includes(lowerSearch) ||
+      entry.vehicle_number.toLowerCase().includes(lowerSearch) ||
+      entry.material_name.toLowerCase().includes(lowerSearch) ||
+      entry.naka_incharge_name?.toLowerCase().includes(lowerSearch)
+    );
+  }, [entries, search]);
+
+  const totalPages = Math.ceil(filteredEntries.length / limit);
+  const paginatedEntries = filteredEntries.slice((page - 1) * limit, page * limit);
 
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest">
@@ -79,7 +87,10 @@ export default function AuthorityVehicleEntriesPage() {
                 type="text"
                 placeholder="Search"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
                 className="w-full border-none bg-transparent p-0 text-sm font-normal text-[#343434] outline-none placeholder:text-[#343434]/60 focus:ring-0"
               />
             </div>
@@ -121,17 +132,20 @@ export default function AuthorityVehicleEntriesPage() {
                 {isLoading ? (
                    <tr>
                      <td colSpan={6} className="px-2 py-8 text-center text-sm text-[#343434]/60">
-                       Loading vehicle entries...
+                       <div className="flex justify-center items-center gap-2">
+                         <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#0C83FF] border-t-transparent"></div>
+                         <span>Loading vehicle entries...</span>
+                       </div>
                      </td>
                    </tr>
-                ) : filteredEntries.length === 0 ? (
+                ) : paginatedEntries.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-2 py-8 text-center text-sm text-[#343434]/60">
                       No vehicle entries found.
                     </td>
                   </tr>
                 ) : (
-                  filteredEntries.map((item) => (
+                  paginatedEntries.map((item) => (
                     <tr key={item.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                       <td className="px-2 py-3">
                         <div className="flex items-center gap-2">
@@ -190,9 +204,13 @@ export default function AuthorityVehicleEntriesPage() {
           {/* Pagination */}
           <TablePagination
             currentPage={page}
-            totalPages={1} // TODO: Update based on API if pagination is added
+            totalPages={totalPages}
             limit={limit}
             onPageChange={setPage}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setPage(1);
+            }}
           />
         </div>
       </div>

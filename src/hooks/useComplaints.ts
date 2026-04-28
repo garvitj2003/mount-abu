@@ -17,6 +17,7 @@ export function useAllComplaints(params: {
   ward_id?: number | null;
   department_id?: number | null;
   category_id?: number | null;
+  search?: string;
   offset?: number;
   limit?: number;
 }) {

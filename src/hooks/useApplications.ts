@@ -5,7 +5,15 @@ import { type components } from "@/types/api";
 type ApplicationFlags = components["schemas"]["ApplicationFlags"];
 type WorkflowActionRequest = components["schemas"]["WorkflowActionRequest"];
 
-export function useApplications(params: { flag: ApplicationFlags; citizen_user_id?: number; offset?: number; limit?: number }) {
+export function useApplications(params: { 
+  flag: ApplicationFlags; 
+  citizen_user_id?: number; 
+  offset?: number; 
+  limit?: number;
+  search?: string;
+  ward_id?: number;
+  property_usage?: string;
+}) {
   return useQuery({
     queryKey: ["applications", params],
     queryFn: () => ApplicationService.getApplications(params),
@@ -65,7 +73,7 @@ export function useUpdatePhaseStatus() {
 }
 
 export function useApplicationComments(applicationId: number, options?: { enabled?: boolean }) {
-  return useQuery<components["schemas"]["CommentResponse"][]>({
+  return useQuery<components["schemas"]["backend__schemas__response__application__CommentResponse"][]>({
     queryKey: ["application-comments", applicationId],
     queryFn: () => ApplicationService.getComments(applicationId),
     enabled: !!applicationId,

@@ -216,7 +216,7 @@ export interface paths {
         };
         /**
          * Get Applications
-         * @description Get applications filtered by flag.
+         * @description Get applications filtered by flag, search, and other criteria.
          */
         get: operations["get_applications_api_applications_get"];
         put?: never;
@@ -1701,7 +1701,7 @@ export interface components {
              * Comments
              * @default []
              */
-            comments: components["schemas"]["CommentResponse"][];
+            comments: components["schemas"]["backend__schemas__response__application__CommentResponse"][];
             /**
              * Inspections
              * @default []
@@ -1711,7 +1711,7 @@ export interface components {
              * Tokens
              * @default []
              */
-            tokens: components["schemas"]["backend__schemas__response__application__TokenResponse"][];
+            tokens: components["schemas"]["TokenResponse"][];
         };
         /**
          * ApplicationStatus
@@ -1866,6 +1866,74 @@ export interface components {
              * Format: binary
              */
             file: string;
+        };
+        /** Body_create_event_api_events_post */
+        Body_create_event_api_events_post: {
+            /** Title */
+            title: string;
+            /** Event Type */
+            event_type?: string | null;
+            /** Date */
+            date?: string | null;
+            /** Venue */
+            venue?: string | null;
+            /** @default ACTIVE */
+            status: components["schemas"]["TenderStatus"] | null;
+            /** Image */
+            image?: string | null;
+        };
+        /** Body_create_leader_api_leaders_post */
+        Body_create_leader_api_leaders_post: {
+            /** Name */
+            name: string;
+            /** Designation */
+            designation?: string | null;
+            /** Tenure Start */
+            tenure_start?: string | null;
+            /** Tenure End */
+            tenure_end?: string | null;
+            /** @default ACTIVE */
+            status: components["schemas"]["NoticeStatus"] | null;
+            /** Image */
+            image?: string | null;
+        };
+        /** Body_create_notice_api_notices_post */
+        Body_create_notice_api_notices_post: {
+            /** Title */
+            title: string;
+            /** Notice Type */
+            notice_type?: string | null;
+            /** Published On */
+            published_on?: string | null;
+            /** Valid Till */
+            valid_till?: string | null;
+            /** @default ACTIVE */
+            status: components["schemas"]["NoticeStatus"] | null;
+            /** @default PUBLIC */
+            visibility: components["schemas"]["Visibility"] | null;
+            /** Image */
+            image?: string | null;
+            /** Document */
+            document?: string | null;
+        };
+        /** Body_create_tender_api_tenders_post */
+        Body_create_tender_api_tenders_post: {
+            /** Title */
+            title: string;
+            /** Tender Type */
+            tender_type?: string | null;
+            /** Department Id */
+            department_id?: number | null;
+            /** Amount */
+            amount?: number | null;
+            /** Published On */
+            published_on?: string | null;
+            /** Submission Deadline */
+            submission_deadline?: string | null;
+            /** @default ACTIVE */
+            status: components["schemas"]["TenderStatus"] | null;
+            /** File */
+            file?: string | null;
         };
         /** Body_upload_document_api_applications__application_id__document_post */
         Body_upload_document_api_applications__application_id__document_post: {
@@ -2101,27 +2169,20 @@ export interface components {
              */
             media_paths?: string[] | null;
         };
-        /**
-         * CommentResponse
-         * @description Response schema for application comments.
-         */
+        /** CommentResponse */
         CommentResponse: {
             /** Id */
             id: number;
-            /** Application Id */
-            application_id: number;
             /** Comment */
             comment: string;
-            /** Comment By */
-            comment_by: number;
-            /** Commenter Name */
-            commenter_name?: string | null;
-            /** @default GENERAL */
-            comment_type: components["schemas"]["CommentType"] | null;
-            /** Media Paths */
-            media_paths?: unknown[] | null;
             /** Created At */
             created_at?: string | null;
+            /** Comment By */
+            comment_by?: number | null;
+            /** Media Path */
+            media_path?: string | null;
+            /** Access Url */
+            access_url?: string | null;
         };
         /**
          * CommentType
@@ -2303,7 +2364,7 @@ export interface components {
              * Comments
              * @default []
              */
-            comments: components["schemas"]["backend__schemas__response__complaint__CommentResponse"][];
+            comments: components["schemas"]["CommentResponse"][];
         };
         /**
          * ComplaintRow
@@ -2589,31 +2650,6 @@ export interface components {
             /** Entry Count */
             entry_count: number;
         };
-        /** EventCreate */
-        EventCreate: {
-            /**
-             * Title
-             * @description Title of the event
-             */
-            title: string;
-            /**
-             * Event Type
-             * @description Type/category of event
-             */
-            event_type?: string | null;
-            /**
-             * Date
-             * @description Date/time of event
-             */
-            date?: string | null;
-            /**
-             * Venue
-             * @description Venue of the event
-             */
-            venue?: string | null;
-            /** @default ACTIVE */
-            status: components["schemas"]["TenderStatus"] | null;
-        };
         /** EventResponse */
         EventResponse: {
             /** Id */
@@ -2627,6 +2663,10 @@ export interface components {
             /** Venue */
             venue: string | null;
             status: components["schemas"]["TenderStatus"];
+            /** Image Path */
+            image_path?: string | null;
+            /** Image Url */
+            image_url?: string | null;
             /** Created By */
             created_by: number | null;
             /** Created At */
@@ -2765,25 +2805,6 @@ export interface components {
              */
             percent_change?: number | null;
         };
-        /** LeaderCreate */
-        LeaderCreate: {
-            /**
-             * Name
-             * @description Leader name
-             */
-            name: string;
-            /**
-             * Designation
-             * @description Designation / title
-             */
-            designation?: string | null;
-            /** Tenure Start */
-            tenure_start?: string | null;
-            /** Tenure End */
-            tenure_end?: string | null;
-            /** @default ACTIVE */
-            status: components["schemas"]["NoticeStatus"] | null;
-        };
         /** LeaderResponse */
         LeaderResponse: {
             /** Id */
@@ -2797,6 +2818,10 @@ export interface components {
             /** Tenure End */
             tenure_end: string | null;
             status: components["schemas"]["NoticeStatus"];
+            /** Image Path */
+            image_path?: string | null;
+            /** Image Url */
+            image_url?: string | null;
             /** Created By */
             created_by: number | null;
             /** Created At */
@@ -2972,9 +2997,15 @@ export interface components {
              */
             message: string;
         };
-        /** MessageResponse */
+        /**
+         * MessageResponse
+         * @description Response with a message.
+         */
         MessageResponse: {
-            /** Message */
+            /**
+             * Message
+             * @description Response message
+             */
             message: string;
         };
         /**
@@ -3133,39 +3164,6 @@ export interface components {
             /** Media Path */
             media_path?: string | null;
         };
-        /** NoticeCreate */
-        NoticeCreate: {
-            /**
-             * Title
-             * @description Title of the notice
-             */
-            title: string;
-            /**
-             * Notice Type
-             * @description Type/category of notice
-             */
-            notice_type?: string | null;
-            /**
-             * Published On
-             * @description When it was published
-             */
-            published_on?: string | null;
-            /**
-             * Valid Till
-             * @description Valid until date/time
-             */
-            valid_till?: string | null;
-            /**
-             * @description Status - ACTIVE/EXPIRED/INACTIVE
-             * @default ACTIVE
-             */
-            status: components["schemas"]["NoticeStatus"] | null;
-            /**
-             * @description Visibility - PUBLIC/INTERNAL
-             * @default PUBLIC
-             */
-            visibility: components["schemas"]["Visibility"] | null;
-        };
         /** NoticeResponse */
         NoticeResponse: {
             /** Id */
@@ -3180,6 +3178,14 @@ export interface components {
             valid_till: string | null;
             status: components["schemas"]["NoticeStatus"];
             visibility: components["schemas"]["Visibility"];
+            /** Image Path */
+            image_path?: string | null;
+            /** Image Url */
+            image_url?: string | null;
+            /** Document Path */
+            document_path?: string | null;
+            /** Document Url */
+            document_url?: string | null;
             /** Created By */
             created_by: number | null;
             /** Created At */
@@ -3509,35 +3515,6 @@ export interface components {
              */
             message?: string | null;
         };
-        /** TenderCreate */
-        TenderCreate: {
-            /**
-             * Title
-             * @description Title of the tender
-             */
-            title: string;
-            /**
-             * Tender Type
-             * @description Type/category of tender
-             */
-            tender_type?: string | null;
-            /**
-             * Department Id
-             * @description Department id
-             */
-            department_id?: number | null;
-            /**
-             * Amount
-             * @description Tender amount
-             */
-            amount?: number | null;
-            /** Published On */
-            published_on?: string | null;
-            /** Submission Deadline */
-            submission_deadline?: string | null;
-            /** @default ACTIVE */
-            status: components["schemas"]["TenderStatus"] | null;
-        };
         /** TenderResponse */
         TenderResponse: {
             /** Id */
@@ -3555,6 +3532,10 @@ export interface components {
             /** Submission Deadline */
             submission_deadline: string | null;
             status: components["schemas"]["TenderStatus"];
+            /** Document Path */
+            document_path?: string | null;
+            /** Document Url */
+            document_url?: string | null;
             /** Created By */
             created_by: number | null;
             /** Created At */
@@ -3671,25 +3652,24 @@ export interface components {
             /** Remaining Quantity */
             remaining_quantity: number;
         };
-        /** TokenResponse */
+        /**
+         * TokenResponse
+         * @description Lightweight token for the token-list table.
+         */
         TokenResponse: {
-            /** Access Token */
-            access_token: string;
-            /** Refresh Token */
-            refresh_token: string;
-            /** Token Type */
-            token_type: string;
-            /** Role */
-            role: string;
-            /** User Id */
-            user_id: number;
-            /** Name */
-            name: string;
-            /**
-             * Is New User
-             * @default false
-             */
-            is_new_user: boolean;
+            /** Transport Code */
+            transport_code: string;
+            /** Token Number */
+            token_number: string;
+            /** Application Number */
+            application_number: string;
+            /** Phase */
+            phase: number;
+            /** Remaining Quantity Pct */
+            remaining_quantity_pct?: number | null;
+            /** Valid Till */
+            valid_till?: string | null;
+            status: components["schemas"]["ApplicationPhaseStatus"];
         };
         /**
          * TokenUtilizationRow
@@ -4006,24 +3986,52 @@ export interface components {
              */
             phase_materials?: components["schemas"]["PhaseMaterialEntry"][] | null;
         };
+        /** MessageResponse */
+        backend__controllers__auth__MessageResponse: {
+            /** Message */
+            message: string;
+        };
+        /** TokenResponse */
+        backend__controllers__auth__TokenResponse: {
+            /** Access Token */
+            access_token: string;
+            /** Refresh Token */
+            refresh_token: string;
+            /** Token Type */
+            token_type: string;
+            /** Role */
+            role: string;
+            /** User Id */
+            user_id: number;
+            /** Name */
+            name: string;
+            /**
+             * Is New User
+             * @default false
+             */
+            is_new_user: boolean;
+        };
         /**
-         * TokenResponse
-         * @description Lightweight token for the token-list table.
+         * CommentResponse
+         * @description Response schema for application comments.
          */
-        backend__schemas__response__application__TokenResponse: {
-            /** Transport Code */
-            transport_code: string;
-            /** Token Number */
-            token_number: string;
-            /** Application Number */
-            application_number: string;
-            /** Phase */
-            phase: number;
-            /** Remaining Quantity Pct */
-            remaining_quantity_pct?: number | null;
-            /** Valid Till */
-            valid_till?: string | null;
-            status: components["schemas"]["ApplicationPhaseStatus"];
+        backend__schemas__response__application__CommentResponse: {
+            /** Id */
+            id: number;
+            /** Application Id */
+            application_id: number;
+            /** Comment */
+            comment: string;
+            /** Comment By */
+            comment_by: number;
+            /** Commenter Name */
+            commenter_name?: string | null;
+            /** @default GENERAL */
+            comment_type: components["schemas"]["CommentType"] | null;
+            /** Media Paths */
+            media_paths?: unknown[] | null;
+            /** Created At */
+            created_at?: string | null;
         };
         /**
          * VehicleEntryResponse
@@ -4062,32 +4070,6 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
-        /** CommentResponse */
-        backend__schemas__response__complaint__CommentResponse: {
-            /** Id */
-            id: number;
-            /** Comment */
-            comment: string;
-            /** Created At */
-            created_at?: string | null;
-            /** Comment By */
-            comment_by?: number | null;
-            /** Media Path */
-            media_path?: string | null;
-            /** Access Url */
-            access_url?: string | null;
-        };
-        /**
-         * MessageResponse
-         * @description Response with a message.
-         */
-        backend__schemas__response__meta__MessageResponse: {
-            /**
-             * Message
-             * @description Response message
-             */
-            message: string;
-        };
     };
     responses: never;
     parameters: never;
@@ -4116,7 +4098,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MessageResponse"];
+                    "application/json": components["schemas"]["backend__controllers__auth__MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4149,7 +4131,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TokenResponse"];
+                    "application/json": components["schemas"]["backend__controllers__auth__TokenResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4182,7 +4164,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TokenResponse"];
+                    "application/json": components["schemas"]["backend__controllers__auth__TokenResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4288,7 +4270,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__meta__MessageResponse"];
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4354,7 +4336,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__meta__MessageResponse"];
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4389,7 +4371,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__meta__MessageResponse"];
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4420,7 +4402,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__meta__MessageResponse"];
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4441,6 +4423,12 @@ export interface operations {
                 flag: components["schemas"]["ApplicationFlags"];
                 offset?: number;
                 limit?: number;
+                /** @description Search by applicant name, mobile, or application number */
+                search?: string | null;
+                /** @description Filter by ward/zone */
+                ward_id?: number | null;
+                /** @description Filter by property usage */
+                property_usage?: components["schemas"]["PropertyUsageType"] | null;
                 /** @description Citizen user ID (required when flag=CITIZEN) */
                 citizen_user_id?: number | null;
             };
@@ -5073,7 +5061,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CommentResponse"][];
+                    "application/json": components["schemas"]["backend__schemas__response__application__CommentResponse"][];
                 };
             };
             /** @description Validation Error */
@@ -5109,7 +5097,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__application__TokenResponse"][];
+                    "application/json": components["schemas"]["TokenResponse"][];
                 };
             };
             /** @description Validation Error */
@@ -5140,7 +5128,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__application__TokenResponse"][];
+                    "application/json": components["schemas"]["TokenResponse"][];
                 };
             };
             /** @description Validation Error */
@@ -5915,7 +5903,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["NoticeCreate"];
+                "multipart/form-data": components["schemas"]["Body_create_notice_api_notices_post"];
             };
         };
         responses: {
@@ -6077,7 +6065,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["TenderCreate"];
+                "multipart/form-data": components["schemas"]["Body_create_tender_api_tenders_post"];
             };
         };
         responses: {
@@ -6239,7 +6227,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["EventCreate"];
+                "multipart/form-data": components["schemas"]["Body_create_event_api_events_post"];
             };
         };
         responses: {
@@ -6401,7 +6389,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LeaderCreate"];
+                "multipart/form-data": components["schemas"]["Body_create_leader_api_leaders_post"];
             };
         };
         responses: {

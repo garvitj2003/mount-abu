@@ -23,6 +23,7 @@ export const ComplaintService = {
     ward_id?: number | null;
     department_id?: number | null;
     category_id?: number | null;
+    search?: string;
     offset?: number;
     limit?: number;
   }): Promise<ComplaintListResponse> {

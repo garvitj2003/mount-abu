@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { type components } from "@/types/api";
 import { useCreateLeader, useUpdateLeader } from "@/hooks/useWebsiteContent";
 
-type LeaderCreate = components["schemas"]["LeaderCreate"];
+type LeaderCreate = components["schemas"]["Body_create_leader_api_leaders_post"];
 type LeaderUpdate = components["schemas"]["LeaderUpdate"];
 type LeaderResponse = components["schemas"]["LeaderResponse"];
 
@@ -31,6 +31,9 @@ export default function AddLeaderDrawer({ isOpen, onClose, data }: AddLeaderDraw
     status: "ACTIVE",
   });
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (data) {
       setFormData({
@@ -49,6 +52,7 @@ export default function AddLeaderDrawer({ isOpen, onClose, data }: AddLeaderDraw
         status: "ACTIVE",
       });
     }
+    setImageFile(null);
   }, [data, isOpen]);
 
   const handleSubmit = async () => {
@@ -69,7 +73,17 @@ export default function AddLeaderDrawer({ isOpen, onClose, data }: AddLeaderDraw
         await updateLeader({ id: data.id, data: updateData });
         alert("Leader updated successfully!");
       } else {
-        await createLeader(formData);
+        const payload = new FormData();
+        payload.append("name", formData.name);
+        payload.append("designation", formData.designation || "");
+        if (formData.tenure_start) payload.append("tenure_start", formData.tenure_start);
+        if (formData.tenure_end) payload.append("tenure_end", formData.tenure_end);
+        payload.append("status", formData.status || "ACTIVE");
+        if (imageFile) {
+          payload.append("image", imageFile);
+        }
+
+        await createLeader(payload);
         alert("Leader added successfully!");
       }
       onClose();
@@ -158,6 +172,42 @@ export default function AddLeaderDrawer({ isOpen, onClose, data }: AddLeaderDraw
                   />
                 </div>
               </div>
+
+              {/* Image Upload */}
+              {!isEdit && (
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-[#343434]">Leader Image</label>
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex cursor-pointer items-center justify-between rounded-lg border border-dashed border-[#D6D9DE] bg-[#F5F6F7] p-3 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Image src="/dashboard/icons/attach.svg" alt="attach" width={20} height={20} />
+                      <span className="text-sm text-[#343434] opacity-60">
+                        {imageFile ? imageFile.name : "Attach Image"}
+                      </span>
+                    </div>
+                    {imageFile && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setImageFile(null);
+                        }}
+                        className="text-xs text-red-500 hover:underline"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <input 
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                  />
+                </div>
+              )}
 
               <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5">

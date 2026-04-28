@@ -2,13 +2,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { WebsiteContentService } from "@/services/websiteContentService";
 import { type components } from "@/types/api";
 
-type NoticeCreate = components["schemas"]["NoticeCreate"];
+type NoticeCreate = components["schemas"]["Body_create_notice_api_notices_post"];
 type NoticeUpdate = components["schemas"]["NoticeUpdate"];
-type TenderCreate = components["schemas"]["TenderCreate"];
+type TenderCreate = components["schemas"]["Body_create_tender_api_tenders_post"];
 type TenderUpdate = components["schemas"]["TenderUpdate"];
-type EventCreate = components["schemas"]["EventCreate"];
+type EventCreate = components["schemas"]["Body_create_event_api_events_post"];
 type EventUpdate = components["schemas"]["EventUpdate"];
-type LeaderCreate = components["schemas"]["LeaderCreate"];
+type LeaderCreate = components["schemas"]["Body_create_leader_api_leaders_post"];
 type LeaderUpdate = components["schemas"]["LeaderUpdate"];
 type ContactDiaryCreate = components["schemas"]["ContactDiaryCreate"];
 type ContactDiaryUpdate = components["schemas"]["ContactDiaryUpdate"];
@@ -25,7 +25,7 @@ export function useNotices(params?: { limit?: number; offset?: number }) {
 export function useCreateNotice() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: NoticeCreate) => WebsiteContentService.createNotice(data),
+    mutationFn: (data: FormData) => WebsiteContentService.createNotice(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notices"] }),
   });
 }
@@ -58,7 +58,7 @@ export function useTenders(params?: { limit?: number; offset?: number }) {
 export function useCreateTender() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: TenderCreate) => WebsiteContentService.createTender(data),
+    mutationFn: (data: FormData) => WebsiteContentService.createTender(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tenders"] }),
   });
 }
@@ -91,7 +91,7 @@ export function useEvents(params?: { limit?: number; offset?: number }) {
 export function useCreateEvent() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: EventCreate) => WebsiteContentService.createEvent(data),
+    mutationFn: (data: FormData) => WebsiteContentService.createEvent(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["events"] }),
   });
 }
@@ -124,7 +124,7 @@ export function useLeaders(params?: { limit?: number; offset?: number }) {
 export function useCreateLeader() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: LeaderCreate) => WebsiteContentService.createLeader(data),
+    mutationFn: (data: FormData) => WebsiteContentService.createLeader(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["leaders"] }),
   });
 }

@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { type components } from "@/types/api";
 import DropdownSelect from "@/components/ui/DropdownSelect";
 import { useCreateEvent, useUpdateEvent } from "@/hooks/useWebsiteContent";
 
-type EventCreate = components["schemas"]["EventCreate"];
+type EventCreate = components["schemas"]["Body_create_event_api_events_post"];
 type EventUpdate = components["schemas"]["EventUpdate"];
 type EventResponse = components["schemas"]["EventResponse"];
 
@@ -40,6 +40,9 @@ export default function AddEventDrawer({ isOpen, onClose, data }: AddEventDrawer
     status: "ACTIVE",
   });
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (data) {
       setFormData({
@@ -58,6 +61,7 @@ export default function AddEventDrawer({ isOpen, onClose, data }: AddEventDrawer
         status: "ACTIVE",
       });
     }
+    setImageFile(null);
   }, [data, isOpen]);
 
   const handleSubmit = async () => {
@@ -78,7 +82,17 @@ export default function AddEventDrawer({ isOpen, onClose, data }: AddEventDrawer
         await updateEvent({ id: data.id, data: updateData });
         alert("Event updated successfully!");
       } else {
-        await createEvent(formData);
+        const payload = new FormData();
+        payload.append("title", formData.title);
+        payload.append("event_type", formData.event_type || "Cultural");
+        payload.append("date", formData.date || "");
+        payload.append("venue", formData.venue || "");
+        payload.append("status", formData.status || "ACTIVE");
+        if (imageFile) {
+          payload.append("image", imageFile);
+        }
+
+        await createEvent(payload);
         alert("Event added successfully!");
       }
       onClose();
@@ -175,6 +189,42 @@ export default function AddEventDrawer({ isOpen, onClose, data }: AddEventDrawer
                   onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
                 />
               </div>
+
+              {/* Image Upload */}
+              {!isEdit && (
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-[#343434]">Event Image</label>
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex cursor-pointer items-center justify-between rounded-lg border border-dashed border-[#D6D9DE] bg-[#F5F6F7] p-3 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Image src="/dashboard/icons/attach.svg" alt="attach" width={20} height={20} />
+                      <span className="text-sm text-[#343434] opacity-60">
+                        {imageFile ? imageFile.name : "Attach Image"}
+                      </span>
+                    </div>
+                    {imageFile && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setImageFile(null);
+                        }}
+                        className="text-xs text-red-500 hover:underline"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <input 
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                  />
+                </div>
+              )}
 
               {/* Status */}
               <div className="flex items-center justify-between py-2">

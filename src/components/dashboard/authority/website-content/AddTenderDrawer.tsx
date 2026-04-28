@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { type components } from "@/types/api";
@@ -8,7 +8,7 @@ import DropdownSelect from "@/components/ui/DropdownSelect";
 import { useDepartments } from "@/hooks/useMasterData";
 import { useCreateTender, useUpdateTender } from "@/hooks/useWebsiteContent";
 
-type TenderCreate = components["schemas"]["TenderCreate"];
+type TenderCreate = components["schemas"]["Body_create_tender_api_tenders_post"];
 type TenderUpdate = components["schemas"]["TenderUpdate"];
 type TenderResponse = components["schemas"]["TenderResponse"];
 type TenderStatus = components["schemas"]["TenderStatus"];
@@ -22,7 +22,7 @@ interface AddTenderDrawerProps {
 const TENDER_TYPE_OPTIONS = [
   { label: "Standard", value: "Standard" },
   { label: "Limited", value: "Limited" },
-  { label: "Expression of Interest", value: "Limited" },
+  { label: "Expression of Interest", value: "Expression of Interest" },
 ];
 
 export default function AddTenderDrawer({ isOpen, onClose, data }: AddTenderDrawerProps) {
@@ -42,6 +42,9 @@ export default function AddTenderDrawer({ isOpen, onClose, data }: AddTenderDraw
     submission_deadline: null,
     status: "ACTIVE",
   });
+
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (data) {
@@ -65,6 +68,7 @@ export default function AddTenderDrawer({ isOpen, onClose, data }: AddTenderDraw
         status: "ACTIVE",
       });
     }
+    setPdfFile(null);
   }, [data, isOpen]);
 
   const deptOptions = departments.map(d => ({
@@ -92,7 +96,20 @@ export default function AddTenderDrawer({ isOpen, onClose, data }: AddTenderDraw
         await updateTender({ id: data.id, data: updateData });
         alert("Tender updated successfully!");
       } else {
-        await createTender(formData);
+        const payload = new FormData();
+        payload.append("title", formData.title);
+        payload.append("tender_type", formData.tender_type || "Standard");
+        if (formData.department_id) payload.append("department_id", formData.department_id.toString());
+        if (formData.amount) payload.append("amount", formData.amount.toString());
+        payload.append("published_on", formData.published_on || "");
+        if (formData.submission_deadline) payload.append("submission_deadline", formData.submission_deadline);
+        payload.append("status", formData.status || "ACTIVE");
+
+        if (pdfFile) {
+          payload.append("pdf", pdfFile);
+        }
+
+        await createTender(payload);
         alert("Tender added successfully!");
       }
       onClose();
@@ -216,6 +233,42 @@ export default function AddTenderDrawer({ isOpen, onClose, data }: AddTenderDraw
                   </div>
                 </div>
               </div>
+
+              {/* PDF Upload */}
+              {!isEdit && (
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-[#343434]">Tender PDF</label>
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex cursor-pointer items-center justify-between rounded-lg border border-dashed border-[#D6D9DE] bg-[#F5F6F7] p-3 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Image src="/dashboard/icons/attach.svg" alt="attach" width={20} height={20} />
+                      <span className="text-sm text-[#343434] opacity-60">
+                        {pdfFile ? pdfFile.name : "Attach PDF"}
+                      </span>
+                    </div>
+                    {pdfFile && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPdfFile(null);
+                        }}
+                        className="text-xs text-red-500 hover:underline"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <input 
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="application/pdf"
+                    onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                  />
+                </div>
+              )}
 
               {/* Status */}
               <div className="flex items-center justify-between py-2">

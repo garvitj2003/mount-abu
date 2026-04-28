@@ -1,19 +1,19 @@
 import api from "@/lib/axios";
 import { type components } from "@/types/api";
 
-type NoticeCreate = components["schemas"]["NoticeCreate"];
+type NoticeCreate = components["schemas"]["Body_create_notice_api_notices_post"];
 type NoticeResponse = components["schemas"]["NoticeResponse"];
 type NoticesListResponse = components["schemas"]["NoticesListResponse"];
 
-type TenderCreate = components["schemas"]["TenderCreate"];
+type TenderCreate = components["schemas"]["Body_create_tender_api_tenders_post"];
 type TenderResponse = components["schemas"]["TenderResponse"];
 type TendersListResponse = components["schemas"]["TendersListResponse"];
 
-type EventCreate = components["schemas"]["EventCreate"];
+type EventCreate = components["schemas"]["Body_create_event_api_events_post"];
 type EventResponse = components["schemas"]["EventResponse"];
 type EventsListResponse = components["schemas"]["EventsListResponse"];
 
-type LeaderCreate = components["schemas"]["LeaderCreate"];
+type LeaderCreate = components["schemas"]["Body_create_leader_api_leaders_post"];
 type LeaderResponse = components["schemas"]["LeaderResponse"];
 type LeadersListResponse = components["schemas"]["LeadersListResponse"];
 
@@ -37,8 +37,10 @@ export const WebsiteContentService = {
     const response = await api.get<NoticesListResponse>("/api/notices", { params });
     return response.data;
   },
-  async createNotice(data: NoticeCreate): Promise<NoticeResponse> {
-    const response = await api.post<NoticeResponse>("/api/notices", data);
+  async createNotice(data: FormData): Promise<NoticeResponse> {
+    const response = await api.post<NoticeResponse>("/api/notices", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
   },
   async updateNotice(id: number, data: NoticeUpdate): Promise<NoticeResponse> {
@@ -55,8 +57,10 @@ export const WebsiteContentService = {
     const response = await api.get<TendersListResponse>("/api/tenders", { params });
     return response.data;
   },
-  async createTender(data: TenderCreate): Promise<TenderResponse> {
-    const response = await api.post<TenderResponse>("/api/tenders", data);
+  async createTender(data: FormData): Promise<TenderResponse> {
+    const response = await api.post<TenderResponse>("/api/tenders", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
   },
   async updateTender(id: number, data: TenderUpdate): Promise<TenderResponse> {
@@ -73,8 +77,10 @@ export const WebsiteContentService = {
     const response = await api.get<EventsListResponse>("/api/events", { params });
     return response.data;
   },
-  async createEvent(data: EventCreate): Promise<EventResponse> {
-    const response = await api.post<EventResponse>("/api/events", data);
+  async createEvent(data: FormData): Promise<EventResponse> {
+    const response = await api.post<EventResponse>("/api/events", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
   },
   async updateEvent(id: number, data: EventUpdate): Promise<EventResponse> {
@@ -91,8 +97,10 @@ export const WebsiteContentService = {
     const response = await api.get<LeadersListResponse>("/api/leaders", { params });
     return response.data;
   },
-  async createLeader(data: LeaderCreate): Promise<LeaderResponse> {
-    const response = await api.post<LeaderResponse>("/api/leaders", data);
+  async createLeader(data: FormData): Promise<LeaderResponse> {
+    const response = await api.post<LeaderResponse>("/api/leaders", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return response.data;
   },
   async updateLeader(id: number, data: LeaderUpdate): Promise<LeaderResponse> {

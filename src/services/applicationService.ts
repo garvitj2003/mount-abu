@@ -35,6 +35,9 @@ export const ApplicationService = {
     citizen_user_id?: number;
     offset?: number;
     limit?: number;
+    search?: string;
+    ward_id?: number;
+    property_usage?: string;
   }): Promise<ApplicationResponse[]> {
     const response = await api.get<ApplicationResponse[]>("/api/applications", {
       params,
@@ -130,8 +133,8 @@ export const ApplicationService = {
     return response.data;
   },
 
-  async getComments(applicationId: number): Promise<components["schemas"]["CommentResponse"][]> {
-    const response = await api.get<components["schemas"]["CommentResponse"][]>(`/api/applications/${applicationId}/comments`);
+  async getComments(applicationId: number): Promise<components["schemas"]["backend__schemas__response__application__CommentResponse"][]> {
+    const response = await api.get<components["schemas"]["backend__schemas__response__application__CommentResponse"][]>(`/api/applications/${applicationId}/comments`);
     return response.data;
   },
 

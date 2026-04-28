@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import TablePagination from "@/components/ui/TablePagination";
 import { useTokens } from "@/hooks/useTokens";
+import CustomDropdown from "@/components/ui/CustomDropdown";
 
 const ProgressBar = ({ progress }: { progress: number }) => (
   <div className="flex items-center gap-3 w-full max-w-[120px]">
@@ -18,22 +19,43 @@ const ProgressBar = ({ progress }: { progress: number }) => (
   </div>
 );
 
+const TOKEN_STATUS_OPTIONS = [
+  { label: "Active", value: "ACTIVE" },
+  { label: "Pending", value: "PENDING" },
+  { label: "Completed", value: "COMPLETED" },
+  { label: "Withheld", value: "WITHHELD" },
+  { label: "Terminated", value: "TERMINATED" },
+];
+
 export default function AuthorityTokensPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [page, setPage] = useState(1);
-  const limit = 10;
+  const [limit, setLimit] = useState(10);
+
+  // Debounce search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const { data: tokens = [], isLoading, error } = useTokens({
     offset: (page - 1) * limit,
     limit: limit,
-    search: search || undefined
+    search: debouncedSearch || undefined,
+    status: selectedStatus || undefined
   });
 
-  // Since total count might not be returned in simple array response, 
-  // we'll estimate for pagination or adjust if backend provides it.
-  // For now, assuming more if we hit limit.
-  const totalPages = tokens.length === limit ? page + 1 : page;
+  // Estimate total pages
+  const totalPages = useMemo(() => {
+    if (tokens.length < limit) return page;
+    return page + 1;
+  }, [tokens.length, page, limit]);
 
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest relative overflow-y-auto">
@@ -51,22 +73,38 @@ export default function AuthorityTokensPage() {
       <div className="p-5">
         <div className="flex flex-col gap-4 rounded-lg border border-[#D6D9DE] bg-white p-4">
           
-          {/* Search Bar */}
+          {/* Filters Bar */}
           <div className="flex items-center justify-between gap-4">
-            <div className="flex w-[209px] items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-60">
-                <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <input
-                type="text"
-                placeholder="Search"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
+            <div className="flex items-center gap-3">
+              {/* Search Bar */}
+              <div className="flex w-[209px] items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-60">
+                  <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full border-none bg-transparent p-0 text-sm font-normal text-[#343434] outline-none placeholder:text-[#343434]/60 focus:ring-0"
+                />
+              </div>
+
+              {/* Status Filter */}
+              <CustomDropdown
+                label="Status"
+                options={[
+                  { label: "All Statuses", value: "" },
+                  ...TOKEN_STATUS_OPTIONS
+                ]}
+                value={selectedStatus}
+                onSelect={(val) => {
+                  setSelectedStatus(val);
                   setPage(1);
                 }}
-                className="w-full border-none bg-transparent p-0 text-sm font-normal text-[#343434] outline-none placeholder:text-[#343434]/60 focus:ring-0"
+                placeholder="Select Status"
+                width="160px"
               />
             </div>
           </div>
@@ -125,7 +163,9 @@ export default function AuthorityTokensPage() {
                         </span>
                       </td>
                       <td className="px-2 py-3">
-                        <span className="text-sm font-normal text-[#343434] opacity-70">{token.application_number}</span>
+                        <span className="text-sm font-normal text-[#343434] opacity-70">
+                          {token.application_number ? `#${token.application_number.toString().padStart(5, '0')}` : '—'}
+                        </span>
                       </td>
                       <td className="px-2 py-3">
                         <ProgressBar progress={token.remaining_quantity_pct || 0} />
@@ -143,7 +183,13 @@ export default function AuthorityTokensPage() {
                             width={14} 
                             height={14} 
                           />
-                          <span className={`text-sm font-normal ${token.status === 'COMPLETED' ? 'text-gray-500' : token.status === 'PENDING' ? 'text-[#B39632]' : 'text-[#059669]'}`}>
+                          <span className={`text-sm font-normal ${
+                            token.status === 'COMPLETED' ? 'text-gray-500' : 
+                            token.status === 'PENDING' ? 'text-[#B39632]' : 
+                            token.status === 'TERMINATED' ? 'text-red-500' :
+                            token.status === 'WITHHELD' ? 'text-purple-500' :
+                            'text-[#059669]'
+                          }`}>
                             {token.status}
                           </span>
                         </div>
@@ -177,6 +223,10 @@ export default function AuthorityTokensPage() {
             totalPages={totalPages}
             limit={limit}
             onPageChange={setPage}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setPage(1);
+            }}
           />
         </div>
       </div>

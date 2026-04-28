@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import { useAllComplaints } from "@/hooks/useComplaints";
-import { useComplaintCategories } from "@/hooks/useMasterData";
+import { useComplaintCategories, useWards } from "@/hooks/useMasterData";
 import { type components } from "@/types/api";
-import DropdownSelect from "@/components/ui/DropdownSelect";
 import TablePagination from "@/components/ui/TablePagination";
 import ComplaintViewDrawer from "@/components/dashboard/citizen/complaints/ComplaintViewDrawer";
+import CustomDropdown from "@/components/ui/CustomDropdown";
 
 type ComplaintStatus = components["schemas"]["ComplaintStatus"];
 
@@ -35,7 +35,7 @@ const StatusBadge = ({ status }: { status: ComplaintStatus }) => {
     case "REJECTED":
     case "WITHDRAWN":
     case "WITHHELD":
-      icon = "/dashboard/icons/warning.svg"; // Fallback or specific icon
+      icon = "/dashboard/icons/warning.svg";
       textColor = "text-[#EF4444]";
       label = status.charAt(0) + status.slice(1).toLowerCase();
       break;
@@ -56,18 +56,21 @@ const StatusBadge = ({ status }: { status: ComplaintStatus }) => {
 export default function AuthorityComplaintsPage() {
   const [filter, setFilter] = useState<ComplaintStatus | "All">("All");
   const [search, setSearch] = useState("");
-  const [categoryId, setCategoryId] = useState<number | "All">("All");
+  const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [selectedWardId, setSelectedWardId] = useState<number | null>(null);
   const [page, setPage] = useState(1);
-  const limit = 10;
+  const [limit, setLimit] = useState(10);
 
   const [selectedComplaint, setSelectedComplaint] = useState<any>(null);
   const [isViewDrawerOpen, setIsViewDrawerOpen] = useState(false);
 
-  const { data: categories } = useComplaintCategories();
+  const { data: categories = [] } = useComplaintCategories();
+  const { data: wards = [] } = useWards();
 
   const { data, isLoading } = useAllComplaints({
     status: filter === "All" ? null : filter,
-    category_id: categoryId === "All" ? null : categoryId,
+    category_id: categoryId,
+    ward_id: selectedWardId,
     offset: (page - 1) * limit,
     limit: limit,
   });
@@ -76,16 +79,27 @@ export default function AuthorityComplaintsPage() {
   const total = data?.total || 0;
   const totalPages = Math.ceil(total / limit);
 
-  const filteredComplaints = complaints.filter((c) => 
-    c.title.toLowerCase().includes(search.toLowerCase()) || 
-    c.id.toString().includes(search) ||
-    c.applicant_name.toLowerCase().includes(search.toLowerCase())
-  );
+  // Reverting to local search
+  const filteredComplaints = useMemo(() => {
+    if (!search) return complaints;
+    const lowerSearch = search.toLowerCase();
+    return complaints.filter((c) => 
+      c.title?.toLowerCase().includes(lowerSearch) || 
+      c.id.toString().includes(search) ||
+      c.applicant_name?.toLowerCase().includes(lowerSearch) ||
+      c.location_address?.toLowerCase().includes(lowerSearch)
+    );
+  }, [complaints, search]);
 
-  const categoryOptions = [
-    { label: "All Category", value: "All" },
-    ...(categories?.map((cat) => ({ label: cat.name, value: cat.id })) || [])
-  ];
+  const categoryOptions = useMemo(() => [
+    { label: "All Categories", value: "" },
+    ...categories.map((cat) => ({ label: cat.name, value: cat.id }))
+  ], [categories]);
+
+  const wardOptions = useMemo(() => [
+    { label: "All Wards", value: "" },
+    ...wards.map((w) => ({ label: w.name, value: w.id }))
+  ], [wards]);
 
   const handleComplaintClick = (complaint: any) => {
     setSelectedComplaint(complaint);
@@ -125,13 +139,31 @@ export default function AuthorityComplaintsPage() {
               />
             </div>
 
-            <div className="flex items-center gap-2 h-9">
+            <div className="flex items-center gap-2">
               {/* Category Dropdown */}
-              <DropdownSelect
+              <CustomDropdown
+                label="Category"
                 options={categoryOptions}
-                value={categoryId}
-                onChange={(val) => setCategoryId(val === "All" ? "All" : Number(val))}
-                className="w-[160px] h-full"
+                value={categoryId || ""}
+                onSelect={(val) => {
+                  setCategoryId(val ? Number(val) : null);
+                  setPage(1);
+                }}
+                placeholder="Select Category"
+                width="150px"
+              />
+
+              {/* Ward Dropdown */}
+              <CustomDropdown
+                label="Ward"
+                options={wardOptions}
+                value={selectedWardId || ""}
+                onSelect={(val) => {
+                  setSelectedWardId(val ? Number(val) : null);
+                  setPage(1);
+                }}
+                placeholder="Select Ward"
+                width="140px"
               />
 
               {/* Status Divider */}
@@ -172,7 +204,7 @@ export default function AuthorityComplaintsPage() {
                     "Category",
                     "Ward No.",
                     "Location",
-                    "Assigned To", // Note: API might not have this, we'll check.
+                    "Assigned To",
                     "Submitted On",
                     "Status",
                   ].map((header, idx) => (
@@ -212,8 +244,6 @@ export default function AuthorityComplaintsPage() {
                         </span>
                       </td>
                       <td className="px-2 py-3">
-                        {/* Assuming category_name is available in ComplaintRow based on schema. 
-                            If not, we might need to map category_id to name using categories list */}
                         <span className="text-sm font-normal text-[#343434]">
                             {(item as any).category_name || categories?.find(c => c.id === item.category_id)?.name || "—"}
                         </span>
@@ -228,7 +258,7 @@ export default function AuthorityComplaintsPage() {
                       </td>
                       <td className="px-2 py-3">
                         <span className="text-sm font-normal text-[#343434]">
-                            {item.assigned_to?.name}
+                            {item.assigned_to?.name || "Unassigned"}
                         </span>
                       </td>
                       <td className="px-2 py-3">
@@ -252,6 +282,10 @@ export default function AuthorityComplaintsPage() {
             totalPages={totalPages}
             limit={limit}
             onPageChange={setPage}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setPage(1);
+            }}
           />
         </div>
       </div>

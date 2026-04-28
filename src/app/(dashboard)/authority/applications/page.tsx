@@ -8,6 +8,8 @@ import { useUser } from "@/hooks/useUser";
 import { useApplications, useWorkflowAction } from "@/hooks/useApplications";
 import { ROLE_FILTERS, type ApplicationFlag } from "@/constants/filters";
 import { useRouter } from "next/navigation";
+import { useWards } from "@/hooks/useMasterData";
+import CustomDropdown from "@/components/ui/CustomDropdown";
 
 type ApplicationStatus = 
   | "PENDING"
@@ -18,6 +20,12 @@ type ApplicationStatus =
   | "OBJECTED"
   | "REJECTED"
   | "WITHHELD";
+
+const PROPERTY_USAGE_OPTIONS = [
+  { label: "Domestic", value: "DOMESTIC" },
+  { label: "Commercial", value: "COMMERCIAL" },
+  { label: "Hotel", value: "HOTEL" },
+];
 
 const StatusBadge = ({ status }: { status: ApplicationStatus }) => {
   let bgColor = "";
@@ -68,22 +76,46 @@ const StatusBadge = ({ status }: { status: ApplicationStatus }) => {
 export default function AuthorityApplicationsPage() {
   const router = useRouter();
   const { data: user } = useUser();
+  const { data: wards = [] } = useWards();
+  
   const [selectedCategory, setSelectedCategory] = useState<"All" | "New" | "Renovation">("All");
   const [selectedFlag, setSelectedFlag] = useState<ApplicationFlag>("ALL");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedWardId, setSelectedWardId] = useState<number | null>(null);
+  const [selectedPropertyUsage, setSelectedPropertyUsage] = useState<string>("");
+  
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [dropdownPos, setDropdownPosition] = useState({ top: 0, left: 0 });
+  
   const dropdownRef = useRef<HTMLDivElement>(null);
   const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  
-  const limit = 10;
+
+  // Debounce search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1); // Reset to first page on search
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const { data: applications = [], isLoading } = useApplications({
     flag: selectedFlag,
     offset: (page - 1) * limit,
     limit,
+    search: debouncedSearch || undefined,
+    ward_id: selectedWardId || undefined,
+    property_usage: selectedPropertyUsage || undefined,
   });
+
+  // Since API doesn't return total count, we estimate total pages
+  const totalPages = useMemo(() => {
+    if (applications.length < limit) return page;
+    return page + 1;
+  }, [applications.length, page, limit]);
 
   const { mutateAsync: performAction } = useWorkflowAction();
 
@@ -106,7 +138,6 @@ export default function AuthorityApplicationsPage() {
     if (user?.role && !canViewAll && selectedFlag === "ALL") {
       const filters = ROLE_FILTERS[user.role];
       if (filters) {
-        // Default to New Construction first, then Renovation
         if (filters.newConstruction.length > 0) {
           setSelectedCategory("New");
           setSelectedFlag(filters.newConstruction[0].value);
@@ -120,6 +151,7 @@ export default function AuthorityApplicationsPage() {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Main actions dropdown
       if (openDropdownId !== null && triggerRefs.current[openDropdownId]?.contains(event.target as Node)) {
         return;
       }
@@ -127,7 +159,10 @@ export default function AuthorityApplicationsPage() {
         setOpenDropdownId(null);
       }
     };
-    const handleScroll = () => setOpenDropdownId(null);
+    
+    const handleScroll = () => {
+      setOpenDropdownId(null);
+    };
 
     document.addEventListener("mousedown", handleClickOutside);
     window.addEventListener("scroll", handleScroll, true);
@@ -170,16 +205,10 @@ export default function AuthorityApplicationsPage() {
     }
   };
 
-  // Client-side filtering for Search (since API doesn't support it yet)
-  const filteredApplications = applications.filter(app => {
-    if (!search) return true;
-    const term = search.toLowerCase();
-    return (
-      app.applicant_name.toLowerCase().includes(term) ||
-      app.id.toString().includes(term) ||
-      (app.ward_zone && app.ward_zone.toLowerCase().includes(term))
-    );
-  });
+  const wardOptions = useMemo(() => [
+    { label: "All Wards", value: "" },
+    ...wards.map(w => ({ label: w.name, value: w.id }))
+  ], [wards]);
 
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest relative">
@@ -216,16 +245,33 @@ export default function AuthorityApplicationsPage() {
 
             <div className="flex items-center gap-2">
               {/* Ward/Zone Dropdown */}
-              <div className="flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors">
-                <span className="text-sm font-normal text-[#343434]">Ward/Zone</span>
-                <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} className="opacity-60" />
-              </div>
+              <CustomDropdown
+                label="Ward/Zone"
+                options={wardOptions}
+                value={selectedWardId || ""}
+                onSelect={(val) => {
+                  setSelectedWardId(val ? Number(val) : null);
+                  setPage(1);
+                }}
+                placeholder="Select Ward"
+                width="160px"
+              />
 
               {/* Property Usage Dropdown */}
-              <div className="flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2 cursor-pointer hover:bg-gray-50 transition-colors">
-                <span className="text-sm font-normal text-[#343434]">Property Usage</span>
-                <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} className="opacity-60" />
-              </div>
+              <CustomDropdown
+                label="Property Usage"
+                options={[
+                  { label: "All Usages", value: "" },
+                  ...PROPERTY_USAGE_OPTIONS
+                ]}
+                value={selectedPropertyUsage}
+                onSelect={(val) => {
+                  setSelectedPropertyUsage(val);
+                  setPage(1);
+                }}
+                placeholder="Select Usage"
+                width="160px"
+              />
 
               {/* Status Divider */}
               <div className="h-6 w-[1px] bg-[#D6D9DE] mx-1"></div>
@@ -238,6 +284,7 @@ export default function AuthorityApplicationsPage() {
                     onClick={() => {
                       setSelectedCategory("All");
                       setSelectedFlag("ALL");
+                      setPage(1);
                     }}
                     className={`h-[38px] px-4 text-sm rounded-lg border transition-colors flex items-center justify-center ${
                       selectedCategory === "All"
@@ -260,6 +307,7 @@ export default function AuthorityApplicationsPage() {
                     onSelect={(flag) => {
                       setSelectedCategory("New");
                       setSelectedFlag(flag);
+                      setPage(1);
                     }}
                   />
                 )}
@@ -275,6 +323,7 @@ export default function AuthorityApplicationsPage() {
                     onSelect={(flag) => {
                       setSelectedCategory("Renovation");
                       setSelectedFlag(flag);
+                      setPage(1);
                     }}
                   />
                 )}
@@ -312,8 +361,8 @@ export default function AuthorityApplicationsPage() {
                       Loading applications...
                     </td>
                   </tr>
-                ) : filteredApplications.length > 0 ? (
-                  filteredApplications.map((app) => (
+                ) : applications.length > 0 ? (
+                  applications.map((app) => (
                     <tr key={app.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                       <td className="px-2 py-3">
                         <span 
@@ -422,8 +471,13 @@ export default function AuthorityApplicationsPage() {
           {/* Pagination */}
           <TablePagination
             currentPage={page}
-            totalPages={10} // Total pages unknown from API, defaulting to 10 for now
+            totalPages={totalPages}
+            limit={limit}
             onPageChange={setPage}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setPage(1);
+            }}
           />
         </div>
       </div>

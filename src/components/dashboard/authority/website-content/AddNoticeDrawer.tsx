@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { type components } from "@/types/api";
 import DropdownSelect from "@/components/ui/DropdownSelect";
 import { useCreateNotice, useUpdateNotice } from "@/hooks/useWebsiteContent";
 
-type NoticeCreate = components["schemas"]["NoticeCreate"];
+type NoticeCreate = components["schemas"]["Body_create_notice_api_notices_post"];
 type NoticeUpdate = components["schemas"]["NoticeUpdate"];
 type NoticeResponse = components["schemas"]["NoticeResponse"];
 type NoticeStatus = components["schemas"]["NoticeStatus"];
@@ -43,6 +43,12 @@ export default function AddNoticeDrawer({ isOpen, onClose, data }: AddNoticeDraw
     visibility: "PUBLIC",
   });
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (data) {
       setFormData({
@@ -63,6 +69,8 @@ export default function AddNoticeDrawer({ isOpen, onClose, data }: AddNoticeDraw
         visibility: "PUBLIC",
       });
     }
+    setImageFile(null);
+    setPdfFile(null);
   }, [data, isOpen]);
 
   const handleSubmit = async () => {
@@ -84,7 +92,22 @@ export default function AddNoticeDrawer({ isOpen, onClose, data }: AddNoticeDraw
         await updateNotice({ id: data.id, data: updateData });
         alert("Notice updated successfully!");
       } else {
-        await createNotice(formData);
+        const payload = new FormData();
+        payload.append("title", formData.title);
+        payload.append("notice_type", formData.notice_type || "");
+        payload.append("published_on", formData.published_on || "");
+        if (formData.valid_till) payload.append("valid_till", formData.valid_till);
+        payload.append("status", formData.status || "ACTIVE");
+        payload.append("visibility", formData.visibility || "PUBLIC");
+        
+        if (imageFile) {
+          payload.append("image", imageFile);
+        }
+        if (pdfFile) {
+          payload.append("pdf", pdfFile);
+        }
+        
+        await createNotice(payload);
         alert("Notice added successfully!");
       }
       onClose();
@@ -217,6 +240,63 @@ export default function AddNoticeDrawer({ isOpen, onClose, data }: AddNoticeDraw
                   </div>
                 </div>
               </div>
+
+              {/* Uploads */}
+              {!isEdit && (
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Image Upload */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-[#343434]">Notice Image</label>
+                    <div 
+                      onClick={() => imageInputRef.current?.click()}
+                      className="flex cursor-pointer items-center justify-between rounded-lg border border-dashed border-[#D6D9DE] bg-[#F5F6F7] p-3 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <Image src="/dashboard/icons/attach.svg" alt="attach" width={20} height={20} />
+                        <span className="text-xs text-[#343434] opacity-60 truncate">
+                          {imageFile ? imageFile.name : "Attach Image"}
+                        </span>
+                      </div>
+                    </div>
+                    <input 
+                      type="file"
+                      ref={imageInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                    />
+                    {imageFile && (
+                      <button onClick={() => setImageFile(null)} className="text-[10px] text-red-500 hover:underline">Remove Image</button>
+                    )}
+                  </div>
+
+                  {/* PDF Upload */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-[#343434]">Notice PDF</label>
+                    <div 
+                      onClick={() => pdfInputRef.current?.click()}
+                      className="flex cursor-pointer items-center justify-between rounded-lg border border-dashed border-[#D6D9DE] bg-[#F5F6F7] p-3 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <Image src="/dashboard/icons/attach.svg" alt="attach" width={20} height={20} />
+                        <span className="text-xs text-[#343434] opacity-60 truncate">
+                          {pdfFile ? pdfFile.name : "Attach PDF"}
+                        </span>
+                      </div>
+                    </div>
+                    <input 
+                      type="file"
+                      ref={pdfInputRef}
+                      className="hidden"
+                      accept="application/pdf"
+                      onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                    />
+                    {pdfFile && (
+                      <button onClick={() => setPdfFile(null)} className="text-[10px] text-red-500 hover:underline">Remove PDF</button>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Status */}
               <div className="flex items-center justify-between py-2">
