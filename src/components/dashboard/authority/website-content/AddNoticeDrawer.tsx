@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { type components } from "@/types/api";
 import DropdownSelect from "@/components/ui/DropdownSelect";
 import { useCreateNotice, useUpdateNotice } from "@/hooks/useWebsiteContent";
+import { validateImageAspectRatio } from "@/lib/image-utils";
 
 type NoticeCreate = components["schemas"]["Body_create_notice_api_notices_post"];
 type NoticeUpdate = components["schemas"]["Body_update_notice_api_notices__notice_id__put"];
@@ -45,11 +46,26 @@ export default function AddNoticeDrawer({ isOpen, onClose, data }: AddNoticeDraw
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-  
   const imageInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
 
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const isValid = await validateImageAspectRatio(file);
+      if (!isValid) {
+        alert("Please upload an image with a 4:3 aspect ratio.");
+        if (imageInputRef.current) imageInputRef.current.value = "";
+        return;
+      }
+      setImageFile(file);
+    } else {
+      setImageFile(null);
+    }
+  };
+
   useEffect(() => {
+
     if (data) {
       setFormData({
         title: data.title,
@@ -80,33 +96,25 @@ export default function AddNoticeDrawer({ isOpen, onClose, data }: AddNoticeDraw
     }
     
     try {
+      const payload = new FormData();
+      payload.append("title", formData.title);
+      payload.append("notice_type", formData.notice_type || "");
+      payload.append("published_on", formData.published_on || "");
+      if (formData.valid_till) payload.append("valid_till", formData.valid_till);
+      payload.append("status", formData.status || "ACTIVE");
+      payload.append("visibility", formData.visibility || "PUBLIC");
+      
+      if (imageFile) {
+        payload.append("image", imageFile);
+      }
+      if (pdfFile) {
+        payload.append("document", pdfFile);
+      }
+
       if (isEdit && data) {
-        const updateData: NoticeUpdate = {
-          title: formData.title,
-          notice_type: formData.notice_type,
-          published_on: formData.published_on,
-          valid_till: formData.valid_till,
-          status: formData.status,
-          visibility: formData.visibility,
-        };
-        await updateNotice({ id: data.id, data: updateData });
+        await updateNotice({ id: data.id, data: payload });
         alert("Notice updated successfully!");
       } else {
-        const payload = new FormData();
-        payload.append("title", formData.title);
-        payload.append("notice_type", formData.notice_type || "");
-        payload.append("published_on", formData.published_on || "");
-        if (formData.valid_till) payload.append("valid_till", formData.valid_till);
-        payload.append("status", formData.status || "ACTIVE");
-        payload.append("visibility", formData.visibility || "PUBLIC");
-        
-        if (imageFile) {
-          payload.append("image", imageFile);
-        }
-        if (pdfFile) {
-          payload.append("document", pdfFile);
-        }
-        
         await createNotice(payload);
         alert("Notice added successfully!");
       }
@@ -242,61 +250,69 @@ export default function AddNoticeDrawer({ isOpen, onClose, data }: AddNoticeDraw
               </div>
 
               {/* Uploads */}
-              {!isEdit && (
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Image Upload */}
-                  <div className="space-y-1.5">
+              <div className="grid grid-cols-2 gap-4">
+                {/* Image Upload */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
                     <label className="text-sm font-medium text-[#343434]">Notice Image</label>
-                    <div 
-                      onClick={() => imageInputRef.current?.click()}
-                      className="flex cursor-pointer items-center justify-between rounded-lg border border-dashed border-[#D6D9DE] bg-[#F5F6F7] p-3 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center gap-2 truncate">
-                        <Image src="/dashboard/icons/attach.svg" alt="attach" width={20} height={20} />
-                        <span className="text-xs text-[#343434] opacity-60 truncate">
-                          {imageFile ? imageFile.name : "Attach Image"}
-                        </span>
-                      </div>
-                    </div>
-                    <input 
-                      type="file"
-                      ref={imageInputRef}
-                      className="hidden"
-                      accept="image/*"
-                      onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                    />
-                    {imageFile && (
-                      <button onClick={() => setImageFile(null)} className="text-[10px] text-red-500 hover:underline">Remove Image</button>
+                    {isEdit && data?.image_url && (
+                      <a href={data.image_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 hover:underline">View Current</a>
                     )}
                   </div>
-
-                  {/* PDF Upload */}
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-[#343434]">Notice PDF</label>
-                    <div 
-                      onClick={() => pdfInputRef.current?.click()}
-                      className="flex cursor-pointer items-center justify-between rounded-lg border border-dashed border-[#D6D9DE] bg-[#F5F6F7] p-3 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center gap-2 truncate">
-                        <Image src="/dashboard/icons/attach.svg" alt="attach" width={20} height={20} />
-                        <span className="text-xs text-[#343434] opacity-60 truncate">
-                          {pdfFile ? pdfFile.name : "Attach PDF"}
-                        </span>
-                      </div>
+                  <div 
+                    onClick={() => imageInputRef.current?.click()}
+                    className="flex cursor-pointer items-center justify-between rounded-lg border border-dashed border-[#D6D9DE] bg-[#F5F6F7] p-3 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <Image src="/dashboard/icons/attach.svg" alt="attach" width={20} height={20} />
+                      <span className="text-xs text-[#343434] opacity-60 truncate">
+                        {imageFile ? imageFile.name : (isEdit && data?.image_url ? "Change Image" : "Attach Image")}
+                      </span>
                     </div>
-                    <input 
-                      type="file"
-                      ref={pdfInputRef}
-                      className="hidden"
-                      accept="application/pdf"
-                      onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
-                    />
-                    {pdfFile && (
-                      <button onClick={() => setPdfFile(null)} className="text-[10px] text-red-500 hover:underline">Remove PDF</button>
-                    )}
                   </div>
+                  <input 
+                    type="file"
+                    ref={imageInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                  />
+                  {imageFile && (
+                    <button onClick={() => setImageFile(null)} className="text-[10px] text-red-500 hover:underline">Remove Selected</button>
+                  )}
                 </div>
-              )}
+
+                {/* PDF Upload */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-[#343434]">Notice PDF</label>
+                    {isEdit && data?.document_url && (
+                      <a href={data.document_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 hover:underline">View Current</a>
+                    )}
+                  </div>
+                  <div 
+                    onClick={() => pdfInputRef.current?.click()}
+                    className="flex cursor-pointer items-center justify-between rounded-lg border border-dashed border-[#D6D9DE] bg-[#F5F6F7] p-3 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <Image src="/dashboard/icons/attach.svg" alt="attach" width={20} height={20} />
+                      <span className="text-xs text-[#343434] opacity-60 truncate">
+                        {pdfFile ? pdfFile.name : (isEdit && data?.document_url ? "Change PDF" : "Attach PDF")}
+                      </span>
+                    </div>
+                  </div>
+                  <input 
+                    type="file"
+                    ref={pdfInputRef}
+                    className="hidden"
+                    accept="application/pdf"
+                    onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                  />
+                  {pdfFile && (
+                    <button onClick={() => setPdfFile(null)} className="text-[10px] text-red-500 hover:underline">Remove Selected</button>
+                  )}
+                </div>
+              </div>
 
               {/* Status */}
               <div className="flex items-center justify-between py-2">

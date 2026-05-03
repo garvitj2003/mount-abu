@@ -33,7 +33,7 @@ export function useCreateNotice() {
 export function useUpdateNotice() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: NoticeUpdate }) => 
+    mutationFn: ({ id, data }: { id: number; data: NoticeUpdate | FormData }) => 
       WebsiteContentService.updateNotice(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notices"] }),
   });
@@ -66,7 +66,7 @@ export function useCreateTender() {
 export function useUpdateTender() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: TenderUpdate }) => 
+    mutationFn: ({ id, data }: { id: number; data: TenderUpdate | FormData }) => 
       WebsiteContentService.updateTender(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tenders"] }),
   });
@@ -99,7 +99,7 @@ export function useCreateEvent() {
 export function useUpdateEvent() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: EventUpdate }) => 
+    mutationFn: ({ id, data }: { id: number; data: EventUpdate | FormData }) => 
       WebsiteContentService.updateEvent(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["events"] }),
   });
@@ -132,7 +132,7 @@ export function useCreateLeader() {
 export function useUpdateLeader() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: LeaderUpdate }) => 
+    mutationFn: ({ id, data }: { id: number; data: LeaderUpdate | FormData }) => 
       WebsiteContentService.updateLeader(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["leaders"] }),
   });

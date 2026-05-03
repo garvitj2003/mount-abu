@@ -171,9 +171,14 @@ export default function AddDownloadDrawer({ isOpen, onClose, data }: AddDownload
                 />
               </div>
 
-              {!isEdit && (
-                <div className="space-y-1.5">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-[#343434]">Select File</label>
+                  {isEdit && data?.file_url && (
+                    <a href={data.file_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 hover:underline">View Current</a>
+                  )}
+                </div>
+                {!isEdit ? (
                   <div className="relative">
                     <input 
                       type="file"
@@ -185,8 +190,12 @@ export default function AddDownloadDrawer({ isOpen, onClose, data }: AddDownload
                       <Image src="/dashboard/icons/applications/file-icon.svg" alt="file" width={16} height={16} />
                     </div>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 flex items-center bg-gray-50 text-sm text-[#343434] opacity-60">
+                    <span>File cannot be changed during edit</span>
+                  </div>
+                )}
+              </div>
 
               <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5">

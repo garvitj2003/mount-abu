@@ -83,32 +83,23 @@ export default function AddTenderDrawer({ isOpen, onClose, data }: AddTenderDraw
     }
     
     try {
+      const payload = new FormData();
+      payload.append("title", formData.title);
+      payload.append("tender_type", formData.tender_type || "Standard");
+      if (formData.department_id) payload.append("department_id", formData.department_id.toString());
+      if (formData.amount) payload.append("amount", formData.amount.toString());
+      payload.append("published_on", formData.published_on || "");
+      if (formData.submission_deadline) payload.append("submission_deadline", formData.submission_deadline);
+      payload.append("status", formData.status || "ACTIVE");
+
+      if (pdfFile) {
+        payload.append("document", pdfFile);
+      }
+
       if (isEdit && data) {
-        const updateData: TenderUpdate = {
-          title: formData.title,
-          tender_type: formData.tender_type,
-          department_id: formData.department_id,
-          amount: formData.amount,
-          published_on: formData.published_on,
-          submission_deadline: formData.submission_deadline,
-          status: formData.status,
-        };
-        await updateTender({ id: data.id, data: updateData });
+        await updateTender({ id: data.id, data: payload });
         alert("Tender updated successfully!");
       } else {
-        const payload = new FormData();
-        payload.append("title", formData.title);
-        payload.append("tender_type", formData.tender_type || "Standard");
-        if (formData.department_id) payload.append("department_id", formData.department_id.toString());
-        if (formData.amount) payload.append("amount", formData.amount.toString());
-        payload.append("published_on", formData.published_on || "");
-        if (formData.submission_deadline) payload.append("submission_deadline", formData.submission_deadline);
-        payload.append("status", formData.status || "ACTIVE");
-
-        if (pdfFile) {
-          payload.append("document", pdfFile);
-        }
-
         await createTender(payload);
         alert("Tender added successfully!");
       }
@@ -235,40 +226,43 @@ export default function AddTenderDrawer({ isOpen, onClose, data }: AddTenderDraw
               </div>
 
               {/* PDF Upload */}
-              {!isEdit && (
-                <div className="space-y-1.5">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-[#343434]">Tender PDF</label>
-                  <div 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex cursor-pointer items-center justify-between rounded-lg border border-dashed border-[#D6D9DE] bg-[#F5F6F7] p-3 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Image src="/dashboard/icons/attach.svg" alt="attach" width={20} height={20} />
-                      <span className="text-sm text-[#343434] opacity-60">
-                        {pdfFile ? pdfFile.name : "Attach PDF"}
-                      </span>
-                    </div>
-                    {pdfFile && (
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPdfFile(null);
-                        }}
-                        className="text-xs text-red-500 hover:underline"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                  <input 
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="application/pdf"
-                    onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
-                  />
+                  {isEdit && data?.document_url && (
+                    <a href={data.document_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 hover:underline">View Current</a>
+                  )}
                 </div>
-              )}
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex cursor-pointer items-center justify-between rounded-lg border border-dashed border-[#D6D9DE] bg-[#F5F6F7] p-3 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Image src="/dashboard/icons/attach.svg" alt="attach" width={20} height={20} />
+                    <span className="text-sm text-[#343434] opacity-60">
+                      {pdfFile ? pdfFile.name : (isEdit && data?.document_url ? "Change PDF" : "Attach PDF")}
+                    </span>
+                  </div>
+                  {pdfFile && (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPdfFile(null);
+                      }}
+                      className="text-xs text-red-500 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <input 
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="application/pdf"
+                  onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                />
+              </div>
 
               {/* Status */}
               <div className="flex items-center justify-between py-2">

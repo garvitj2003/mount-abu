@@ -62,27 +62,20 @@ export default function AddLeaderDrawer({ isOpen, onClose, data }: AddLeaderDraw
     }
     
     try {
+      const payload = new FormData();
+      payload.append("name", formData.name);
+      payload.append("designation", formData.designation || "");
+      if (formData.tenure_start) payload.append("tenure_start", formData.tenure_start);
+      if (formData.tenure_end) payload.append("tenure_end", formData.tenure_end);
+      payload.append("status", formData.status || "ACTIVE");
+      if (imageFile) {
+        payload.append("image", imageFile);
+      }
+
       if (isEdit && data) {
-        const updateData: LeaderUpdate = {
-          name: formData.name,
-          designation: formData.designation,
-          tenure_start: formData.tenure_start,
-          tenure_end: formData.tenure_end,
-          status: formData.status,
-        };
-        await updateLeader({ id: data.id, data: updateData });
+        await updateLeader({ id: data.id, data: payload });
         alert("Leader updated successfully!");
       } else {
-        const payload = new FormData();
-        payload.append("name", formData.name);
-        payload.append("designation", formData.designation || "");
-        if (formData.tenure_start) payload.append("tenure_start", formData.tenure_start);
-        if (formData.tenure_end) payload.append("tenure_end", formData.tenure_end);
-        payload.append("status", formData.status || "ACTIVE");
-        if (imageFile) {
-          payload.append("image", imageFile);
-        }
-
         await createLeader(payload);
         alert("Leader added successfully!");
       }
@@ -174,40 +167,43 @@ export default function AddLeaderDrawer({ isOpen, onClose, data }: AddLeaderDraw
               </div>
 
               {/* Image Upload */}
-              {!isEdit && (
-                <div className="space-y-1.5">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-[#343434]">Leader Image</label>
-                  <div 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex cursor-pointer items-center justify-between rounded-lg border border-dashed border-[#D6D9DE] bg-[#F5F6F7] p-3 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Image src="/dashboard/icons/attach.svg" alt="attach" width={20} height={20} />
-                      <span className="text-sm text-[#343434] opacity-60">
-                        {imageFile ? imageFile.name : "Attach Image"}
-                      </span>
-                    </div>
-                    {imageFile && (
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setImageFile(null);
-                        }}
-                        className="text-xs text-red-500 hover:underline"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                  <input 
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                  />
+                  {isEdit && data?.image_url && (
+                    <a href={data.image_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 hover:underline">View Current</a>
+                  )}
                 </div>
-              )}
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex cursor-pointer items-center justify-between rounded-lg border border-dashed border-[#D6D9DE] bg-[#F5F6F7] p-3 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Image src="/dashboard/icons/attach.svg" alt="attach" width={20} height={20} />
+                    <span className="text-sm text-[#343434] opacity-60">
+                      {imageFile ? imageFile.name : (isEdit && data?.image_url ? "Change Image" : "Attach Image")}
+                    </span>
+                  </div>
+                  {imageFile && (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setImageFile(null);
+                      }}
+                      className="text-xs text-red-500 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <input 
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                />
+              </div>
 
               <div className="flex items-center justify-between py-2">
                 <div className="space-y-0.5">

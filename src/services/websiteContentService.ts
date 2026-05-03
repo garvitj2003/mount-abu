@@ -43,8 +43,11 @@ export const WebsiteContentService = {
     });
     return response.data;
   },
-  async updateNotice(id: number, data: NoticeUpdate): Promise<NoticeResponse> {
-    const response = await api.put<NoticeResponse>(`/api/notices/${id}`, data);
+  async updateNotice(id: number, data: NoticeUpdate | FormData): Promise<NoticeResponse> {
+    const isFormData = data instanceof FormData;
+    const response = await api.put<NoticeResponse>(`/api/notices/${id}`, data, {
+      headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
+    });
     return response.data;
   },
   async deleteNotice(id: number): Promise<any> {
@@ -63,8 +66,11 @@ export const WebsiteContentService = {
     });
     return response.data;
   },
-  async updateTender(id: number, data: TenderUpdate): Promise<TenderResponse> {
-    const response = await api.put<TenderResponse>(`/api/tenders/${id}`, data);
+  async updateTender(id: number, data: TenderUpdate | FormData): Promise<TenderResponse> {
+    const isFormData = data instanceof FormData;
+    const response = await api.put<TenderResponse>(`/api/tenders/${id}`, data, {
+      headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
+    });
     return response.data;
   },
   async deleteTender(id: number): Promise<any> {
@@ -83,8 +89,11 @@ export const WebsiteContentService = {
     });
     return response.data;
   },
-  async updateEvent(id: number, data: EventUpdate): Promise<EventResponse> {
-    const response = await api.put<EventResponse>(`/api/events/${id}`, data);
+  async updateEvent(id: number, data: EventUpdate | FormData): Promise<EventResponse> {
+    const isFormData = data instanceof FormData;
+    const response = await api.put<EventResponse>(`/api/events/${id}`, data, {
+      headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
+    });
     return response.data;
   },
   async deleteEvent(id: number): Promise<any> {
@@ -103,8 +112,11 @@ export const WebsiteContentService = {
     });
     return response.data;
   },
-  async updateLeader(id: number, data: LeaderUpdate): Promise<LeaderResponse> {
-    const response = await api.put<LeaderResponse>(`/api/leaders/${id}`, data);
+  async updateLeader(id: number, data: LeaderUpdate | FormData): Promise<LeaderResponse> {
+    const isFormData = data instanceof FormData;
+    const response = await api.put<LeaderResponse>(`/api/leaders/${id}`, data, {
+      headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
+    });
     return response.data;
   },
   async deleteLeader(id: number): Promise<any> {

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { type components } from "@/types/api";
 import DropdownSelect from "@/components/ui/DropdownSelect";
 import { useCreateEvent, useUpdateEvent } from "@/hooks/useWebsiteContent";
+import { validateImageAspectRatio } from "@/lib/image-utils";
 
 type EventCreate = components["schemas"]["Body_create_event_api_events_post"];
 type EventUpdate = components["schemas"]["Body_update_event_api_events__event_id__put"];
@@ -43,6 +44,21 @@ export default function AddEventDrawer({ isOpen, onClose, data }: AddEventDrawer
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const isValid = await validateImageAspectRatio(file);
+      if (!isValid) {
+        alert("Please upload an image with a 4:3 aspect ratio.");
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
+      setImageFile(file);
+    } else {
+      setImageFile(null);
+    }
+  };
+
   useEffect(() => {
     if (data) {
       setFormData({
@@ -71,27 +87,20 @@ export default function AddEventDrawer({ isOpen, onClose, data }: AddEventDrawer
     }
     
     try {
+      const payload = new FormData();
+      payload.append("title", formData.title);
+      payload.append("event_type", formData.event_type || "Cultural");
+      payload.append("date", formData.date || "");
+      payload.append("venue", formData.venue || "");
+      payload.append("status", formData.status || "ACTIVE");
+      if (imageFile) {
+        payload.append("image", imageFile);
+      }
+
       if (isEdit && data) {
-        const updateData: EventUpdate = {
-          title: formData.title,
-          event_type: formData.event_type,
-          date: formData.date,
-          venue: formData.venue,
-          status: formData.status,
-        };
-        await updateEvent({ id: data.id, data: updateData });
+        await updateEvent({ id: data.id, data: payload });
         alert("Event updated successfully!");
       } else {
-        const payload = new FormData();
-        payload.append("title", formData.title);
-        payload.append("event_type", formData.event_type || "Cultural");
-        payload.append("date", formData.date || "");
-        payload.append("venue", formData.venue || "");
-        payload.append("status", formData.status || "ACTIVE");
-        if (imageFile) {
-          payload.append("image", imageFile);
-        }
-
         await createEvent(payload);
         alert("Event added successfully!");
       }
@@ -191,40 +200,43 @@ export default function AddEventDrawer({ isOpen, onClose, data }: AddEventDrawer
               </div>
 
               {/* Image Upload */}
-              {!isEdit && (
-                <div className="space-y-1.5">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-[#343434]">Event Image</label>
-                  <div 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex cursor-pointer items-center justify-between rounded-lg border border-dashed border-[#D6D9DE] bg-[#F5F6F7] p-3 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Image src="/dashboard/icons/attach.svg" alt="attach" width={20} height={20} />
-                      <span className="text-sm text-[#343434] opacity-60">
-                        {imageFile ? imageFile.name : "Attach Image"}
-                      </span>
-                    </div>
-                    {imageFile && (
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setImageFile(null);
-                        }}
-                        className="text-xs text-red-500 hover:underline"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                  <input 
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                  />
+                  {isEdit && data?.image_url && (
+                    <a href={data.image_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 hover:underline">View Current</a>
+                  )}
                 </div>
-              )}
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex cursor-pointer items-center justify-between rounded-lg border border-dashed border-[#D6D9DE] bg-[#F5F6F7] p-3 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Image src="/dashboard/icons/attach.svg" alt="attach" width={20} height={20} />
+                    <span className="text-sm text-[#343434] opacity-60">
+                      {imageFile ? imageFile.name : (isEdit && data?.image_url ? "Change Image" : "Attach Image")}
+                    </span>
+                  </div>
+                  {imageFile && (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setImageFile(null);
+                      }}
+                      className="text-xs text-red-500 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <input 
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+              </div>
 
               {/* Status */}
               <div className="flex items-center justify-between py-2">
