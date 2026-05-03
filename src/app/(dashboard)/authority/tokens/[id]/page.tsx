@@ -45,16 +45,21 @@ const Header = ({
   token, 
   onBack,
   onHold,
+  onResume,
   onTerminate
 }: { 
   token: TokenDetailResponse; 
   onBack: () => void;
   onHold: () => void;
+  onResume: () => void;
   onTerminate: () => void;
 }) => {
   const dateRange = token.valid_from && token.valid_till 
     ? `${new Date(token.valid_from).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} - ${new Date(token.valid_till).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`
     : "—";
+
+  const isWithheld = token.status === "WITHHELD";
+  const isTerminated = token.status === "TERMINATED";
 
   return (
     <div className="sticky top-0 z-50 flex w-full items-center justify-between border-b border-[#D6D9DE] bg-white px-5 py-3 shadow-[0px_1px_3px_0px_rgba(0,0,0,0.13)]">
@@ -72,20 +77,34 @@ const Header = ({
       </div>
 
       <div className="flex items-center gap-2">
-        <button 
-          onClick={onHold}
-          className="flex items-center gap-2.5 rounded-lg border border-[#FFD648] bg-[#FFD648] px-4 py-2.5 text-sm font-medium text-[#343434] hover:opacity-90 transition-opacity cursor-pointer"
-        >
-          <Image src="/dashboard/icons/timer-round.svg" alt="" width={16} height={16} />
-          Hold Token
-        </button>
-        <button 
-          onClick={onTerminate}
-          className="flex items-center gap-2.5 rounded-lg border border-[#EF4444] bg-[#EF4444] px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 transition-opacity cursor-pointer"
-        >
-          <Image src="/dashboard/icons/close.svg" alt="" width={16} height={16} className="invert brightness-0" />
-          Terminate Token
-        </button>
+        {!isTerminated && (
+          <>
+            {isWithheld ? (
+              <button 
+                onClick={onResume}
+                className="flex items-center gap-2.5 rounded-lg border border-[#059669] bg-[#059669] px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 transition-opacity cursor-pointer"
+              >
+                <Image src="/dashboard/icons/tick-round-green.svg" alt="" width={16} height={16} className="invert brightness-0" />
+                Resume Token
+              </button>
+            ) : (
+              <button 
+                onClick={onHold}
+                className="flex items-center gap-2.5 rounded-lg border border-[#FFD648] bg-[#FFD648] px-4 py-2.5 text-sm font-medium text-[#343434] hover:opacity-90 transition-opacity cursor-pointer"
+              >
+                <Image src="/dashboard/icons/timer-round.svg" alt="" width={16} height={16} />
+                Hold Token
+              </button>
+            )}
+            <button 
+              onClick={onTerminate}
+              className="flex items-center gap-2.5 rounded-lg border border-[#EF4444] bg-[#EF4444] px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 transition-opacity cursor-pointer"
+            >
+              <Image src="/dashboard/icons/close.svg" alt="" width={16} height={16} className="invert brightness-0" />
+              Terminate Token
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
@@ -162,7 +181,7 @@ export default function TokenDetailsPage() {
   const { data: token, isLoading, error } = useTokenDetail(transportCode);
   const { mutate: updateStatus } = useUpdatePhaseStatus();
 
-  const [modalConfig, setModalConfig] = useState<{ isOpen: boolean; type: "HOLD" | "TERMINATE" }>({
+  const [modalConfig, setModalConfig] = useState<{ isOpen: boolean; type: "HOLD" | "TERMINATE" | "RESUME" }>({
     isOpen: false,
     type: "HOLD",
   });
@@ -175,7 +194,10 @@ export default function TokenDetailsPage() {
   const handleTokenAction = (remarks: string) => {
     if (!token) return;
     
-    const newStatus = modalConfig.type === "HOLD" ? "WITHHELD" : "TERMINATED";
+    const newStatus = 
+      modalConfig.type === "HOLD" ? "WITHHELD" : 
+      modalConfig.type === "TERMINATE" ? "TERMINATED" : 
+      "ACTIVE";
     
     updateStatus({
       applicationId: token.application_id,
@@ -183,7 +205,8 @@ export default function TokenDetailsPage() {
       status: newStatus
     }, {
       onSuccess: () => {
-        alert(`Token ${modalConfig.type === "HOLD" ? "held" : "terminated"} successfully.`);
+        const action = modalConfig.type === "HOLD" ? "held" : modalConfig.type === "TERMINATE" ? "terminated" : "resumed";
+        alert(`Token ${action} successfully.`);
         setModalConfig({ ...modalConfig, isOpen: false });
       },
       onError: (err: any) => {
@@ -212,6 +235,7 @@ export default function TokenDetailsPage() {
         token={token} 
         onBack={() => router.back()} 
         onHold={() => setModalConfig({ isOpen: true, type: "HOLD" })}
+        onResume={() => setModalConfig({ isOpen: true, type: "RESUME" })}
         onTerminate={() => setModalConfig({ isOpen: true, type: "TERMINATE" })}
       />
 

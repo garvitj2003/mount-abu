@@ -8,7 +8,7 @@ interface TokenActionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (remarks: string) => void;
-  type: "HOLD" | "TERMINATE";
+  type: "HOLD" | "TERMINATE" | "RESUME";
   isPending?: boolean;
 }
 
@@ -22,13 +22,14 @@ export default function TokenActionModal({
   const [remarks, setRemarks] = useState("");
 
   const isHold = type === "HOLD";
-  const title = isHold ? "Hold Token" : "Terminate Token";
-  const confirmText = isHold ? "Hold Token" : "Terminate Token";
-  const bgColor = isHold ? "bg-[#FFD648]" : "bg-[#EF4444]";
-  const hoverColor = isHold ? "hover:bg-[#FACC15]" : "hover:bg-[#DC2626]";
-  const iconBg = isHold ? "bg-[#FEF3C7]" : "bg-[#FEE2E2]";
-  const iconSrc = isHold ? "/dashboard/icons/timer-round.svg" : "/dashboard/icons/cross-round-red.svg";
-  const focusBorder = isHold ? "focus:border-[#FFD648]" : "focus:border-[#EF4444]";
+  const isResume = type === "RESUME";
+  const title = isHold ? "Hold Token" : isResume ? "Resume Token" : "Terminate Token";
+  const confirmText = isHold ? "Hold Token" : isResume ? "Resume Token" : "Terminate Token";
+  const bgColor = isHold ? "bg-[#FFD648]" : isResume ? "bg-[#059669]" : "bg-[#EF4444]";
+  const hoverColor = isHold ? "hover:bg-[#FACC15]" : isResume ? "hover:bg-[#047857]" : "hover:bg-[#DC2626]";
+  const iconBg = isHold ? "bg-[#FEF3C7]" : isResume ? "bg-[#D1FAE5]" : "bg-[#FEE2E2]";
+  const iconSrc = isHold ? "/dashboard/icons/timer-round.svg" : isResume ? "/dashboard/icons/tick-round-green.svg" : "/dashboard/icons/cross-round-red.svg";
+  const focusBorder = isHold ? "focus:border-[#FFD648]" : isResume ? "focus:border-[#059669]" : "focus:border-[#EF4444]";
 
   const handleConfirm = () => {
     if (!remarks.trim()) {
@@ -80,7 +81,7 @@ export default function TokenActionModal({
             <div className="flex flex-col items-center gap-4 p-6 pt-8">
               {/* Icon */}
               <div className={`flex h-16 w-16 items-center justify-center rounded-full ${iconBg}`}>
-                <div className={`flex h-12 w-12 items-center justify-center rounded-full ${isHold ? "bg-[#FFD648]" : "bg-[#EF4444]"}`}>
+                <div className={`flex h-12 w-12 items-center justify-center rounded-full ${isHold ? "bg-[#FFD648]" : isResume ? "bg-[#059669]" : "bg-[#EF4444]"}`}>
                    <Image src={iconSrc} alt="" width={24} height={24} className={isHold ? "" : "invert brightness-0"} />
                 </div>
               </div>

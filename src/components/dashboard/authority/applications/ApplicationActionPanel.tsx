@@ -92,6 +92,11 @@ export default function ApplicationActionPanel({
           <ActionButton key="app" label="Approve" variant="success" onClick={() => onAction("APPROVE")} />
         );
       }
+      if (status === "OBJECTED" && (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN")) {
+        actionList.push(
+          <ActionButton key="clear-app" label="Clear Objection and Approve" variant="success" onClick={() => onAction("APPROVE")} />
+        );
+      }
       if (status === "APPROVED") {
         if (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN") {
           actionList.push(
@@ -152,6 +157,11 @@ export default function ApplicationActionPanel({
             <ActionButton key="app" label="Approve Application" variant="success" onClick={() => onAction("APPROVE")} />
           );
         }
+      }
+      if (status === "OBJECTED" && (userRole === "COMMISSIONER" || userRole === "SUPERADMIN")) {
+        actionList.push(
+          <ActionButton key="clear-app" label="Clear Objection and Approve" variant="success" onClick={() => onAction("APPROVE")} />
+        );
       }
       if (status === "APPROVED") {
         if (userRole === "COMMISSIONER" || userRole === "SUPERADMIN") {

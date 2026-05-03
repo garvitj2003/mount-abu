@@ -9,10 +9,19 @@ import { WardWiseActivityChart } from "@/components/common/charts/WardWiseActivi
 import { WardSummaryTable } from "@/components/common/charts/WardSummaryTable";
 import { useAuthorityDashboard } from "@/hooks/useDashboard";
 import { useUser } from "@/hooks/useUser";
+import { useDepartments, useWards } from "@/hooks/useMasterData";
+import DropdownSelect from "@/components/ui/DropdownSelect";
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Legend, Cell, PieChart, Pie
 } from "recharts";
+
+const DAY_OPTIONS = [
+  { label: "Last 7 Days", value: 7 },
+  { label: "Last 30 Days", value: 30 },
+  { label: "Last 90 Days", value: 90 },
+  { label: "Last Year", value: 365 },
+];
 
 const STATUS_COLORS: Record<string, string> = {
   "PENDING": "#FFD648", // Yellow
@@ -68,7 +77,20 @@ const formatStatus = (status: string) => {
 
 export default function DashboardAuthorityPage() {
   const { data: user } = useUser();
-  const { data: dashboard, isLoading, error } = useAuthorityDashboard();
+  const [filters, setFilters] = useState<{ days: number; department_id: number | null; ward_id: number | null }>({
+    days: 7,
+    department_id: null,
+    ward_id: null
+  });
+
+  const { data: dashboard, isLoading, error } = useAuthorityDashboard({
+    days: filters.days,
+    department_id: filters.department_id || undefined,
+    ward_id: filters.ward_id || undefined
+  });
+
+  const { data: departments } = useDepartments();
+  const { data: wards } = useWards();
 
   const role = user?.role;
 
@@ -171,20 +193,41 @@ export default function DashboardAuthorityPage() {
           {(role === "SUPERADMIN" || role === "ADMIN") && (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2 text-sm text-[#343434] cursor-pointer hover:bg-gray-50 transition-colors">
-                  Last 7 Days
-                  <Image src="/dashboard/icons/applications/chevron-down.svg" alt="" width={10} height={6} />
-                </div>
+                <DropdownSelect
+                  options={DAY_OPTIONS}
+                  value={filters.days}
+                  onChange={(val) => setFilters(prev => ({ ...prev, days: val as number }))}
+                  triggerClassName="bg-white px-3 py-2 border-[#D6D9DE] h-auto"
+                  className="w-[140px]"
+                />
+                
                 <div className="h-6 w-px bg-[#C6CAD1]" />
-                <div className="flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2 text-sm text-[#343434] cursor-pointer hover:bg-gray-50 transition-colors">
-                  All Department
-                  <Image src="/dashboard/icons/applications/chevron-down.svg" alt="" width={10} height={6} />
-                </div>
+                
+                <DropdownSelect
+                  options={[
+                    { label: "All Department", value: "null" },
+                    ...(departments?.map(d => ({ label: d.name, value: d.id })) || [])
+                  ]}
+                  value={filters.department_id === null ? "null" : filters.department_id}
+                  onChange={(val) => setFilters(prev => ({ ...prev, department_id: val === "null" ? null : val as number }))}
+                  placeholder="All Department"
+                  triggerClassName="bg-white px-3 py-2 border-[#D6D9DE] h-auto"
+                  className="w-[180px]"
+                />
+
                 <div className="h-6 w-px bg-[#C6CAD1]" />
-                <div className="flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2 text-sm text-[#343434] cursor-pointer hover:bg-gray-50 transition-colors">
-                  All Wards
-                  <Image src="/dashboard/icons/applications/chevron-down.svg" alt="" width={10} height={6} />
-                </div>
+
+                <DropdownSelect
+                  options={[
+                    { label: "All Wards", value: "null" },
+                    ...(wards?.map(w => ({ label: w.name, value: w.id })) || [])
+                  ]}
+                  value={filters.ward_id === null ? "null" : filters.ward_id}
+                  onChange={(val) => setFilters(prev => ({ ...prev, ward_id: val === "null" ? null : val as number }))}
+                  placeholder="All Wards"
+                  triggerClassName="bg-white px-3 py-2 border-[#D6D9DE] h-auto"
+                  className="w-[160px]"
+                />
               </div>
             </div>
           )}

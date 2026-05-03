@@ -8,9 +8,13 @@ export function useCitizenDashboard() {
   });
 }
 
-export function useAuthorityDashboard() {
+export function useAuthorityDashboard(filters?: { 
+  days?: number; 
+  department_id?: number; 
+  ward_id?: number;
+}) {
   return useQuery({
-    queryKey: ["dashboard-authority"],
-    queryFn: () => DashboardService.getAuthorityDashboard(),
+    queryKey: ["dashboard-authority", filters],
+    queryFn: () => DashboardService.getAuthorityDashboard(filters),
   });
 }
