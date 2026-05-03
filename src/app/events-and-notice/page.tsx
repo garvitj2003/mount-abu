@@ -8,7 +8,7 @@ import Footer from "@/components/landing/Footer";
 import { motion, Variants } from "motion/react";
 import { Calendar, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { events, notices } from "@/data/events";
+import { useEvents, useNotices } from "@/hooks/useWebsiteContent";
 
 const fadeIn: Variants = {
   hidden: { opacity: 0, y: 30 },
@@ -19,8 +19,42 @@ const fadeIn: Variants = {
   },
 };
 
+const formatDate = (dateStr?: string | null) => {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
 export default function EventsAndNoticesPage() {
   const router = useRouter();
+
+  const { data: eventsData, isLoading: isLoadingEvents } = useEvents({ limit: 20 });
+  const { data: noticesData, isLoading: isLoadingNotices } = useNotices({ limit: 20 });
+
+  const eventsList = eventsData?.events.map(event => ({
+    id: event.id,
+    image: event.image_url || "/images/fairs-festivals.png",
+    tag: event.event_type || "Event",
+    title: event.title,
+    date: formatDate(event.date),
+    location: event.venue || "N/A",
+    status: event.status || "Upcoming",
+    pdfLink: "#",
+    type: "event"
+  })) || [];
+
+  const noticesList = noticesData?.notices.map(notice => ({
+    id: notice.id,
+    image: notice.image_url || "/images/news/vasant-panchami.jpeg",
+    tag: notice.notice_type || "Notice",
+    title: notice.title,
+    date: formatDate(notice.published_on),
+    pdfLink: notice.document_url || "#",
+    type: "notice"
+  })) || [];
 
   return (
     <div className="min-h-screen bg-[#FFFBEF] flex flex-col font-montserrat">
@@ -110,74 +144,83 @@ export default function EventsAndNoticesPage() {
 
           {/* Events Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {events.map((event) => (
-              <Link href={`/events-and-notice/${event.id}`} key={event.id} className="block h-full">
-                <motion.div
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-50px" }}
-                    variants={fadeIn}
-                    className="bg-[#F5F2E9] border border-[#2D4A2D] rounded-[24px] overflow-hidden flex flex-col relative group h-full hover:shadow-lg transition-shadow"
-                >
-                    {/* Image Section */}
-                    <div className="relative h-[240px] w-full">
-                        <Image
-                            src={event.image}
-                            alt={event.title}
-                            fill
-                            className="object-cover"
-                        />
-                        
-                        {/* Status Badge - Top Right */}
-                        <div className="absolute top-4 right-0 z-10 bg-[#D4AF37] border-y border-l border-[#000000] text-black px-2 py-2 rounded-l-lg font-montserrat font-medium text-xs">
-                            {event.status}
-                        </div>
+            {isLoadingEvents ? (
+                <div className="col-span-full flex justify-center py-20">
+                    <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#D4AF37] border-t-transparent"></div>
+                </div>
+            ) : eventsList.length > 0 ? (
+                eventsList.map((event) => (
+                    <Link href={`/events-and-notice/${event.id}?type=event`} key={event.id} className="block h-full">
+                        <motion.div
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true, margin: "-50px" }}
+                            variants={fadeIn}
+                            className="bg-[#F5F2E9] border border-[#2D4A2D] rounded-[24px] overflow-hidden flex flex-col relative group h-full hover:shadow-lg transition-shadow"
+                        >
+                            {/* Image Section */}
+                            <div className="relative h-[240px] w-full">
+                                <Image
+                                    src={event.image}
+                                    alt={event.title}
+                                    fill
+                                    className="object-cover"
+                                />
+                                
+                                {/* Status Badge - Top Right */}
+                                <div className="absolute top-4 right-0 z-10 bg-[#D4AF37] border-y border-l border-[#000000] text-black px-2 py-2 rounded-l-lg font-montserrat font-medium text-xs uppercase">
+                                    {event.status}
+                                </div>
 
-                        {/* Location Bar - Bottom of Image */}
-                        <div className="absolute bottom-0 left-0 w-full bg-[#2D4A2D] text-white px-4 py-2 flex items-center gap-2">
-                            <div className="w-5 h-5 relative shrink-0">
-                            <Image 
-                                src="/images/icons/location-tick.svg" 
-                                alt="Location" 
-                                fill
-                                className="object-contain"
-                            />
+                                {/* Location Bar - Bottom of Image */}
+                                <div className="absolute bottom-0 left-0 w-full bg-[#2D4A2D] text-white px-4 py-2 flex items-center gap-2">
+                                    <div className="w-5 h-5 relative shrink-0">
+                                    <Image 
+                                        src="/images/icons/location-tick.svg" 
+                                        alt="Location" 
+                                        fill
+                                        className="object-contain"
+                                    />
+                                    </div>
+                                    <span className="text-sm font-medium truncate">{event.location}</span>
+                                </div>
                             </div>
-                            <span className="text-sm font-medium truncate">{event.location}</span>
-                        </div>
-                    </div>
 
-                    {/* Content Section */}
-                    <div className="p-5 pt-6 flex flex-col flex-grow relative">
-                    <span className="text-sm text-[#333333] mb-2">{event.tag}</span>
-                    <h3 className="font-montserrat font-bold text-xl text-[#2D4A2D] leading-tight mb-4 pr-12">
-                        {event.title}
-                    </h3>
-                    
-                    <div className="mt-auto mb-1">
-                        <p className="text-sm text-[#333333] font-medium">{event.date}</p>
-                    </div>
+                            {/* Content Section */}
+                            <div className="p-5 pt-6 flex flex-col flex-grow relative">
+                            <span className="text-sm text-[#333333] mb-2">{event.tag}</span>
+                            <h3 className="font-montserrat font-bold text-xl text-[#2D4A2D] leading-tight mb-4 pr-12">
+                                {event.title}
+                            </h3>
+                            
+                            <div className="mt-auto mb-1">
+                                <p className="text-sm text-[#333333] font-medium">{event.date}</p>
+                            </div>
 
-                    {/* Download Button - Bottom Right */}
-                    <div 
-                        onClick={(e) => {
-                            e.preventDefault();
-                            // Handle download logic here
-                        }}
-                        className="absolute bottom-5 right-5 w-12 h-12 bg-[#FFF5F5] border border-[#EA2A28] rounded-[14px] flex items-center justify-center hover:bg-[#FFE5E5] transition-colors cursor-pointer"
-                    >
-                        <Image 
-                        src="/images/icons/download-icon.svg" 
-                        alt="Download" 
-                        width={48}
-                        height={48}
-                        className="object-contain"
-                        />
-                    </div>
-                    </div>
-                </motion.div>
-              </Link>
-            ))}
+                            {/* Download Button - Bottom Right */}
+                            <button 
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    // Handle download logic here
+                                }}
+                                className="absolute bottom-5 right-5 w-12 h-12 bg-[#FFF5F5] border border-[#EA2A28] rounded-[14px] flex items-center justify-center hover:bg-[#FFE5E5] transition-colors cursor-pointer"
+                            >
+                                <Image 
+                                src="/images/icons/download-icon.svg" 
+                                alt="Download" 
+                                width={48}
+                                height={48}
+                                className="object-contain"
+                                />
+                            </button>
+                            </div>
+                        </motion.div>
+                    </Link>
+                ))
+            ) : (
+                <div className="col-span-full text-center py-20 text-[#2D4A2D]/60 font-montserrat">No events found.</div>
+            )}
           </div>
         </section>
 
@@ -215,55 +258,66 @@ export default function EventsAndNoticesPage() {
 
           {/* Notices Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-             {notices.map((notice) => (
-              <Link href={`/events-and-notice/${notice.id}`} key={notice.id} className="block h-full">
-                <motion.div
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-50px" }}
-                    variants={fadeIn}
-                    className="bg-[#F5F2E9] border border-[#2D4A2D] rounded-[24px] overflow-hidden flex flex-col relative group h-full hover:shadow-lg transition-shadow"
-                >
-                    {/* Image Section */}
-                    <div className="relative h-[200px] w-full">
-                        <Image
-                            src={notice.image}
-                            alt={notice.title}
-                            fill
-                            className="object-cover"
-                        />
-                        {/* Download Button - Bottom Right */}
-                        <div 
-                            onClick={(e) => {
-                                e.preventDefault();
-                                // Handle download logic here
-                            }}
-                            className="absolute top-2 right-2 w-12 h-12 bg-[#FFF5F5] border border-[#EA2A28] rounded-[14px] flex items-center justify-center hover:bg-[#FFE5E5] transition-colors cursor-pointer"
+             {isLoadingNotices ? (
+                <div className="col-span-full flex justify-center py-20">
+                    <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#D4AF37] border-t-transparent"></div>
+                </div>
+            ) : noticesList.length > 0 ? (
+                noticesList.map((notice) => (
+                    <Link href={`/events-and-notice/${notice.id}?type=notice`} key={notice.id} className="block h-full">
+                        <motion.div
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true, margin: "-50px" }}
+                            variants={fadeIn}
+                            className="bg-[#F5F2E9] border border-[#2D4A2D] rounded-[24px] overflow-hidden flex flex-col relative group h-full hover:shadow-lg transition-shadow"
                         >
-                            <Image 
-                            src="/images/icons/download-icon.svg" 
-                            alt="Download" 
-                            width={48}
-                            height={48}
-                            className="object-contain"
-                            />
-                        </div>
-                    </div>
+                            {/* Image Section */}
+                            <div className="relative h-[200px] w-full">
+                                <Image
+                                    src={notice.image}
+                                    alt={notice.title}
+                                    fill
+                                    className="object-cover"
+                                />
+                                {/* Download Button - Bottom Right */}
+                                <button 
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        if (notice.pdfLink && notice.pdfLink !== "#") {
+                                            window.open(notice.pdfLink, "_blank", "noopener,noreferrer");
+                                        }
+                                    }}
+                                    className="absolute top-2 right-2 w-12 h-12 bg-[#FFF5F5] border border-[#EA2A28] rounded-[14px] flex items-center justify-center hover:bg-[#FFE5E5] transition-colors cursor-pointer"
+                                >
+                                    <Image 
+                                    src="/images/icons/download-icon.svg" 
+                                    alt="Download" 
+                                    width={48}
+                                    height={48}
+                                    className="object-contain"
+                                    />
+                                </button>
+                            </div>
 
-                    {/* Content Section */}
-                    <div className="p-5 pt-6 flex flex-col flex-grow relative">
-                    <span className="text-sm text-[#333333] mb-2">{notice.tag}</span>
-                    <h3 className="font-montserrat font-bold text-xl text-[#2D4A2D] leading-tight mb-4 pr-12">
-                        {notice.title}
-                    </h3>
-                    
-                    <div className="mt-auto mb-1">
-                        <p className="text-sm text-[#333333] font-medium">{notice.date}</p>
-                    </div>
-                    </div>
-                </motion.div>
-              </Link>
-            ))}
+                            {/* Content Section */}
+                            <div className="p-5 pt-6 flex flex-col flex-grow relative">
+                            <span className="text-sm text-[#333333] mb-2">{notice.tag}</span>
+                            <h3 className="font-montserrat font-bold text-xl text-[#2D4A2D] leading-tight mb-4 pr-12">
+                                {notice.title}
+                            </h3>
+                            
+                            <div className="mt-auto mb-1">
+                                <p className="text-sm text-[#333333] font-medium">{notice.date}</p>
+                            </div>
+                            </div>
+                        </motion.div>
+                    </Link>
+                ))
+            ) : (
+                <div className="col-span-full text-center py-20 text-[#2D4A2D]/60 font-montserrat">No notices found.</div>
+            )}
           </div>
         </section>
       </main>

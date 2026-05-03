@@ -50,6 +50,10 @@ export const WebsiteContentService = {
     });
     return response.data;
   },
+  async getNotice(id: number): Promise<NoticeResponse> {
+    const response = await api.get<NoticeResponse>(`/api/notices/${id}`);
+    return response.data;
+  },
   async deleteNotice(id: number): Promise<any> {
     const response = await api.delete(`/api/notices/${id}`);
     return response.data;
@@ -94,6 +98,10 @@ export const WebsiteContentService = {
     const response = await api.put<EventResponse>(`/api/events/${id}`, data, {
       headers: isFormData ? { "Content-Type": "multipart/form-data" } : {},
     });
+    return response.data;
+  },
+  async getEvent(id: number): Promise<EventResponse> {
+    const response = await api.get<EventResponse>(`/api/events/${id}`);
     return response.data;
   },
   async deleteEvent(id: number): Promise<any> {

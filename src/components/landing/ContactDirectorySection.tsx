@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { motion, Variants } from "motion/react";
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
+import { useContacts } from "@/hooks/useWebsiteContent";
 
 const fadeIn: Variants = {
     hidden: { opacity: 0, y: 30 },
@@ -22,60 +23,6 @@ interface ContactTable {
     id: number;
     officers: Officer[];
 }
-
-const contactTables: ContactTable[] = [
-    {
-        id: 1,
-        officers: [
-            { name: "श्री आशुतोष आचार्य", post: "आयुक्त" },
-            { name: "श्री नवोदित सिंह राजपुरोहित", post: "सहायक अभियन्ता" },
-            { name: "श्री ललित कुमार भारद्वाज", post: "सहायक अभियन्ता" },
-            { name: "श्री लक्ष्मण कुमार", post: "कनिष्ठ अभियन्ता (सिविल)" },
-            { name: "श्री गजेन्द्र सिंह", post: "कनिष्ठ अभियन्ता (विद्युत)" },
-            { name: "श्री महेन्द्र कुमार बंजारा", post: "राजस्व निरीक्षक" },
-            { name: "श्री प्रभात चन्देल", post: "सहायक राजस्व निरीक्षक" },
-            { name: "श्री रमेश चन्द्र रोहिण", post: "वरिष्ठ सहायक" },
-        ],
-    },
-    {
-        id: 2,
-        officers: [
-            { name: "श्री पंकज माथुर", post: "कनिष्ठ सहायक" },
-            { name: "श्रीमती नीता राणा", post: "कनिष्ठ सहायक" },
-            { name: "श्री धीरजमल कुमावत", post: "कनिष्ठ सहायक" },
-            { name: "सुश्री शिल्पा बिष्ठ", post: "कनिष्ठ सहायक" },
-            { name: "श्री आर्यमान", post: "कनिष्ठ सहायक" },
-            { name: "सुश्री आशा कुंवर", post: "कनिष्ठ सहायक" },
-            { name: "श्री कुणाल", post: "कनिष्ठ सहायक" },
-            { name: "श्री राजकिशोर शर्मा", post: "नाकेदार" },
-        ],
-    },
-    {
-        id: 3,
-        officers: [
-            { name: "श्री दिनेश कुमार", post: "ड्राईवर" },
-            { name: "श्री तरूण", post: "जमादार" },
-            { name: "श्री मनोज कुमार", post: "जमादार" },
-            { name: "श्री दिलीप कुमार", post: "चतुर्थ श्रेणी कर्मचारी" },
-            { name: "श्री भैराराम", post: "चतुर्थ श्रेणी कर्मचारी" },
-            { name: "श्री विक्रम कुमार", post: "चतुर्थ श्रेणी कर्मचारी" },
-            { name: "श्री संजय राणा", post: "चतुर्थ श्रेणी कर्मचारी" },
-            { name: "श्री ललित भाट", post: "नाविक" },
-        ],
-    },
-    {
-        id: 4,
-        officers: [
-            { name: "श्री शंकरलाल", post: "फायरमैन" },
-            { name: "श्री दिनेश कुमार सैनी", post: "फायरमैन" },
-            { name: "श्री निलेश बामणिया", post: "फायरमैन" },
-            { name: "श्री अर्जुन बामणिया", post: "फायर वाहन चालक" },
-            { name: "श्री अजित डीडवाणी", post: "बागवान" },
-            { name: "श्री दिनेश कुमार", post: "सिविल मिस्त्री" },
-            { name: "श्री मोहन लाल", post: "सिविल मिस्त्री" },
-        ],
-    },
-];
 
 function ContactTableCard({ table }: { table: ContactTable }) {
     return (
@@ -127,6 +74,25 @@ function ContactTableCard({ table }: { table: ContactTable }) {
 
 export default function ContactDirectorySection() {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const { data: contactsData, isLoading } = useContacts({ page: 1, size: 100 });
+
+    const contactTables: ContactTable[] = useMemo(() => {
+        if (!contactsData?.items) return [];
+
+        const activeContacts = contactsData.items.filter(item => item.status);
+        const chunked: ContactTable[] = [];
+        for (let i = 0; i < activeContacts.length; i += 8) {
+            const chunk = activeContacts.slice(i, i + 8);
+            chunked.push({
+                id: Math.floor(i / 8) + 1,
+                officers: chunk.map((item) => ({
+                    name: item.contact_person,
+                    post: item.designation || "—",
+                })),
+            });
+        }
+        return chunked;
+    }, [contactsData]);
 
     const handlePrev = () => {
         if (scrollContainerRef.current) {
@@ -206,49 +172,63 @@ export default function ContactDirectorySection() {
                             msOverflowStyle: "none",
                         }}
                     >
-                        {contactTables.map((table) => (
-                            <div key={table.id} className="snap-center">
-                                <ContactTableCard table={table} />
+                        {isLoading ? (
+                            <div className="w-full flex justify-center p-20">
+                                <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#d49d37] border-t-transparent"></div>
                             </div>
-                        ))}
+                        ) : contactTables.length > 0 ? (
+                            contactTables.map((table) => (
+                                <div key={table.id} className="snap-center">
+                                    <ContactTableCard table={table} />
+                                </div>
+                            ))
+                        ) : (
+                            <div className="w-full text-center p-20">
+                                <p className="font-montserrat text-xl text-white/60">
+                                    No contacts found in the directory.
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </motion.div>
 
                 {/* Navigation Arrows */}
-                <motion.div
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true }}
-                    variants={fadeIn}
-                    className="flex justify-center gap-5 mt-10"
-                >
-                    <button
-                        onClick={handlePrev}
-                        className="w-11 h-11 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
-                        aria-label="Previous"
+                {contactTables.length > 1 && (
+                    <motion.div
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true }}
+                        variants={fadeIn}
+                        className="flex justify-center gap-5 mt-10"
                     >
-                        <Image
-                            src="/images/nav-next.svg"
-                            alt="Previous"
-                            width={44}
-                            height={44}
-                            className="rotate-180"
-                        />
-                    </button>
+                        <button
+                            onClick={handlePrev}
+                            className="w-11 h-11 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
+                            aria-label="Previous"
+                        >
+                            <Image
+                                src="/images/nav-next.svg"
+                                alt="Previous"
+                                width={44}
+                                height={44}
+                                className="rotate-180"
+                            />
+                        </button>
 
-                    <button
-                        onClick={handleNext}
-                        className="w-11 h-11 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
-                        aria-label="Next"
-                    >
-                        <Image
-                            src="/images/nav-next.svg"
-                            alt="Next"
-                            width={44}
-                            height={44}
-                        />
-                    </button>
-                </motion.div>
+                        <button
+                            onClick={handleNext}
+                            className="w-11 h-11 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
+                            aria-label="Next"
+                        >
+                            <Image
+                                src="/images/nav-next.svg"
+                                alt="Next"
+                                width={44}
+                                height={44}
+                            />
+                        </button>
+                    </motion.div>
+                )}
             </div>
 
             {/* Hide scrollbar utility */}
@@ -260,3 +240,4 @@ export default function ContactDirectorySection() {
         </section>
     );
 }
+

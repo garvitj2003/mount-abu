@@ -22,6 +22,14 @@ export function useNotices(params?: { limit?: number; offset?: number }) {
   });
 }
 
+export function useNotice(id: number) {
+  return useQuery({
+    queryKey: ["notices", id],
+    queryFn: () => WebsiteContentService.getNotice(id),
+    enabled: !!id,
+  });
+}
+
 export function useCreateNotice() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -85,6 +93,14 @@ export function useEvents(params?: { limit?: number; offset?: number }) {
   return useQuery({
     queryKey: ["events", params],
     queryFn: () => WebsiteContentService.getEvents(params),
+  });
+}
+
+export function useEvent(id: number) {
+  return useQuery({
+    queryKey: ["events", id],
+    queryFn: () => WebsiteContentService.getEvent(id),
+    enabled: !!id,
   });
 }
 

@@ -39,14 +39,14 @@ const services: ServiceItem[] = [
         title: "Digital Construction Token",
         description: "Instant eco-zone approvals with QR token generation",
         image: "/images/service-construction.png",
-        link: "#",
+        link: "/login",
     },
     {
         id: 2,
         title: "Complaint Redressal & Tracking",
         description: "File complaints without login, get real-time SMS updates",
         image: "/images/service-complaint.png",
-        link: "#",
+        link: "/login",
     },
     {
         id: 3,

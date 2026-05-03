@@ -28,8 +28,8 @@ const menuItems: MenuItem[] = [
   {
     label: "Municipal Services",
     children: [
-      { label: "Digital Construction Token", href: "#services" },
-      { label: "Complaint Redressal & Tracking", href: "#services" },
+      { label: "Digital Construction Token", href: "/login" },
+      { label: "Complaint Redressal & Tracking", href: "/login" },
       { label: "Vital Certificates (Birth/Death)", href: "#services" },
       { label: "Marriage Certificate", href: "#services" },
     ],

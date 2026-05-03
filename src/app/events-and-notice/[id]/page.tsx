@@ -6,23 +6,10 @@ import NavigationHeader from "@/components/landing/NavigationHeader";
 import Footer from "@/components/landing/Footer";
 import DestinationMapSection from "@/components/landing/DestinationMapSection";
 import { motion, Variants } from "motion/react";
-import { allItems } from "@/data/events";
+import { useSearchParams } from "next/navigation";
+import { useEvent, useNotice, useEvents, useNotices } from "@/hooks/useWebsiteContent";
 import { Heart, Clock, Share2, ArrowLeft } from "lucide-react"; 
 import Link from "next/link";
-
-interface Item {
-  id: number;
-  image: string;
-  tag: string;
-  title: string;
-  date: string;
-  pdfLink: string;
-  description: string;
-  type: string;
-  time?: string;
-  location?: string;
-  status?: string;
-}
 
 const fadeIn: Variants = {
   hidden: { opacity: 0, y: 30 },
@@ -33,23 +20,105 @@ const fadeIn: Variants = {
   },
 };
 
+const formatDate = (dateStr?: string | null) => {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
 export default function EventNoticeDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const type = searchParams.get("type") || "event";
   
-  const { id } = React.use(params); 
+  const { id: idStr } = React.use(params);
+  const id = parseInt(idStr);
 
-  const item = allItems.find((d) => d.id.toString() === id) as Item | undefined;
+  const { data: event, isLoading: isLoadingEvent } = useEvent(type === "event" ? id : 0);
+  const { data: notice, isLoading: isLoadingNotice } = useNotice(type === "notice" ? id : 0);
+
+  const { data: eventsData } = useEvents({ limit: 5 });
+  const { data: noticesData } = useNotices({ limit: 5 });
+
+  const isLoading = isLoadingEvent || isLoadingNotice;
+
+  const item = React.useMemo(() => {
+    if (type === "event" && event) {
+        return {
+            id: event.id,
+            image: event.image_url || "/images/fairs-festivals.png",
+            tag: event.event_type || "Event",
+            title: event.title,
+            date: formatDate(event.date),
+            description: event.title, // Backend doesn't have description field yet? Checking components["schemas"]["EventResponse"]
+            type: "event",
+            location: event.venue || "N/A",
+            status: event.status,
+            time: ""
+        };
+    }
+    if (type === "notice" && notice) {
+        return {
+            id: notice.id,
+            image: notice.image_url || "/images/news/vasant-panchami.jpeg",
+            tag: notice.notice_type || "Notice",
+            title: notice.title,
+            date: formatDate(notice.published_on),
+            description: notice.title,
+            type: "notice",
+            location: "",
+            status: notice.status,
+            time: ""
+        };
+    }
+    return null;
+  }, [type, event, notice]);
+
+  const otherItems = React.useMemo(() => {
+    if (type === "event") {
+        return (eventsData?.events || [])
+            .filter(e => e.id !== id)
+            .map(e => ({
+                id: e.id,
+                title: e.title,
+                image: e.image_url || "/images/fairs-festivals.png",
+                date: formatDate(e.date),
+                type: "event"
+            }));
+    }
+    return (noticesData?.notices || [])
+        .filter(n => n.id !== id)
+        .map(n => ({
+            id: n.id,
+            title: n.title,
+            image: n.image_url || "/images/news/vasant-panchami.jpeg",
+            date: formatDate(n.published_on),
+            type: "notice"
+        }));
+  }, [type, eventsData, noticesData, id]);
+
+  if (isLoading) {
+    return (
+        <div className="min-h-screen bg-[#FFFBEF] flex flex-col font-montserrat">
+            <NavigationHeader variant="light" />
+            <main className="flex-grow w-full flex items-center justify-center pt-32">
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#2D4A2D] border-t-transparent"></div>
+            </main>
+            <Footer />
+        </div>
+    );
+  }
 
   if (!item) {
     notFound();
   }
-
-  // Filter other items for "Other Festivals/Notices" section
-  const otherItems = allItems.filter(i => i.type === item.type && i.id !== item.id);
 
   return (
     <div className="min-h-screen bg-[#FFFBEF] flex flex-col font-montserrat">
@@ -102,7 +171,7 @@ export default function EventNoticeDetailPage({
                             {item.time}
                         </span>
                     )}
-                    <span className="bg-[#F5F2E9] border border-[#D4AF37] px-6 py-3 rounded-[8px] font-montserrat font-medium text-[#1C1C1C]">
+                    <span className="bg-[#F5F2E9] border border-[#D4AF37] px-6 py-3 rounded-[8px] font-montserrat font-medium text-[#1C1C1C] uppercase">
                         {item.status || "Active"}
                     </span>
                 </div>
@@ -146,46 +215,48 @@ export default function EventNoticeDetailPage({
             </div>
 
             {/* Where Section */}
-            {item.location && (
+            {item.location && item.location !== "N/A" && (
                 <div className="mb-16">
                     <DestinationMapSection />
                 </div>
             )}
 
             {/* Other Items Section */}
-            <motion.div 
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeIn}
-                className="mb-8"
-            >
-                <h2 className="font-baron text-2xl font-bold text-[#2D4A2D] mb-8 uppercase">
-                    {item.type === 'event' ? 'Other Festivals' : 'Other Notices'}
-                </h2>
-                <div className="flex flex-wrap gap-6">
-                    {otherItems.map((other) => (
-                        <Link href={`/events-and-notice/${other.id}`} key={other.id} className="w-[338px] shrink-0">
-                            <div className="group cursor-pointer">
-                                <div className="relative h-[250px] w-full rounded-[20px] overflow-hidden mb-4 border border-[#2D4A2D]/20">
-                                    <Image
-                                        src={other.image}
-                                        alt={other.title}
-                                        fill
-                                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                    />
+            {otherItems.length > 0 && (
+                <motion.div 
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    variants={fadeIn}
+                    className="mb-8"
+                >
+                    <h2 className="font-baron text-2xl font-bold text-[#2D4A2D] mb-8 uppercase">
+                        {item.type === 'event' ? 'Other Festivals' : 'Other Notices'}
+                    </h2>
+                    <div className="flex flex-wrap gap-6">
+                        {otherItems.map((other) => (
+                            <Link href={`/events-and-notice/${other.id}?type=${other.type}`} key={other.id} className="w-[338px] shrink-0">
+                                <div className="group cursor-pointer">
+                                    <div className="relative h-[250px] w-full rounded-[20px] overflow-hidden mb-4 border border-[#2D4A2D]/20">
+                                        <Image
+                                            src={other.image}
+                                            alt={other.title}
+                                            fill
+                                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                        />
+                                    </div>
+                                    <h3 className="font-montserrat font-bold text-xl text-[#1C1C1C] group-hover:text-[#2D4A2D] transition-colors mb-1">
+                                        {other.title}
+                                    </h3>
+                                    <p className="font-montserrat text-[#179362] text-sm">
+                                        {other.date}
+                                    </p>
                                 </div>
-                                <h3 className="font-montserrat font-bold text-xl text-[#1C1C1C] group-hover:text-[#2D4A2D] transition-colors mb-1">
-                                    {other.title}
-                                </h3>
-                                <p className="font-montserrat text-[#179362] text-sm">
-                                    {other.date}
-                                </p>
-                            </div>
-                        </Link>
-                    ))}
-                </div>
-            </motion.div>
+                            </Link>
+                        ))}
+                    </div>
+                </motion.div>
+            )}
 
         </div>
       </main>

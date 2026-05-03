@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { motion, Variants } from "motion/react";
+import { useTenders } from "@/hooks/useWebsiteContent";
+import { useDepartments } from "@/hooks/useMasterData";
 
 // Animation for the table container
 const fadeIn: Variants = {
@@ -36,25 +38,6 @@ interface TenderItem {
     pdfLink: string;
 }
 
-const tenderData: TenderItem[] = [
-    {
-        id: 1,
-        title: "6 FEET WALL CONSTRUCTION KALKA MATA",
-        department: "deputy Conservator of forest",
-        estimatedValue: "19,63,989/-",
-        bidClosingDate: "22 Jan. 2026",
-        pdfLink: "https://eproc.rajasthan.gov.in/nicgep/app",
-    },
-    {
-        id: 2,
-        title: "Selection of Operator for Operation of Cafeteria Sarovar at Nakki Lake, Mount Abu, Sirohi (Rajasthan) for the Period of 5 Years",
-        department: "Executive Director, RTDC",
-        estimatedValue: "1,12,00,000/-",
-        bidClosingDate: "30-Jan-2026",
-        pdfLink: "https://eproc.rajasthan.gov.in/nicgep/app",
-    },
-];
-
 const tableHeaders = [
     "Tender Title",
     "Department",
@@ -63,7 +46,36 @@ const tableHeaders = [
     "NIT Download (PDF)",
 ];
 
+const formatDate = (dateStr?: string | null) => {
+    if (!dateStr) return "—";
+    return new Date(dateStr).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+    });
+};
+
 export default function Tenders() {
+    const { data: tendersData, isLoading: isLoadingTenders } = useTenders();
+    const { data: departments } = useDepartments();
+
+    const tenders: TenderItem[] =
+        tendersData?.tenders.map((item) => {
+            const deptName =
+                departments?.find((d) => d.id === item.department_id)?.name ||
+                "N/A";
+            return {
+                id: item.id,
+                title: item.title,
+                department: deptName,
+                estimatedValue: item.amount
+                    ? `₹${item.amount.toLocaleString("en-IN")}/-`
+                    : "—",
+                bidClosingDate: formatDate(item.submission_deadline),
+                pdfLink: item.document_url || "#",
+            };
+        }) || [];
+
     return (
         <section id="tenders" className="relative w-full overflow-hidden py-10">
             {/* Gradients */}
@@ -137,50 +149,69 @@ export default function Tenders() {
 
                         {/* TABLE BODY */}
                         <tbody className="bg-[rgba(0,0,0,0.4)]">
-                            {tenderData.map((item, index) => (
-                                <motion.tr
-                                    key={item.id}
-                                    custom={index}
-                                    variants={tableRowVariants}
-                                    initial="hidden"
-                                    whileInView="visible"
-                                    viewport={{ once: true }}
-                                    className="group bg-white/5 hover:bg-transparent transition-colors"
-                                >
-                                    <td className="p-4 border-[0.844px] border-[rgba(255,255,255,0.1)] align-middle">
-                                        <p className="font-montserrat font-normal text-base md:text-lg text-[#f5f2e9] text-center leading-tight">
-                                            {item.title}
-                                        </p>
+                            {isLoadingTenders ? (
+                                <tr>
+                                    <td colSpan={5} className="p-10 text-center">
+                                        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-[#d49d37] border-t-transparent"></div>
                                     </td>
-                                    <td className="p-4 border-[0.844px] border-[rgba(255,255,255,0.1)] align-middle">
-                                        <p className="font-montserrat font-light text-base md:text-lg text-[#f5f2e9] text-center">
-                                            {item.department}
-                                        </p>
+                                </tr>
+                            ) : tenders.length > 0 ? (
+                                tenders.map((item, index) => (
+                                    <motion.tr
+                                        key={item.id}
+                                        custom={index}
+                                        variants={tableRowVariants}
+                                        initial="hidden"
+                                        whileInView="visible"
+                                        viewport={{ once: true }}
+                                        className="group bg-white/5 hover:bg-transparent transition-colors"
+                                    >
+                                        <td className="p-4 border-[0.844px] border-[rgba(255,255,255,0.1)] align-middle">
+                                            <p className="font-montserrat font-normal text-base md:text-lg text-[#f5f2e9] text-center leading-tight">
+                                                {item.title}
+                                            </p>
+                                        </td>
+                                        <td className="p-4 border-[0.844px] border-[rgba(255,255,255,0.1)] align-middle">
+                                            <p className="font-montserrat font-light text-base md:text-lg text-[#f5f2e9] text-center">
+                                                {item.department}
+                                            </p>
+                                        </td>
+                                        <td className="p-4 border-[0.844px] border-[rgba(255,255,255,0.1)] align-middle">
+                                            <p className="font-montserrat font-light text-base md:text-lg text-[#f5f2e9] text-center">
+                                                {item.estimatedValue}
+                                            </p>
+                                        </td>
+                                        <td className="p-4 border-[0.844px] border-[rgba(255,255,255,0.1)] align-middle">
+                                            <p className="font-montserrat font-light text-base md:text-lg text-[#f5f2e9] text-center">
+                                                {item.bidClosingDate}
+                                            </p>
+                                        </td>
+                                        <td className="p-4 border-[0.844px] border-[rgba(255,255,255,0.1)] align-middle">
+                                            <div className="flex justify-center">
+                                                <a
+                                                    href={item.pdfLink}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="px-6 py-2 bg-[rgba(255,0,4,0.29)] backdrop-blur-md rounded-lg hover:bg-[rgba(255,0,4,0.4)] transition-colors inline-block"
+                                                >
+                                                    <p className="font-montserrat font-medium text-sm text-white text-center whitespace-nowrap">
+                                                        Download PDF
+                                                    </p>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </motion.tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td
+                                        colSpan={5}
+                                        className="p-10 text-center text-white/60 font-montserrat"
+                                    >
+                                        No active tenders found.
                                     </td>
-                                    <td className="p-4 border-[0.844px] border-[rgba(255,255,255,0.1)] align-middle">
-                                        <p className="font-montserrat font-light text-base md:text-lg text-[#f5f2e9] text-center">
-                                            {item.estimatedValue}
-                                        </p>
-                                    </td>
-                                    <td className="p-4 border-[0.844px] border-[rgba(255,255,255,0.1)] align-middle">
-                                        <p className="font-montserrat font-light text-base md:text-lg text-[#f5f2e9] text-center">
-                                            {item.bidClosingDate}
-                                        </p>
-                                    </td>
-                                    <td className="p-4 border-[0.844px] border-[rgba(255,255,255,0.1)] align-middle">
-                                        <div className="flex justify-center">
-                                            <a
-                                                href={item.pdfLink}
-                                                className="px-6 py-2 bg-[rgba(255,0,4,0.29)] backdrop-blur-md rounded-lg hover:bg-[rgba(255,0,4,0.4)] transition-colors inline-block"
-                                            >
-                                                <p className="font-montserrat font-medium text-sm text-white text-center whitespace-nowrap">
-                                                    Download PDF
-                                                </p>
-                                            </a>
-                                        </div>
-                                    </td>
-                                </motion.tr>
-                            ))}
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </motion.div>
@@ -232,3 +263,4 @@ export default function Tenders() {
         </section>
     );
 }
+
