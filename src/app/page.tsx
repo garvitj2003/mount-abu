@@ -15,6 +15,8 @@ import InformationGuidlines from "@/components/landing/InformationGuidlines";
 import Testimonials from "@/components/landing/Testimonals";
 import Footer from "@/components/landing/Footer";
 
+export const dynamic = "force-dynamic";
+
 export default function Home() {
     return (
         <main className="min-h-screen">
