@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import HeroSection from "@/components/landing/HeroSection";
 import DestinationsSection from "@/components/landing/DestinationsSection";
 import AdventuresSection from "@/components/landing/AdventuresSection";
@@ -25,9 +24,7 @@ export default function Home() {
             <AdventuresSection />
             <HiddenPlacesSection />
             <AboutSection />
-            <Suspense fallback={<div className="h-screen bg-[#17261e]" />}>
-                <CityProfileSection />
-            </Suspense>
+            <CityProfileSection />
             <NewsUpdatesSection />
             <ServicesSection />
             <InformationGuidlines />

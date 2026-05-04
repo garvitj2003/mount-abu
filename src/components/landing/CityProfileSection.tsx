@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react";
 import Image from "next/image";
-import { useSuspenseCityProfile } from "@/hooks/useCityProfile";
+import { useCityProfile } from "@/hooks/useCityProfile";
 
 // --- Helper: Individual Slot Digit ---
 function SlotDigit({
@@ -149,29 +149,50 @@ function StatCard({
 }
 
 export default function CityProfileSection() {
-    const { data } = useSuspenseCityProfile();
+    const { data, isError, isLoading } = useCityProfile();
+
+    if (isLoading) {
+        return <section className="relative w-full min-h-screen bg-[#17261e] flex items-center justify-center py-16 md:py-24" />;
+    }
+
+    const cityData = isError || !data ? {
+        area_sq_km: "0",
+        no_of_wards: 0,
+        population_estimate: 0,
+        ward_boundaries: "Attached",
+        rental_properties_of_corporation: 0,
+        number_of_slums: 0,
+        solid_waste_per_day: "0 Tones",
+        street_light_poles: 0,
+        employees_in_board: 0,
+        households_residential: 0,
+        households_shops_offices: 0,
+        households_open_plots: 0,
+        birth_registration_per_year: 0,
+        birth_certificate_per_year: 0
+    } : data;
 
     const areaStats = [
-        { label: "Area In Sq. km.", value: data.area_sq_km || "0" },
-        { label: "No. of wards", value: (data.no_of_wards || 0).toString() },
-        { label: "Population estimate", value: (data.population_estimate || 0).toLocaleString() },
-        { label: "Ward boundries", value: data.ward_boundaries || "Attached", isLink: true },
-        { label: "Rental Properties of corporation", value: (data.rental_properties_of_corporation || 0).toString() },
-        { label: "Number of Slums", value: (data.number_of_slums || 0).toString() },
-        { label: "Solid waste per day", value: data.solid_waste_per_day || "0 Tones" },
-        { label: "Street Light poles", value: (data.street_light_poles || 0).toString() },
-        { label: "No. of employee in the municipal board", value: (data.employees_in_board || 0).toString() },
+        { label: "Area In Sq. km.", value: cityData.area_sq_km || "0" },
+        { label: "No. of wards", value: (cityData.no_of_wards || 0).toString() },
+        { label: "Population estimate", value: (cityData.population_estimate || 0).toLocaleString() },
+        { label: "Ward boundries", value: cityData.ward_boundaries || "Attached", isLink: true },
+        { label: "Rental Properties of corporation", value: (cityData.rental_properties_of_corporation || 0).toString() },
+        { label: "Number of Slums", value: (cityData.number_of_slums || 0).toString() },
+        { label: "Solid waste per day", value: cityData.solid_waste_per_day || "0 Tones" },
+        { label: "Street Light poles", value: (cityData.street_light_poles || 0).toString() },
+        { label: "No. of employee in the municipal board", value: (cityData.employees_in_board || 0).toString() },
     ];
 
     const houseHoldsStats = [
-        { label: "Residential", value: (data.households_residential || 0).toString() },
-        { label: "Shops & Offices", value: (data.households_shops_offices || 0).toString() },
-        { label: "Open Plots", value: (data.households_open_plots || 0).toString() },
+        { label: "Residential", value: (cityData.households_residential || 0).toString() },
+        { label: "Shops & Offices", value: (cityData.households_shops_offices || 0).toString() },
+        { label: "Open Plots", value: (cityData.households_open_plots || 0).toString() },
     ];
 
     const birthDeathStats = [
-        { label: "Registration per year", value: (data.birth_registration_per_year || 0).toString() },
-        { label: "Certificate per year", value: (data.birth_certificate_per_year || 0).toString() },
+        { label: "Registration per year", value: (cityData.birth_registration_per_year || 0).toString() },
+        { label: "Certificate per year", value: (cityData.birth_certificate_per_year || 0).toString() },
     ];
 
     return (
