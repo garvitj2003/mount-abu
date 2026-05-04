@@ -6,7 +6,7 @@ type CityProfileCreate = components["schemas"]["CityProfileCreate"];
 
 export const CityProfileService = {
   async getLatest(): Promise<CityProfileResponse> {
-    const response = await api.get<CityProfileResponse>("/api/city-profile");
+    const response = await api.get<CityProfileResponse>("/api/city-profile/");
     return response.data;
   },
 
