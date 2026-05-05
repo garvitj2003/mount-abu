@@ -1,7 +1,6 @@
 import api from "@/lib/axios";
 import { type components } from "@/types/api";
 
-type OTPRequest = components["schemas"]["OTPRequest"];
 type MessageResponse = components["schemas"]["MessageResponse"];
 type MeResponse = components["schemas"]["MeResponse"];
 
@@ -34,5 +33,13 @@ export const AuthService = {
   async signup(name: string, mobile: string, otp: string): Promise<components["schemas"]["TokenResponse"]> {
     const response = await api.post("/auth/signup", { name, mobile, otp });
     return response.data;
+  },
+
+  /**
+   * Fetch the PEM-formatted RSA Public Key from the backend.
+   */
+  async getPublicKey(): Promise<string> {
+    const response = await api.get<{ public_key: string }>("/auth/public-key");
+    return response.data.public_key;
   }
 };

@@ -9,6 +9,7 @@ import { loginWithOtpAction, loginWithPasswordAction } from "@/app/actions/auth"
 import { mobileSchema, otpSchema } from "@/lib/validations/auth";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useQueryClient } from "@tanstack/react-query";
+import { encryptData } from "@/lib/encryption";
 
 type LoginView = 
   | "citizen" 
@@ -37,11 +38,23 @@ export default function LoginPage() {
   
   // Background Slider State
   const [currentBg, setCurrentBg] = useState(0);
+  const [publicKey, setPublicKey] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentBg((prev) => (prev + 1) % BG_IMAGES.length);
     }, 5000);
+
+    const fetchKey = async () => {
+      try {
+        const key = await AuthService.getPublicKey();
+        setPublicKey(key);
+      } catch (err) {
+        console.error("Failed to fetch public key", err);
+      }
+    };
+    fetchKey();
+
     return () => clearInterval(timer);
   }, []);
 
@@ -96,8 +109,8 @@ export default function LoginPage() {
       await AuthService.sendOtp(mobile);
       setTempMobile(mobile);
       setView("otp");
-    } catch (err: any) {
-      setError(err.response?.data?.detail || "Failed to send OTP. Please try again.");
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || "Failed to send OTP. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -114,8 +127,8 @@ export default function LoginPage() {
     setResendLogin(true);
     try {
       await AuthService.sendOtp(mobile);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || "Failed to send OTP. Please try again.");
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || "Failed to send OTP. Please try again.");
     } finally {
       setResendLogin(false);
     }
@@ -131,9 +144,16 @@ export default function LoginPage() {
       return;
     }
 
+    if (!publicKey) {
+      setError("Encryption key not loaded. Please refresh.");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const result = await loginWithOtpAction(mobile, otpString);
+      const encryptedMobile = encryptData(mobile, publicKey);
+      const encryptedOtp = encryptData(otpString, publicKey);
+      const result = await loginWithOtpAction(encryptedMobile, encryptedOtp);
       if (result.success) {
         // Invalidate 'user' query so TanStack Query fetches fresh data on dashboard load
         await queryClient.invalidateQueries({ queryKey: ["user"] });
@@ -144,7 +164,8 @@ export default function LoginPage() {
         setError(result.error || "Login failed");
       }
     } catch (err) {
-      setError("An unexpected error occurred.");
+      console.error(err);
+      setError("An unexpected error occurred during encryption or login.");
     } finally {
       setIsLoading(false);
     }
@@ -156,10 +177,17 @@ export default function LoginPage() {
       return;
     }
 
+    if (!publicKey) {
+      setError("Encryption key not loaded. Please refresh.");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
-      const result = await loginWithPasswordAction(username, password);
+      const encryptedUsername = encryptData(username, publicKey);
+      const encryptedPassword = encryptData(password, publicKey);
+      const result = await loginWithPasswordAction(encryptedUsername, encryptedPassword);
       if (result.success) {
         await queryClient.invalidateQueries({ queryKey: ["user"] });
         // Redirect based on role or to authority default
@@ -168,7 +196,8 @@ export default function LoginPage() {
         setError(result.error || "Login failed");
       }
     } catch (err) {
-      setError("An unexpected error occurred.");
+      console.error(err);
+      setError("An unexpected error occurred during encryption or login.");
     } finally {
       setIsLoading(false);
     }
