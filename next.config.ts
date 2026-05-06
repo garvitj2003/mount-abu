@@ -31,6 +31,12 @@ const nextConfig: NextConfig = {
         pathname: "/api/media/**",
       },
       {
+        protocol: "https",
+        hostname: "npmountabu.rajasthan.gov.in",
+        port: "",
+        pathname: "/**", 
+      },
+      {
         protocol: "http",
         hostname: "localhost",
         port: "9000",
