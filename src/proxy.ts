@@ -6,7 +6,7 @@ import { components } from "./types/api";
 type UserRole = components["schemas"]["UserRole"];
 
 const API_URL = process.env.INTERNAL_API_URL || "http://localhost:8000";
-const publicRoutes = ["/login", "/signup", "/api/auth/refresh", "/public"];
+const publicRoutes = ["/login", "/signup", "/api/auth/refresh", "/public","/destinations","/treks","/events-and-notice"];
 
 /**
  * Next.js 16 Proxy Gatekeeper.
