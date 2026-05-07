@@ -153,7 +153,7 @@ export default function ComplaintViewDrawer({
                         displayData.media.map((m, idx) => (
                           <div key={m.id} className="relative h-[220px] w-full overflow-hidden rounded-xl bg-gray-100">
                             <Image
-                              src={m.access_url || "/dashboard/images/hero-bg/1.png"}
+                              src={m.access_url || ""}
                               alt={`Complaint Media ${idx + 1}`}
                               fill
                               unoptimized

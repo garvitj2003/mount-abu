@@ -164,6 +164,7 @@ export default function EventsAndNoticesPage() {
                                     src={event.image}
                                     alt={event.title}
                                     fill
+                                    unoptimized
                                     className="object-cover"
                                 />
                                 
@@ -277,6 +278,7 @@ export default function EventsAndNoticesPage() {
                                 <Image
                                     src={notice.image}
                                     alt={notice.title}
+                                    unoptimized
                                     fill
                                     className="object-cover"
                                 />

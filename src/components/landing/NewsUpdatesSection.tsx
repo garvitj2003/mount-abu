@@ -259,6 +259,7 @@ export default function NewsUpdatesSection() {
                                             src={currentItem.image}
                                             alt={currentItem.title}
                                             fill
+                                            unoptimized
                                             className="object-cover"
                                         />
                                     </motion.div>
