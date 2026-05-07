@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node obfuscate.js",
     "start": "next start",
     "lint": "eslint",
     "update-types": "openapi-typescript https://backend-abu.techvysion.com/openapi.json -o src/types/api.ts"
