@@ -38,6 +38,7 @@ export default function AddEventDrawer({ isOpen, onClose, data }: AddEventDrawer
     event_type: "Cultural",
     date: new Date().toISOString(),
     venue: "",
+    description: "",
     status: "ACTIVE",
   });
 
@@ -66,6 +67,7 @@ export default function AddEventDrawer({ isOpen, onClose, data }: AddEventDrawer
         event_type: data.event_type || "Cultural",
         date: data.date || new Date().toISOString(),
         venue: data.venue || "",
+        description: data.description || "",
         status: data.status,
       });
     } else {
@@ -74,6 +76,7 @@ export default function AddEventDrawer({ isOpen, onClose, data }: AddEventDrawer
         event_type: "Cultural",
         date: new Date().toISOString(),
         venue: "",
+        description: "",
         status: "ACTIVE",
       });
     }
@@ -92,6 +95,7 @@ export default function AddEventDrawer({ isOpen, onClose, data }: AddEventDrawer
       payload.append("event_type", formData.event_type || "Cultural");
       payload.append("date", formData.date || "");
       payload.append("venue", formData.venue || "");
+      payload.append("description", formData.description || "");
       payload.append("status", formData.status || "ACTIVE");
       if (imageFile) {
         payload.append("image", imageFile);
@@ -196,6 +200,17 @@ export default function AddEventDrawer({ isOpen, onClose, data }: AddEventDrawer
                   className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
                   value={formData.venue || ""}
                   onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+                />
+              </div>
+
+              {/* Description */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-[#343434]">Description</label>
+                <textarea 
+                  placeholder="Describe the event details..."
+                  className="w-full h-[100px] rounded-lg border border-[#D6D9DE] p-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40 resize-none"
+                  value={formData.description || ""}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
 

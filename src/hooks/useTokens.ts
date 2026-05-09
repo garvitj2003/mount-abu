@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { TokenService } from "@/services/tokenService";
 import { type components } from "@/types/api";
 
-type ConstructionToken = components["schemas"]["backend__schemas__response__application__TokenResponse"];
+type ConstructionToken = components["schemas"]["TokenResponse"];
 
 export function useTokens(params: { 
   offset?: number; 

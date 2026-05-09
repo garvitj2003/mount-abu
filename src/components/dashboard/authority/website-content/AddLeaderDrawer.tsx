@@ -29,6 +29,7 @@ export default function AddLeaderDrawer({ isOpen, onClose, data }: AddLeaderDraw
     tenure_start: null,
     tenure_end: null,
     status: "ACTIVE",
+    message: "",
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -42,6 +43,7 @@ export default function AddLeaderDrawer({ isOpen, onClose, data }: AddLeaderDraw
         tenure_start: data.tenure_start,
         tenure_end: data.tenure_end,
         status: data.status,
+        message: data.message || "",
       });
     } else {
       setFormData({
@@ -50,6 +52,7 @@ export default function AddLeaderDrawer({ isOpen, onClose, data }: AddLeaderDraw
         tenure_start: null,
         tenure_end: null,
         status: "ACTIVE",
+        message: "",
       });
     }
     setImageFile(null);
@@ -68,6 +71,7 @@ export default function AddLeaderDrawer({ isOpen, onClose, data }: AddLeaderDraw
       if (formData.tenure_start) payload.append("tenure_start", formData.tenure_start);
       if (formData.tenure_end) payload.append("tenure_end", formData.tenure_end);
       payload.append("status", formData.status || "ACTIVE");
+      payload.append("message", formData.message || "");
       if (imageFile) {
         payload.append("image", imageFile);
       }
@@ -142,6 +146,16 @@ export default function AddLeaderDrawer({ isOpen, onClose, data }: AddLeaderDraw
                   className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
                   value={formData.designation || ""}
                   onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-[#343434]">Leader Message</label>
+                <textarea 
+                  placeholder="Enter a message from the leader..."
+                  className="w-full h-[100px] rounded-lg border border-[#D6D9DE] p-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40 resize-none"
+                  value={formData.message || ""}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 />
               </div>
 

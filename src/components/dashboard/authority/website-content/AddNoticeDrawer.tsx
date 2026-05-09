@@ -42,6 +42,7 @@ export default function AddNoticeDrawer({ isOpen, onClose, data }: AddNoticeDraw
     valid_till: null,
     status: "ACTIVE",
     visibility: "PUBLIC",
+    content: "",
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -74,6 +75,7 @@ export default function AddNoticeDrawer({ isOpen, onClose, data }: AddNoticeDraw
         valid_till: data.valid_till,
         status: data.status,
         visibility: data.visibility || "PUBLIC",
+        content: data.content || "",
       });
     } else {
       setFormData({
@@ -83,6 +85,7 @@ export default function AddNoticeDrawer({ isOpen, onClose, data }: AddNoticeDraw
         valid_till: null,
         status: "ACTIVE",
         visibility: "PUBLIC",
+        content: "",
       });
     }
     setImageFile(null);
@@ -103,6 +106,7 @@ export default function AddNoticeDrawer({ isOpen, onClose, data }: AddNoticeDraw
       if (formData.valid_till) payload.append("valid_till", formData.valid_till);
       payload.append("status", formData.status || "ACTIVE");
       payload.append("visibility", formData.visibility || "PUBLIC");
+      payload.append("content", formData.content || "");
       
       if (imageFile) {
         payload.append("image", imageFile);
@@ -187,6 +191,17 @@ export default function AddNoticeDrawer({ isOpen, onClose, data }: AddNoticeDraw
                   value={formData.notice_type || ""}
                   onChange={(val) => setFormData({ ...formData, notice_type: val as string })}
                   className="w-full h-[44px]"
+                />
+              </div>
+
+              {/* Content */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-[#343434]">Notice Content</label>
+                <textarea 
+                  placeholder="Enter notice details or description..."
+                  className="w-full h-[100px] rounded-lg border border-[#D6D9DE] p-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40 resize-none"
+                  value={formData.content || ""}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                 />
               </div>
 
