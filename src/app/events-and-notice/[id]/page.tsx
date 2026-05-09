@@ -66,7 +66,7 @@ export default function EventNoticeDetailPage({
         tag: event.event_type || "Event",
         title: event.title,
         date: formatDate(event.date),
-        description: event.title, // Backend doesn't have description field yet? Checking components["schemas"]["EventResponse"]
+        description: event.description || "",
         type: "event",
         location: event.venue || "N/A",
         status: event.status,
@@ -80,7 +80,7 @@ export default function EventNoticeDetailPage({
         tag: notice.notice_type || "Notice",
         title: notice.title,
         date: formatDate(notice.published_on),
-        description: notice.title,
+        description: notice.content || "",
         type: "notice",
         location: "",
         status: notice.status,

@@ -8,7 +8,6 @@ export const ROLE_PERMISSIONS: Partial<Record<UserRole, string[]>> = {
     "/authority/complaints",
     "/authority/token-management",
     "/authority/vehicle-entries",
-    "/authority/reports",
     "/authority/website-content",
     "/authority/users",
     "/authority/master-data",

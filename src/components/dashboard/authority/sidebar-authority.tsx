@@ -41,12 +41,6 @@ const MENU_ITEMS = [
     activeIcon: "/dashboard/icons/vehicle-active.svg",
   },
   {
-    name: "Reports & Analytics",
-    href: "/authority/reports",
-    icon: "/dashboard/icons/report.svg",
-    activeIcon: "/dashboard/icons/report-active.svg",
-  },
-  {
     name: "Website Content",
     href: "/authority/website-content",
     icon: "/dashboard/icons/website.svg",

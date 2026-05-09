@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { useDownloads } from "@/hooks/useWebsiteContent";
 
 type ButtonVariant = "red" | "green" | "blue" | "olive";
 
@@ -59,60 +62,34 @@ function Card({ title, buttonText, buttonVariant, href = "#" }: CardProps) {
     );
 }
 
-const cardData: CardProps[] = [
-    {
-        title: "Nagar Palika Act",
-        buttonText: "Download PDF",
-        buttonVariant: "red",
-        href: "https://drive.google.com/file/d/1k5A-CDzAPz3xCGLcsETX8F3GYdZZxmVP/view?usp=drivesdk",
-    },
-    {
-        title: "Construction Guidelines",
-        buttonText: "Download PDF",
-        buttonVariant: "green",
-        href: "https://drive.google.com/file/d/1PA4DyI-cEGMtTJCSimeTy-QfZ5QR-e57/view?usp=drivesdk",
-    },
-    {
-        title: "Wards List",
-        buttonText: "View Map",
-        buttonVariant: "blue",
-        href: "https://drive.google.com/file/d/1cJExzDqt1iCDeGogL1rOSnEMN-D56tzz/view?usp=drivesdk",
-    },
-    {
-        title: "Solid Waste Management",
-        buttonText: "Download PDF",
-        buttonVariant: "red",
-    },
-    {
-        title: "Restaurant Licences",
-        buttonText: "Apply Online",
-        buttonVariant: "green",
-    },
-    {
-        title: "Land Purchase Guidelines",
-        buttonText: "Download PDF",
-        buttonVariant: "red",
-        href: "https://drive.google.com/file/d/1k5A-CDzAPz3xCGLcsETX8F3GYdZZxmVP/view?usp=drivesdk",
-    },
-    {
-        title: "Tenders",
-        buttonText: "View Tenders",
-        buttonVariant: "olive",
-        href: "https://eproc.rajasthan.gov.in/nicgep/app",
-    },
-    {
-        title: "Taxes",
-        buttonText: "Download PDF",
-        buttonVariant: "green",
-    },
-    {
-        title: "Budget",
-        buttonText: "Download PDF",
-        buttonVariant: "green",
-    },
-];
-
 export default function InformationGuidlines() {
+    const { data: downloadsData, isLoading } = useDownloads({ limit: 20 });
+
+    const getButtonVariant = (type: string | null): ButtonVariant => {
+        const t = type?.toLowerCase() || "";
+        if (t.includes("map")) return "blue";
+        if (t.includes("apply") || t.includes("guideline")) return "green";
+        if (t.includes("tender")) return "olive";
+        return "red";
+    };
+
+    const getButtonText = (type: string | null): string => {
+        const t = type?.toLowerCase() || "";
+        if (t.includes("map")) return "View Map";
+        if (t.includes("apply")) return "Apply Online";
+        if (t.includes("tender")) return "View Tenders";
+        return "Download PDF";
+    };
+
+    const cards = downloadsData?.downloads
+        ?.filter(d => d.status === "ACTIVE")
+        .map(d => ({
+            title: d.document_title,
+            buttonText: getButtonText(d.document_type),
+            buttonVariant: getButtonVariant(d.document_type),
+            href: d.file_url || "#"
+        })) || [];
+
     return (
         <section id="info-guidelines" className="relative w-full min-h-screen overflow-hidden bg-[#132019]">
             {/* Top gradient overlay */}
@@ -156,15 +133,25 @@ export default function InformationGuidlines() {
 
                 {/* Cards Grid */}
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl w-full [&>*:nth-child(odd):last-child]:col-span-2 lg:[&>*:nth-child(odd):last-child]:col-span-1">
-                    {cardData.map((card, index) => (
-                        <Card
-                            key={index}
-                            title={card.title}
-                            buttonText={card.buttonText}
-                            buttonVariant={card.buttonVariant}
-                            href={card.href}
-                        />
-                    ))}
+                    {isLoading ? (
+                        <div className="col-span-full flex justify-center py-12">
+                            <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#a3a355] border-t-transparent"></div>
+                        </div>
+                    ) : cards.length > 0 ? (
+                        cards.map((card, index) => (
+                            <Card
+                                key={index}
+                                title={card.title}
+                                buttonText={card.buttonText}
+                                buttonVariant={card.buttonVariant}
+                                href={card.href}
+                            />
+                        ))
+                    ) : (
+                        <div className="col-span-full text-center py-12 text-white/60">
+                            No guidelines available at the moment.
+                        </div>
+                    )}
                 </div>
             </div>
         </section>
