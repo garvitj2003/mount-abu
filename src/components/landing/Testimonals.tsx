@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useLeaders } from "@/hooks/useWebsiteContent";
 
 interface Testimonial {
   id: number;
@@ -12,63 +13,47 @@ interface Testimonial {
   image: string;
 }
 
-const TESTIMONIALS: Testimonial[] = [
-  {
-    id: 1,
-    name: "Shri Bhajan Lal Sharma",
-    title: "Chief Minister, Rajasthan",
-    message:
-      "Mount Abu is not only a crown jewel of Rajasthan’s tourism but also a symbol of our state’s commitment to sustainable development and civic excellence. As Chief Minister, I am proud of the efforts being made by the Mount Abu Nagar Palika to preserve its natural beauty and enhance the quality of life for its residents and visitors. I encourage every citizen and tourist to experience the unique blend of spirituality, history, and nature that Mount Abu offers, and I assure continued support from the state government for its growth and prosperity.",
-    image: "/images/testimonials/Shri Bhajan Lal Sharma.png",
-  },
-  {
-    id: 2,
-    name: "Shri Jhabar Singh Kharra",
-    title: "Minister of State for Urban Development & Self-Governance",
-    message:
-      "Mount Abu’s legacy as a hill station is built on its scenic beauty, cultural richness, and vibrant community. As the Minister for Urban Development & Self-Governance, I am committed to supporting initiatives that enhance the town’s cleanliness, safety, and civic amenities. Our focus is on sustainable urban planning and citizen engagement, ensuring that Mount Abu remains a model hill station for Rajasthan. I welcome every visitor to experience the magic of Mount Abu and be a part of our journey towards a cleaner, greener, and more inclusive future.",
-    image: "/images/testimonials/Shri Jhabar Singh Kharra.png",
-  },
-  {
-    id: 3,
-    name: "Alpa Chaudhary (IAS)",
-    title: "District Collector, Sirohi",
-    message:
-      "Mount Abu is not just a hill station; it is a symbol of Rajasthan’s rich cultural heritage and natural beauty. As District Collector, Sirohi, I am committed to ensuring that Mount Abu continues to thrive as a premier tourist destination while maintaining its ecological balance and civic amenities. I encourage every visitor to experience the unique blend of spirituality, history, and nature that Mount Abu offers, and I assure all residents and tourists of our continued efforts in making Mount Abu cleaner, safer, and more welcoming for everyone.",
-    image: "/images/testimonials/Alpa Chaudhary (IAS).png",
-  },
-  {
-    id: 4,
-    name: "Anshu Priya (IAS)",
-    title: "SDM, Mount Abu",
-    message:
-      "Mount Abu’s charm lies in its serene lakes, ancient temples, and the warmth of its people. As SDM, Mount Abu, I am proud to lead initiatives that enhance the town’s cleanliness, safety, and civic services. My team and I are dedicated to making Mount Abu a model hill station, where every visitor feels at home. I invite you to explore Mount Abu’s beauty and contribute to its sustainable development by respecting its environment and heritage.",
-    image: "/images/testimonials/Anshu Priya (IAS).png",
-  },
-  {
-    id: 5,
-    name: "Shri Asutosh Acharya",
-    title: "Executive Officer, Municipal Body, Mount Abu",
-    message:
-      "Mount Abu’s legacy as a hill station is built on its scenic beauty, cultural richness, and vibrant community. As Executive Officer, I am committed to providing efficient municipal services and enhancing the quality of life for our residents and visitors. Our focus is on sustainable development, citizen engagement, and preserving Mount Abu’s unique identity. I welcome you to experience the magic of Mount Abu and be a part of our journey towards a cleaner, greener, and more inclusive future.",
-    image: "/images/testimonials/Shri Asutosh Acharya.png",
-  },
-];
-
 export default function Testimonials() {
+  const { data: leadersData, isLoading } = useLeaders({ limit: 10 });
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const currentTestimonial = TESTIMONIALS[currentIndex];
+  const testimonials = useMemo(() => {
+    return (leadersData?.leaders || [])
+      .filter(l => l.status === "ACTIVE")
+      .map(l => ({
+        id: l.id,
+        name: l.name,
+        title: l.designation || "",
+        message: l.message || "",
+        image: l.image_url || "/images/testimonials/profile-placeholder.png",
+      }));
+  }, [leadersData]);
+
+  const currentTestimonial = testimonials[currentIndex];
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % TESTIMONIALS.length);
+    if (testimonials.length === 0) return;
+    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
   };
 
   const handlePrev = () => {
+    if (testimonials.length === 0) return;
     setCurrentIndex(
-      (prev) => (prev - 1 + TESTIMONIALS.length) % TESTIMONIALS.length,
+      (prev) => (prev - 1 + testimonials.length) % testimonials.length,
     );
   };
+
+  if (isLoading) {
+    return (
+      <section className="relative w-full min-h-[400px] bg-[#132019] flex items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#d4af37] border-t-transparent"></div>
+      </section>
+    );
+  }
+
+  if (testimonials.length === 0) {
+    return null;
+  }
 
   return (
     <section
@@ -110,9 +95,9 @@ export default function Testimonials() {
         </div>
 
         {/* Speaker Section */}
-        <div className="flex flex-col lg:flex-row items-center gap-10 md:gap-16 max-w-7xl mx-auto w-full">
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-10 md:gap-16 max-w-7xl mx-auto w-full">
           {/* Image Column */}
-          <div className="relative flex-shrink-0 w-full max-w-[320px] md:max-w-[420px] aspect-[3/4] flex justify-center items-center -mt-12 md:-mt-24">
+          <div className="relative flex-shrink-0 w-full max-w-[260px] md:max-w-[340px] lg:max-w-[400px] aspect-square flex justify-center items-center">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentTestimonial.id}
@@ -120,13 +105,13 @@ export default function Testimonials() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.4 }}
-                className="relative w-full h-full overflow-hidden"
+                className="relative w-full h-full rounded-full overflow-hidden border-4 border-[#d4af37]/30 shadow-2xl"
               >
                 <Image
                   src={currentTestimonial.image}
                   fill
                   alt={currentTestimonial.name}
-                  className="object-contain object-center"
+                  className="object-cover object-center"
                 />
               </motion.div>
             </AnimatePresence>
@@ -163,33 +148,35 @@ export default function Testimonials() {
         </div>
 
         {/* Navigation Buttons */}
-        <div className="mt-8 flex items-center justify-center gap-4 relative z-30">
-          <button
-            onClick={handlePrev}
-            className="w-11 h-11 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
-            aria-label="Previous testimonial"
-          >
-            <Image
-              src="/images/nav-next.svg"
-              width={44}
-              height={44}
-              alt="Previous"
-              className="rotate-180"
-            />
-          </button>
-          <button
-            onClick={handleNext}
-            className="w-11 h-11 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
-            aria-label="Next testimonial"
-          >
-            <Image
-              src="/images/nav-next.svg"
-              width={44}
-              height={44}
-              alt="Next"
-            />
-          </button>
-        </div>
+        {testimonials.length > 1 && (
+          <div className="mt-8 flex items-center justify-center gap-4 relative z-30">
+            <button
+              onClick={handlePrev}
+              className="w-11 h-11 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
+              aria-label="Previous testimonial"
+            >
+              <Image
+                src="/images/nav-next.svg"
+                width={44}
+                height={44}
+                alt="Previous"
+                className="rotate-180"
+              />
+            </button>
+            <button
+              onClick={handleNext}
+              className="w-11 h-11 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
+              aria-label="Next testimonial"
+            >
+              <Image
+                src="/images/nav-next.svg"
+                width={44}
+                height={44}
+                alt="Next"
+              />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Decorative Mountain silhouette */}
