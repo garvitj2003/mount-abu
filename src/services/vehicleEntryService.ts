@@ -5,8 +5,14 @@ type AuthorityVehicleEntryResponse = components["schemas"]["AuthorityVehicleEntr
 type VehicleEntryDetailResponse = components["schemas"]["VehicleEntryDetailResponse"];
 
 export const VehicleEntryService = {
-  async getAllVehicleEntries(): Promise<AuthorityVehicleEntryResponse[]> {
-    const response = await api.get<AuthorityVehicleEntryResponse[]>("/api/authority/vehicle-entries");
+  async getAllVehicleEntries(params?: {
+    search?: string;
+    offset?: number;
+    limit?: number;
+  }): Promise<AuthorityVehicleEntryResponse[]> {
+    const response = await api.get<AuthorityVehicleEntryResponse[]>("/api/authority/vehicle-entries", {
+      params,
+    });
     return response.data;
   },
 

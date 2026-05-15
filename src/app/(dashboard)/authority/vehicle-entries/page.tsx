@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import TablePagination from "@/components/ui/TablePagination";
@@ -8,6 +8,7 @@ import VehicleFilterDrawer from "@/components/dashboard/authority/vehicle-entrie
 import VehicleDetailDrawer from "@/components/dashboard/authority/vehicle-entries/VehicleDetailDrawer";
 import { useVehicleEntries } from "@/hooks/useVehicleEntries";
 import { format } from "date-fns";
+import { usePagination } from "@/hooks/usePagination";
 
 const WarningTooltip = ({ text }: { text: string }) => {
   return (
@@ -31,33 +32,48 @@ const WarningTooltip = ({ text }: { text: string }) => {
 
 export default function AuthorityVehicleEntriesPage() {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [hoveredToken, setHoveredToken] = useState<number | null>(null);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const { page, limit, setPage, setLimit } = usePagination();
 
-  const { data: entries, isLoading } = useVehicleEntries();
+  // Debounce search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Reset page when search changes
+  const prevSearch = useRef(debouncedSearch);
+  useEffect(() => {
+    if (debouncedSearch !== prevSearch.current) {
+      prevSearch.current = debouncedSearch;
+      if (page !== 1) {
+        setPage(1);
+      }
+    }
+  }, [debouncedSearch, page, setPage]);
+
+  const { data: entries = [], isLoading } = useVehicleEntries({
+    search: debouncedSearch || undefined,
+    offset: (page - 1) * limit,
+    limit,
+  });
 
   const handleEntryClick = (id: number) => {
     setSelectedEntryId(id);
     setIsDetailDrawerOpen(true);
   };
 
-  const filteredEntries = useMemo(() => {
-    if (!entries) return [];
-    const lowerSearch = search.toLowerCase();
-    return entries.filter((entry) => 
-      entry.token_number?.toLowerCase().includes(lowerSearch) ||
-      entry.vehicle_number.toLowerCase().includes(lowerSearch) ||
-      entry.material_name.toLowerCase().includes(lowerSearch) ||
-      entry.naka_incharge_name?.toLowerCase().includes(lowerSearch)
-    );
-  }, [entries, search]);
-
-  const totalPages = Math.ceil(filteredEntries.length / limit);
-  const paginatedEntries = filteredEntries.slice((page - 1) * limit, page * limit);
+  // Since API doesn't return total count, we estimate total pages
+  const totalPages = useMemo(() => {
+    if (entries.length < limit) return page;
+    return page + 1;
+  }, [entries.length, page, limit]);
 
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest">
@@ -138,14 +154,14 @@ export default function AuthorityVehicleEntriesPage() {
                        </div>
                      </td>
                    </tr>
-                ) : paginatedEntries.length === 0 ? (
+                ) : entries.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-2 py-8 text-center text-sm text-[#343434]/60">
                       No vehicle entries found.
                     </td>
                   </tr>
                 ) : (
-                  paginatedEntries.map((item) => (
+                  entries.map((item) => (
                     <tr key={item.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                       <td className="px-2 py-3">
                         <div className="flex items-center gap-2">
@@ -207,10 +223,7 @@ export default function AuthorityVehicleEntriesPage() {
             totalPages={totalPages}
             limit={limit}
             onPageChange={setPage}
-            onLimitChange={(newLimit) => {
-              setLimit(newLimit);
-              setPage(1);
-            }}
+            onLimitChange={setLimit}
           />
         </div>
       </div>

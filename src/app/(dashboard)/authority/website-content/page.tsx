@@ -32,6 +32,7 @@ import AddContactDrawer from "@/components/dashboard/authority/website-content/A
 import AddDownloadDrawer from "@/components/dashboard/authority/website-content/AddDownloadDrawer";
 import MasterDataMenu from "@/components/dashboard/authority/master-data/MasterDataMenu";
 import { type components } from "@/types/api";
+import { usePagination } from "@/hooks/usePagination";
 
 type TabType = "Notices" | "Tenders" | "Events" | "Leaders Board" | "Contact Diary" | "City Profile" | "Downloads";
 type CityProfileUpdate = components["schemas"]["CityProfilePut"];
@@ -93,8 +94,7 @@ export default function AuthorityWebsiteContentPage() {
 
   // Pagination & Filters
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const limit = 10;
+  const { page, limit, setPage, setLimit } = usePagination();
   const [showRightShadow, setShowRightShadow] = useState(false);
 
   // Drawer States
@@ -733,6 +733,7 @@ export default function AuthorityWebsiteContentPage() {
               totalPages={Math.ceil(tabContent.total / limit) || 1}
               limit={limit}
               onPageChange={setPage}
+              onLimitChange={setLimit}
             />
           </div>
         )}

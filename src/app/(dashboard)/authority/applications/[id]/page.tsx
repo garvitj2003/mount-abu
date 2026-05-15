@@ -385,6 +385,15 @@ export default function ApplicationDetailsPage() {
   const router = useRouter();
   const id = Number(params.id);
   const { data: user } = useUser();
+  
+  const handleBack = () => {
+    const paramsString = searchParams.toString();
+    if (paramsString) {
+      router.push(`/authority/applications?${paramsString}`);
+    } else {
+      router.push("/authority/applications");
+    }
+  };
   const { data: app, isLoading, error } = useApplication(id);
   const workflowAction = useWorkflowAction();
   const addPhaseMaterials = useAddPhaseMaterials();
@@ -452,7 +461,7 @@ export default function ApplicationDetailsPage() {
     <div className="flex h-full w-full items-center justify-center bg-[#F5F6F7]">
       <div className="flex flex-col items-center gap-4">
         <p className="text-lg font-medium text-[#EF4444]">Error loading application.</p>
-        <button onClick={() => router.back()} className="rounded-lg bg-white border border-[#D6D9DE] px-4 py-2 text-sm">Go Back</button>
+        <button onClick={handleBack} className="rounded-lg bg-white border border-[#D6D9DE] px-4 py-2 text-sm">Go Back</button>
       </div>
     </div>
   );
@@ -462,7 +471,7 @@ export default function ApplicationDetailsPage() {
       <Header 
         app={app} 
         userRole={user?.role as UserRole} 
-        onBack={() => router.back()} 
+        onBack={handleBack} 
         onAction={handleAction}
         onCommentClick={() => setIsCommentsOpen(true)}
         onRejectClick={() => setRemarksModal({ isOpen: true, type: "REJECT" })}

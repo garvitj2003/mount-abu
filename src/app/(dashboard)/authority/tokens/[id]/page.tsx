@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import VehicleFilterDrawer from "@/components/dashboard/authority/vehicle-entries/VehicleFilterDrawer";
 import VehicleDetailDrawer from "@/components/dashboard/authority/vehicle-entries/VehicleDetailDrawer";
 import TokenActionModal from "@/components/dashboard/authority/tokens/TokenActionModal";
@@ -170,8 +170,19 @@ const TableRow = ({
 
 export default function TokenDetailsPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const transportCode = params.id as string;
+  
+  const handleBack = () => {
+    const paramsString = searchParams.toString();
+    if (paramsString) {
+      router.push(`/authority/tokens?${paramsString}`);
+    } else {
+      router.push("/authority/tokens");
+    }
+  };
+
   const [activeTab, setActiveTab] = useState<"Vehicle Entries" | "Material Summary">("Vehicle Entries");
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
@@ -225,7 +236,7 @@ export default function TokenDetailsPage() {
   if (error || !token) return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-4 bg-[#F5F6F7]">
       <p className="text-lg font-medium text-[#EF4444]">Error loading token details.</p>
-      <button onClick={() => router.back()} className="rounded-lg bg-white border border-[#D6D9DE] px-4 py-2 text-sm">Go Back</button>
+      <button onClick={handleBack} className="rounded-lg bg-white border border-[#D6D9DE] px-4 py-2 text-sm">Go Back</button>
     </div>
   );
 
@@ -233,7 +244,7 @@ export default function TokenDetailsPage() {
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest relative overflow-y-auto">
       <Header 
         token={token} 
-        onBack={() => router.back()} 
+        onBack={handleBack} 
         onHold={() => setModalConfig({ isOpen: true, type: "HOLD" })}
         onResume={() => setModalConfig({ isOpen: true, type: "RESUME" })}
         onTerminate={() => setModalConfig({ isOpen: true, type: "TERMINATE" })}

@@ -10,6 +10,7 @@ import { ROLE_FILTERS, type ApplicationFlag } from "@/constants/filters";
 import { useRouter } from "next/navigation";
 import { useWards } from "@/hooks/useMasterData";
 import CustomDropdown from "@/components/ui/CustomDropdown";
+import { usePagination } from "@/hooks/usePagination";
 
 type ApplicationStatus = 
   | "PENDING"
@@ -77,6 +78,7 @@ export default function AuthorityApplicationsPage() {
   const router = useRouter();
   const { data: user } = useUser();
   const { data: wards = [] } = useWards();
+  const { page, limit, setPage, setLimit } = usePagination();
   
   const [selectedCategory, setSelectedCategory] = useState<"All" | "New" | "Renovation">("All");
   const [selectedFlag, setSelectedFlag] = useState<ApplicationFlag>("ALL");
@@ -85,8 +87,6 @@ export default function AuthorityApplicationsPage() {
   const [selectedWardId, setSelectedWardId] = useState<number | null>(null);
   const [selectedPropertyUsage, setSelectedPropertyUsage] = useState<string>("");
   
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [dropdownPos, setDropdownPosition] = useState({ top: 0, left: 0 });
   
@@ -97,10 +97,20 @@ export default function AuthorityApplicationsPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
-      setPage(1); // Reset to first page on search
     }, 800);
     return () => clearTimeout(timer);
   }, [search]);
+
+  // Reset page when search changes
+  const prevSearch = useRef(debouncedSearch);
+  useEffect(() => {
+    if (debouncedSearch !== prevSearch.current) {
+      prevSearch.current = debouncedSearch;
+      if (page !== 1) {
+        setPage(1);
+      }
+    }
+  }, [debouncedSearch, page, setPage]);
 
   const { data: applications = [], isLoading } = useApplications({
     flag: selectedFlag,
@@ -366,7 +376,10 @@ export default function AuthorityApplicationsPage() {
                     <tr key={app.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                       <td className="px-2 py-3">
                         <span 
-                          onClick={() => router.push(`/authority/applications/${app.id}`)}
+                          onClick={() => {
+                            const params = new URLSearchParams(window.location.search);
+                            router.push(`/authority/applications/${app.id}?${params.toString()}`);
+                          }}
                           className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer"
                         >
                           #{app.id.toString().padStart(5, '0')}
@@ -436,18 +449,19 @@ export default function AuthorityApplicationsPage() {
                 if (!app) return null;
                 
                 const isUnderReview = app.status === "SUBMITTED" || app.status === "FORWARDED";
+                const currentParams = new URLSearchParams(window.location.search).toString();
                 
                 return (
                   <>
                     <button 
-                      onClick={() => router.push(`/authority/applications/${app.id}`)}
+                      onClick={() => router.push(`/authority/applications/${app.id}?${currentParams}`)}
                       className="flex h-10 w-full items-center gap-[11px] rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer text-sm font-normal text-[#343434]"
                     >
                       <Image src="/dashboard/icons/edit-pencil.svg" alt="View" width={24} height={24} />
                       View Application
                     </button>
                     <button 
-                      onClick={() => router.push(`/authority/applications/${app.id}?comment=true`)}
+                      onClick={() => router.push(`/authority/applications/${app.id}?${currentParams}${currentParams ? '&' : ''}comment=true`)}
                       className="flex h-10 w-full items-center gap-[11px] rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer text-sm font-normal text-[#343434]"
                     >
                       <Image src="/dashboard/icons/comment-icon.svg" alt="Comment" width={24} height={24} />
@@ -474,10 +488,7 @@ export default function AuthorityApplicationsPage() {
             totalPages={totalPages}
             limit={limit}
             onPageChange={setPage}
-            onLimitChange={(newLimit) => {
-              setLimit(newLimit);
-              setPage(1);
-            }}
+            onLimitChange={setLimit}
           />
         </div>
       </div>

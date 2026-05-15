@@ -10,6 +10,7 @@ import { useApplicationStore } from "@/store/useApplicationStore";
 import { ApplicationService } from "@/services/applicationService";
 import { type components } from "@/types/api";
 import TablePagination from "@/components/ui/TablePagination";
+import { usePagination } from "@/hooks/usePagination";
 
 type ApplicationResponse = components["schemas"]["ApplicationResponse"];
 type ApplicationStatus = components["schemas"]["ApplicationStatus"];
@@ -73,8 +74,7 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
   const { setApplicationId } = useApplicationStore();
   const [filter, setFilter] = useState<"All" | "NEW" | "RENOVATION">("All");
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const limit = 10;
+  const { page, limit, setPage, setLimit } = usePagination();
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
   const [dropdownPos, setDropdownPosition] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -121,11 +121,13 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
   };
 
   const handleViewApplication = (app: ApplicationResponse) => {
+    const params = new URLSearchParams(window.location.search).toString();
+    const query = params ? `?${params}` : "";
     if (app.status === "PENDING") {
       setApplicationId(app.id);
-      router.push("/citizen/applications/new-application");
+      router.push(`/citizen/applications/new-application${query}`);
     } else {
-      router.push(`/citizen/applications/${app.id}`);
+      router.push(`/citizen/applications/${app.id}${query}`);
     }
   };
 
@@ -383,6 +385,7 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
         totalPages={totalPages}
         limit={limit}
         onPageChange={setPage}
+        onLimitChange={setLimit}
       />
     </div>
   );

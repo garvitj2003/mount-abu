@@ -10,6 +10,7 @@ import ResetPasswordDrawer from "@/components/dashboard/authority/users/ResetPas
 import UserMenu from "@/components/dashboard/authority/users/UserMenu";
 import DropdownSelect from "@/components/ui/DropdownSelect";
 import TablePagination from "@/components/ui/TablePagination";
+import { usePagination } from "@/hooks/usePagination";
 
 type UserRole = components["schemas"]["UserRole"];
 type UserResponse = components["schemas"]["UserResponse"];
@@ -31,14 +32,12 @@ export default function AuthorityUserManagementPage() {
   const [roleFilter, setRoleFilter] = useState<string>("All");
   const [deptFilter, setDeptFilter] = useState<string | number>("All");
   const [statusFilter, setStatusFilter] = useState<string>("All");
-  const [page, setPage] = useState(1);
+  const { page, limit, setPage, setLimit } = usePagination();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserResponse | null>(null);
+  const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
   const [dropdownPos, setDropdownPosition] = useState({ top: 0, left: 0 });
-  const limit = 10;
-
   const dropdownRef = useRef<HTMLDivElement>(null);
   const triggerRefs = useRef<Record<number, HTMLButtonElement | null>>({});
 

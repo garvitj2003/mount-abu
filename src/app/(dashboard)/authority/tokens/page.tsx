@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import TablePagination from "@/components/ui/TablePagination";
 import { useTokens } from "@/hooks/useTokens";
 import CustomDropdown from "@/components/ui/CustomDropdown";
+import { usePagination } from "@/hooks/usePagination";
 
 const ProgressBar = ({ progress }: { progress: number }) => (
   <div className="flex items-center gap-3 w-full max-w-[120px]">
@@ -32,17 +33,26 @@ export default function AuthorityTokensPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("");
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const { page, limit, setPage, setLimit } = usePagination();
 
   // Debounce search effect
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
-      setPage(1);
     }, 800);
     return () => clearTimeout(timer);
   }, [search]);
+
+  // Reset page when search changes
+  const prevSearch = useRef(debouncedSearch);
+  useEffect(() => {
+    if (debouncedSearch !== prevSearch.current) {
+      prevSearch.current = debouncedSearch;
+      if (page !== 1) {
+        setPage(1);
+      }
+    }
+  }, [debouncedSearch, page, setPage]);
 
   const { data: tokens = [], isLoading, error } = useTokens({
     offset: (page - 1) * limit,
@@ -156,7 +166,10 @@ export default function AuthorityTokensPage() {
                     <tr key={idx} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                       <td className="px-2 py-3">
                         <span 
-                          onClick={() => router.push(`/authority/tokens/${token.transport_code}`)}
+                          onClick={() => {
+                            const params = new URLSearchParams(window.location.search);
+                            router.push(`/authority/tokens/${token.transport_code}?${params.toString()}`);
+                          }}
                           className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer"
                         >
                           {token.token_number}
@@ -223,10 +236,7 @@ export default function AuthorityTokensPage() {
             totalPages={totalPages}
             limit={limit}
             onPageChange={setPage}
-            onLimitChange={(newLimit) => {
-              setLimit(newLimit);
-              setPage(1);
-            }}
+            onLimitChange={setLimit}
           />
         </div>
       </div>

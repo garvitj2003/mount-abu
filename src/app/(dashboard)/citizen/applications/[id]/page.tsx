@@ -2,7 +2,7 @@
 
 import { useApplication } from "@/hooks/useApplications";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { type components } from "@/types/api";
 import CommentsDrawer from "@/components/dashboard/authority/applications/CommentsDrawer";
@@ -142,8 +142,19 @@ const DetailsCard = ({ app }: { app: ApplicationResponse }) => {
 
 export default function CitizenApplicationDetailsPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const id = Number(params.id);
+  
+  const handleBack = () => {
+    const paramsString = searchParams.toString();
+    if (paramsString) {
+      router.push(`/citizen/applications?${paramsString}`);
+    } else {
+      router.push("/citizen/applications");
+    }
+  };
+
   const { data: app, isLoading, error } = useApplication(id);
   
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
@@ -154,25 +165,24 @@ export default function CitizenApplicationDetailsPage() {
       <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0C83FF] border-t-transparent"></div>
     </div>
   );
-
-  if (error || !app) return (
-    <div className="flex h-full w-full items-center justify-center bg-[#F5F6F7]">
-      <div className="flex flex-col items-center gap-4">
-        <p className="text-lg font-medium text-[#EF4444]">Error loading application.</p>
-        <button onClick={() => router.back()} className="rounded-lg bg-white border border-[#D6D9DE] px-4 py-2 text-sm">Go Back</button>
-      </div>
+if (error || !app) return (
+  <div className="flex h-full w-full items-center justify-center bg-[#F5F6F7]">
+    <div className="flex flex-col items-center gap-4">
+      <p className="text-lg font-medium text-[#EF4444]">Error loading application.</p>
+      <button onClick={handleBack} className="rounded-lg bg-white border border-[#D6D9DE] px-4 py-2 text-sm">Go Back</button>
     </div>
-  );
+  </div>
+);
 
-  // If status is PENDING, we should probably redirect or show a different view
-  // But the requirement said "not pending upon clicking on the id"
-  // So I'll just render the details.
+// If status is PENDING, we should probably redirect or show a different view
+// But the requirement said "not pending upon clicking on the id"
+// So I'll just render the details.
 
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest relative overflow-y-auto">
       <Header 
         app={app} 
-        onBack={() => router.back()} 
+        onBack={handleBack} 
         onCommentClick={() => setIsCommentsOpen(true)}
         onViewDetailsClick={() => setIsMaterialsOpen(true)}
       />

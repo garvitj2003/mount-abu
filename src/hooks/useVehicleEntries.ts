@@ -1,10 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { VehicleEntryService } from "@/services/vehicleEntryService";
 
-export function useVehicleEntries() {
+export function useVehicleEntries(params?: {
+  search?: string;
+  offset?: number;
+  limit?: number;
+}) {
   return useQuery({
-    queryKey: ["vehicle-entries"],
-    queryFn: () => VehicleEntryService.getAllVehicleEntries(),
+    queryKey: ["vehicle-entries", params],
+    queryFn: () => VehicleEntryService.getAllVehicleEntries(params),
     staleTime: 30 * 1000,
   });
 }

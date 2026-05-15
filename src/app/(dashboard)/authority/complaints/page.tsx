@@ -8,6 +8,7 @@ import { type components } from "@/types/api";
 import TablePagination from "@/components/ui/TablePagination";
 import ComplaintViewDrawer from "@/components/dashboard/citizen/complaints/ComplaintViewDrawer";
 import CustomDropdown from "@/components/ui/CustomDropdown";
+import { usePagination } from "@/hooks/usePagination";
 
 type ComplaintStatus = components["schemas"]["ComplaintStatus"];
 
@@ -58,8 +59,7 @@ export default function AuthorityComplaintsPage() {
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [selectedWardId, setSelectedWardId] = useState<number | null>(null);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const { page, limit, setPage, setLimit } = usePagination();
 
   const [selectedComplaint, setSelectedComplaint] = useState<any>(null);
   const [isViewDrawerOpen, setIsViewDrawerOpen] = useState(false);
@@ -282,10 +282,7 @@ export default function AuthorityComplaintsPage() {
             totalPages={totalPages}
             limit={limit}
             onPageChange={setPage}
-            onLimitChange={(newLimit) => {
-              setLimit(newLimit);
-              setPage(1);
-            }}
+            onLimitChange={setLimit}
           />
         </div>
       </div>

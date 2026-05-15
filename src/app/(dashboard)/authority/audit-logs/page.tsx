@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import TablePagination from "@/components/ui/TablePagination";
 import { useAuditLogs } from "@/hooks/useAudit";
 import { type components } from "@/types/api";
+import { usePagination } from "@/hooks/usePagination";
 
 type AuditAction = components["schemas"]["AuditAction"];
 
@@ -19,8 +20,18 @@ const FILTERS = [
 export default function AuthorityAuditLogsPage() {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveTab] = useState("ALL");
-  const [page, setPage] = useState(1);
-  const limit = 10;
+  const { page, limit, setPage, setLimit } = usePagination();
+
+  // Reset page when search changes
+  const prevSearch = useRef(search);
+  useEffect(() => {
+    if (search !== prevSearch.current) {
+      prevSearch.current = search;
+      if (page !== 1) {
+        setPage(1);
+      }
+    }
+  }, [search, page, setPage]);
 
   const { data, isLoading, error } = useAuditLogs({
     offset: (page - 1) * limit,
@@ -210,6 +221,7 @@ export default function AuthorityAuditLogsPage() {
             totalPages={totalPages}
             limit={limit}
             onPageChange={setPage}
+            onLimitChange={setLimit}
           />
         </div>
       </div>

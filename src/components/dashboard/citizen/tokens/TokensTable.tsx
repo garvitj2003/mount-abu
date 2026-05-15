@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import TablePagination from "@/components/ui/TablePagination";
+import { usePagination } from "@/hooks/usePagination";
 import { useTokens } from "@/hooks/useTokens";
 import { useUser } from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
@@ -67,8 +68,7 @@ export default function TokensTable() {
   const router = useRouter();
   const { data: user } = useUser();
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const limit = 10;
+  const { page, limit, setPage, setLimit } = usePagination();
 
   const { data: tokens = [], isLoading, error } = useTokens({
     offset: (page - 1) * limit,
@@ -167,7 +167,10 @@ export default function TokensTable() {
                 <tr key={item.transport_code} className="border-b border-[#D6D9DE] hover:bg-gray-50">
                   <td className="px-2 py-3">
                     <span 
-                      onClick={() => router.push(`/citizen/tokens/${item.transport_code}`)}
+                      onClick={() => {
+                        const params = new URLSearchParams(window.location.search).toString();
+                        router.push(`/citizen/tokens/${item.transport_code}${params ? `?${params}` : ""}`);
+                      }}
                       className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer"
                     >
                       {item.token_number}
@@ -218,6 +221,7 @@ export default function TokensTable() {
         totalPages={totalPages}
         limit={limit}
         onPageChange={setPage}
+        onLimitChange={setLimit}
       />
     </div>
   );

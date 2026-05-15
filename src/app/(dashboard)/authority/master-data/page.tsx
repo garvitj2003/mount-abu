@@ -20,6 +20,7 @@ import NewRoleDrawer from "@/components/dashboard/authority/master-data/NewRoleD
 import NewMaterialDrawer from "@/components/dashboard/authority/master-data/NewMaterialDrawer";
 import MasterDataMenu from "@/components/dashboard/authority/master-data/MasterDataMenu";
 import TablePagination from "@/components/ui/TablePagination";
+import { usePagination } from "@/hooks/usePagination";
 
 type TabType = "Complaint Categories" | "Wards/Zones" | "Departments" | "Roles" | "Materials";
 
@@ -46,8 +47,7 @@ export default function AuthorityMasterDataPage() {
   const [indicatorStyle, setIndicatorStyle] = useState({ width: 0, left: 0 });
   
   // Pagination State
-  const [page, setPage] = useState(1);
-  const limit = 10;
+  const { page, limit, setPage, setLimit } = usePagination();
   
   // Drawer States
   const [isCategoryDrawerOpen, setIsCategoryDrawerOpen] = useState(false);
@@ -477,6 +477,7 @@ export default function AuthorityMasterDataPage() {
             totalPages={totalPages}
             limit={limit}
             onPageChange={setPage}
+            onLimitChange={setLimit}
           />
         </div>
       </div>

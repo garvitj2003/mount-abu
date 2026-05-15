@@ -6,6 +6,7 @@ import { useMyComplaints, useWithdrawComplaint } from "@/hooks/useComplaints";
 import { useUser } from "@/hooks/useUser";
 import { type components } from "@/types/api";
 import TablePagination from "@/components/ui/TablePagination";
+import { usePagination } from "@/hooks/usePagination";
 
 type ComplaintResponse = components["schemas"]["ComplaintResponse"];
 type ComplaintStatus = components["schemas"]["ComplaintStatus"];
@@ -57,8 +58,7 @@ export default function ComplaintsTable({ onComplaintClick }: ComplaintsTablePro
   const { data: user } = useUser();
   const [filter, setFilter] = useState<ComplaintStatus | "All">("All");
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const limit = 10;
+  const { page, limit, setPage, setLimit } = usePagination();
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
   const [dropdownPos, setDropdownPosition] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -274,6 +274,7 @@ export default function ComplaintsTable({ onComplaintClick }: ComplaintsTablePro
         totalPages={totalPages}
         limit={limit}
         onPageChange={setPage}
+        onLimitChange={setLimit}
       />
     </div>
   );
