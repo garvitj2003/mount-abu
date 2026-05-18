@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface NavigationHeaderProps {
   variant?: "dark" | "light";
@@ -79,9 +80,10 @@ const menuItems: MenuItem[] = [
 ];
 
 const RunningBorderButton = ({
-  variant = "dark",
+  variant = "dark", isLoginPage,
 }: {
   variant?: "dark" | "light";
+  isLoginPage?: boolean;
 }) => {
   return (
     <div className="flex w-full items-center justify-center">
@@ -119,9 +121,11 @@ const RunningBorderButton = ({
           className={`absolute inset-0 rounded-full border ${variant === "dark" ? "border-white/20" : "border-black/10"}`}
         />
       </button>
-      <Link href={"/login"} className="text-sm ml-4 underline">
-        Login
-      </Link>
+      {!isLoginPage && (
+        <Link href={"/login"} className="text-sm ml-4 underline">
+          Login
+        </Link>
+      )}
     </div>
   );
 };
@@ -133,6 +137,12 @@ export default function NavigationHeader({
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [isScrolled, setIsScrolled] = useState(false);
   const isDark = variant === "dark";
+
+  const pathname = usePathname(); // For login path
+
+  const isLoginPage = pathname === "/login"; // add this
+
+
 
   useEffect(() => {
     const handleScroll = () => {
@@ -181,16 +191,15 @@ export default function NavigationHeader({
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 h-20 flex items-center justify-between px-4 md:px-20.5 border-b ${
-          isScrolled ? "backdrop-blur-xl" : "backdrop-blur-md"
-        } ${
-          isDark
+        className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 h-20 flex items-center justify-between px-4 md:px-20.5 border-b ${isScrolled ? "backdrop-blur-xl" : "backdrop-blur-md"
+          } ${isDark
             ? `text-white border-white/10 ${isScrolled ? "bg-white/5 shadow-lg" : "bg-[#132019] md:bg-transparent md:border-transparent"}`
             : `text-black border-black/10 ${isScrolled ? "bg-black/5 shadow-sm" : "bg-white/80 md:bg-transparent md:border-transparent"}`
-        }`}
+          }`}
       >
         {/* Logo and Title */}
-        <div className="flex items-center gap-3">
+        <Link href={'/'} className="flex items-center gap-3">
+
           <div className="relative w-12 h-12 flex items-center justify-center">
             {/* Logo placeholder - mountain icon */}
             <Image
@@ -205,11 +214,13 @@ export default function NavigationHeader({
           >
             Nagar Palika Mount Abu
           </span>
-        </div>
+
+        </Link>
 
         {/* Right side - Language and Menu */}
         <div className="flex items-center gap-4 md:gap-6">
-          <RunningBorderButton variant={variant} />
+
+          <RunningBorderButton variant={variant} isLoginPage={isLoginPage} />
           <button
             onClick={() => setIsOpen(true)}
             className={`p-2 rounded-lg transition-colors ${isDark ? "text-white hover:bg-white/10" : "text-black hover:bg-black/5"}`}
@@ -229,6 +240,10 @@ export default function NavigationHeader({
               <line x1="3" y1="18" x2="21" y2="18" />
             </svg>
           </button>
+
+
+
+
         </div>
       </header>
 

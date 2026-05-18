@@ -1,16 +1,16 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import {
-    Phone,
+    Facebook,
+    Instagram,
     Mail,
     MapPin,
-    Instagram,
-    Facebook,
+    Phone,
     Twitter,
     Youtube,
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 const adventureLinks = [
     { label: "Top Destinations", href: "/#destinations" },
@@ -26,15 +26,15 @@ const adventureLinks = [
 ];
 
 const quickLinks = [
-    "Administrative Office",
-    "Rajasthan Sampark",
-    "Pehchan",
-    "Eproc",
-    "Notices",
-    "Tenders",
-    "Complaints",
-    "Digital Construction Token",
-    "Emergency Contacts",
+    { label: "Administrative Office",href:"https://gad.rajasthan.gov.in/" },
+    { label: "Rajasthan Sampark",href:"https://sampark.rajasthan.gov.in/" },
+    { label: "Pehchan",href:"https://pehchan.rajasthan.gov.in/pehchan2/Mainpage.aspx" },
+    { label: "Eproc",href:"https://etenders.gov.in/eprocure/app"},
+    { label: "Notices",href:"#notices" },
+    { label: "Tenders",href:"#tenders" },
+    { label: "Complaints",href:"/login" },
+    { label: "Digital Construction Token",href:"/login" },
+    { label: "Emergency Contacts",href:"#" },
 ];
 
 const connectLinks = ["About Us", "Contact Us"];
@@ -164,9 +164,9 @@ export default function Footer() {
                             <h3 className="text-[15px] font-bold text-[#1a1a1a] mb-3">Quick Links</h3>
                             <ul className="flex flex-col gap-1.5">
                                 {quickLinks.map((item) => (
-                                    <li key={item}>
-                                        <Link href="#" className="text-[13px] text-black hover:text-black/70 transition-colors block">
-                                            {item}
+                                    <li key={item.label}>
+                                        <Link href={item.href} className="text-[13px] text-black hover:text-black/70 transition-colors block">
+                                            {item.label}
                                         </Link>
                                     </li>
                                 ))}
@@ -175,9 +175,9 @@ export default function Footer() {
 
                         {/* Other Govt Links */}
                         <div>
-                          <Link href="/important-links" className="text-[15px] font-bold text-[#1a1a1a] hover:text-[#1a1a1a]/70 transition-colors">
-                              Other Govt. Links
-                          </Link>
+                            <Link href="/important-links" className="text-[15px] font-bold text-[#1a1a1a] hover:text-[#1a1a1a]/70 transition-colors">
+                                Other Govt. Links
+                            </Link>
                         </div>
 
                         {/* Connect */}

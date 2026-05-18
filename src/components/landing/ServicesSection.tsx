@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { motion, Variants } from "motion/react";
+import Image from "next/image";
 
 const fadeIn: Variants = {
     hidden: { opacity: 0, y: 30 },
@@ -53,14 +53,14 @@ const services: ServiceItem[] = [
         title: "Vital Certificates (Birth/Death)",
         description: "Instant download from government portal",
         image: "/images/service-certificates.png",
-        link: "#",
+        link: "https://pehchan.rajasthan.gov.in/pehchan2/Mainpage.aspx",
     },
     {
         id: 4,
         title: "Marriage Certificate",
         description: "Register marriage digitally, get certified copy online",
         image: "/images/service-marriage.png",
-        link: "#",
+        link: "https://pehchan.rajasthan.gov.in/pehchan2/Mainpage.aspx",
     },
 ];
 

@@ -10,14 +10,15 @@ import { mobileSchema, otpSchema } from "@/lib/validations/auth";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { encryptData } from "@/lib/encryption";
+import NavigationHeader from "@/components/landing/NavigationHeader";
 
-type LoginView = 
-  | "citizen" 
-  | "authority" 
-  | "otp" 
-  | "forgot-password" 
-  | "reset-otp" 
-  | "new-password" 
+type LoginView =
+  | "citizen"
+  | "authority"
+  | "otp"
+  | "forgot-password"
+  | "reset-otp"
+  | "new-password"
   | "success";
 
 const BG_IMAGES = [
@@ -35,7 +36,7 @@ export default function LoginPage() {
   const [view, setView] = useState<LoginView>("citizen");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  
+
   // Background Slider State
   const [currentBg, setCurrentBg] = useState(0);
   const [publicKey, setPublicKey] = useState<string | null>(null);
@@ -69,12 +70,12 @@ export default function LoginPage() {
 
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
-    
+
     const digit = value.slice(-1);
     const newOtp = [...otp];
     newOtp[index] = digit;
     setOtp(newOtp);
-    
+
     if (digit !== "" && index < 5) {
       const nextInput = document.getElementById(`otp-${index + 1}`);
       nextInput?.focus();
@@ -133,8 +134,8 @@ export default function LoginPage() {
       setResendLogin(false);
     }
   };
-  
-  
+
+
   const handleLoginWithOtp = async () => {
     setError(null);
     const otpString = otp.join("");
@@ -157,7 +158,7 @@ export default function LoginPage() {
       if (result.success) {
         // Invalidate 'user' query so TanStack Query fetches fresh data on dashboard load
         await queryClient.invalidateQueries({ queryKey: ["user"] });
-        
+
         // Redirect to citizen module only
         router.push("/citizen");
       } else {
@@ -213,9 +214,8 @@ export default function LoginPage() {
       />
       <button
         onClick={() => setView("citizen")}
-        className={`relative flex flex-1 items-center justify-center gap-2 py-2 text-xs font-semibold transition-colors ${
-          (view === "citizen" || view === "otp") ? "text-[#0C83FF]" : "text-[#343434]"
-        }`}
+        className={`relative flex flex-1 items-center justify-center gap-2 py-2 text-xs font-semibold transition-colors ${(view === "citizen" || view === "otp") ? "text-[#0C83FF]" : "text-[#343434]"
+          }`}
       >
         <Image
           src="/dashboard/icons/citizen.svg"
@@ -228,9 +228,8 @@ export default function LoginPage() {
       </button>
       <button
         onClick={() => setView("authority")}
-        className={`relative flex flex-1 items-center justify-center gap-2 py-2 text-xs font-semibold transition-colors ${
-          view === "authority" ? "text-[#0C83FF]" : "text-[#343434]"
-        }`}
+        className={`relative flex flex-1 items-center justify-center gap-2 py-2 text-xs font-semibold transition-colors ${view === "authority" ? "text-[#0C83FF]" : "text-[#343434]"
+          }`}
       >
         <Image
           src="/dashboard/icons/authority.svg"
@@ -260,7 +259,6 @@ export default function LoginPage() {
               <div className="flex h-full items-center gap-1 pr-3 border-r border-[#343434]/30">
                 <Image src="/dashboard/icons/flag.svg" alt="Flag" width={20} height={20} className="object-contain" />
                 <span className="text-sm text-[#343434]">+91</span>
-                <Image src="/dashboard/icons/login/dropdown.svg" alt="Dropdown" width={6} height={3} className="opacity-60" />
               </div>
               <input
                 type="tel"
@@ -375,7 +373,8 @@ export default function LoginPage() {
                   placeholder="Password"
                 />
                 <button onClick={() => setShowPassword(!showPassword)}>
-                  <Image src="/dashboard/icons/login/visibility.svg" alt="Toggle Password" width={24} height={24} />
+                  <Image src={
+                    showPassword ? "/dashboard/icons/login/visibilityClose.svg" : "/dashboard/icons/login/visibility.svg"} alt="Toggle Password" width={24} height={24} />
                 </button>
               </div>
             </div>
@@ -395,10 +394,10 @@ export default function LoginPage() {
               </button>
             </div>
 
-            <button 
+            <button
               onClick={handleLoginWithPassword}
               disabled={isLoading}
-              className="flex h-[54px] w-full items-center justify-center rounded-lg bg-[#0C83FF] text-sm font-normal text-white hover:bg-blue-600 transition-colors disabled:opacity-70"
+              className="cursor-pointer flex h-[54px] w-full items-center justify-center rounded-lg bg-[#0C83FF] text-sm font-normal text-white hover:bg-blue-600 transition-colors disabled:opacity-70"
             >
               {isLoading ? "Verifying..." : "Login Now"}
             </button>
@@ -425,14 +424,14 @@ export default function LoginPage() {
 
             <button
               onClick={() => setView("reset-otp")}
-              className="flex h-[54px] w-full items-center justify-center rounded-lg bg-[#0C83FF] text-sm font-normal text-white hover:bg-blue-600 transition-colors"
+              className="cursor-pointer flex h-[54px] w-full items-center justify-center rounded-lg bg-[#0C83FF] text-sm font-normal text-white hover:bg-blue-600 transition-colors"
             >
               Send Reset Code
             </button>
 
             <button
               onClick={() => setView("authority")}
-              className="flex h-[54px] w-full items-center justify-center gap-2 rounded-lg border border-[#C9C9C9] text-sm font-normal text-[#343434] hover:bg-gray-50 transition-colors"
+              className="cursor-pointer flex h-[54px] w-full items-center justify-center gap-2 rounded-lg border border-[#C9C9C9] text-sm font-normal text-[#343434] hover:bg-gray-50 transition-colors"
             >
               <Image src="/dashboard/icons/login/back-arrow.svg" alt="" width={20} height={20} />
               Back to login
@@ -477,14 +476,14 @@ export default function LoginPage() {
 
             <button
               onClick={() => setView("new-password")}
-              className="flex h-[54px] w-full items-center justify-center rounded-lg bg-[#0C83FF] text-sm font-normal text-white hover:bg-blue-600 transition-colors"
+              className="cursor-pointer flex h-[54px] w-full items-center justify-center rounded-lg bg-[#0C83FF] text-sm font-normal text-white hover:bg-blue-600 transition-colors"
             >
               Verify & Continue
             </button>
 
             <button
               onClick={() => setView("forgot-password")}
-              className="flex h-[54px] w-full items-center justify-center gap-2 rounded-lg border border-[#C9C9C9] text-sm font-normal text-[#343434] hover:bg-gray-50 transition-colors"
+              className="cursor-pointer flex h-[54px] w-full items-center justify-center gap-2 rounded-lg border border-[#C9C9C9] text-sm font-normal text-[#343434] hover:bg-gray-50 transition-colors"
             >
               <Image src="/dashboard/icons/login/back-arrow.svg" alt="" width={20} height={20} />
               Change username/mobile
@@ -510,7 +509,7 @@ export default function LoginPage() {
                   placeholder="New Password"
                 />
                 <button onClick={() => setShowPassword(!showPassword)}>
-                  <Image src="/dashboard/icons/login/visibility.svg" alt="" width={24} height={24} />
+                  <Image src={showPassword ? "/dashboard/icons/login/visibilityClose.svg" : "/dashboard/icons/login/visibility.svg"} alt="" width={24} height={24} />
                 </button>
               </div>
 
@@ -525,7 +524,7 @@ export default function LoginPage() {
 
             <button
               onClick={() => setView("success")}
-              className="flex h-[54px] w-full items-center justify-center rounded-lg bg-[#0C83FF] text-sm font-normal text-white hover:bg-blue-600 transition-colors"
+              className="cursor-pointer flex h-[54px] w-full items-center justify-center rounded-lg bg-[#0C83FF] text-sm font-normal text-white hover:bg-blue-600 transition-colors"
             >
               Update Password
             </button>
@@ -546,7 +545,7 @@ export default function LoginPage() {
             </div>
             <button
               onClick={() => { setView("authority"); setError(null); }}
-              className="flex h-[54px] w-full items-center justify-center rounded-lg bg-[#0C83FF] text-sm font-normal text-white hover:bg-blue-600 transition-colors"
+              className="cursor-pointer flex h-[54px] w-full items-center justify-center rounded-lg bg-[#0C83FF] text-sm font-normal text-white hover:bg-blue-600 transition-colors"
             >
               Back to Login
             </button>
@@ -560,6 +559,9 @@ export default function LoginPage() {
 
   return (
     <div className={`relative min-h-screen w-full overflow-hidden font-onest`}>
+
+      {/* Navigation Header */}
+      <NavigationHeader />
       {/* Background */}
       <div className="absolute inset-0 z-0">
         <AnimatePresence initial={false}>
@@ -589,7 +591,7 @@ export default function LoginPage() {
       {/* Content */}
       <div className="relative z-10 flex min-h-screen items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="grid w-full max-w-7xl grid-cols-1 gap-12 lg:grid-cols-2 lg:items-center">
-          
+
           <div className="space-y-6 text-white max-w-2xl">
             <h1 className="text-4xl font-bold leading-tight sm:text-5xl lg:text-[3.5rem] tracking-tight">
               Mount Abu Nagar Palika Digital Governance System
@@ -603,7 +605,7 @@ export default function LoginPage() {
           </div>
 
           <div className="flex justify-center lg:justify-end">
-            <motion.div 
+            <motion.div
               layout
               className="w-full max-w-[365px] rounded-xl bg-white p-6 shadow-[0px_0px_4px_0px_rgba(0,0,0,0.25)] overflow-hidden"
               transition={{ layout: { duration: 0.4, ease: [0.4, 0, 0.2, 1] } }}
