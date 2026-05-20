@@ -26,18 +26,21 @@ const adventureLinks = [
 ];
 
 const quickLinks = [
-    { label: "Administrative Office",href:"https://gad.rajasthan.gov.in/" },
-    { label: "Rajasthan Sampark",href:"https://sampark.rajasthan.gov.in/" },
-    { label: "Pehchan",href:"https://pehchan.rajasthan.gov.in/pehchan2/Mainpage.aspx" },
-    { label: "Eproc",href:"https://etenders.gov.in/eprocure/app"},
-    { label: "Notices",href:"#notices" },
-    { label: "Tenders",href:"#tenders" },
-    { label: "Complaints",href:"/login" },
-    { label: "Digital Construction Token",href:"/login" },
-    { label: "Emergency Contacts",href:"#" },
+    { label: "Administrative Office", href: "https://gad.rajasthan.gov.in/" },
+    { label: "Rajasthan Sampark", href: "https://sampark.rajasthan.gov.in/" },
+    { label: "Pehchan", href: "https://pehchan.rajasthan.gov.in/pehchan2/Mainpage.aspx" },
+    { label: "Eproc", href: "https://etenders.gov.in/eprocure/app" },
+    { label: "Notices", href: "#notices" },
+    { label: "Tenders", href: "#tenders" },
+    { label: "Complaints", href: "/login" },
+    { label: "Digital Construction Token", href: "/login" },
+    { label: "Emergency Contacts", href: "#" },
 ];
 
-const connectLinks = ["About Us", "Contact Us"];
+const connectLinks = [
+    { label: "About Us", href: "#about" },
+    { label: "Contact Us", href: "#contact" }
+];
 
 export default function Footer() {
     return (
@@ -185,9 +188,9 @@ export default function Footer() {
                             <h3 className="text-[15px] font-bold text-[#1a1a1a] mb-3">Connect</h3>
                             <ul className="flex flex-col gap-1.5">
                                 {connectLinks.map((item) => (
-                                    <li key={item}>
-                                        <Link href="#" className="text-[13px] text-black hover:text-black/70 transition-colors block">
-                                            {item}
+                                    <li key={item.label}>
+                                        <Link href={item.href} className="text-[13px] text-black hover:text-black/70 transition-colors block">
+                                            {item.label}
                                         </Link>
                                     </li>
                                 ))}

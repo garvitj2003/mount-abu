@@ -1,19 +1,26 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import Image from "next/image";
-import { StatCard } from "@/components/common/stats/StatCard";
 import { ApplicationsByStatusChart } from "@/components/common/charts/ApplicationsByStatusChart";
 import { ComplaintsByCategoryChart } from "@/components/common/charts/ComplaintsByCategoryChart";
-import { WardWiseActivityChart } from "@/components/common/charts/WardWiseActivityChart";
 import { WardSummaryTable } from "@/components/common/charts/WardSummaryTable";
-import { useAuthorityDashboard } from "@/hooks/useDashboard";
-import { useUser } from "@/hooks/useUser";
-import { useDepartments, useWards } from "@/hooks/useMasterData";
+import { WardWiseActivityChart } from "@/components/common/charts/WardWiseActivityChart";
+import { StatCard } from "@/components/common/stats/StatCard";
 import DropdownSelect from "@/components/ui/DropdownSelect";
-import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, Legend, Cell, PieChart, Pie
+import { useAuthorityDashboard } from "@/hooks/useDashboard";
+import { useDepartments, useWards } from "@/hooks/useMasterData";
+import { useUser } from "@/hooks/useUser";
+import Image from "next/image";
+import { useMemo, useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis, YAxis
 } from "recharts";
 
 const DAY_OPTIONS = [
@@ -37,7 +44,8 @@ const STATUS_COLORS: Record<string, string> = {
   "RESOLVED": "#059669", // Green
   "ACTIVE": "#059669", // Green
   "COMPLETED": "#15803D", // Dark Green
-  "TERMINATED": "#B91C1C", // Dark Red
+  "TERMINATED": "#B91C1C", // Dark Red,
+  "INSPECTED": "#0C83FF",
 };
 
 const KPI_ICONS: Record<string, string> = {
@@ -99,13 +107,13 @@ export default function DashboardAuthorityPage() {
     return dashboard.kpis.map(kpi => ({
       title: kpi.label,
       count: kpi.value,
-      subtext: (kpi.percent_change !== null && kpi.percent_change !== undefined) 
-        ? `${kpi.percent_change > 0 ? '+' : ''}${kpi.percent_change}% vs last period` 
+      subtext: (kpi.percent_change !== null && kpi.percent_change !== undefined)
+        ? `${kpi.percent_change > 0 ? '+' : ''}${kpi.percent_change}% vs last period`
         : "vs last period",
       iconType: (KPI_ICONS[kpi.label] || "applications") as any,
       color: KPI_COLORS[kpi.label] || "#0C83FF",
-      trend: (kpi.percent_change !== null && kpi.percent_change !== undefined) 
-        ? { value: Math.abs(kpi.percent_change), isUp: kpi.percent_change > 0 } 
+      trend: (kpi.percent_change !== null && kpi.percent_change !== undefined)
+        ? { value: Math.abs(kpi.percent_change), isUp: kpi.percent_change > 0 }
         : undefined
     }));
   }, [dashboard?.kpis]);
@@ -174,12 +182,12 @@ export default function DashboardAuthorityPage() {
 
         <div className="flex items-center gap-3">
           <button className="flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-2 text-sm font-medium text-[#343434] hover:bg-gray-200 transition-colors cursor-pointer">
-            <Image src="/dashboard/icons/applications/download.svg" alt="" width={14} height={14} className="opacity-60" />
+            <Image src="/dashboard/icons/applications/pdficon.svg" alt="" width={14} height={14} className="opacity-60" />
             Export PDF
           </button>
           <div className="h-6 w-px bg-[#D6D9DE] mx-1" />
           <button className="flex items-center gap-2 rounded-lg bg-[#0C83FF] px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 transition-colors cursor-pointer">
-            <Image src="/dashboard/icons/applications/download.svg" alt="" width={14} height={14} className="invert brightness-0" />
+            <Image src="/dashboard/icons/applications/csvicon.svg" alt="" width={14} height={14} className="invert brightness-0" />
             Export Excel
           </button>
         </div>
@@ -188,7 +196,7 @@ export default function DashboardAuthorityPage() {
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto p-5">
         <div className="flex flex-col gap-6 pb-10">
-          
+
           {/* Filters Row (Only for Super Admin/Dept heads) */}
           {(role === "SUPERADMIN" || role === "ADMIN") && (
             <div className="flex items-center justify-between">
@@ -200,9 +208,9 @@ export default function DashboardAuthorityPage() {
                   triggerClassName="bg-white px-3 py-2 border-[#D6D9DE] h-auto"
                   className="w-[140px]"
                 />
-                
+
                 <div className="h-6 w-px bg-[#C6CAD1]" />
-                
+
                 <DropdownSelect
                   options={[
                     { label: "All Department", value: "null" },
@@ -235,7 +243,7 @@ export default function DashboardAuthorityPage() {
           {/* KPI Grid */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
             {kpiData.map((kpi, idx) => (
-              <StatCard 
+              <StatCard
                 key={idx}
                 title={kpi.title}
                 count={kpi.count}
@@ -248,7 +256,7 @@ export default function DashboardAuthorityPage() {
           </div>
 
           {/* Role-Specific Views */}
-          
+
           {(role === "SUPERADMIN" || role === "ADMIN" || role === "COMMISSIONER") && (
             <>
               <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
@@ -257,7 +265,7 @@ export default function DashboardAuthorityPage() {
                     {role === "COMMISSIONER" ? "Resolution Status" : "Applications by Status"}
                   </h3>
                   <ApplicationsByStatusChart data={
-                    role === "COMMISSIONER" 
+                    role === "COMMISSIONER"
                       ? (dashboard.complaint_resolution_status?.map(s => ({ status: formatStatus(s.status), count: s.count, color: STATUS_COLORS[s.status] || "#94A3B8" })) || [])
                       : statusData
                   } />
@@ -316,7 +324,7 @@ export default function DashboardAuthorityPage() {
               <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
                 <h3 className="text-xs font-medium text-[#343434] mb-2">Verification Status</h3>
                 <ApplicationsByStatusChart data={
-                  dashboard.verification_status?.map(s => ({ status: formatStatus(s.status), count: s.count, color: STATUS_COLORS[s.status] || "#94A3B8" })) || []
+                  dashboard.verification_status?.map(s => ({ status: formatStatus(s.status), count: s.count, color: STATUS_COLORS[s.status.toUpperCase()] || "#94A3B8" })) || []
                 } />
               </div>
               <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
@@ -325,8 +333,8 @@ export default function DashboardAuthorityPage() {
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={dashboard.avg_verification_time_trend || []}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="period" tick={{fontSize: 10}} />
-                      <YAxis tick={{fontSize: 10}} />
+                      <XAxis dataKey="period" tick={{ fontSize: 10 }} />
+                      <YAxis tick={{ fontSize: 10 }} />
                       <Tooltip />
                       <Line type="monotone" dataKey="avg_hours" stroke="#0C83FF" strokeWidth={2} />
                     </LineChart>
@@ -371,8 +379,8 @@ export default function DashboardAuthorityPage() {
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={dashboard.entries_by_naka || []}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis dataKey="naka_name" tick={{fontSize: 10}} />
-                      <YAxis tick={{fontSize: 10}} />
+                      <XAxis dataKey="naka_name" tick={{ fontSize: 10 }} />
+                      <YAxis tick={{ fontSize: 10 }} />
                       <Tooltip />
                       <Bar dataKey="entries" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
                     </BarChart>
@@ -428,8 +436,8 @@ export default function DashboardAuthorityPage() {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={dashboard.material_approved_vs_used || []}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                        <XAxis dataKey="material_name" tick={{fontSize: 10}} />
-                        <YAxis tick={{fontSize: 10}} />
+                        <XAxis dataKey="material_name" tick={{ fontSize: 10 }} />
+                        <YAxis tick={{ fontSize: 10 }} />
                         <Tooltip />
                         <Legend />
                         <Bar dataKey="approved_quantity" name="Approved" fill="#3B83F6" />

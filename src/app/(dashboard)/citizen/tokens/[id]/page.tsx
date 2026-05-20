@@ -74,7 +74,7 @@ const Header = ({
 
       <div className="flex items-center gap-2">
         <button className="flex items-center gap-2.5 rounded-lg border border-[#498AA9] bg-[#E9F1F5] px-4 py-2.5 text-sm font-medium text-[#247297] hover:opacity-90 transition-opacity cursor-pointer">
-          <Image src="/dashboard/icons/applications/step-upload.svg" alt="" width={18} height={18} />
+          <Image src="/dashboard/icons/applications/share.svg" alt="" width={18} height={18} />
           Share
         </button>
         <button 
@@ -280,7 +280,7 @@ export default function CitizenTokenDetailsPage() {
                 onClick={() => setIsFilterDrawerOpen(true)}
                 className="flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-3 py-2 text-sm font-medium text-[#343434] cursor-pointer hover:bg-gray-100"
               >
-                <Image src="/dashboard/icons/applications/chevron-down.svg" alt="" width={14} height={14} className="rotate-90 opacity-60" />
+                <Image src="/dashboard/icons/applications/filter.svg" alt="" width={14} height={14} className=" opacity-60" />
                 Filter
               </button>
             </div>
