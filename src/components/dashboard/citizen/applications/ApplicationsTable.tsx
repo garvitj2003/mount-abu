@@ -99,7 +99,7 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
 
     document.addEventListener("mousedown", handleClickOutside);
     window.addEventListener("scroll", handleScroll, true);
-    
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       window.removeEventListener("scroll", handleScroll, true);
@@ -137,7 +137,7 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
 
   const handleWithdraw = async (id: number) => {
     if (!confirm("Are you sure you want to withdraw this application? This action cannot be undone.")) return;
-    
+
     try {
       await ApplicationService.deleteApplication(id);
       queryClient.invalidateQueries({ queryKey: ["applications"] });
@@ -150,7 +150,7 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
 
   const filteredApplications = applications.filter((app) => {
     const matchesFilter = filter === "All" || app.type === filter;
-    const matchesSearch = 
+    const matchesSearch =
       app.applicant_name.toLowerCase().includes(search.toLowerCase()) ||
       app.id.toString().includes(search);
     return matchesFilter && matchesSearch;
@@ -174,7 +174,7 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
       <div className="flex flex-wrap items-center justify-between gap-4">
         {/* Search Input */}
         <div className="flex w-[209px] items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2">
-           <svg
+          <svg
             width="16"
             height="16"
             viewBox="0 0 16 16"
@@ -208,31 +208,28 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
         <div className="flex items-center rounded-lg border border-[#D6D9DE] bg-white overflow-hidden">
           <button
             onClick={() => setFilter("All")}
-            className={`border-r border-[#D6D9DE] px-4 py-2 text-sm font-semibold transition-colors ${
-              filter === "All"
+            className={`border-r border-[#D6D9DE] px-4 py-2 text-sm font-semibold transition-colors ${filter === "All"
                 ? "bg-[#E7F3FF] text-[#0C83FF]"
                 : "bg-white text-[#343434] hover:bg-gray-50"
-            }`}
+              }`}
           >
             All
           </button>
           <button
             onClick={() => setFilter("NEW")}
-            className={`border-r border-[#D6D9DE] px-4 py-2 text-sm font-normal transition-colors ${
-              filter === "NEW"
+            className={`border-r border-[#D6D9DE] px-4 py-2 text-sm font-normal transition-colors ${filter === "NEW"
                 ? "bg-[#E7F3FF] text-[#0C83FF]"
                 : "bg-white text-[#343434] hover:bg-gray-50"
-            }`}
+              }`}
           >
             New Construction
           </button>
           <button
             onClick={() => setFilter("RENOVATION")}
-            className={`px-4 py-2 text-sm font-normal transition-colors ${
-              filter === "RENOVATION"
+            className={`px-4 py-2 text-sm font-normal transition-colors ${filter === "RENOVATION"
                 ? "bg-[#E7F3FF] text-[#0C83FF]"
                 : "bg-white text-[#343434] hover:bg-gray-50"
-            }`}
+              }`}
           >
             Renovation
           </button>
@@ -245,36 +242,36 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
           <thead>
             <tr className="border-b border-[#D6D9DE]">
               <th className="px-2 py-3 text-left">
-                 <div className="flex items-center gap-2 border-r border-[rgba(0,0,0,0.1)] pr-2">
-                    <span className="text-xs font-semibold text-[#333333] opacity-70">Application ID</span>
-                 </div>
+                <div className="flex items-center gap-2 border-r border-[rgba(0,0,0,0.1)] pr-2">
+                  <span className="text-xs font-semibold text-[#333333] opacity-70">Application ID</span>
+                </div>
               </th>
               <th className="px-2 py-3 text-left">
-                  <div className="flex items-center gap-2 border-r border-[rgba(0,0,0,0.1)] pr-2">
-                    <span className="text-xs font-semibold text-[#333333] opacity-70">Application Type</span>
-                  </div>
+                <div className="flex items-center gap-2 border-r border-[rgba(0,0,0,0.1)] pr-2">
+                  <span className="text-xs font-semibold text-[#333333] opacity-70">Application Type</span>
+                </div>
               </th>
               <th className="px-2 py-3 text-left">
-                  <div className="flex items-center gap-2 border-r border-[rgba(0,0,0,0.1)] pr-2">
-                    <span className="text-xs font-semibold text-[#333333] opacity-70">Property Address</span>
-                  </div>
+                <div className="flex items-center gap-2 border-r border-[rgba(0,0,0,0.1)] pr-2">
+                  <span className="text-xs font-semibold text-[#333333] opacity-70">Property Address</span>
+                </div>
               </th>
               <th className="px-2 py-3 text-left">
-                  <div className="flex items-center gap-2 border-r border-[rgba(0,0,0,0.1)] pr-2">
-                    <span className="text-xs font-semibold text-[#333333] opacity-70">Applicant</span>
-                  </div>
+                <div className="flex items-center gap-2 border-r border-[rgba(0,0,0,0.1)] pr-2">
+                  <span className="text-xs font-semibold text-[#333333] opacity-70">Applicant</span>
+                </div>
               </th>
               <th className="px-2 py-3 text-left">
-                  <div className="flex items-center gap-2 border-r border-[rgba(0,0,0,0.1)] pr-2">
-                     <span className="text-xs font-semibold text-[#333333] opacity-70">Current Status</span>
-                  </div>
+                <div className="flex items-center gap-2 border-r border-[rgba(0,0,0,0.1)] pr-2">
+                  <span className="text-xs font-semibold text-[#333333] opacity-70">Current Status</span>
+                </div>
               </th>
               <th className="px-2 py-3 text-left">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-[#333333] opacity-70">Remarks</span>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-[#333333] opacity-70">Remarks</span>
+                </div>
               </th>
-               <th className="px-2 py-3 text-left w-[40px]">
+              <th className="px-2 py-3 text-left w-[40px]">
               </th>
             </tr>
           </thead>
@@ -283,7 +280,7 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
               paginatedApplications.map((app) => (
                 <tr key={app.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                   <td className="px-2 py-3">
-                    <span 
+                    <span
                       onClick={() => handleResume(app)}
                       className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer"
                     >
@@ -292,7 +289,7 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
                   </td>
                   <td className="px-2 py-3">
                     <span className="text-sm font-normal text-[#333333] capitalize">
-                      {app.type.toLowerCase()}
+                      {app.type.toLowerCase() === "new" ? 'New Construction' : app.type.toLowerCase() === "renovation" ? 'Repair & Renovation' : ''}
                     </span>
                   </td>
                   <td className="px-2 py-3">
@@ -314,17 +311,17 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
                     </span>
                   </td>
                   <td className="px-2 py-3 text-center">
-                      <button 
-                        ref={el => { triggerRefs.current[app.id] = el }}
-                        onClick={(e) => handleActionClick(e, app.id)}
-                        className="text-[#343434] hover:bg-gray-200 rounded p-1 cursor-pointer transition-colors"
-                      >
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M8 8.66667C8.36819 8.66667 8.66667 8.36819 8.66667 8C8.66667 7.63181 8.36819 7.33333 8 7.33333C7.63181 7.33333 7.33333 7.63181 7.33333 8C7.33333 8.36819 7.63181 8.66667 8 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M13.3333 8.66667C13.7015 8.66667 14 8.36819 14 8C14 7.63181 13.7015 7.33333 13.3333 7.33333C12.9651 7.33333 12.6667 7.63181 12.6667 8C12.6667 8.36819 12.9651 8.66667 13.3333 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M2.66667 8.66667C3.03486 8.66667 3.33333 8.36819 3.33333 8C3.33333 7.63181 3.03486 7.33333 2.66667 7.33333C2.29848 7.33333 2 7.63181 2 8C2 8.36819 2.29848 8.66667 2.66667 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                      </button>
+                    <button
+                      ref={el => { triggerRefs.current[app.id] = el }}
+                      onClick={(e) => handleActionClick(e, app.id)}
+                      className="text-[#343434] hover:bg-gray-200 rounded p-1 cursor-pointer transition-colors"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 8.66667C8.36819 8.66667 8.66667 8.36819 8.66667 8C8.66667 7.63181 8.36819 7.33333 8 7.33333C7.63181 7.33333 7.33333 7.63181 7.33333 8C7.33333 8.36819 7.63181 8.66667 8 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M13.3333 8.66667C13.7015 8.66667 14 8.36819 14 8C14 7.63181 13.7015 7.33333 13.3333 7.33333C12.9651 7.33333 12.6667 7.63181 12.6667 8C12.6667 8.36819 12.9651 8.66667 13.3333 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M2.66667 8.66667C3.03486 8.66667 3.33333 8.36819 3.33333 8C3.33333 7.63181 3.03486 7.33333 2.66667 7.33333C2.29848 7.33333 2 7.63181 2 8C2 8.36819 2.29848 8.66667 2.66667 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
                   </td>
                 </tr>
               ))
@@ -341,18 +338,18 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
 
       {/* Actions Dropdown */}
       {openDropdownId && (
-        <div 
+        <div
           ref={dropdownRef}
           onClick={(e) => e.stopPropagation()}
-          style={{ 
-            position: 'fixed', 
-            top: dropdownPos.top, 
+          style={{
+            position: 'fixed',
+            top: dropdownPos.top,
             left: dropdownPos.left,
-            minWidth: '180px' 
+            minWidth: '180px'
           }}
           className="z-[9999] flex w-max flex-col gap-2 rounded-lg border border-[#D6D9DE] bg-white p-2 shadow-[0px_6px_12px_rgba(0,0,0,0.15)] animate-in fade-in zoom-in duration-200"
         >
-          <button 
+          <button
             onClick={(e) => {
               e.stopPropagation();
               setOpenDropdownId(null);
@@ -366,7 +363,7 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
             <span className="text-sm font-normal text-[#343434]">View Application</span>
           </button>
           <div className="h-[1px] w-full bg-[#D6D9DE]" />
-          <button 
+          <button
             onClick={(e) => {
               e.stopPropagation();
               handleWithdraw(openDropdownId);

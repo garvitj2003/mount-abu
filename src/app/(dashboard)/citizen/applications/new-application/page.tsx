@@ -24,13 +24,13 @@ export default function NewApplicationPage() {
 
   const isMasterDataLoading = isUserLoading || isWardsLoading || isMaterialsLoading;
 
-  const { 
-    formData, 
-    updateFormData, 
-    currentStep, 
+  const {
+    formData,
+    updateFormData,
+    currentStep,
     setCurrentStep,
     applicationId,
-    setApplicationId 
+    setApplicationId
   } = useApplicationStore();
 
   const [uploading, setUploading] = useState(false);
@@ -45,7 +45,7 @@ export default function NewApplicationPage() {
 
       try {
         const app = await ApplicationService.getApplication(applicationId);
-        
+
         // 1. Populate Form Data
         updateFormData({
           applicant_name: app.applicant_name,
@@ -88,7 +88,7 @@ export default function NewApplicationPage() {
         const requiredDocs = ["AADHAAR", "OWNERSHIP_DOCUMENTS", "PROPERTY_PHOTOS", "PERMISSION_DOCUMENTS"];
         const uploadedDocTypes = app.documents?.map(d => d.document_type) || [];
         const allDocsUploaded = requiredDocs.every(type => uploadedDocTypes.includes(type as any));
-        
+
         const hasMaterials = app.materials && app.materials.length > 0;
 
         if (!allDocsUploaded) {
@@ -105,7 +105,7 @@ export default function NewApplicationPage() {
     };
 
     if (applicationId && dbMaterials.length > 0) { // Wait for dbMaterials to be loaded to map correctly
-        resumeApplication();
+      resumeApplication();
     }
   }, [applicationId, updateFormData, setCurrentStep, dbMaterials]);
 
@@ -125,7 +125,7 @@ export default function NewApplicationPage() {
   });
 
   // Form State Step 3 (Materials)
-  const [materials, setMaterials] = useState<{id: number, name: string, unit: string, qty: string}[]>([]);
+  const [materials, setMaterials] = useState<{ id: number, name: string, unit: string, qty: string }[]>([]);
 
   useEffect(() => {
     if (dbMaterials.length > 0 && materials.length === 0) {
@@ -195,17 +195,17 @@ export default function NewApplicationPage() {
   const onNextStep1 = async () => {
     setErrors({});
     const validation = step1Schema.safeParse(formData);
-    
+
     if (!validation.success) {
       const fieldErrors = validation.error.flatten().fieldErrors;
       const newErrors: Record<string, string> = {};
-      
+
       Object.entries(fieldErrors).forEach(([key, messages]) => {
         if (messages && messages.length > 0) {
           newErrors[key] = messages[0];
         }
       });
-      
+
       setErrors(newErrors);
       return;
     }
@@ -224,11 +224,11 @@ export default function NewApplicationPage() {
       });
       extraMaterials.forEach(m => {
         if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
-          initialRequirements.push({ 
-            material_id: null, 
+          initialRequirements.push({
+            material_id: null,
             custom_name: m.name,
             custom_unit: m.unit,
-            material_qty: Number(m.qty) 
+            material_qty: Number(m.qty)
           });
         }
       });
@@ -256,10 +256,10 @@ export default function NewApplicationPage() {
         { key: "propertyPhotos", type: "PROPERTY_PHOTOS" },
         { key: "permissionDocuments", type: "PERMISSION_DOCUMENTS" },
       ];
-      
+
       let completed = 0;
       let totalFiles = 0;
-      
+
       // Calculate total files
       docTypes.forEach(doc => {
         if (doc.key === "propertyPhotos") {
@@ -302,7 +302,7 @@ export default function NewApplicationPage() {
     if (!applicationId) return;
     try {
       const requirements: any[] = [];
-      
+
       // Standard materials from master data
       materials.forEach(m => {
         if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
@@ -313,11 +313,11 @@ export default function NewApplicationPage() {
       // Additional (Extra) materials
       extraMaterials.forEach(m => {
         if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
-          requirements.push({ 
-            material_id: null, 
+          requirements.push({
+            material_id: null,
             custom_name: m.name,
             custom_unit: m.unit,
-            material_qty: Number(m.qty) 
+            material_qty: Number(m.qty)
           });
         }
       });
@@ -364,11 +364,11 @@ export default function NewApplicationPage() {
           });
           extraMaterials.forEach(m => {
             if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
-              initialRequirements.push({ 
-                material_id: null, 
+              initialRequirements.push({
+                material_id: null,
                 custom_name: m.name,
                 custom_unit: m.unit,
-                material_qty: Number(m.qty) 
+                material_qty: Number(m.qty)
               });
             }
           });
@@ -512,7 +512,7 @@ export default function NewApplicationPage() {
               </select>
               <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"><Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} /></div>
             </div>
-            <button 
+            <button
               type="button"
               onClick={() => setIsWardModalOpen(true)}
               className="w-fit text-[11px] font-medium text-[#0C83FF] hover:underline cursor-pointer"
@@ -529,9 +529,9 @@ export default function NewApplicationPage() {
         <button onClick={onNextStep1} className="flex items-center justify-center gap-2 rounded-lg bg-[#0C83FF] px-6 py-3 text-sm font-medium text-white hover:bg-blue-600 transition-colors font-onest">Next <Image src="/dashboard/icons/applications/step-arrow.svg" alt="next" width={14} height={14} className="invert brightness-0" /></button>
       </div>
 
-      <WardMapModal 
-        isOpen={isWardModalOpen} 
-        onClose={() => setIsWardModalOpen(false)} 
+      <WardMapModal
+        isOpen={isWardModalOpen}
+        onClose={() => setIsWardModalOpen(false)}
       />
     </div>
   );
@@ -559,7 +559,7 @@ export default function NewApplicationPage() {
                 {(files[field.key] && !field.multiple) ? (
                   <div className="flex flex-col items-center gap-2">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-50">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17L4 12" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17L4 12" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                     </div>
                     <span className="text-xs font-medium text-[#343434] truncate max-w-[200px] font-onest">{(files[field.key] as File).name}</span>
                     <button onClick={() => handleFileChange(field.key, null)} className="text-[10px] text-red-500 hover:underline font-onest">Remove</button>
@@ -573,18 +573,18 @@ export default function NewApplicationPage() {
                     </div>
                     <label className="mt-1 flex cursor-pointer items-center justify-center rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-2 text-sm font-normal text-[#343434] hover:bg-gray-200 transition-colors font-onest">
                       Browse File
-                      <input 
-                        type="file" 
-                        className="hidden" 
-                        accept={field.accept} 
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept={field.accept}
                         multiple={field.multiple}
-                        onChange={(e) => handleFileChange(field.key, e.target.files)} 
+                        onChange={(e) => handleFileChange(field.key, e.target.files)}
                       />
                     </label>
                   </>
                 )}
               </div>
-              
+
               {/* Preview List for Multiple Files (Property Photos) */}
               {field.multiple && (files[field.key] as File[])?.length > 0 && (
                 <div className="flex flex-col gap-2 max-h-[138px] overflow-y-auto pr-1">
@@ -652,7 +652,7 @@ export default function NewApplicationPage() {
               </div>
               <div className="flex flex-col flex-1">
                 <div className="flex h-10 items-center justify-between border-b border-[#D6D9DE] pl-2 pr-0"><span className="text-[12px] font-semibold uppercase text-[#333333] opacity-70 font-onest">Estimated Material</span><div className="h-4 w-[1px] bg-black/10" /></div>
-                <div className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><div className="flex h-[34px] w-full items-center justify-between rounded-lg border border-[#D6D9DE] bg-white px-3"><input type="text" placeholder="Enter Qty" className="w-full text-sm text-[#343434] outline-none placeholder:opacity-20 font-onest" value={pendingExtra.qty} onChange={(e) => setPendingExtra({ ...pendingExtra, qty: e.target.value })} /><div className="flex items-center gap-1 border-l border-[#D6D9DE] pl-2 ml-2"><select className="bg-transparent text-sm text-[#343434] outline-none font-onest" value={pendingExtra.unit} onChange={(e) => setPendingExtra({ ...pendingExtra, unit: e.target.value })}><option value="Kg">Kg</option><option value="Nos">Nos</option><option value="Bags">Bags</option></select><Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={8} height={5} /></div></div></div>
+                <div className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><div className="flex h-[34px] w-full items-center justify-between rounded-lg border border-[#D6D9DE] bg-white px-3"><input type="text" placeholder="Enter Qty" className="w-full text-sm text-[#343434] outline-none placeholder:opacity-20 font-onest" value={pendingExtra.qty} onChange={(e) => setPendingExtra({ ...pendingExtra, qty: e.target.value })} /><div className="flex items-center gap-1 border-l border-[#D6D9DE] pl-2 ml-2"><select className="bg-transparent text-sm text-[#343434] outline-none font-onest" value={pendingExtra.unit} onChange={(e) => setPendingExtra({ ...pendingExtra, unit: e.target.value })}><option value="Kg">Kg</option><option value="Nos">Nos</option><option value="Bags">Bags</option></select></div></div></div>
                 {extraMaterials.map(m => (<div key={m.id} className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><span className="text-sm font-medium text-[#343434] font-onest pl-3">{m.qty} {m.unit}</span></div>))}
               </div>
             </div>
@@ -675,7 +675,7 @@ export default function NewApplicationPage() {
       <div className="flex flex-col gap-6">
         <label className="flex cursor-pointer items-center gap-2 group">
           <input type="checkbox" className="hidden" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-          <div className={`flex h-5 w-5 items-center justify-center rounded border transition-all ${agreed ? "border-[#0C83FF] bg-[#0C83FF]" : "border-[#D6D9DE] group-hover:border-[#0C83FF]"}`}>{agreed && (<svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.5 8.5L11 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>)}</div>
+          <div className={`flex h-5 w-5 items-center justify-center rounded border transition-all ${agreed ? "border-[#0C83FF] bg-[#0C83FF]" : "border-[#D6D9DE] group-hover:border-[#0C83FF]"}`}>{agreed && (<svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.5 8.5L11 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>)}</div>
           <span className="text-sm font-medium text-[#343434] font-onest">I agree to Below Mentioned agreement.</span>
         </label>
         <div className="space-y-4 text-[#343434] text-sm leading-relaxed pl-1 font-onest">

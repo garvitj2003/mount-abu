@@ -42,18 +42,18 @@ const DetailItem = ({ label, value }: { label: string; value: string | null | un
   </div>
 );
 
-const Header = ({ 
-  token, 
+const Header = ({
+  token,
   onBack,
   onDownload,
   isDownloading
-}: { 
-  token: TokenDetailResponse; 
+}: {
+  token: TokenDetailResponse;
   onBack: () => void;
   onDownload: () => void;
   isDownloading: boolean;
 }) => {
-  const validity = token.valid_from && token.valid_till 
+  const validity = token.valid_from && token.valid_till
     ? `${new Date(token.valid_from).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} - ${new Date(token.valid_till).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`
     : "—";
 
@@ -77,7 +77,7 @@ const Header = ({
           <Image src="/dashboard/icons/applications/share.svg" alt="" width={18} height={18} />
           Share
         </button>
-        <button 
+        <button
           onClick={onDownload}
           disabled={isDownloading}
           className="flex items-center gap-2.5 rounded-lg border border-[#72B7FF] bg-[#E7F3FF] px-4 py-2.5 text-sm font-medium text-[#0C83FF] hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50"
@@ -98,8 +98,8 @@ const Sidebar = ({ token, sidebarRef }: { token: TokenDetailResponse; sidebarRef
   <div ref={sidebarRef} className="flex w-[238px] flex-col gap-5 rounded-lg border border-[#D6D9DE] bg-white p-4 h-fit sticky top-[80px]">
     {/* QR Code */}
     <div className="relative aspect-square w-full rounded border border-[#D6D9DE] p-4 bg-white flex items-center justify-center">
-      <QRCodeSVG 
-        value={token.transport_code} 
+      <QRCodeSVG
+        value={token.transport_code}
         size={180}
         level="H"
         includeMargin={false}
@@ -110,16 +110,16 @@ const Sidebar = ({ token, sidebarRef }: { token: TokenDetailResponse; sidebarRef
       <DetailItem label="Application Number" value={token.application_number} />
       <DetailItem label="Applicant Name" value={token.applicant_name} />
       <DetailItem label="Property Address" value={token.property_address} />
-      
+
       <div className="flex gap-4">
         <DetailItem label="Property Usage" value={token.property_usage} />
-        <DetailItem label="Type of Work" value={token.application_type} />
+        <DetailItem label="Type of Work" value={token.application_type.toLowerCase() === "new" ? 'New Construction' : token.application_type.toLowerCase() === "renovation" ? 'Repair & Renovation' : ''} />
       </div>
 
       <div className="h-px w-full bg-[#D6D9DE] my-1" />
-      
+
       <p className="text-[12px] font-medium text-[#498AA9]">Authority & System Information</p>
-      
+
       <DetailItem label="Issued By" value={token.authority.issued_by} />
       <DetailItem label="Issued On" value={token.authority.issued_on ? new Date(token.authority.issued_on).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "—"} />
       <DetailItem label="Token Generated From" value={token.authority.token_generated_from} />
@@ -127,11 +127,11 @@ const Sidebar = ({ token, sidebarRef }: { token: TokenDetailResponse; sidebarRef
   </div>
 );
 
-const TableRow = ({ 
-  entry, onClick 
-}: { 
-  entry: components["schemas"]["backend__schemas__response__application__VehicleEntryResponse"]; 
-  onClick: () => void 
+const TableRow = ({
+  entry, onClick
+}: {
+  entry: components["schemas"]["backend__schemas__response__application__VehicleEntryResponse"];
+  onClick: () => void
 }) => (
   <tr className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
     <td className="p-3 text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer" onClick={onClick}>
@@ -151,7 +151,7 @@ export default function CitizenTokenDetailsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const transportCode = params.id as string;
-  
+
   const handleBack = () => {
     const paramsString = searchParams.toString();
     if (paramsString) {
@@ -169,7 +169,7 @@ export default function CitizenTokenDetailsPage() {
   const [isDownloading, setIsDownloading] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const pdfRef = useRef<HTMLDivElement>(null);
-  
+
   const { data: token, isLoading, error } = useTokenDetail(transportCode);
 
   const handleEntryClick = (id: number) => {
@@ -179,17 +179,17 @@ export default function CitizenTokenDetailsPage() {
 
   const handleDownload = async () => {
     if (!pdfRef.current || !token) return;
-    
+
     try {
       setIsDownloading(true);
-      
+
       const canvas = await html2canvas(pdfRef.current, {
         scale: 1.5, // Reduced from 2 to 1.5 for smaller file size
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
       });
-      
+
       // Use JPEG with 0.7 compression instead of PNG
       const imgData = canvas.toDataURL("image/jpeg", 0.7);
       const pdf = new jsPDF({
@@ -197,7 +197,7 @@ export default function CitizenTokenDetailsPage() {
         unit: "px",
         format: [canvas.width / 1.5, canvas.height / 1.5],
       });
-      
+
       pdf.addImage(imgData, "JPEG", 0, 0, canvas.width / 1.5, canvas.height / 1.5, undefined, 'FAST');
       pdf.save(`token-${token.token_number}.pdf`);
     } catch (err) {
@@ -222,9 +222,9 @@ export default function CitizenTokenDetailsPage() {
 
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest relative overflow-y-auto">
-      <Header 
-        token={token} 
-        onBack={handleBack} 
+      <Header
+        token={token}
+        onBack={handleBack}
         onDownload={handleDownload}
         isDownloading={isDownloading}
       />
@@ -239,9 +239,8 @@ export default function CitizenTokenDetailsPage() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab as any)}
-                className={`relative px-4 py-4 text-sm font-medium transition-colors cursor-pointer ${
-                  activeTab === tab ? "text-[#0C83FF]" : "text-[#343434] opacity-60 hover:opacity-100"
-                }`}
+                className={`relative px-4 py-4 text-sm font-medium transition-colors cursor-pointer ${activeTab === tab ? "text-[#0C83FF]" : "text-[#343434] opacity-60 hover:opacity-100"
+                  }`}
               >
                 {tab}
                 {activeTab === tab && (
@@ -264,19 +263,19 @@ export default function CitizenTokenDetailsPage() {
             <div className="flex items-center justify-between gap-4">
               <div className="flex w-[209px] items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-60">
-                  <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <input 
-                  type="text" 
-                  placeholder="Search" 
+                <input
+                  type="text"
+                  placeholder="Search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full border-none bg-transparent p-0 text-sm font-normal text-[#343434] outline-none placeholder:text-[#343434]/60 focus:ring-0" 
+                  className="w-full border-none bg-transparent p-0 text-sm font-normal text-[#343434] outline-none placeholder:text-[#343434]/60 focus:ring-0"
                 />
               </div>
-              
-              <button 
+
+              <button
                 onClick={() => setIsFilterDrawerOpen(true)}
                 className="flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-3 py-2 text-sm font-medium text-[#343434] cursor-pointer hover:bg-gray-100"
               >
@@ -300,13 +299,13 @@ export default function CitizenTokenDetailsPage() {
                   </thead>
                   <tbody>
                     {token.vehicle_entries
-                      .filter(entry => 
-                        !search || 
+                      .filter(entry =>
+                        !search ||
                         entry.vehicle_number?.toLowerCase().includes(search.toLowerCase()) ||
                         entry.material_name?.toLowerCase().includes(search.toLowerCase())
                       )
                       .map((entry, idx) => (
-                        <TableRow 
+                        <TableRow
                           key={idx}
                           entry={entry}
                           onClick={() => handleEntryClick(entry.id)}
@@ -350,12 +349,12 @@ export default function CitizenTokenDetailsPage() {
         </div>
       </div>
 
-      <VehicleFilterDrawer 
+      <VehicleFilterDrawer
         isOpen={isFilterDrawerOpen}
         onClose={() => setIsFilterDrawerOpen(false)}
       />
 
-      <VehicleDetailDrawer 
+      <VehicleDetailDrawer
         isOpen={isDetailDrawerOpen}
         onClose={() => {
           setIsDetailDrawerOpen(false);

@@ -12,7 +12,7 @@ import { useWards } from "@/hooks/useMasterData";
 import CustomDropdown from "@/components/ui/CustomDropdown";
 import { usePagination } from "@/hooks/usePagination";
 
-type ApplicationStatus = 
+type ApplicationStatus =
   | "PENDING"
   | "SUBMITTED"
   | "FORWARDED"
@@ -79,17 +79,17 @@ export default function AuthorityApplicationsPage() {
   const { data: user } = useUser();
   const { data: wards = [] } = useWards();
   const { page, limit, setPage, setLimit } = usePagination();
-  
+
   const [selectedCategory, setSelectedCategory] = useState<"All" | "New" | "Renovation">("All");
   const [selectedFlag, setSelectedFlag] = useState<ApplicationFlag>("ALL");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedWardId, setSelectedWardId] = useState<number | null>(null);
   const [selectedPropertyUsage, setSelectedPropertyUsage] = useState<string>("");
-  
+
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [dropdownPos, setDropdownPosition] = useState({ top: 0, left: 0 });
-  
+
   const dropdownRef = useRef<HTMLDivElement>(null);
   const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
@@ -135,8 +135,8 @@ export default function AuthorityApplicationsPage() {
   }, [user?.role]);
 
   const canViewAll = useMemo(() => {
-     if (!user?.role) return false;
-     return ["SUPERADMIN", "COMMISSIONER", "NODAL_OFFICER"].includes(user.role);
+    if (!user?.role) return false;
+    return ["SUPERADMIN", "COMMISSIONER", "NODAL_OFFICER"].includes(user.role);
   }, [user?.role]);
 
   const isNodalOrAdmin = useMemo(() => {
@@ -169,14 +169,14 @@ export default function AuthorityApplicationsPage() {
         setOpenDropdownId(null);
       }
     };
-    
+
     const handleScroll = () => {
       setOpenDropdownId(null);
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     window.addEventListener("scroll", handleScroll, true);
-    
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       window.removeEventListener("scroll", handleScroll, true);
@@ -235,14 +235,14 @@ export default function AuthorityApplicationsPage() {
       {/* Content */}
       <div className="p-5">
         <div className="flex w-full flex-col gap-4 rounded-lg border border-[#D6D9DE] bg-white p-4">
-          
+
           {/* Filters Row */}
           <div className="flex flex-wrap items-center justify-between gap-4">
             {/* Search */}
             <div className="flex w-[209px] items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-60">
-                <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <input
                 type="text"
@@ -296,11 +296,10 @@ export default function AuthorityApplicationsPage() {
                       setSelectedFlag("ALL");
                       setPage(1);
                     }}
-                    className={`h-[38px] px-4 text-sm rounded-lg border transition-colors flex items-center justify-center ${
-                      selectedCategory === "All"
-                        ? "bg-[#E7F3FF] border-[#0C83FF] text-[#0C83FF] font-semibold"
-                        : "bg-white border-[#D6D9DE] text-[#343434] hover:bg-gray-50"
-                    }`}
+                    className={`h-[38px] px-4 text-sm rounded-lg border transition-colors flex items-center justify-center ${selectedCategory === "All"
+                      ? "bg-[#E7F3FF] border-[#0C83FF] text-[#0C83FF] font-semibold"
+                      : "bg-white border-[#D6D9DE] text-[#343434] hover:bg-gray-50"
+                      }`}
                   >
                     All
                   </button>
@@ -375,7 +374,7 @@ export default function AuthorityApplicationsPage() {
                   applications.map((app) => (
                     <tr key={app.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                       <td className="px-2 py-3">
-                        <span 
+                        <span
                           onClick={() => {
                             const params = new URLSearchParams(window.location.search);
                             router.push(`/authority/applications/${app.id}?${params.toString()}`);
@@ -389,7 +388,7 @@ export default function AuthorityApplicationsPage() {
                         <span className="text-sm font-normal text-[#343434]">{app.applicant_name}</span>
                       </td>
                       <td className="px-2 py-3">
-                        <span className="text-sm font-normal text-[#343434] capitalize">{app.type.toLowerCase()}</span>
+                        <span className="text-sm font-normal text-[#343434] capitalize">{app.type.toLowerCase() === "new" ? 'New Construction' : app.type.toLowerCase() === "renovation" ? 'Repair & Renovation' : ''}</span>
                       </td>
                       <td className="px-2 py-3">
                         <span className="text-sm font-normal text-[#343434]">{app.ward_zone || "—"}</span>
@@ -406,15 +405,15 @@ export default function AuthorityApplicationsPage() {
                         <StatusBadge status={app.status as ApplicationStatus} />
                       </td>
                       <td className="px-2 py-3 text-center">
-                        <button 
+                        <button
                           ref={el => { triggerRefs.current[app.id.toString()] = el }}
                           onClick={(e) => handleActionClick(e, app.id.toString())}
                           className="text-[#343434] hover:bg-gray-200 rounded p-1 transition-colors"
                         >
                           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path d="M8 8.66667C8.36819 8.66667 8.66667 8.36819 8.66667 8C8.66667 7.63181 8.36819 7.33333 8 7.33333C7.63181 7.33333 7.33333 7.63181 7.33333 8C7.33333 8.36819 7.63181 8.66667 8 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M13.3333 8.66667C13.7015 8.66667 14 8.36819 14 8C14 7.63181 13.7015 7.33333 13.3333 7.33333C12.9651 7.33333 12.6667 7.63181 12.6667 8C12.6667 8.36819 12.9651 8.66667 13.3333 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M2.66667 8.66667C3.03486 8.66667 3.33333 8.36819 3.33333 8C3.33333 7.63181 3.03486 7.33333 2.66667 7.33333C2.29848 7.33333 2 7.63181 2 8C2 8.36819 2.29848 8.66667 2.66667 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M8 8.66667C8.36819 8.66667 8.66667 8.36819 8.66667 8C8.66667 7.63181 8.36819 7.33333 8 7.33333C7.63181 7.33333 7.33333 7.63181 7.33333 8C7.33333 8.36819 7.63181 8.66667 8 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M13.3333 8.66667C13.7015 8.66667 14 8.36819 14 8C14 7.63181 13.7015 7.33333 13.3333 7.33333C12.9651 7.33333 12.6667 7.63181 12.6667 8C12.6667 8.36819 12.9651 8.66667 13.3333 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M2.66667 8.66667C3.03486 8.66667 3.33333 8.36819 3.33333 8C3.33333 7.63181 3.03486 7.33333 2.66667 7.33333C2.29848 7.33333 2 7.63181 2 8C2 8.36819 2.29848 8.66667 2.66667 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </button>
                       </td>
@@ -433,34 +432,34 @@ export default function AuthorityApplicationsPage() {
 
           {/* Actions Dropdown */}
           {openDropdownId && (
-            <div 
+            <div
               ref={dropdownRef}
               onClick={(e) => e.stopPropagation()}
-              style={{ 
-                position: 'fixed', 
-                top: dropdownPos.top, 
+              style={{
+                position: 'fixed',
+                top: dropdownPos.top,
                 left: dropdownPos.left,
-                minWidth: '195px' 
+                minWidth: '195px'
               }}
               className="z-[9999] flex w-max flex-col gap-2 rounded-lg border border-[#D6D9DE] bg-white p-2 shadow-[0px_6px_12px_rgba(0,0,0,0.15)] animate-in fade-in zoom-in duration-200"
             >
               {(() => {
                 const app = applications.find(a => a.id.toString() === openDropdownId);
                 if (!app) return null;
-                
+
                 const isUnderReview = app.status === "SUBMITTED" || app.status === "FORWARDED";
                 const currentParams = new URLSearchParams(window.location.search).toString();
-                
+
                 return (
                   <>
-                    <button 
+                    <button
                       onClick={() => router.push(`/authority/applications/${app.id}?${currentParams}`)}
                       className="flex h-10 w-full items-center gap-[11px] rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer text-sm font-normal text-[#343434]"
                     >
                       <Image src="/dashboard/icons/edit-pencil.svg" alt="View" width={24} height={24} />
                       View Application
                     </button>
-                    <button 
+                    <button
                       onClick={() => router.push(`/authority/applications/${app.id}?${currentParams}${currentParams ? '&' : ''}comment=true`)}
                       className="flex h-10 w-full items-center gap-[11px] rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer text-sm font-normal text-[#343434]"
                     >
@@ -468,7 +467,7 @@ export default function AuthorityApplicationsPage() {
                       Comment
                     </button>
                     {isNodalOrAdmin && isUnderReview && (
-                      <button 
+                      <button
                         onClick={() => handleQuickApprove(app.id)}
                         className="flex h-10 w-full items-center gap-[11px] rounded-lg p-2 hover:bg-[#99D4C2]/20 transition-colors cursor-pointer text-sm font-medium text-[#059669]"
                       >

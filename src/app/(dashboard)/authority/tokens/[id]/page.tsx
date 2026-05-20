@@ -129,7 +129,7 @@ const Sidebar = ({ token }: { token: TokenDetailResponse }) => (
       
       <div className="flex gap-4">
         <DetailItem label="Property Usage" value={token.property_usage} />
-        <DetailItem label="Type of Work" value={token.application_type} />
+        <DetailItem label="Type of Work" value={token.application_type.toLowerCase() === "new" ? 'New Construction' : token.application_type.toLowerCase() === "renovation" ? 'Repair & Renovation' : '' } />
       </div>
 
       <div className="h-px w-full bg-[#D6D9DE] my-1" />

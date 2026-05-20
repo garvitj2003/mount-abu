@@ -113,7 +113,7 @@ const DetailsCard = ({ app }: { app: ApplicationResponse }) => {
           <div className="grid grid-cols-3 gap-5">
             <DetailItem label="Is this property on agriculture land?" value={app.is_agriculture_land} />
             <DetailItem label="Property usage" value={app.property_usage} />
-            <DetailItem label="Type of work" value={app.type} />
+            {/* <DetailItem label="Type of work" value={app.type} /> */}
           </div>
 
           {/* Row 3 */}
@@ -131,7 +131,7 @@ const DetailsCard = ({ app }: { app: ApplicationResponse }) => {
 
           {/* Row 5 */}
           <div className="grid grid-cols-2 gap-5">
-            <DetailItem label="Type of work" value={app.type} />
+            <DetailItem label="Type of work" value={app.type.toLowerCase() === "new" ? 'New Construction' : app.type.toLowerCase() === "renovation" ? 'Repair & Renovation' : ''} />
             <DetailItem label="Work Description" value={app.work_description} />
           </div>
         </div>
