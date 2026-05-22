@@ -32,7 +32,9 @@ const ROLE_OPTIONS: { label: string; value: UserRole }[] = [
 export default function NewUserDrawer({ isOpen, onClose, user }: NewUserDrawerProps) {
   const { mutateAsync: createUser, isPending: isCreating } = useCreateUser();
   const { mutateAsync: updateUser, isPending: isUpdating } = useUpdateUser();
-  
+  const [showPassword, setShowPassword] = useState(false);
+
+
   const isPending = isCreating || isUpdating;
   const isEdit = !!user;
 
@@ -71,10 +73,10 @@ export default function NewUserDrawer({ isOpen, onClose, user }: NewUserDrawerPr
     if (!formData.name.trim()) newErrors.name = "Full Name is required";
     if (!formData.mobile.trim()) newErrors.mobile = "Mobile Number is required";
     else if (!/^\d{10}$/.test(formData.mobile)) newErrors.mobile = "Mobile must be 10 digits";
-    
+
     // Username/Password are optional in schema but usually good to have validation if entered
     if (!isEdit && formData.password && formData.password.length < 6) {
-        newErrors.password = "Password must be at least 6 chars";
+      newErrors.password = "Password must be at least 6 chars";
     }
 
     setErrors(newErrors);
@@ -147,11 +149,11 @@ export default function NewUserDrawer({ isOpen, onClose, user }: NewUserDrawerPr
 
             {/* Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-5">
-              
+
               {/* Full Name */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#343434]">Full Name</label>
-                <input 
+                <input
                   type="text"
                   placeholder="Rajesh Kumar"
                   className={`w-full h-[44px] rounded-lg border ${errors.name ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40`}
@@ -164,7 +166,7 @@ export default function NewUserDrawer({ isOpen, onClose, user }: NewUserDrawerPr
               {/* Username */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#343434]">Username</label>
-                <input 
+                <input
                   type="text"
                   placeholder="rajesh.kumar"
                   className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
@@ -177,35 +179,66 @@ export default function NewUserDrawer({ isOpen, onClose, user }: NewUserDrawerPr
               {/* Mobile Number */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#343434]">Mobile Number</label>
-                <input 
+                <input
                   type="text"
                   placeholder="98XXXXXXXX"
                   maxLength={10}
                   className={`w-full h-[44px] rounded-lg border ${errors.mobile ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40`}
                   value={formData.mobile}
                   onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, '');
-                      setFormData({ ...formData, mobile: val });
+                    const val = e.target.value.replace(/\D/g, '');
+                    setFormData({ ...formData, mobile: val });
                   }}
                 />
-                 {errors.mobile && <p className="text-xs text-red-500">{errors.mobile}</p>}
+                {errors.mobile && <p className="text-xs text-red-500">{errors.mobile}</p>}
               </div>
 
-               {/* Password */}
-               {!isEdit && (
-                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-[#343434]">Password</label>
-                  <input 
-                    type="password"
-                    placeholder="Enter password"
-                    className={`w-full h-[44px] rounded-lg border ${errors.password ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40`}
-                    value={formData.password || ""}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  />
-                  {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
-                  <p className="text-xs text-gray-500">Optional. User can set via OTP if left blank.</p>
+              {/* Password */}
+              {!isEdit && (
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-[#343434]">
+                    Password
+                  </label>
+
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter password"
+                      className={`w-full h-[44px] rounded-lg border pr-12 pl-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40 ${errors.password ? "border-red-500" : "border-[#D6D9DE]"
+                        }`}
+                      value={formData.password || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, password: e.target.value })
+                      }
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
+                    >
+                      <Image
+                        src={
+                          showPassword
+                            ? "/dashboard/icons/login/visibilityClose.svg"
+                            : "/dashboard/icons/login/visibility.svg"
+                        }
+                        alt="Toggle Password"
+                        width={22}
+                        height={22}
+                      />
+                    </button>
+                  </div>
+
+                  {errors.password && (
+                    <p className="text-xs text-red-500">{errors.password}</p>
+                  )}
+
+                  <p className="text-xs text-gray-500">
+                    Optional. User can set via OTP if left blank.
+                  </p>
                 </div>
-               )}
+              )}
 
               {/* Role */}
               <div className="space-y-1.5">
@@ -224,13 +257,13 @@ export default function NewUserDrawer({ isOpen, onClose, user }: NewUserDrawerPr
 
             {/* Footer */}
             <div className="flex items-center justify-end gap-3 border-t border-[#D6D9DE] p-4 bg-white">
-              <button 
+              <button
                 onClick={onClose}
                 className="h-[44px] rounded-lg border border-[#D6D9DE] bg-white px-6 text-sm font-medium text-[#343434] hover:bg-gray-50 transition-colors"
               >
                 Close
               </button>
-              <button 
+              <button
                 onClick={handleSubmit}
                 disabled={isPending}
                 className="h-[44px] rounded-lg bg-[#0C83FF] px-8 text-sm font-medium text-white hover:bg-blue-600 transition-colors disabled:opacity-50"

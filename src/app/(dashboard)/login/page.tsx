@@ -328,14 +328,14 @@ export default function LoginPage() {
             <button
               onClick={handleLoginWithOtp}
               disabled={isLoading}
-              className="flex h-[54px] w-full items-center justify-center rounded-lg bg-[#0C83FF] text-sm font-normal text-white hover:bg-blue-600 transition-colors disabled:opacity-70"
+              className="cursor-pointer flex h-[54px] w-full items-center justify-center rounded-lg bg-[#0C83FF] text-sm font-normal text-white hover:bg-blue-600 transition-colors disabled:opacity-70"
             >
               {isLoading ? "Verifying..." : "Login Now"}
             </button>
 
             <button
               onClick={() => { setView("citizen"); setError(null); }}
-              className="flex h-[54px] w-full items-center justify-center gap-2 rounded-lg border border-[#C9C9C9] text-sm font-normal text-[#343434] hover:bg-gray-50 transition-colors"
+              className="cursor-pointer flex h-[54px] w-full items-center justify-center gap-2 rounded-lg border border-[#C9C9C9] text-sm font-normal text-[#343434] hover:bg-gray-50 transition-colors"
             >
               <Image src="/dashboard/icons/login/back-arrow.svg" alt="" width={20} height={20} />
               Change contact number
