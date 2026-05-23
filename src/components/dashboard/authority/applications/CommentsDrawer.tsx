@@ -168,14 +168,14 @@ export default function CommentsDrawer({
                 />
                 <div className="flex items-center gap-2 border-l border-[#D6D9DE] pl-3">
                   <button className="p-1 hover:bg-gray-200 rounded transition-colors">
-                    <Image src="/dashboard/icons/applications/step-upload.svg" alt="Attach" width={20} height={20} className="opacity-60" />
+                    <Image src="/dashboard/icons/applications/fileattach.svg" alt="Attach" width={20} height={20} className="opacity-60" />
                   </button>
                   <button 
                     onClick={handleSend}
                     disabled={!newComment.trim() || isSubmitting}
                     className="flex h-8 w-8 items-center justify-center rounded-full text-white transition-colors bg-[#0C83FF] hover:bg-blue-600 disabled:opacity-50"
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="rotate-45 ml-[-2px] mt-[-1px]">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="-rotate-45 ml-[-2px] mt-[-1px]">
                       <path d="M2.01 21L23 12L2.01 3L2 10L17 12L2 14L2.01 21Z" fill="currentColor" />
                     </svg>
                   </button>

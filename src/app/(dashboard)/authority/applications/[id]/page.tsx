@@ -23,14 +23,14 @@ const isImage = (doc: components["schemas"]["ApplicationDocumentResponse"]) => {
   return /\.(jpg|jpeg|png|webp|gif)$/i.test(doc.access_url || doc.document_path || "");
 };
 
-const ActionButton = ({ 
-  label, 
-  icon, 
-  onClick, 
-  variant = "secondary" 
-}: { 
-  label: string; 
-  icon?: string; 
+const ActionButton = ({
+  label,
+  icon,
+  onClick,
+  variant = "secondary"
+}: {
+  label: string;
+  icon?: string;
   onClick?: () => void;
   variant?: "primary" | "secondary" | "danger" | "warning" | "success";
 }) => {
@@ -43,7 +43,7 @@ const ActionButton = ({
   };
 
   return (
-    <button 
+    <button
       onClick={onClick}
       className={`flex items-center justify-center gap-2.5 rounded-lg border border-solid px-4 py-2.5 text-sm font-medium transition-colors hover:opacity-90 ${styles[variant]}`}
     >
@@ -53,18 +53,18 @@ const ActionButton = ({
   );
 };
 
-const Header = ({ 
-  app, 
-  userRole, 
+const Header = ({
+  app,
+  userRole,
   onBack,
   onAction,
   onCommentClick,
   onRejectClick,
   onObjectionClick,
   onAddPhaseClick
-}: { 
-  app: ApplicationResponse; 
-  userRole?: UserRole; 
+}: {
+  app: ApplicationResponse;
+  userRole?: UserRole;
   onBack: () => void;
   onAction: (action: WorkflowAction, remarks?: string) => void;
   onCommentClick?: () => void;
@@ -74,10 +74,10 @@ const Header = ({
 }) => {
   const warning = useMemo(() => {
     if (userRole !== 'SUPERADMIN' && userRole !== 'JEN') return null;
-    
+
     const noInspection = app.inspections.length == 0;
     const noEstimates = app.phase_materials.length == 0;
-    
+
     if (noInspection) return "Missing Geo-Photos & JEN Estimates";
     if (noEstimates) return "Pending JEN Estimates";
     return null;
@@ -104,10 +104,10 @@ const Header = ({
         </div>
       </div>
 
-      <ApplicationActionPanel 
-        app={app} 
-        userRole={userRole} 
-        onAction={onAction} 
+      <ApplicationActionPanel
+        app={app}
+        userRole={userRole}
+        onAction={onAction}
         onCommentClick={onCommentClick}
         onRejectClick={onRejectClick}
         onObjectionClick={onObjectionClick}
@@ -130,26 +130,26 @@ const Sidebar = ({ app }: { app: ApplicationResponse }) => {
   return (
     <div className="flex w-[238px] flex-col gap-5 rounded-lg border border-[#D6D9DE] bg-white p-5 h-fit sticky top-[80px]">
       <h2 className="text-[12px] font-bold text-[#343434] uppercase tracking-wider">Application Details</h2>
-      
+
       <div className="flex flex-col gap-5">
         <DetailItem label="Applicant name" value={app.applicant_name} />
         <DetailItem label="Father's name" value={app.father_name} />
         <DetailItem label="Contact Number" value={app.mobile} />
         <DetailItem label="Email" value={app.email} />
-        
+
         <div className="h-px w-full bg-[#D6D9DE] my-1" />
-        
+
         <DetailItem label="Current Address" value={app.current_address} />
         <DetailItem label="Construction Address" value={app.property_address} />
-        
+
         <div className="h-px w-full bg-[#D6D9DE] my-1" />
-        
+
         <DetailItem label="Agriculture Land" value={app.is_agriculture_land} />
         <DetailItem label="Property Usage" value={app.property_usage} />
-        <DetailItem label="Type of Work" value={app.type} />
-        
+        <DetailItem label="Type of Work" value={app.type.toLowerCase() === "new" ? 'New Construction' : app.type.toLowerCase() === "renovation" ? 'Repair & Renovation' : ''} />
+
         <div className="h-px w-full bg-[#D6D9DE] my-1" />
-        
+
         <DetailItem label="Location" value={app.ward_zone} />
         <DetailItem label="Department" value={app.department_id?.toString()} />
         <DetailItem label="Ward" value={app.ward_id?.toString()} />
@@ -220,7 +220,7 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
   }, [app.documents]);
 
   const inspectionPhotos = useMemo(() => {
-    return app.inspections?.flatMap(ins => 
+    return app.inspections?.flatMap(ins =>
       (ins.access_urls || []).map(url => ({
         url,
         remarks: ins.remarks,
@@ -258,16 +258,41 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
         <h3 className="text-[12px] font-semibold text-[#4BB5AB] uppercase">Geo-Tagged Pictures (from Inspection)</h3>
         <div className="grid grid-cols-4 gap-3">
           {inspectionPhotos.map((photo, idx) => (
-            <div key={idx} className="aspect-video relative rounded-lg border border-[#D6D9DE] overflow-hidden bg-gray-100 group cursor-pointer hover:border-[#0C83FF] transition-all">
-               <Image src={photo.url || "/sample/application-main.png"} alt="Geo-tagged" fill unoptimized className="object-cover" />
-               <div className="absolute bottom-2 right-2 p-1 bg-white rounded-full shadow-sm">
-                  <Image src="/dashboard/icons/applications/visibility-public.svg" alt="" width={12} height={12} />
-               </div>
-               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity p-2 flex flex-col justify-end">
-                  <p className="text-[8px] text-white font-medium line-clamp-2">{photo.remarks}</p>
-                  <p className="text-[7px] text-white/70 italic">By {photo.inspector} on {new Date(photo.date).toLocaleDateString()}</p>
-               </div>
-            </div>
+            <a
+              key={idx}
+              href={photo.url || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="aspect-video relative rounded-lg border border-[#D6D9DE] overflow-hidden bg-gray-100 group cursor-pointer hover:border-[#0C83FF] transition-all block"
+            >
+              <Image
+                src={photo.url || "/sample/application-main.png"}
+                alt="Geo-tagged"
+                fill
+                unoptimized
+                className="object-cover"
+              />
+
+              <div className="absolute bottom-2 right-2 p-1 bg-white rounded-full shadow-sm">
+                <Image
+                  src="/dashboard/icons/applications/visibility-public.svg"
+                  alt=""
+                  width={12}
+                  height={12}
+                />
+              </div>
+
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity p-2 flex flex-col justify-end">
+                <p className="text-[8px] text-white font-medium line-clamp-2">
+                  {photo.remarks}
+                </p>
+
+                <p className="text-[7px] text-white/70 italic">
+                  By {photo.inspector} on{" "}
+                  {new Date(photo.date).toLocaleDateString()}
+                </p>
+              </div>
+            </a>
           ))}
           {!inspectionPhotos.length && (
             <p className="text-xs text-gray-400 col-span-4 italic py-4">No inspection pictures available.</p>
@@ -286,17 +311,16 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
                 <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Estimated Material</th>
                 <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Estimated by JEN</th>
                 {Array.from({ length: app.num_stages || 0 }).map((_, i) => (
-                  <th 
-                    key={i} 
-                    className={`p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE] last:border-r-0 ${
-                      [
-                        "bg-[#E7F3FF]", // Phase 1
-                        "bg-[#FFEEB4]", // Phase 2
-                        "bg-[#E6F7F5]", // Phase 3
-                        "bg-[#FFF1F0]", // Phase 4
-                        "bg-[#F0F7FF]", // Phase 5
-                      ][i % 5]
-                    }`}
+                  <th
+                    key={i}
+                    className={`p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE] last:border-r-0 ${[
+                      "bg-[#E7F3FF]", // Phase 1
+                      "bg-[#FFEEB4]", // Phase 2
+                      "bg-[#E6F7F5]", // Phase 3
+                      "bg-[#FFF1F0]", // Phase 4
+                      "bg-[#F0F7FF]", // Phase 5
+                    ][i % 5]
+                      }`}
                   >
                     Phase {i + 1}
                   </th>
@@ -318,9 +342,8 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
                       {mat.quantity} Units
                     </td>
                     <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">
-                      <div className={`rounded border px-3 py-1.5 text-xs font-bold ${
-                        jenTotal > 0 ? "bg-white border-[#D6D9DE] text-[#0C83FF]" : "bg-gray-50 border-transparent text-gray-400"
-                      }`}>
+                      <div className={`rounded border px-3 py-1.5 text-xs font-bold ${jenTotal > 0 ? "bg-white border-[#D6D9DE] text-[#0C83FF]" : "bg-gray-50 border-transparent text-gray-400"
+                        }`}>
                         {jenTotal > 0 ? `${jenTotal} Units` : "—"}
                       </div>
                     </td>
@@ -331,17 +354,16 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
                       )?.quantity;
 
                       return (
-                        <td 
-                          key={i} 
-                          className={`p-3 text-sm font-medium text-black border-r border-[#D6D9DE] last:border-r-0 ${
-                            [
-                              "bg-[#E7F3FF]",
-                              "bg-[#FFEEB4]",
-                              "bg-[#E6F7F5]",
-                              "bg-[#FFF1F0]",
-                              "bg-[#F0F7FF]",
-                            ][i % 5]
-                          }`}
+                        <td
+                          key={i}
+                          className={`p-3 text-sm font-medium text-black border-r border-[#D6D9DE] last:border-r-0 ${[
+                            "bg-[#E7F3FF]",
+                            "bg-[#FFEEB4]",
+                            "bg-[#E6F7F5]",
+                            "bg-[#FFF1F0]",
+                            "bg-[#F0F7FF]",
+                          ][i % 5]
+                            }`}
                         >
                           {phaseQty !== undefined ? `${phaseQty} Units` : "—"}
                         </td>
@@ -352,8 +374,8 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
               })}
               {!app.materials?.length && (
                 <tr>
-                  <td 
-                    colSpan={3 + (app.num_stages || 0)} 
+                  <td
+                    colSpan={3 + (app.num_stages || 0)}
                     className="p-10 text-center text-gray-400 text-sm italic"
                   >
                     No material requirements specified.
@@ -385,7 +407,7 @@ export default function ApplicationDetailsPage() {
   const router = useRouter();
   const id = Number(params.id);
   const { data: user } = useUser();
-  
+
   const handleBack = () => {
     const paramsString = searchParams.toString();
     if (paramsString) {
@@ -398,7 +420,7 @@ export default function ApplicationDetailsPage() {
   const workflowAction = useWorkflowAction();
   const addPhaseMaterials = useAddPhaseMaterials();
   const { mutateAsync: addComment } = useAddComment();
-  
+
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
 
   useEffect(() => {
@@ -414,20 +436,20 @@ export default function ApplicationDetailsPage() {
   const [isAddPhaseOpen, setIsAddPhaseOpen] = useState(false);
 
   const handleAction = async (
-    action: WorkflowAction, 
+    action: WorkflowAction,
     remarks?: string,
     extra?: { num_stages?: number; phase_materials?: components["schemas"]["PhaseMaterialEntry"][] }
   ) => {
     try {
       // 1. Call Workflow Action API
-      await workflowAction.mutateAsync({ 
-        id, 
-        data: { 
-          action, 
+      await workflowAction.mutateAsync({
+        id,
+        data: {
+          action,
           remarks: remarks || `Action ${action} performed by ${user?.role}`,
           ...(action === "GENERATE_TOKENS" ? { num_stages: app?.inspections[0].recommended_phases } : {}),
           ...extra
-        } 
+        }
       });
 
       // 2. If it's an Objection, also call the Comment API
@@ -468,10 +490,10 @@ export default function ApplicationDetailsPage() {
 
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest relative overflow-y-auto">
-      <Header 
-        app={app} 
-        userRole={user?.role as UserRole} 
-        onBack={handleBack} 
+      <Header
+        app={app}
+        userRole={user?.role as UserRole}
+        onBack={handleBack}
         onAction={handleAction}
         onCommentClick={() => setIsCommentsOpen(true)}
         onRejectClick={() => setRemarksModal({ isOpen: true, type: "REJECT" })}
@@ -490,9 +512,9 @@ export default function ApplicationDetailsPage() {
         </div>
       </div>
 
-      <CommentsDrawer 
-        isOpen={isCommentsOpen} 
-        onClose={() => setIsCommentsOpen(false)} 
+      <CommentsDrawer
+        isOpen={isCommentsOpen}
+        onClose={() => setIsCommentsOpen(false)}
         applicationId={id}
         applicationNumber={`#${app.id.toString().padStart(5, '0')}`}
       />

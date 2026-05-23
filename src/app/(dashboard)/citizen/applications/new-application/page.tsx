@@ -24,19 +24,22 @@ export default function NewApplicationPage() {
 
   const isMasterDataLoading = isUserLoading || isWardsLoading || isMaterialsLoading;
 
-  const { 
-    formData, 
-    updateFormData, 
-    currentStep, 
+  const {
+    formData,
+    updateFormData,
+    currentStep,
     setCurrentStep,
     applicationId,
-    setApplicationId 
+    setApplicationId,
+    resetApplication
   } = useApplicationStore();
 
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isWardModalOpen, setIsWardModalOpen] = useState(false);
+
+  const [dragActive, setDragActive] = useState<string | null>(null);
 
   // Resume Application Logic
   useEffect(() => {
@@ -45,7 +48,7 @@ export default function NewApplicationPage() {
 
       try {
         const app = await ApplicationService.getApplication(applicationId);
-        
+
         // 1. Populate Form Data
         updateFormData({
           applicant_name: app.applicant_name,
@@ -88,7 +91,7 @@ export default function NewApplicationPage() {
         const requiredDocs = ["AADHAAR", "OWNERSHIP_DOCUMENTS", "PROPERTY_PHOTOS", "PERMISSION_DOCUMENTS"];
         const uploadedDocTypes = app.documents?.map(d => d.document_type) || [];
         const allDocsUploaded = requiredDocs.every(type => uploadedDocTypes.includes(type as any));
-        
+
         const hasMaterials = app.materials && app.materials.length > 0;
 
         if (!allDocsUploaded) {
@@ -105,7 +108,7 @@ export default function NewApplicationPage() {
     };
 
     if (applicationId && dbMaterials.length > 0) { // Wait for dbMaterials to be loaded to map correctly
-        resumeApplication();
+      resumeApplication();
     }
   }, [applicationId, updateFormData, setCurrentStep, dbMaterials]);
 
@@ -125,7 +128,7 @@ export default function NewApplicationPage() {
   });
 
   // Form State Step 3 (Materials)
-  const [materials, setMaterials] = useState<{id: number, name: string, unit: string, qty: string}[]>([]);
+  const [materials, setMaterials] = useState<{ id: number, name: string, unit: string, qty: string }[]>([]);
 
   useEffect(() => {
     if (dbMaterials.length > 0 && materials.length === 0) {
@@ -158,17 +161,119 @@ export default function NewApplicationPage() {
     });
   };
 
-  const handleFileChange = (key: string, fileList: FileList | null) => {
-    if (key === "propertyPhotos") {
-      if (fileList) {
-        setFiles((prev) => ({
-          ...prev,
-          [key]: [...(prev[key] as File[] || []), ...Array.from(fileList)],
-        }));
-      }
-    } else {
-      setFiles((prev) => ({ ...prev, [key]: fileList ? fileList[0] : null }));
+  // const handleFileChange = (key: string, fileList: FileList | null) => {
+  //   if (key === "propertyPhotos") {
+  //     if (fileList) {
+  //       setFiles((prev) => ({
+  //         ...prev,
+  //         [key]: [...(prev[key] as File[] || []), ...Array.from(fileList)],
+  //       }));
+  //     }
+  //   } else {
+  //     setFiles((prev) => ({ ...prev, [key]: fileList ? fileList[0] : null }));
+  //   }
+  // };
+
+
+
+  const handleFileChange = (
+    key: string,
+    fileList: FileList | null
+  ) => {
+
+    // REMOVE FILE
+    if (!fileList || fileList.length === 0) {
+
+      setFiles((prev) => ({
+        ...prev,
+        [key]: key === "propertyPhotos" ? [] : null,
+      }));
+
+      return;
     }
+
+    // ==================================
+    // PROPERTY PHOTOS (MULTIPLE IMAGES)
+    // ==================================
+
+    if (key === "propertyPhotos") {
+
+      const selectedFiles = Array.from(fileList);
+
+      // ONLY IMAGE FILES
+      const validImages = selectedFiles.filter((file) =>
+        file.type.startsWith("image/")
+      );
+
+      // OLD IMAGES
+      const previousImages =
+        (files.propertyPhotos as File[]) || [];
+
+      // MERGE OLD + NEW
+      const mergedImages = [
+        ...previousImages,
+        ...validImages,
+      ];
+
+      // REMOVE DUPLICATES
+      const uniqueImages = mergedImages.filter(
+        (file, index, self) =>
+          index ===
+          self.findIndex(
+            (f) =>
+              f.name === file.name &&
+              f.size === file.size
+          )
+      );
+
+      // MAX 10 IMAGES
+      const limitedImages = uniqueImages.slice(0, 10);
+
+      setFiles((prev) => ({
+        ...prev,
+        propertyPhotos: limitedImages,
+      }));
+
+      return;
+    }
+
+    // ==================================
+    // PDF VALIDATION
+    // ==================================
+
+    const file = fileList[0];
+
+    const isPDF =
+      file.type === "application/pdf";
+
+    if (!isPDF) {
+      alert("Only PDF files are allowed.");
+      return;
+    }
+
+    // SINGLE PDF FILE
+    setFiles((prev) => ({
+      ...prev,
+      [key]: file,
+    }));
+  };
+
+  const handleDrop = (
+    e: React.DragEvent<HTMLDivElement>,
+    field: any
+  ) => {
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    setDragActive(null);
+
+    const droppedFiles = e.dataTransfer.files;
+
+    if (!droppedFiles || droppedFiles.length === 0)
+      return;
+
+    handleFileChange(field.key, droppedFiles);
   };
 
   const removePhoto = (index: number) => {
@@ -195,17 +300,17 @@ export default function NewApplicationPage() {
   const onNextStep1 = async () => {
     setErrors({});
     const validation = step1Schema.safeParse(formData);
-    
+
     if (!validation.success) {
       const fieldErrors = validation.error.flatten().fieldErrors;
       const newErrors: Record<string, string> = {};
-      
+
       Object.entries(fieldErrors).forEach(([key, messages]) => {
         if (messages && messages.length > 0) {
           newErrors[key] = messages[0];
         }
       });
-      
+
       setErrors(newErrors);
       return;
     }
@@ -224,11 +329,11 @@ export default function NewApplicationPage() {
       });
       extraMaterials.forEach(m => {
         if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
-          initialRequirements.push({ 
-            material_id: null, 
+          initialRequirements.push({
+            material_id: null,
             custom_name: m.name,
             custom_unit: m.unit,
-            material_qty: Number(m.qty) 
+            material_qty: Number(m.qty)
           });
         }
       });
@@ -256,10 +361,10 @@ export default function NewApplicationPage() {
         { key: "propertyPhotos", type: "PROPERTY_PHOTOS" },
         { key: "permissionDocuments", type: "PERMISSION_DOCUMENTS" },
       ];
-      
+
       let completed = 0;
       let totalFiles = 0;
-      
+
       // Calculate total files
       docTypes.forEach(doc => {
         if (doc.key === "propertyPhotos") {
@@ -302,7 +407,7 @@ export default function NewApplicationPage() {
     if (!applicationId) return;
     try {
       const requirements: any[] = [];
-      
+
       // Standard materials from master data
       materials.forEach(m => {
         if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
@@ -313,11 +418,11 @@ export default function NewApplicationPage() {
       // Additional (Extra) materials
       extraMaterials.forEach(m => {
         if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
-          requirements.push({ 
-            material_id: null, 
+          requirements.push({
+            material_id: null,
             custom_name: m.name,
             custom_unit: m.unit,
-            material_qty: Number(m.qty) 
+            material_qty: Number(m.qty)
           });
         }
       });
@@ -339,6 +444,9 @@ export default function NewApplicationPage() {
     try {
       await ApplicationService.submitApplication(applicationId);
       queryClient.invalidateQueries({ queryKey: ["applications"] });
+
+      resetApplication();
+
       router.push("/citizen/applications");
     } catch (error) {
       console.error("Final submission failed", error);
@@ -364,11 +472,11 @@ export default function NewApplicationPage() {
           });
           extraMaterials.forEach(m => {
             if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
-              initialRequirements.push({ 
-                material_id: null, 
+              initialRequirements.push({
+                material_id: null,
                 custom_name: m.name,
                 custom_unit: m.unit,
-                material_qty: Number(m.qty) 
+                material_qty: Number(m.qty)
               });
             }
           });
@@ -512,7 +620,7 @@ export default function NewApplicationPage() {
               </select>
               <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"><Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} /></div>
             </div>
-            <button 
+            <button
               type="button"
               onClick={() => setIsWardModalOpen(true)}
               className="w-fit text-[11px] font-medium text-[#0C83FF] hover:underline cursor-pointer"
@@ -529,93 +637,247 @@ export default function NewApplicationPage() {
         <button onClick={onNextStep1} className="flex items-center justify-center gap-2 rounded-lg bg-[#0C83FF] px-6 py-3 text-sm font-medium text-white hover:bg-blue-600 transition-colors font-onest">Next <Image src="/dashboard/icons/applications/step-arrow.svg" alt="next" width={14} height={14} className="invert brightness-0" /></button>
       </div>
 
-      <WardMapModal 
-        isOpen={isWardModalOpen} 
-        onClose={() => setIsWardModalOpen(false)} 
+      <WardMapModal
+        isOpen={isWardModalOpen}
+        onClose={() => setIsWardModalOpen(false)}
       />
     </div>
   );
 
+
+
   const renderStep2 = () => {
     const uploadFields = [
-      { key: "aadharCard", label: "Aadhar Card", hint: "PDF Only", accept: ".pdf" },
-      { key: "ownershipDocument", label: "Ownership Document", hint: "PDF Only", accept: ".pdf" },
-      { key: "propertyPhotos", label: "Property Photos", hint: "JPEG, PNG formats.", accept: ".jpg,.jpeg,.png", multiple: true },
-      { key: "permissionDocuments", label: "Permission Documents", hint: "PDF Only", accept: ".pdf" },
+      {
+        key: "aadharCard",
+        label: "Aadhar Card",
+        hint: "PDF Only",
+        accept: ".pdf",
+      },
+      {
+        key: "ownershipDocument",
+        label: "Ownership Document",
+        hint: "PDF Only",
+        accept: ".pdf",
+      },
+      {
+        key: "propertyPhotos",
+        label: "Property Photos",
+        hint: "JPEG, PNG formats. Max 10 Images",
+        accept: ".jpg,.jpeg,.png",
+        multiple: true,
+      },
+      {
+        key: "permissionDocuments",
+        label: "Permission Documents",
+        hint: "PDF Only",
+        accept: ".pdf",
+      },
     ];
+
     return (
       <div className="space-y-5">
         {uploading && (
-          <div className="flex flex-col gap-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex justify-between text-sm font-medium text-blue-700 font-onest"><span>Uploading Documents...</span><span>{uploadProgress}%</span></div>
-            <div className="w-full h-2 bg-blue-100 rounded-full overflow-hidden"><div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${uploadProgress}%` }} /></div>
+          <div className="flex flex-col gap-2 rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <div className="flex justify-between font-onest text-sm font-medium text-blue-700">
+              <span>Uploading Documents...</span>
+              <span>{uploadProgress}%</span>
+            </div>
+
+            <div className="h-2 w-full overflow-hidden rounded-full bg-blue-100">
+              <div
+                className="h-full bg-blue-500 transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
           </div>
         )}
+
         {uploadFields.map((field) => (
           <div key={field.key} className="flex gap-5">
-            <label className="w-[228px] text-[12px] font-normal text-[#343434] leading-tight font-onest">{field.label}</label>
+            <label className="w-[228px] font-onest text-[12px] font-normal leading-tight text-[#343434]">
+              {field.label}
+            </label>
+
             <div className="flex items-start gap-4">
-              <div className="flex h-[138px] w-[321px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-[#D6D9DE] bg-white p-3">
-                {(files[field.key] && !field.multiple) ? (
+              <div
+                className={`flex h-[138px] w-[321px] flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-3 transition-all duration-200
+              
+              ${dragActive === field.key
+                    ? "border-[#0C83FF] bg-blue-50"
+                    : "border-[#D6D9DE] bg-white"
+                  }
+            `}
+                onDragEnter={(e) => {
+                  e.preventDefault();
+                  setDragActive(field.key);
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setDragActive(field.key);
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  setDragActive(null);
+                }}
+                onDrop={(e) => handleDrop(e, field)}
+              >
+                {files[field.key] &&
+                  !field.multiple &&
+                  (files[field.key] as File)?.name ? (
                   <div className="flex flex-col items-center gap-2">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-50">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17L4 12" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        <path
+                          d="M20 6L9 17L4 12"
+                          stroke="#10B981"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
                     </div>
-                    <span className="text-xs font-medium text-[#343434] truncate max-w-[200px] font-onest">{(files[field.key] as File).name}</span>
-                    <button onClick={() => handleFileChange(field.key, null)} className="text-[10px] text-red-500 hover:underline font-onest">Remove</button>
+
+                    <span className="max-w-[200px] truncate font-onest text-xs font-medium text-[#343434]">
+                      {(files[field.key] as File)?.name}
+                    </span>
+
+                    <button
+                      onClick={() => handleFileChange(field.key, null)}
+                      className="font-onest text-[10px] text-red-500 hover:underline"
+                    >
+                      Remove
+                    </button>
                   </div>
                 ) : (
                   <>
-                    <Image src="/dashboard/icons/applications/upload-cloud.svg" alt="upload" width={36} height={36} />
+                    <Image
+                      src="/dashboard/icons/applications/upload-cloud.svg"
+                      alt="upload"
+                      width={36}
+                      height={36}
+                    />
+
                     <div className="flex flex-col items-center">
-                      <p className="text-sm font-normal text-black text-center leading-tight font-onest">Choose {field.multiple ? "files" : "a file"} or drag & drop.</p>
-                      <p className="text-[12px] font-normal text-black opacity-60 font-onest">{field.hint}</p>
+                      <p className="text-center font-onest text-sm font-normal leading-tight text-black">
+                        Choose {field.multiple ? "files" : "a file"} or drag &
+                        drop.
+                      </p>
+
+                      <p className="font-onest text-[12px] font-normal text-black opacity-60">
+                        {field.hint}
+                      </p>
                     </div>
-                    <label className="mt-1 flex cursor-pointer items-center justify-center rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-2 text-sm font-normal text-[#343434] hover:bg-gray-200 transition-colors font-onest">
+
+                    <label className="mt-1 flex cursor-pointer items-center justify-center rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-2 font-onest text-sm font-normal text-[#343434] transition-colors hover:bg-gray-200">
                       Browse File
-                      <input 
-                        type="file" 
-                        className="hidden" 
-                        accept={field.accept} 
+
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept={field.accept}
                         multiple={field.multiple}
-                        onChange={(e) => handleFileChange(field.key, e.target.files)} 
+                        onChange={(e) =>
+                          handleFileChange(field.key, e.target.files)
+                        }
                       />
                     </label>
                   </>
                 )}
               </div>
-              
-              {/* Preview List for Multiple Files (Property Photos) */}
-              {field.multiple && (files[field.key] as File[])?.length > 0 && (
-                <div className="flex flex-col gap-2 max-h-[138px] overflow-y-auto pr-1">
-                  {(files[field.key] as File[]).map((file, index) => (
-                    <div key={index} className="flex h-12 w-[200px] items-center gap-2 rounded border border-[#D6D9DE] bg-white p-1 pr-2 shrink-0">
-                      <div className="h-10 w-10 relative bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                        {file.type.startsWith('image/') ? (
-                          <img src={URL.createObjectURL(file)} alt="preview" className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-500">Doc</div>
-                        )}
-                      </div>
-                      <span className="text-xs text-[#343434] truncate flex-1 font-onest">{file.name}</span>
-                      <button onClick={() => removePhoto(index)} className="p-1 hover:bg-red-50 rounded">
-                        <Image src="/dashboard/icons/close.svg" alt="remove" width={10} height={10} className="opacity-60 hover:opacity-100" />
-                      </button>
+
+              {/* Multiple Image Preview */}
+              {field.multiple &&
+                (files[field.key] as File[])?.length > 0 && (
+                  <div className="max-h-[138px] overflow-y-auto pr-1">
+                    <div className="flex flex-col gap-2">
+                      {(files[field.key] as File[]).map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex h-12 w-[220px] shrink-0 items-center gap-2 rounded border border-[#D6D9DE] bg-white p-1 pr-2"
+                        >
+                          <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded bg-gray-100">
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt="preview"
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+
+                          <span className="flex-1 truncate font-onest text-xs text-[#343434]">
+                            {file.name}
+                          </span>
+
+                          <button
+                            onClick={() => removePhoto(index)}
+                            className="rounded p-1 hover:bg-red-50"
+                          >
+                            <Image
+                              src="/dashboard/icons/close.svg"
+                              alt="remove"
+                              width={10}
+                              height={10}
+                              className="opacity-60 hover:opacity-100"
+                            />
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
+
+                    <p className="mt-2 font-onest text-[11px] text-gray-500">
+                      {(files[field.key] as File[])?.length}/10 Images Selected
+                    </p>
+                  </div>
+                )}
             </div>
           </div>
         ))}
+
         <div className="flex items-center gap-5 pt-5">
           <div className="w-[228px]" />
+
           <div className="flex w-[321px] justify-between gap-5">
-            <button onClick={() => setCurrentStep(1)} disabled={uploading} className="flex items-center justify-center gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-6 py-3 text-sm font-medium text-[#343434] hover:bg-gray-200 transition-colors font-onest disabled:opacity-50">
-              <Image src="/dashboard/icons/applications/arrow-back.svg" alt="back" width={14} height={14} /> Back
+            <button
+              onClick={() => setCurrentStep(1)}
+              disabled={uploading}
+              className="flex items-center justify-center gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-6 py-3 font-onest text-sm font-medium text-[#343434] transition-colors hover:bg-gray-200 disabled:opacity-50"
+            >
+              <Image
+                src="/dashboard/icons/applications/arrow-back.svg"
+                alt="back"
+                width={14}
+                height={14}
+              />
+              Back
             </button>
-            <button onClick={onNextStep2} disabled={uploading || (!files.aadharCard || !files.ownershipDocument || !files.permissionDocuments)} className="flex items-center justify-center gap-2 rounded-lg bg-[#0C83FF] px-6 py-3 text-sm font-medium text-white hover:bg-blue-600 transition-colors font-onest disabled:opacity-50">
-              {uploading ? "Uploading..." : "Next"} {!uploading && <Image src="/dashboard/icons/applications/step-arrow.svg" alt="next" width={14} height={14} className="invert brightness-0" />}
+
+            <button
+              onClick={onNextStep2}
+              disabled={
+                uploading ||
+                !files.aadharCard ||
+                !files.ownershipDocument ||
+                !files.permissionDocuments
+              }
+              className="flex items-center justify-center gap-2 rounded-lg bg-[#0C83FF] px-6 py-3 font-onest text-sm font-medium text-white transition-colors hover:bg-blue-600 disabled:opacity-50"
+            >
+              {uploading ? "Uploading..." : "Next"}
+
+              {!uploading && (
+                <Image
+                  src="/dashboard/icons/applications/step-arrow.svg"
+                  alt="next"
+                  width={14}
+                  height={14}
+                  className="invert brightness-0"
+                />
+              )}
             </button>
           </div>
         </div>
@@ -652,7 +914,7 @@ export default function NewApplicationPage() {
               </div>
               <div className="flex flex-col flex-1">
                 <div className="flex h-10 items-center justify-between border-b border-[#D6D9DE] pl-2 pr-0"><span className="text-[12px] font-semibold uppercase text-[#333333] opacity-70 font-onest">Estimated Material</span><div className="h-4 w-[1px] bg-black/10" /></div>
-                <div className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><div className="flex h-[34px] w-full items-center justify-between rounded-lg border border-[#D6D9DE] bg-white px-3"><input type="text" placeholder="Enter Qty" className="w-full text-sm text-[#343434] outline-none placeholder:opacity-20 font-onest" value={pendingExtra.qty} onChange={(e) => setPendingExtra({ ...pendingExtra, qty: e.target.value })} /><div className="flex items-center gap-1 border-l border-[#D6D9DE] pl-2 ml-2"><select className="bg-transparent text-sm text-[#343434] outline-none font-onest" value={pendingExtra.unit} onChange={(e) => setPendingExtra({ ...pendingExtra, unit: e.target.value })}><option value="Kg">Kg</option><option value="Nos">Nos</option><option value="Bags">Bags</option></select><Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={8} height={5} /></div></div></div>
+                <div className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><div className="flex h-[34px] w-full items-center justify-between rounded-lg border border-[#D6D9DE] bg-white px-3"><input type="text" placeholder="Enter Qty" className="w-full text-sm text-[#343434] outline-none placeholder:opacity-20 font-onest" value={pendingExtra.qty} onChange={(e) => setPendingExtra({ ...pendingExtra, qty: e.target.value })} /><div className="flex items-center gap-1 border-l border-[#D6D9DE] pl-2 ml-2"><select className="bg-transparent text-sm text-[#343434] outline-none font-onest" value={pendingExtra.unit} onChange={(e) => setPendingExtra({ ...pendingExtra, unit: e.target.value })}><option value="Kg">Kg</option><option value="Nos">Nos</option><option value="Bags">Bags</option></select></div></div></div>
                 {extraMaterials.map(m => (<div key={m.id} className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><span className="text-sm font-medium text-[#343434] font-onest pl-3">{m.qty} {m.unit}</span></div>))}
               </div>
             </div>
@@ -675,7 +937,7 @@ export default function NewApplicationPage() {
       <div className="flex flex-col gap-6">
         <label className="flex cursor-pointer items-center gap-2 group">
           <input type="checkbox" className="hidden" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-          <div className={`flex h-5 w-5 items-center justify-center rounded border transition-all ${agreed ? "border-[#0C83FF] bg-[#0C83FF]" : "border-[#D6D9DE] group-hover:border-[#0C83FF]"}`}>{agreed && (<svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.5 8.5L11 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>)}</div>
+          <div className={`flex h-5 w-5 items-center justify-center rounded border transition-all ${agreed ? "border-[#0C83FF] bg-[#0C83FF]" : "border-[#D6D9DE] group-hover:border-[#0C83FF]"}`}>{agreed && (<svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.5 8.5L11 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>)}</div>
           <span className="text-sm font-medium text-[#343434] font-onest">I agree to Below Mentioned agreement.</span>
         </label>
         <div className="space-y-4 text-[#343434] text-sm leading-relaxed pl-1 font-onest">

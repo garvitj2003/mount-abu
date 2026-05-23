@@ -29,20 +29,32 @@ export default function ComplaintViewDrawer({
   const categoryName = categories.find(c => c.id === displayData?.category_id)?.name || "General";
 
   const trackerSteps = [
-    { 
-      label: "Submitted", 
-      date: displayData?.created_at ? new Date(displayData.created_at).toLocaleString() : "—", 
-      completed: !!displayData 
+    {
+      label: "Submitted",
+      date: displayData?.created_at ? new Date(displayData.created_at).toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }) : "—",
+      completed: !!displayData
     },
-    { 
-      label: "Assigned to authority", 
-      date: complaint?.assigned_to?.name, 
+    {
+      label: "Assigned to authority",
+      date: complaint?.assigned_to?.name,
       completed: complaint?.assigned_to
     },
-    { 
-      label: "Resolved", 
-      date: displayData?.status === "RESOLVED" ? new Date(displayData.updated_at || "").toLocaleString() : "—", 
-      completed: displayData?.status === "RESOLVED" 
+    {
+      label: "Resolved",
+      date: displayData?.status === "RESOLVED" ? new Date(displayData.updated_at || "").toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }) : "—",
+      completed: displayData?.status === "RESOLVED"
     },
   ];
 
@@ -151,23 +163,42 @@ export default function ComplaintViewDrawer({
                     <div className="flex flex-col gap-3">
                       {displayData.media && displayData.media.length > 0 ? (
                         displayData.media.map((m, idx) => (
-                          <div key={m.id} className="relative h-[220px] w-full overflow-hidden rounded-xl bg-gray-100">
+                          <a
+                            key={m.id}
+                            href={m.access_url || "#"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="relative block h-[220px] w-full overflow-hidden rounded-xl bg-gray-100 group"
+                          >
                             <Image
                               src={m.access_url || ""}
                               alt={`Complaint Media ${idx + 1}`}
                               fill
                               unoptimized
-                              className="object-contain"
+                              className="object-contain transition-transform duration-300 group-hover:scale-105"
                             />
+
+                            {/* View Icon */}
+                            <div className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-md">
+                              <Image
+                                src="/dashboard/icons/applications/visibility-public.svg"
+                                alt="View"
+                                width={16}
+                                height={16}
+                              />
+                            </div>
+
+                            {/* Bottom Location Bar */}
                             <div className="absolute bottom-0 left-0 right-0 flex items-center gap-2 bg-black/40 px-4 py-2 backdrop-blur-md">
                               <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0C83FF]">
                                 <div className="h-2 w-2 rounded-full bg-white shadow-[0_0_8px_#0C83FF]" />
                               </div>
+
                               <span className="text-[11px] font-medium text-white">
                                 {displayData.location_address || "Location detail not available"}
                               </span>
                             </div>
-                          </div>
+                          </a>
                         ))
                       ) : (
                         <div className="relative h-[180px] w-full overflow-hidden rounded-xl bg-gray-200">

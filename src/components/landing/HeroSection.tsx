@@ -4,6 +4,7 @@ import Image from "next/image";
 import HeroCarousel from "./heroCaraousel";
 import { motion } from "motion/react";
 import NavigationHeader from "./NavigationHeader";
+import Link from "next/link";
 
 // Minister Card Component (Unchanged)
 function MinisterCard({
@@ -119,9 +120,18 @@ export default function HeroSection() {
 
                     {/* Explore Text - Centered at bottom */}
                     <div className="absolute bottom-10 md:bottom-24 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                        <p className="font-baron text-xl text-[#d4af37] leading-normal tracking-[0.2em]">
+                        <button
+                            onClick={() => {
+                                const section = document.getElementById("destinations");
+                                section?.scrollIntoView({
+                                    behavior: "smooth",
+                                    block: "start",
+                                });
+                            }}
+                            className="font-baron text-xl text-[#d4af37] leading-normal tracking-[0.2em] cursor-pointer"
+                        >
                             Explore
-                        </p>
+                        </button>
                     </div>
 
                     {/* Minister Cards - Bottom centered on mobile, right-aligned on desktop */}

@@ -21,15 +21,14 @@ const isImage = (doc: ApplicationDocumentResponse) => {
 };
 
 const Checkbox = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
-  <button 
+  <button
     onClick={onChange}
-    className={`flex size-5 items-center justify-center rounded border transition-colors cursor-pointer ${
-      checked ? "border-[#0C83FF] bg-[#0C83FF]" : "border-[#D6D9DE] bg-white"
-    }`}
+    className={`flex size-5 items-center justify-center rounded border transition-colors cursor-pointer ${checked ? "border-[#0C83FF] bg-[#0C83FF]" : "border-[#D6D9DE] bg-white"
+      }`}
   >
     {checked && (
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     )}
   </button>
@@ -48,9 +47,31 @@ export default function ApplicationMaterialsDrawer({
     return [...docs].sort((a, b) => (isImage(a) === isImage(b) ? 0 : isImage(a) ? 1 : -1));
   }, [app.documents]);
 
-  const geoTaggedDocs = useMemo(() => {
-    return app.documents?.filter((d) => d.document_type === "GEO_TAGGED_PHOTO") || [];
-  }, [app.documents]);
+  const inspectionPhotos = useMemo<
+    {
+      id: string;
+      url: string;
+      remarks: string;
+      inspector: string;
+      date: string;
+      latitude: number | string;
+      longitude: number | string;
+    }[]
+  >(() => {
+    return (
+      ((app as any).inspections || []).flatMap((inspection: any) =>
+        (inspection.access_urls || []).map((url: string, index: number) => ({
+          id: `${inspection.id}-${index}`,
+          url,
+          remarks: inspection.remarks || "",
+          inspector: inspection.inspector_name || "",
+          date: inspection.inspected_at || "",
+          latitude: inspection.latitude || "",
+          longitude: inspection.longitude || "",
+        }))
+      )
+    );
+  }, [(app as any).inspections]);
 
   const handleToggleMaterial = (id: number) => {
     setSelectedMaterials(prev => ({ ...prev, [id]: !prev[id] }));
@@ -96,7 +117,7 @@ export default function ApplicationMaterialsDrawer({
 
             {/* Body */}
             <div className="flex-1 overflow-y-auto p-5 space-y-6">
-              
+
               {/* Utilized Material Table */}
               <div className="space-y-3">
                 <p className="px-3 text-[12px] font-medium text-[#498AA9] uppercase">Utilized Material</p>
@@ -114,9 +135,9 @@ export default function ApplicationMaterialsDrawer({
                       {app.materials?.map((mat) => (
                         <tr key={mat.id} className="border-b border-[#D6D9DE] last:border-0 hover:bg-gray-50 transition-colors">
                           <td className="p-2 text-center border-r border-[#D6D9DE]">
-                            <Checkbox 
-                              checked={!!selectedMaterials[mat.id]} 
-                              onChange={() => handleToggleMaterial(mat.id)} 
+                            <Checkbox
+                              checked={!!selectedMaterials[mat.id]}
+                              onChange={() => handleToggleMaterial(mat.id)}
                             />
                           </td>
                           <td className="p-2 text-[13px] font-medium text-[#343434] border-r border-[#D6D9DE]">
@@ -126,8 +147,8 @@ export default function ApplicationMaterialsDrawer({
                             {mat.quantity} Units
                           </td>
                           <td className="p-2">
-                            <input 
-                              type="text" 
+                            <input
+                              type="text"
                               placeholder="-"
                               value={extraQtys[mat.id] || ""}
                               onChange={(e) => handleExtraQtyChange(mat.id, e.target.value)}
@@ -181,14 +202,67 @@ export default function ApplicationMaterialsDrawer({
               </div>
 
               {/* Geo-Tagged Pictures */}
-              <div className="space-y-3">
-                <p className="px-3 text-[12px] font-medium text-[#498AA9] uppercase">Geo-Tagged Pictures</p>
+              <div className="flex flex-col gap-3">
+                <p className="px-3 text-[12px] font-medium text-[#498AA9] uppercase">
+                  Geo-Tagged Pictures (from Inspection)
+                </p>
+
                 <div className="grid grid-cols-2 gap-3">
-                  {geoTaggedDocs.map((doc) => (
-                    <div key={doc.id} className="aspect-square relative rounded-lg border border-[#D6D9DE] overflow-hidden bg-gray-100">
-                       <Image src={doc.access_url || "/sample/application-main.png"} alt="Geo-tagged" fill unoptimized className="object-cover" />
-                    </div>
+                  {inspectionPhotos.map((photo, idx) => (
+                    <a
+                      key={idx}
+                      href={photo.url || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group relative block aspect-video overflow-hidden rounded-lg border border-[#D6D9DE] bg-gray-100 transition-all hover:border-[#0C83FF]"
+                    >
+                      <Image
+                        src={photo.url || "/sample/application-main.png"}
+                        alt="Geo-tagged"
+                        fill
+                        unoptimized
+                        className="object-cover"
+                      />
+
+                      {/* View Icon */}
+                      <div className="absolute bottom-2 right-2 rounded-full bg-white p-1 shadow-sm">
+                        <Image
+                          src="/dashboard/icons/applications/visibility-public.svg"
+                          alt="View"
+                          width={12}
+                          height={12}
+                        />
+                      </div>
+
+                      {/* Hover Overlay */}
+                      <div className="absolute inset-0 flex flex-col justify-end bg-black/60 p-2 opacity-0 transition-opacity group-hover:opacity-100">
+
+                        {photo.remarks && (
+                          <p className="line-clamp-2 text-[8px] font-medium text-white">
+                            {photo.remarks}
+                          </p>
+                        )}
+
+                        <p className="mt-1 text-[7px] italic text-white/70">
+                          By {photo.inspector}
+                        </p>
+
+                        <p className="text-[7px] text-white/70">
+                          {new Date(photo.date).toLocaleDateString()}
+                        </p>
+
+                        <p className="text-[7px] text-white/70">
+                          {photo.latitude}, {photo.longitude}
+                        </p>
+                      </div>
+                    </a>
                   ))}
+
+                  {!inspectionPhotos.length && (
+                    <p className="col-span-2 py-4 text-xs italic text-gray-400">
+                      No inspection pictures available.
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -196,7 +270,7 @@ export default function ApplicationMaterialsDrawer({
 
             {/* Footer */}
             <div className="border-t border-[#D6D9DE] p-4 bg-white flex justify-end">
-              <button 
+              <button
                 onClick={onClose}
                 className="rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-8 py-2.5 text-[14px] font-medium text-[#343434] hover:bg-gray-200 transition-colors cursor-pointer"
               >

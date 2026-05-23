@@ -38,7 +38,7 @@ export default function ApplicationStepper({ app }: ApplicationStepperProps) {
       s = [
         { label: "Submitted", role: "Applicant" },
         { label: "Forward to Dept", role: "Commissioner" },
-        { label: "Dept Comments", role: "Departments" },
+        { label: "Dept Comments", role: "JEN/ATP/LEGAL/LAND" },
         { label: "Approval", role: "Commissioner" },
         { label: "Inspection", role: "JEN" },
         { label: "Token Generated", role: "Nodal Officer" },
@@ -112,20 +112,19 @@ export default function ApplicationStepper({ app }: ApplicationStepperProps) {
       <div className="relative flex min-w-[900px] items-start justify-between px-10">
         {/* Connection Lines */}
         <div className="absolute top-[18px] left-[60px] right-[60px] h-[2px] bg-[#D6D9DE]" />
-        <div 
-          className="absolute top-[18px] left-[60px] h-[2px] bg-[#0C83FF] transition-all duration-500" 
-          style={{ width: `${Math.min(progressWidth, 100) * 0.85}%` }}
+        <div
+          className="absolute top-[18px] left-[60px] h-[2px] bg-[#0C83FF] transition-all duration-500"
+          style={{ width: `calc(${Math.min(progressWidth, 100)}% - 120px)` }}
         />
 
         {steps.map((step) => (
           <div key={step.id} className="relative z-10 flex flex-col items-center gap-2 text-center w-[120px]">
             {/* Circle Icon */}
-            <div className={`flex size-9 items-center justify-center rounded-full border-2 transition-colors ${
-              step.status === 'completed' ? 'border-[#0C83FF] bg-[#0C83FF]' :
+            <div className={`flex size-9 items-center justify-center rounded-full border-2 transition-colors ${step.status === 'completed' ? 'border-[#0C83FF] bg-[#0C83FF]' :
               step.status === 'active' ? 'border-[#0C83FF] bg-white' :
-              step.status === 'objection' ? 'border-[#FFD648] bg-[#FFD648]' :
-              'border-[#D6D9DE] bg-[#D6D9DE]'
-            }`}>
+                step.status === 'objection' ? 'border-[#FFD648] bg-[#FFD648]' :
+                  'border-[#D6D9DE] bg-[#D6D9DE]'
+              }`}>
               {step.status === 'completed' ? (
                 <Image src="/dashboard/icons/tick-round-green.svg" alt="" width={20} height={20} className="invert brightness-0" />
               ) : step.status === 'objection' ? (
@@ -139,9 +138,8 @@ export default function ApplicationStepper({ app }: ApplicationStepperProps) {
 
             {/* Label & Info */}
             <div className="flex flex-col gap-1">
-              <p className={`text-[12px] font-semibold leading-tight ${
-                step.status === 'pending' ? 'text-[#9CA3AF]' : 'text-[#343434]'
-              }`}>
+              <p className={`text-[12px] font-semibold leading-tight ${step.status === 'pending' ? 'text-[#9CA3AF]' : 'text-[#343434]'
+                }`}>
                 {step.label}
               </p>
               <p className="text-[11px] font-normal text-[#9CA3AF]">
