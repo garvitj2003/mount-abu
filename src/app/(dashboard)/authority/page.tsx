@@ -10,7 +10,9 @@ import { useAuthorityDashboard } from "@/hooks/useDashboard";
 import { useDepartments, useWards } from "@/hooks/useMasterData";
 import { useUser } from "@/hooks/useUser";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
+import { toPng } from "html-to-image";
+import jsPDF from "jspdf";
 import {
   Bar,
   BarChart,
@@ -51,16 +53,23 @@ const STATUS_COLORS: Record<string, string> = {
 const KPI_ICONS: Record<string, string> = {
   "Total Applications": "applications",
   "Tokens Issued": "token",
-  "Complaints": "token",
+  "Complaints": "complaints",
   "Approved": "applications",
-  "Complaints Closed": "token",
+  "Complaints Closed": "complaints",
   "Assigned": "applications",
   "Verified": "applications",
   "Total Entries": "token",
-  "Received": "token",
-  "Resolved": "token",
+  "Received": "complaints",
+  "Resolved": "complaints",
   "Tokens Generated": "token",
   "Utilized": "token",
+  // JEN Specific
+  "Applications Assigned": "applications",
+  "Applications Verified": "applications",
+  "Applications Pending": "applications",
+  "Complaints Received": "complaints",
+  "Complaints Resolved": "complaints",
+  "Complaints Pending": "complaints",
 };
 
 const KPI_COLORS: Record<string, string> = {
@@ -77,6 +86,13 @@ const KPI_COLORS: Record<string, string> = {
   "Resolved": "#10B981",
   "Tokens Generated": "#F35C86",
   "Utilized": "#F59E0B",
+  // JEN Specific
+  "Applications Assigned": "#0C83FF",
+  "Applications Verified": "#059669",
+  "Applications Pending": "#F59E0B",
+  "Complaints Received": "#3B83F6",
+  "Complaints Resolved": "#10B981",
+  "Complaints Pending": "#EF4444",
 };
 
 const formatStatus = (status: string) => {
@@ -85,6 +101,10 @@ const formatStatus = (status: string) => {
 
 export default function DashboardAuthorityPage() {
   const { data: user } = useUser();
+  const dashboardRef = useRef<HTMLDivElement>(null);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
+  const [isExportingCSV, setIsExportingCSV] = useState(false);
+
   const [filters, setFilters] = useState<{ days: number; department_id: number | null; ward_id: number | null }>({
     days: 7,
     department_id: null,
@@ -104,7 +124,21 @@ export default function DashboardAuthorityPage() {
 
   const kpiData = useMemo(() => {
     if (!dashboard?.kpis) return [];
-    return dashboard.kpis.map(kpi => ({
+    
+    let filteredKpis = dashboard.kpis;
+    
+    // For specific roles, only show complaints-related KPIs
+    if (role === "AEN" || role === "SIN" || role === "RIN") {
+      filteredKpis = dashboard.kpis.filter(kpi => 
+        kpi.label === "Complaints Received" || 
+        kpi.label === "Complaints Resolved" || 
+        kpi.label === "Complaints Pending" ||
+        kpi.label === "Complaints Closed" ||
+        kpi.label === "Complaints"
+      );
+    }
+
+    return filteredKpis.map(kpi => ({
       title: kpi.label,
       count: kpi.value,
       subtext: (kpi.percent_change !== null && kpi.percent_change !== undefined)
@@ -116,7 +150,7 @@ export default function DashboardAuthorityPage() {
         ? { value: Math.abs(kpi.percent_change), isUp: kpi.percent_change > 0 }
         : undefined
     }));
-  }, [dashboard?.kpis]);
+  }, [dashboard?.kpis, role]);
 
   const statusData = useMemo(() => {
     if (!dashboard?.application_status_breakdown) return [];
@@ -157,6 +191,90 @@ export default function DashboardAuthorityPage() {
     }));
   }, [dashboard?.complaints_by_category]);
 
+  const handleExportPDF = async () => {
+    if (!dashboardRef.current) return;
+    try {
+      setIsExportingPDF(true);
+      
+      // Calculate the full scrollable area
+      const width = dashboardRef.current.scrollWidth;
+      const height = dashboardRef.current.scrollHeight;
+
+      const dataUrl = await toPng(dashboardRef.current, {
+        quality: 0.95,
+        backgroundColor: "#F5F6F7",
+        pixelRatio: 2,
+        width,
+        height,
+        style: {
+          overflow: 'visible',
+          height: `${height}px`,
+          width: `${width}px`,
+        }
+      });
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgProps = pdf.getImageProperties(dataUrl);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      
+      // If the dashboard is very long, we might need multiple pages, 
+      // but usually for a report a single long page or scaled down is preferred.
+      // Scaling down to fit width is standard for dashboards.
+      pdf.addImage(dataUrl, "PNG", 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+      pdf.save(`dashboard-report-${new Date().getTime()}.pdf`);
+    } catch (err) {
+      console.error("PDF Export failed", err);
+      alert("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsExportingPDF(false);
+    }
+  };
+
+  const handleExportCSV = () => {
+    if (!dashboard) return;
+    try {
+      setIsExportingCSV(true);
+      let csvContent = "Metric,Value\n";
+      
+      // 1. KPIs Section
+      kpiData.forEach(kpi => {
+        csvContent += `"${kpi.title}",${kpi.count}\n`;
+      });
+      csvContent += "\n";
+
+      // 2. Ward Activity
+      if (dashboard.ward_activity && dashboard.ward_activity.length > 0) {
+        csvContent += "Ward,Applications,Approved,Complaints,Tokens Issued\n";
+        dashboard.ward_activity.forEach(w => {
+          csvContent += `"${w.ward_name}",${w.applications},${w.approved},${w.complaints},${w.tokens_issued}\n`;
+        });
+        csvContent += "\n";
+      }
+
+      // 3. Recent Complaints
+      if (dashboard.complaint_list && dashboard.complaint_list.length > 0) {
+        csvContent += "Complaint ID,Applicant,Category,Status\n";
+        dashboard.complaint_list.forEach(c => {
+          csvContent += `#${c.complaint_id},"${c.applicant_name}","${c.category_name}",${c.status}\n`;
+        });
+      }
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `dashboard-data-${new Date().getTime()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("CSV Export failed", err);
+    } finally {
+      setIsExportingCSV(false);
+    }
+  };
+
   if (isLoading) return (
     <div className="flex h-full w-full items-center justify-center bg-[#F5F6F7]">
       <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0C83FF] border-t-transparent"></div>
@@ -181,64 +299,78 @@ export default function DashboardAuthorityPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-2 text-sm font-medium text-[#343434] hover:bg-gray-200 transition-colors cursor-pointer">
-            <Image src="/dashboard/icons/applications/pdficon.svg" alt="" width={14} height={14} className="opacity-60" />
-            Export PDF
+          <button 
+            onClick={handleExportPDF}
+            disabled={isExportingPDF}
+            className="flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-2 text-sm font-medium text-[#343434] hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {isExportingPDF ? (
+              <div className="h-3 w-3 animate-spin rounded-full border-2 border-[#343434] border-t-transparent" />
+            ) : (
+              <Image src="/dashboard/icons/applications/pdficon.svg" alt="" width={14} height={14} className="opacity-60" />
+            )}
+            {isExportingPDF ? "Exporting..." : "Export PDF"}
           </button>
           <div className="h-6 w-px bg-[#D6D9DE] mx-1" />
-          <button className="flex items-center gap-2 rounded-lg bg-[#0C83FF] px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 transition-colors cursor-pointer">
-            <Image src="/dashboard/icons/applications/csvicon.svg" alt="" width={14} height={14} className="invert brightness-0" />
-            Export Excel
+          <button 
+            onClick={handleExportCSV}
+            disabled={isExportingCSV}
+            className="flex items-center gap-2 rounded-lg bg-[#0C83FF] px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {isExportingCSV ? (
+              <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            ) : (
+              <Image src="/dashboard/icons/applications/csvicon.svg" alt="" width={14} height={14} className="invert brightness-0" />
+            )}
+            {isExportingCSV ? "Exporting..." : "Export Excel"}
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-5">
+      <div ref={dashboardRef} className="flex-1 overflow-y-auto p-5">
         <div className="flex flex-col gap-6 pb-10">
 
-          {/* Filters Row (Only for Super Admin/Dept heads) */}
-          {(role === "SUPERADMIN" || role === "ADMIN") && (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <DropdownSelect
-                  options={DAY_OPTIONS}
-                  value={filters.days}
-                  onChange={(val) => setFilters(prev => ({ ...prev, days: val as number }))}
-                  triggerClassName="bg-white px-3 py-2 border-[#D6D9DE] h-auto"
-                  className="w-[140px]"
-                />
+          {/* Filters Row */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <DropdownSelect
+                options={DAY_OPTIONS}
+                value={filters.days}
+                onChange={(val) => setFilters(prev => ({ ...prev, days: val as number }))}
+                triggerClassName="bg-white px-3 py-2 border-[#D6D9DE] h-auto"
+                className="w-[140px]"
+              />
 
-                <div className="h-6 w-px bg-[#C6CAD1]" />
+              <div className="h-6 w-px bg-[#C6CAD1]" />
 
-                <DropdownSelect
-                  options={[
-                    { label: "All Department", value: "null" },
-                    ...(departments?.map(d => ({ label: d.name, value: d.id })) || [])
-                  ]}
-                  value={filters.department_id === null ? "null" : filters.department_id}
-                  onChange={(val) => setFilters(prev => ({ ...prev, department_id: val === "null" ? null : val as number }))}
-                  placeholder="All Department"
-                  triggerClassName="bg-white px-3 py-2 border-[#D6D9DE] h-auto"
-                  className="w-[180px]"
-                />
+              <DropdownSelect
+                options={[
+                  { label: "All Department", value: "null" },
+                  ...(departments?.map(d => ({ label: d.name, value: d.id })) || [])
+                ]}
+                value={filters.department_id === null ? "null" : filters.department_id}
+                onChange={(val) => setFilters(prev => ({ ...prev, department_id: val === "null" ? null : val as number }))}
+                placeholder="All Department"
+                triggerClassName="bg-white px-3 py-2 border-[#D6D9DE] h-auto"
+                className="w-[180px]"
+              />
 
-                <div className="h-6 w-px bg-[#C6CAD1]" />
+              <div className="h-6 w-px bg-[#C6CAD1]" />
 
-                <DropdownSelect
-                  options={[
-                    { label: "All Wards", value: "null" },
-                    ...(wards?.map(w => ({ label: w.name, value: w.id })) || [])
-                  ]}
-                  value={filters.ward_id === null ? "null" : filters.ward_id}
-                  onChange={(val) => setFilters(prev => ({ ...prev, ward_id: val === "null" ? null : val as number }))}
-                  placeholder="All Wards"
-                  triggerClassName="bg-white px-3 py-2 border-[#D6D9DE] h-auto"
-                  className="w-[160px]"
-                />
-              </div>
+              <DropdownSelect
+                options={[
+                  { label: "All Wards", value: "null" },
+                  ...(wards?.map(w => ({ label: w.name, value: w.id })) || [])
+                ]}
+                value={filters.ward_id === null ? "null" : filters.ward_id}
+                onChange={(val) => setFilters(prev => ({ ...prev, ward_id: val === "null" ? null : val as number }))}
+                placeholder="All Wards"
+                triggerClassName="bg-white px-3 py-2 border-[#D6D9DE] h-auto"
+                className="w-[160px]"
+              />
             </div>
-          )}
+          </div>
 
           {/* KPI Grid */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
@@ -257,15 +389,15 @@ export default function DashboardAuthorityPage() {
 
           {/* Role-Specific Views */}
 
-          {(role === "SUPERADMIN" || role === "ADMIN" || role === "COMMISSIONER") && (
+          {(role === "SUPERADMIN" || role === "ADMIN" || role === "COMMISSIONER" || role === "AEN" || role === "SIN" || role === "RIN") && (
             <>
               <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
                 <div className="col-span-1 rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
                   <h3 className="text-xs font-medium text-[#343434] mb-2">
-                    {role === "COMMISSIONER" ? "Resolution Status" : "Applications by Status"}
+                    {(role === "COMMISSIONER" || role === "AEN" || role === "SIN" || role === "RIN") ? "Resolution Status" : "Applications by Status"}
                   </h3>
                   <ApplicationsByStatusChart data={
-                    role === "COMMISSIONER"
+                    (role === "COMMISSIONER" || role === "AEN" || role === "SIN" || role === "RIN")
                       ? (dashboard.complaint_resolution_status?.map(s => ({ status: formatStatus(s.status), count: s.count, color: STATUS_COLORS[s.status] || "#94A3B8" })) || [])
                       : statusData
                   } />
@@ -289,7 +421,7 @@ export default function DashboardAuthorityPage() {
                 </>
               )}
 
-              {role === "COMMISSIONER" && dashboard.complaint_list && (
+              {(role === "COMMISSIONER" || role === "AEN" || role === "SIN" || role === "RIN") && dashboard.complaint_list && (
                 <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
                   <h3 className="text-xs font-medium text-[#343434] mb-4">Recent Complaints</h3>
                   <div className="w-full overflow-x-auto rounded-lg border border-[#D6D9DE]">

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { useVehicleEntryDetail } from "@/hooks/useVehicleEntries";
@@ -23,7 +22,7 @@ const InfoSection = ({ title, children, rightAction }: { title: string; children
 );
 
 const DetailCard = ({ children, noPadding = false }: { children: React.ReactNode; noPadding?: boolean }) => (
-  <div className={`rounded-xl border border-[#D6D9DE] bg-white ${noPadding ? "" : "p-4"} shadow-sm`}>
+  <div className={`rounded-xl border border-[#D6D9DE] bg-white ${noPadding ? "" : "p-4"} shadow-sm overflow-hidden`}>
     {children}
   </div>
 );
@@ -168,7 +167,7 @@ export default function VehicleDetailDrawer({
                         {data.material_entry_details.map((material, idx) => (
                           <div key={idx} className="grid grid-cols-2 gap-y-4 border-b border-[#D6D9DE] pb-4 last:border-0 last:pb-0">
                             <div className="space-y-0.5">
-                              <p className="text-[15px] font-semibold text-[#343434]">{material.material_name}</p>
+                              <p className="text-[15px] font-semibold text-[#343434]">{material.material_name || material.custom_name || "Unknown Material"}</p>
                               <p className="text-[11px] font-medium text-[#343434] opacity-50 uppercase">Material Name</p>
                             </div>
                             <div className="text-right space-y-0.5">
@@ -176,15 +175,15 @@ export default function VehicleDetailDrawer({
                               <p className="text-[11px] font-medium text-[#343434] opacity-50 uppercase">Material Category</p>
                             </div>
                             <div className="space-y-0.5">
-                              <p className="text-[15px] font-semibold text-[#343434]">{material.approved_quantity} {material.unit}</p>
+                              <p className="text-[15px] font-semibold text-[#343434]">{(material as any).permitted_material_quantity ?? material.approved_quantity} {material.unit || material.custom_unit || ""}</p>
                               <p className="text-[11px] font-medium text-[#343434] opacity-50 uppercase">Total Permitted Quantity</p>
                             </div>
                             <div className="text-center space-y-0.5">
-                              <p className="text-[15px] font-semibold text-[#343434]">{material.consumed_quantity} {material.unit}</p>
+                              <p className="text-[15px] font-semibold text-[#343434]">{(material as any).quantity ?? material.consumed_quantity} {material.unit || material.custom_unit || ""}</p>
                               <p className="text-[11px] font-medium text-[#343434] opacity-50 uppercase">Quantity Entered</p>
                             </div>
                             <div className="text-right space-y-0.5">
-                              <p className="text-[15px] font-semibold text-[#343434]">{material.remaining_quantity} {material.unit}</p>
+                              <p className="text-[15px] font-semibold text-[#343434]">{(material as any).remaining_material_quantity ?? material.remaining_quantity} {material.unit || material.custom_unit || ""}</p>
                               <p className="text-[11px] font-medium text-[#343434] opacity-50 uppercase">Remaining Quantity</p>
                             </div>
                           </div>
@@ -196,24 +195,12 @@ export default function VehicleDetailDrawer({
                   {/* Entry Proofs */}
                   <InfoSection title="Entry Proofs">
                     <DetailCard noPadding>
-                      <div className="flex border-b border-[#D6D9DE] h-[160px]">
-                        <div className="flex-1 relative bg-gray-50 border-r border-[#D6D9DE]">
-                          {/* GMap Placeholder */}
-                          <Image src="/dashboard/images/hero-bg/1.png" alt="Location Map" fill className="object-cover opacity-60" />
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="flex flex-col items-center">
-                               <div className="h-6 w-6 rounded-full bg-red-500 border-2 border-white shadow-md mb-1" />
-                               <span className="text-[10px] font-bold text-gray-800 bg-white/80 px-1.5 rounded">Entry Point</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex-1 relative bg-gray-100">
-                          {data.entry_proof && data.entry_proof.length > 0 ? (
-                            <Image src={data.entry_proof[0]} alt="Vehicle Entry Proof" fill className="object-cover" unoptimized />
-                          ) : (
-                            <div className="flex h-full items-center justify-center bg-gray-50 text-xs text-[#343434]/40">No Proof Image</div>
-                          )}
-                        </div>
+                      <div className="relative h-[180px] w-full bg-gray-100 border-b border-[#D6D9DE]">
+                        {data.entry_proof && data.entry_proof.length > 0 ? (
+                          <Image src={data.entry_proof[0]} alt="Vehicle Entry Proof" fill className="object-cover" unoptimized />
+                        ) : (
+                          <div className="flex h-full items-center justify-center bg-gray-50 text-xs text-[#343434]/40">No Proof Image</div>
+                        )}
                       </div>
                       <div className="p-4 space-y-4">
                         <div className="text-center">

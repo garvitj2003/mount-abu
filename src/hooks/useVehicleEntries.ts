@@ -3,6 +3,11 @@ import { VehicleEntryService } from "@/services/vehicleEntryService";
 
 export function useVehicleEntries(params?: {
   search?: string;
+  vehicle_number?: string | string[];
+  material_name?: string | string[];
+  token_number?: string | string[];
+  start_date?: string;
+  end_date?: string;
   offset?: number;
   limit?: number;
 }) {

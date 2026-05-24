@@ -1,37 +1,95 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
+import SearchableSelect from "./SearchableSelect";
+import { useTokenSuggestions, useVehicleSuggestions, useMaterialSuggestions } from "@/hooks/useSuggestions";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface VehicleFilterDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  filters: {
+    token_number?: string[];
+    vehicle_number?: string[];
+    material_name?: string[];
+    start_date?: string;
+    end_date?: string;
+  };
+  onApply: (filters: {
+    token_number?: string[];
+    vehicle_number?: string[];
+    material_name?: string[];
+    start_date?: string;
+    end_date?: string;
+  }) => void;
+  tokenOptions?: string[];
+  vehicleOptions?: string[];
+  materialOptions?: string[];
 }
-
-const Tag = ({ text, onRemove }: { text: string; onRemove: () => void }) => (
-  <div className="flex items-center gap-1 rounded bg-[#E7F3FF] px-2 py-1 text-sm font-normal text-[#343434]">
-    {text}
-    <button onClick={onRemove} className="flex h-3.5 w-3.5 items-center justify-center rounded-full hover:bg-blue-200">
-      <Image src="/dashboard/icons/close.svg" alt="remove" width={10} height={10} className="opacity-60" />
-    </button>
-  </div>
-);
 
 export default function VehicleFilterDrawer({
   isOpen,
   onClose,
+  filters,
+  onApply,
+  tokenOptions: propTokenOptions,
+  vehicleOptions: propVehicleOptions,
+  materialOptions: propMaterialOptions,
 }: VehicleFilterDrawerProps) {
-  const [tokens, setTokens] = useState(["TKN-2025-014", "TKN-2025-019"]);
-  const [vehicles, setVehicles] = useState(["RJ24 AB 4587"]);
-  const [materials, setMaterials] = useState(["Cement", "Sand"]);
-  const [aiMatched, setMatched] = useState(true);
-  const [aiUnmatched, setUnmatched] = useState(false);
-  const [fromDate, setFromDate] = useState("05 Oct 2025");
-  const [toDate, setToDate] = useState("");
+  const [localFilters, setLocalFilters] = useState(filters);
+  const [tokenSearch, setTokenSearch] = useState("");
+  const [vehicleSearch, setVehicleSearch] = useState("");
+  const [materialSearch, setMaterialSearch] = useState("");
+
+  const debouncedTokenSearch = useDebounce(tokenSearch, 500);
+  const debouncedVehicleSearch = useDebounce(vehicleSearch, 500);
+  const debouncedMaterialSearch = useDebounce(materialSearch, 500);
+
+  const { data: apiTokenOptions = [], isLoading: isTokensLoading } = useTokenSuggestions(debouncedTokenSearch, { enabled: !propTokenOptions });
+  const { data: apiVehicleOptions = [], isLoading: isVehiclesLoading } = useVehicleSuggestions(debouncedVehicleSearch, { enabled: !propVehicleOptions });
+  const { data: apiMaterialOptions = [], isLoading: isMaterialsLoading } = useMaterialSuggestions(debouncedMaterialSearch, { enabled: !propMaterialOptions });
+
+  const finalTokenOptions = propTokenOptions 
+    ? propTokenOptions.filter(o => o.toLowerCase().includes(tokenSearch.toLowerCase())) 
+    : apiTokenOptions;
+    
+  const finalVehicleOptions = propVehicleOptions 
+    ? propVehicleOptions.filter(o => o.toLowerCase().includes(vehicleSearch.toLowerCase())) 
+    : apiVehicleOptions;
+    
+  const finalMaterialOptions = propMaterialOptions 
+    ? propMaterialOptions.filter(o => o.toLowerCase().includes(materialSearch.toLowerCase())) 
+    : apiMaterialOptions;
+
+  const isLocalMode = !!(propVehicleOptions || propMaterialOptions);
+
+  // Sync local state when filters prop changes or drawer opens
+  useEffect(() => {
+    if (isOpen) {
+      setLocalFilters(filters);
+    }
+  }, [isOpen, filters]);
 
   const handleApply = () => {
-    // Filter logic will be implemented here
+    onApply(localFilters);
+    onClose();
+  };
+
+  const handleClear = () => {
+    const cleared = {
+      token_number: [],
+      vehicle_number: [],
+      material_name: [],
+      start_date: "",
+      end_date: "",
+    };
+    setLocalFilters(cleared);
+    setTokenSearch("");
+    setVehicleSearch("");
+    setMaterialSearch("");
+    onApply(cleared);
     onClose();
   };
 
@@ -59,7 +117,7 @@ export default function VehicleFilterDrawer({
             {/* Header */}
             <div className="flex items-center justify-between border-b border-[#D6D9DE] bg-[#F5F6F7] px-6 py-4">
               <h2 className="text-[15px] font-medium text-[#343434]">
-                Vehicle Records Fliter
+                Vehicle Records Filter
               </h2>
               <button
                 onClick={onClose}
@@ -76,73 +134,61 @@ export default function VehicleFilterDrawer({
 
             {/* Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {/* Token Number */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#343434]">Token Number</label>
-                <div className="relative flex min-h-[38px] w-full flex-wrap gap-2 rounded-lg border border-[#D6D9DE] bg-white px-2 py-1.5 pr-8">
-                  {tokens.map((t) => (
-                    <Tag key={t} text={t} onRemove={() => setTokens(prev => prev.filter(x => x !== t))} />
-                  ))}
-                  <div className="pointer-events-none absolute right-3 top-[11px]">
-                    <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} className="opacity-60" />
-                  </div>
-                </div>
-              </div>
+              {/* Token Number - Hide in local mode (Token Detail view) */}
+              {!isLocalMode && (
+                <SearchableSelect
+                  label="Token Number"
+                  placeholder="Select Token Number"
+                  selectedValues={localFilters.token_number || []}
+                  onAdd={(val) => setLocalFilters(prev => ({ 
+                    ...prev, 
+                    token_number: [...(prev.token_number || []), val] 
+                  }))}
+                  onRemove={(val) => setLocalFilters(prev => ({ 
+                    ...prev, 
+                    token_number: (prev.token_number || []).filter(x => x !== val) 
+                  }))}
+                  onSearchChange={setTokenSearch}
+                  options={finalTokenOptions}
+                  isLoading={isTokensLoading && !propTokenOptions}
+                />
+              )}
 
               {/* Vehicle Number */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#343434]">Vehicle Number</label>
-                <div className="relative flex min-h-[38px] w-full flex-wrap gap-2 rounded-lg border border-[#D6D9DE] bg-white px-2 py-1.5 pr-8">
-                  {vehicles.map((v) => (
-                    <Tag key={v} text={v} onRemove={() => setVehicles(prev => prev.filter(x => x !== v))} />
-                  ))}
-                  <div className="pointer-events-none absolute right-3 top-[11px]">
-                    <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} className="opacity-60" />
-                  </div>
-                </div>
-              </div>
+              <SearchableSelect
+                label="Vehicle Number"
+                placeholder="Select Vehicle Number"
+                selectedValues={localFilters.vehicle_number || []}
+                onAdd={(val) => setLocalFilters(prev => ({ 
+                  ...prev, 
+                  vehicle_number: [...(prev.vehicle_number || []), val] 
+                }))}
+                onRemove={(val) => setLocalFilters(prev => ({ 
+                  ...prev, 
+                  vehicle_number: (prev.vehicle_number || []).filter(x => x !== val) 
+                }))}
+                onSearchChange={setVehicleSearch}
+                options={finalVehicleOptions}
+                isLoading={isVehiclesLoading && !propVehicleOptions}
+              />
 
               {/* Material Type */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#343434]">Material Type</label>
-                <div className="relative flex min-h-[38px] w-full flex-wrap gap-2 rounded-lg border border-[#D6D9DE] bg-white px-2 py-1.5 pr-8">
-                  {materials.map((m) => (
-                    <Tag key={m} text={m} onRemove={() => setMaterials(prev => prev.filter(x => x !== m))} />
-                  ))}
-                  <div className="pointer-events-none absolute right-3 top-[11px]">
-                    <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} className="opacity-60" />
-                  </div>
-                </div>
-              </div>
-
-              {/* AI Plate Recognition */}
-              <div className="space-y-3">
-                <p className="text-sm font-medium text-[#343434]">AI Number Plate Recognization</p>
-                <div className="space-y-3">
-                  <label className="flex cursor-pointer items-center gap-3">
-                    <input type="checkbox" className="hidden" checked={aiMatched} onChange={() => setMatched(!aiMatched)} />
-                    <div className="h-5 w-5 flex items-center justify-center">
-                      {aiMatched ? (
-                        <Image src="/dashboard/icons/select-tick.svg" alt="checked" width={20} height={20} />
-                      ) : (
-                        <div className="h-5 w-5 rounded border border-[#D6D9DE] bg-white" />
-                      )}
-                    </div>
-                    <span className="text-sm font-normal text-[#343434]">Matched</span>
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-3">
-                    <input type="checkbox" className="hidden" checked={aiUnmatched} onChange={() => setUnmatched(!aiUnmatched)} />
-                    <div className="h-5 w-5 flex items-center justify-center">
-                      {aiUnmatched ? (
-                        <Image src="/dashboard/icons/select-tick.svg" alt="checked" width={20} height={20} />
-                      ) : (
-                        <div className="h-5 w-5 rounded border border-[#D6D9DE] bg-white" />
-                      )}
-                    </div>
-                    <span className="text-sm font-normal text-[#343434]">Unmatched</span>
-                  </label>
-                </div>
-              </div>
+              <SearchableSelect
+                label="Material Type"
+                placeholder="Select Material Name"
+                selectedValues={localFilters.material_name || []}
+                onAdd={(val) => setLocalFilters(prev => ({ 
+                  ...prev, 
+                  material_name: [...(prev.material_name || []), val] 
+                }))}
+                onRemove={(val) => setLocalFilters(prev => ({ 
+                  ...prev, 
+                  material_name: (prev.material_name || []).filter(x => x !== val) 
+                }))}
+                onSearchChange={setMaterialSearch}
+                options={finalMaterialOptions}
+                isLoading={isMaterialsLoading && !propMaterialOptions}
+              />
 
               {/* Dates */}
               <div className="flex gap-4">
@@ -150,40 +196,22 @@ export default function VehicleFilterDrawer({
                   <label className="text-sm font-medium text-[#343434]">From Date</label>
                   <div className="relative">
                     <input 
-                      type="text" 
-                      placeholder="Choose Date"
-                      value={fromDate}
-                      onChange={(e) => setFromDate(e.target.value)}
+                      type="date" 
+                      value={localFilters.start_date || ""}
+                      onChange={(e) => setLocalFilters(prev => ({ ...prev, start_date: e.target.value }))}
                       className="w-full h-[38px] rounded-lg border border-[#D6D9DE] bg-white px-3 text-sm text-[#343434] outline-none"
                     />
-                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-60">
-                        <path d="M12.6667 2.66699H3.33333C2.59695 2.66699 2 3.26395 2 4.00033V13.3337C2 14.07 2.59695 14.667 3.33333 14.667H12.6667C13.403 14.667 14 14.07 14 13.3337V4.00033C14 3.26395 13.403 2.66699 12.6667 2.66699Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M10.6667 1.33301V4.00033" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M5.33337 1.33301V4.00033" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M2 6.66699H14" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
                   </div>
                 </div>
                 <div className="flex-1 space-y-1.5">
                   <label className="text-sm font-medium text-[#343434]">To Date</label>
                   <div className="relative">
                     <input 
-                      type="text" 
-                      placeholder="Choose Date"
-                      value={toDate}
-                      onChange={(e) => setToDate(e.target.value)}
+                      type="date" 
+                      value={localFilters.end_date || ""}
+                      onChange={(e) => setLocalFilters(prev => ({ ...prev, end_date: e.target.value }))}
                       className="w-full h-[38px] rounded-lg border border-[#D6D9DE] bg-white px-3 text-sm text-[#343434] outline-none"
                     />
-                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-60">
-                        <path d="M12.6667 2.66699H3.33333C2.59695 2.66699 2 3.26395 2 4.00033V13.3337C2 14.07 2.59695 14.667 3.33333 14.667H12.6667C13.403 14.667 14 14.07 14 13.3337V4.00033C14 3.26395 13.403 2.66699 12.6667 2.66699Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M10.6667 1.33301V4.00033" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M5.33337 1.33301V4.00033" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M2 6.66699H14" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -192,16 +220,16 @@ export default function VehicleFilterDrawer({
             {/* Footer */}
             <div className="flex items-center justify-end gap-3 border-t border-[#D6D9DE] p-4 bg-white mt-auto">
               <button 
-                onClick={onClose}
+                onClick={handleClear}
                 className="h-[38px] rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-6 text-sm font-medium text-[#343434] hover:bg-gray-200 transition-colors"
               >
-                Close
+                Clear All
               </button>
               <button 
                 onClick={handleApply}
                 className="h-[38px] rounded-lg bg-[#0C83FF] px-8 text-sm font-medium text-white hover:bg-blue-600 transition-colors"
               >
-                Filter Records
+                Apply Filters
               </button>
             </div>
           </motion.div>

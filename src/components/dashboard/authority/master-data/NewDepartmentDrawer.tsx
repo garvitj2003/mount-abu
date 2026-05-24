@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { useCreateDepartment, useUpdateDepartment, useJens } from "@/hooks/useMasterData";
 import { type components } from "@/types/api";
+import DropdownSelect from "@/components/ui/DropdownSelect";
 
 type DepartmentResponse = components["schemas"]["DepartmentResponse"];
 
@@ -34,17 +35,38 @@ export default function NewDepartmentDrawer({
     jen_id: "" as string | number,
   });
 
+  const [customType, setCustomType] = useState("");
+  const [isOtherType, setIsOtherType] = useState(false);
+
+  const TYPE_OPTIONS = [
+    { label: "Municipal", value: "Municipal" },
+    { label: "Planning", value: "Planning" },
+    { label: "Engineering", value: "Engineering" },
+    { label: "Regulatory", value: "Regulatory" },
+    { label: "Other", value: "Other" },
+  ];
+
   useEffect(() => {
     if (data) {
+      const isPredefined = TYPE_OPTIONS.some(opt => opt.value === data.type);
       setFormData({
         name: data.name,
         code: data.code,
-        type: data.type,
+        type: isPredefined ? data.type : "Other",
         status: data.status,
         jen_id: data.jen_id || "",
       });
+      if (!isPredefined) {
+        setCustomType(data.type);
+        setIsOtherType(true);
+      } else {
+        setCustomType("");
+        setIsOtherType(false);
+      }
     } else {
       setFormData({ name: "", code: "", type: "Municipal", status: true, jen_id: "" });
+      setCustomType("");
+      setIsOtherType(false);
     }
   }, [data, isOpen]);
 
@@ -53,9 +75,16 @@ export default function NewDepartmentDrawer({
       alert("Name and Code are required");
       return;
     }
+
+    const finalType = formData.type === "Other" ? customType : formData.type;
+    if (!finalType) {
+      alert("Department type is required");
+      return;
+    }
     
     const payload = {
       ...formData,
+      type: finalType,
       jen_id: formData.jen_id === "" ? null : Number(formData.jen_id),
     };
 
@@ -122,42 +151,54 @@ export default function NewDepartmentDrawer({
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-[#343434]">Department Type</label>
-                  <div className="relative">
-                    <select 
-                      className="w-full h-[38px] appearance-none rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] bg-white"
-                      value={formData.type}
-                      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                    >
-                      <option value="Municipal">Municipal</option>
-                      <option value="Planning">Planning</option>
-                      <option value="Engineering">Engineering</option>
-                      <option value="Regulatory">Regulatory</option>
-                    </select>
-                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                      <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} />
-                    </div>
-                  </div>
+                  <DropdownSelect
+                    options={TYPE_OPTIONS}
+                    value={formData.type}
+                    onChange={(val) => {
+                      setFormData({ ...formData, type: val as string });
+                      setIsOtherType(val === "Other");
+                    }}
+                    placeholder="Select Type"
+                    className="w-full h-[38px]"
+                  />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-[#343434]">Assign JEN</label>
-                  <div className="relative">
-                    <select 
-                      className="w-full h-[38px] appearance-none rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] bg-white"
-                      value={formData.jen_id}
-                      onChange={(e) => setFormData({ ...formData, jen_id: e.target.value })}
-                    >
-                      <option value="">Select JEN</option>
-                      {jens?.map((jen) => (
-                        <option key={jen.id} value={jen.id}>{jen.name}</option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                      <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} />
-                    </div>
-                  </div>
+                  <label className="text-sm font-medium text-[#343434]">Assign to</label>
+                  <DropdownSelect
+                    options={jens?.map((j) => ({ label: j.name, value: j.id, role: j.role })) || []}
+                    value={formData.jen_id}
+                    onChange={(val) => setFormData({ ...formData, jen_id: val })}
+                    placeholder="Select Official"
+                    className="w-full h-[38px]"
+                    renderOption={(opt: any) => (
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">{opt.label}</span>
+                        <span className="text-[10px] font-normal opacity-50 uppercase tracking-wider">
+                          {opt.role?.replace('_', ' ')}
+                        </span>
+                      </div>
+                    )}
+                  />
                 </div>
               </div>
+
+              {isOtherType && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-1.5"
+                >
+                  <label className="text-sm font-medium text-[#343434]">Specify Department Type</label>
+                  <input 
+                    type="text"
+                    placeholder="Enter custom type"
+                    className="w-full h-[38px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
+                    value={customType}
+                    onChange={(e) => setCustomType(e.target.value)}
+                  />
+                </motion.div>
+              )}
 
               <div className="flex items-center justify-between gap-3 pt-2">
                 <div className="space-y-0.5">

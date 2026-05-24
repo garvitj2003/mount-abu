@@ -9,6 +9,7 @@ import { useMyComplaints } from "@/hooks/useComplaints";
 import { ComplaintService } from "@/services/complaintService";
 import { complaintSchema, type ComplaintFormData } from "@/lib/validations/complaint";
 import { useQueryClient } from "@tanstack/react-query";
+import DropdownSelect from "@/components/ui/DropdownSelect";
 
 interface NewComplaintDrawerProps {
   isOpen: boolean;
@@ -183,46 +184,38 @@ export default function NewComplaintDrawer({
               {/* Choose Category */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#343434]">Choose Category</label>
-                <div className="relative">
-                  <select 
-                    className={`w-full h-[38px] appearance-none rounded-lg border ${errors.category_id ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] bg-white`}
-                    value={formData.category_id || ""}
-                    onChange={(e) => setFormData({ ...formData, category_id: Number(e.target.value) })}
-                  >
-                    <option value="">Select Category</option>
-                    {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-                  </select>
-                  <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                    <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} />
-                  </div>
-                </div>
+                <DropdownSelect
+                  options={categories.map(cat => ({ label: cat.name, value: cat.id }))}
+                  value={formData.category_id || ""}
+                  onChange={(val) => setFormData({ ...formData, category_id: Number(val) })}
+                  placeholder="Select Category"
+                  className="w-full h-[38px]"
+                  triggerClassName={errors.category_id ? "border-red-500" : ""}
+                />
               </div>
 
               {/* Refer to Past Complain */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#343434]">Refer to Past Complain</label>
-                <div className="relative">
-                  <select 
-                    className="w-full h-[38px] appearance-none rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] bg-white"
-                  >
-                    {pastComplaints.length > 0 ? (
-                      <>
-                        <option value="">Select Category</option>
-                        {Array.from(new Set(pastComplaints.map(c => c.category_id)))
+                <DropdownSelect
+                  options={
+                    pastComplaints.length > 0 
+                      ? Array.from(new Set(pastComplaints.map(c => c.category_id)))
                           .map(catId => {
                             const category = categories.find(cat => cat.id === catId);
-                            return <option key={catId} value={catId || 0}>{category?.name || "Unknown Category"}</option>;
+                            return { label: category?.name || "Unknown Category", value: catId || 0 };
                           })
-                        }
-                      </>
-                    ) : (
-                      <option value="">No past complaints</option>
-                    )}
-                  </select>
-                  <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                    <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} />
-                  </div>
-                </div>
+                      : []
+                  }
+                  value={null}
+                  onChange={(val) => {
+                    const categoryId = Number(val);
+                    if (categoryId) setFormData(prev => ({ ...prev, category_id: categoryId }));
+                  }}
+                  placeholder={pastComplaints.length > 0 ? "Select Category" : "No past complaints"}
+                  disabled={pastComplaints.length === 0}
+                  className="w-full h-[38px]"
+                />
               </div>
 
               {/* Write detailed complain */}
@@ -270,17 +263,14 @@ export default function NewComplaintDrawer({
                 <label className="text-sm font-medium text-[#343434]">Ward No.</label>
                 <div className="flex gap-3">
                   <div className="relative flex-1">
-                    <select 
-                      className={`w-full h-[38px] appearance-none rounded-lg border ${errors.ward_id ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] bg-white`}
+                    <DropdownSelect
+                      options={wards.map(ward => ({ label: ward.name, value: ward.id }))}
                       value={formData.ward_id || ""}
-                      onChange={(e) => setFormData({ ...formData, ward_id: Number(e.target.value) })}
-                    >
-                      <option value="">Ward List Goes Here</option>
-                      {wards.map(ward => <option key={ward.id} value={ward.id}>{ward.name}</option>)}
-                    </select>
-                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                      <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} />
-                    </div>
+                      onChange={(val) => setFormData({ ...formData, ward_id: Number(val) })}
+                      placeholder="Select Ward"
+                      className="w-full h-[38px]"
+                      triggerClassName={errors.ward_id ? "border-red-500" : ""}
+                    />
                   </div>
                   <button className="h-[38px] whitespace-nowrap rounded-lg border border-[#0C83FF] bg-[#E7F3FF] px-4 text-xs font-medium text-[#0C83FF] hover:bg-[#D6E9FF] transition-colors">
                     Know Your Ward

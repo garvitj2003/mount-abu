@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import Image from "next/image";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import VehicleFilterDrawer from "@/components/dashboard/authority/vehicle-entries/VehicleFilterDrawer";
@@ -130,7 +130,7 @@ const Sidebar = ({ token, sidebarRef }: { token: TokenDetailResponse; sidebarRef
 const TableRow = ({
   entry, onClick
 }: {
-  entry: components["schemas"]["backend__schemas__response__application__VehicleEntryResponse"];
+  entry: components["schemas"]["VehicleEntryResponse"];
   onClick: () => void
 }) => (
   <tr className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
@@ -166,11 +166,53 @@ export default function CitizenTokenDetailsPage() {
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState<{
+    token_number?: string[];
+    vehicle_number?: string[];
+    material_name?: string[];
+    start_date?: string;
+    end_date?: string;
+  }>({});
   const [isDownloading, setIsDownloading] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const pdfRef = useRef<HTMLDivElement>(null);
 
   const { data: token, isLoading, error } = useTokenDetail(transportCode);
+
+  const filteredEntries = useMemo(() => {
+    if (!token?.vehicle_entries) return [];
+    
+    return token.vehicle_entries.filter(entry => {
+      // Search
+      const matchesSearch = !search || 
+        entry.vehicle_number?.toLowerCase().includes(search.toLowerCase()) ||
+        entry.material_name?.toLowerCase().includes(search.toLowerCase());
+      
+      if (!matchesSearch) return false;
+
+      // Vehicle Number filter
+      if (filters.vehicle_number && filters.vehicle_number.length > 0) {
+        if (!filters.vehicle_number.includes(entry.vehicle_number || "")) return false;
+      }
+
+      // Material Name filter
+      if (filters.material_name && filters.material_name.length > 0) {
+        if (!filters.material_name.includes(entry.material_name || "")) return false;
+      }
+
+      // Date Range filter
+      if (filters.start_date) {
+        if (new Date(entry.entry_at) < new Date(filters.start_date)) return false;
+      }
+      if (filters.end_date) {
+        const endDate = new Date(filters.end_date);
+        endDate.setHours(23, 59, 59, 999);
+        if (new Date(entry.entry_at) > endDate) return false;
+      }
+
+      return true;
+    });
+  }, [token?.vehicle_entries, search, filters]);
 
   const handleEntryClick = (id: number) => {
     setSelectedEntryId(id);
@@ -298,21 +340,15 @@ export default function CitizenTokenDetailsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {token.vehicle_entries
-                      .filter(entry =>
-                        !search ||
-                        entry.vehicle_number?.toLowerCase().includes(search.toLowerCase()) ||
-                        entry.material_name?.toLowerCase().includes(search.toLowerCase())
-                      )
-                      .map((entry, idx) => (
-                        <TableRow
-                          key={idx}
-                          entry={entry}
-                          onClick={() => handleEntryClick(entry.id)}
-                        />
-                      ))}
-                    {token.vehicle_entries.length === 0 && (
-                      <tr><td colSpan={5} className="p-10 text-center text-sm opacity-50 italic">No vehicle entries recorded yet.</td></tr>
+                    {filteredEntries.map((entry, idx) => (
+                      <TableRow
+                        key={idx}
+                        entry={entry}
+                        onClick={() => handleEntryClick(entry.id)}
+                      />
+                    ))}
+                    {filteredEntries.length === 0 && (
+                      <tr><td colSpan={5} className="p-10 text-center text-sm opacity-50 italic">No vehicle entries match your filters.</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -352,6 +388,10 @@ export default function CitizenTokenDetailsPage() {
       <VehicleFilterDrawer
         isOpen={isFilterDrawerOpen}
         onClose={() => setIsFilterDrawerOpen(false)}
+        filters={filters}
+        onApply={setFilters}
+        vehicleOptions={Array.from(new Set(token.vehicle_entries.map(e => e.vehicle_number || "").filter(Boolean)))}
+        materialOptions={Array.from(new Set(token.vehicle_entries.map(e => e.material_name || "").filter(Boolean)))}
       />
 
       <VehicleDetailDrawer

@@ -28,6 +28,15 @@ export const ROLE_PERMISSIONS: Partial<Record<UserRole, string[]>> = {
     "/authority/applications",
     "/authority/complaints",
   ],
+  AEN: [
+    "/authority/complaints",
+  ],
+  SIN: [
+    "/authority/complaints",
+  ],
+  RIN: [
+    "/authority/complaints",
+  ],
   DEPT_LAND: [
     "/authority/applications",
   ],

@@ -11,7 +11,8 @@ import {
   useUpdateWard,
   useUpdateDepartment,
   useUpdateRole,
-  useUpdateComplaintCategory
+  useUpdateComplaintCategory,
+  useUpdateMaterial
 } from "@/hooks/useMasterData";
 import NewCategoryDrawer from "@/components/dashboard/authority/master-data/NewCategoryDrawer";
 import NewWardDrawer from "@/components/dashboard/authority/master-data/NewWardDrawer";
@@ -76,6 +77,7 @@ export default function AuthorityMasterDataPage() {
   const { mutateAsync: updateDept } = useUpdateDepartment();
   const { mutateAsync: updateRole } = useUpdateRole();
   const { mutateAsync: updateCategory } = useUpdateComplaintCategory();
+  const { mutateAsync: updateMaterial } = useUpdateMaterial();
 
   const handleActionClick = (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
@@ -102,6 +104,8 @@ export default function AuthorityMasterDataPage() {
         await updateRole({ id: item.id, data: { status: newStatus } });
       } else if (activeTab === "Complaint Categories") {
         await updateCategory({ id: item.id, data: { status: newStatus } });
+      } else if (activeTab === "Materials") {
+        await updateMaterial({ id: item.id, data: { status: newStatus } });
       }
       alert("Status updated successfully!");
     } catch (error) {
@@ -240,6 +244,7 @@ export default function AuthorityMasterDataPage() {
     },
     { header: "Material Name", key: "name" },
     { header: "Unit", key: "unit" },
+    { header: "Status", key: "status" },
     { 
       header: "Created by", 
       key: "created_by",
@@ -250,6 +255,7 @@ export default function AuthorityMasterDataPage() {
       key: "created_at",
       render: (row: any) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatDate(row.created_at)}</span>
     },
+    ACTION_COLUMN
   ];
 
   useEffect(() => {
@@ -439,7 +445,7 @@ export default function AuthorityMasterDataPage() {
             )}
           </div>
           
-            {openDropdownId && activeTab !== "Materials" && (
+            {openDropdownId && (
               <div 
                 ref={dropdownRef}
                 style={{ 
@@ -463,6 +469,7 @@ export default function AuthorityMasterDataPage() {
                         else if (activeTab === "Departments") setIsDepartmentDrawerOpen(true);
                         else if (activeTab === "Roles") setIsRoleDrawerOpen(true);
                         else if (activeTab === "Complaint Categories") setIsCategoryDrawerOpen(true);
+                        else if (activeTab === "Materials") setIsMaterialDrawerOpen(true);
                         setOpenDropdownId(null);
                       }}
                     />

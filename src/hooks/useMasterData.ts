@@ -11,6 +11,7 @@ type RoleUpdate = components["schemas"]["RoleUpdate"];
 type ComplaintCategoryCreate = components["schemas"]["ComplaintCategoryCreate"];
 type ComplaintCategoryUpdate = components["schemas"]["ComplaintCategoryUpdate"];
 type MaterialCreate = components["schemas"]["MaterialCreate"];
+type MaterialUpdate = components["schemas"]["MaterialUpdate"];
 
 export function useWards(options?: { enabled?: boolean }) {
   return useQuery({
@@ -135,6 +136,15 @@ export function useCreateMaterial() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: MaterialCreate) => MasterDataService.createMaterial(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["materials"] }),
+  });
+}
+
+export function useUpdateMaterial() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: MaterialUpdate }) => 
+      MasterDataService.updateMaterial(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["materials"] }),
   });
 }

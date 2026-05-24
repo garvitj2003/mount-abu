@@ -6,6 +6,9 @@ const API_URL = typeof window !== "undefined" ? "/api/proxy" : (process.env.INTE
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true, // Required to send cookies to the backend
+  paramsSerializer: {
+    indexes: null, // This removes the brackets []
+  }
 });
 
 /**

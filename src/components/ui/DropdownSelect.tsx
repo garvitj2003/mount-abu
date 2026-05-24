@@ -17,6 +17,7 @@ interface DropdownSelectProps {
   className?: string;
   disabled?: boolean;
   renderTrigger?: (option: Option | undefined, isOpen: boolean) => React.ReactNode;
+  renderOption?: (option: Option) => React.ReactNode;
   triggerClassName?: string;
 }
 
@@ -28,6 +29,7 @@ export default function DropdownSelect({
   className = "",
   disabled = false,
   renderTrigger,
+  renderOption,
   triggerClassName = "",
 }: DropdownSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -102,7 +104,7 @@ export default function DropdownSelect({
                     value === option.value ? "bg-[#E7F3FF] text-[#0C83FF] font-medium" : "text-[#343434] font-normal"
                   }`}
                 >
-                  {option.label}
+                  {renderOption ? renderOption(option) : option.label}
                 </button>
               ))
             ) : (

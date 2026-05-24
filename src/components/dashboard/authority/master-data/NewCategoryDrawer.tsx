@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { useCreateComplaintCategory, useUpdateComplaintCategory, useDepartments } from "@/hooks/useMasterData";
 import { type components } from "@/types/api";
+import DropdownSelect from "@/components/ui/DropdownSelect";
 
 type ComplaintCategoryResponse = components["schemas"]["ComplaintCategoryResponse"];
 
@@ -112,16 +113,13 @@ export default function NewCategoryDrawer({
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#343434]">Mapped Department</label>
-                <select
-                  className="w-full h-[38px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] bg-white"
+                <DropdownSelect
+                  options={departments.map((dept) => ({ label: dept.name, value: dept.id }))}
                   value={formData.department_id}
-                  onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
-                >
-                  <option value="">Select Department</option>
-                  {departments.map((dept) => (
-                    <option key={dept.id} value={dept.id}>{dept.name}</option>
-                  ))}
-                </select>
+                  onChange={(val) => setFormData({ ...formData, department_id: val })}
+                  placeholder="Select Department"
+                  className="w-full h-[38px]"
+                />
               </div>
 
               <div className="space-y-1.5">

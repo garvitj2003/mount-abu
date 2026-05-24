@@ -17,6 +17,7 @@ type WardUpdate = components["schemas"]["WardUpdate"];
 type DepartmentUpdate = components["schemas"]["DepartmentUpdate"];
 type RoleUpdate = components["schemas"]["RoleUpdate"];
 type ComplaintCategoryUpdate = components["schemas"]["ComplaintCategoryUpdate"];
+type MaterialUpdate = components["schemas"]["MaterialUpdate"];
 
 export const MasterDataService = {
   // Wards
@@ -88,6 +89,10 @@ export const MasterDataService = {
   },
   async createMaterial(data: MaterialCreate): Promise<MaterialResponse> {
     const response = await api.post<MaterialResponse>("/api/master/materials", data);
+    return response.data;
+  },
+  async updateMaterial(materialId: number, data: MaterialUpdate): Promise<MaterialResponse> {
+    const response = await api.put<MaterialResponse>(`/api/master/materials/${materialId}`, data);
     return response.data;
   },
 };

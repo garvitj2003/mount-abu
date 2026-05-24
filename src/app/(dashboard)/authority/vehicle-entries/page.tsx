@@ -10,21 +10,67 @@ import { useVehicleEntries } from "@/hooks/useVehicleEntries";
 import { format } from "date-fns";
 import { usePagination } from "@/hooks/usePagination";
 
-const WarningTooltip = ({ text }: { text: string }) => {
+const WarningTooltip = ({ text, index }: { text: string; index: number }) => {
+  const isFirstFewRows = index < 3;
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+      initial={{ opacity: 0, y: isFirstFewRows ? -10 : 10, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+      exit={{ opacity: 0, y: isFirstFewRows ? -10 : 10, scale: 0.95 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className="absolute bottom-full left-1/2 z-[100] mb-2 -translate-x-1/2"
+      className={`absolute left-1/2 z-[100] -translate-x-1/2 ${
+        isFirstFewRows ? "top-full mt-2" : "bottom-full mb-2"
+      }`}
     >
       <div className="relative rounded-lg bg-[#343434] px-3 py-2 shadow-lg">
         <p className="whitespace-nowrap text-xs font-medium text-white">
           {text}
         </p>
         {/* Triangle Arrow */}
-        <div className="absolute left-1/2 top-full -translate-x-1/2 border-x-8 border-t-8 border-x-transparent border-t-[#343434]" />
+        <div 
+          className={`absolute left-1/2 -translate-x-1/2 border-x-8 border-x-transparent ${
+            isFirstFewRows 
+              ? "bottom-full border-b-8 border-b-[#343434]" 
+              : "top-full border-t-8 border-t-[#343434]"
+          }`} 
+        />
+      </div>
+    </motion.div>
+  );
+};
+
+const MaterialsTooltip = ({ materials, index }: { materials: { material_name: string; quantity: number; unit: string }[], index: number }) => {
+  const isFirstFewRows = index < 3;
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: isFirstFewRows ? -10 : 10, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: isFirstFewRows ? -10 : 10, scale: 0.95 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className={`absolute left-1/2 z-[100] -translate-x-1/2 ${
+        isFirstFewRows ? "top-full mt-2" : "bottom-full mb-2"
+      }`}
+    >
+      <div className="relative rounded-lg bg-[#343434] px-4 py-3 shadow-xl w-max max-w-[320px]">
+        <div className="flex flex-col gap-2">
+          <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wider border-b border-white/10 pb-1 mb-1">
+            Material Breakdown
+          </p>
+          {materials.map((m, idx) => (
+            <div key={idx} className="flex items-center justify-between gap-4">
+              <span className="text-xs font-medium text-white">{m.material_name}</span>
+              <span className="text-xs font-bold text-[#0C83FF]">{m.quantity} {m.unit}</span>
+            </div>
+          ))}
+        </div>
+        {/* Triangle Arrow */}
+        <div 
+          className={`absolute left-1/2 -translate-x-1/2 border-x-8 border-x-transparent ${
+            isFirstFewRows 
+              ? "bottom-full border-b-8 border-b-[#343434]" 
+              : "top-full border-t-8 border-t-[#343434]"
+          }`} 
+        />
       </div>
     </motion.div>
   );
@@ -33,7 +79,15 @@ const WarningTooltip = ({ text }: { text: string }) => {
 export default function AuthorityVehicleEntriesPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [filters, setFilters] = useState<{
+    token_number?: string[];
+    vehicle_number?: string[];
+    material_name?: string[];
+    start_date?: string;
+    end_date?: string;
+  }>({});
   const [hoveredToken, setHoveredToken] = useState<number | null>(null);
+  const [hoveredMaterials, setHoveredMaterials] = useState<number | null>(null);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
@@ -47,27 +101,48 @@ export default function AuthorityVehicleEntriesPage() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Reset page when search changes
-  const prevSearch = useRef(debouncedSearch);
+  // Reset page when search or filters change
+  const prevParams = useRef({ search: debouncedSearch, filters });
   useEffect(() => {
-    if (debouncedSearch !== prevSearch.current) {
-      prevSearch.current = debouncedSearch;
+    if (debouncedSearch !== prevParams.current.search || JSON.stringify(filters) !== JSON.stringify(prevParams.current.filters)) {
+      prevParams.current = { search: debouncedSearch, filters };
       if (page !== 1) {
         setPage(1);
       }
     }
-  }, [debouncedSearch, page, setPage]);
+  }, [debouncedSearch, filters, page, setPage]);
 
-  const { data: entries = [], isLoading } = useVehicleEntries({
-    search: debouncedSearch || undefined,
-    offset: (page - 1) * limit,
-    limit,
-  });
+  const requestParams = useMemo(() => {
+    const params: any = {
+      search: debouncedSearch || undefined,
+      offset: (page - 1) * limit,
+      limit,
+    };
+
+    if (filters.token_number && filters.token_number.length > 0) params.token_number = filters.token_number;
+    if (filters.vehicle_number && filters.vehicle_number.length > 0) params.vehicle_number = filters.vehicle_number;
+    if (filters.material_name && filters.material_name.length > 0) params.material_name = filters.material_name;
+    if (filters.start_date && filters.start_date !== "") params.start_date = filters.start_date;
+    if (filters.end_date && filters.end_date !== "") params.end_date = filters.end_date;
+
+    return params;
+  }, [debouncedSearch, filters, page, limit]);
+
+  const { data: entries = [], isLoading } = useVehicleEntries(requestParams);
 
   const handleEntryClick = (id: number) => {
     setSelectedEntryId(id);
     setIsDetailDrawerOpen(true);
   };
+
+  const activeFiltersCount = useMemo(() => {
+    return Object.entries(filters).reduce((acc, [key, value]) => {
+      if (Array.isArray(value)) {
+        return acc + value.length;
+      }
+      return acc + (value && value !== "" ? 1 : 0);
+    }, 0);
+  }, [filters]);
 
   // Since API doesn't return total count, we estimate total pages
   const totalPages = useMemo(() => {
@@ -105,7 +180,6 @@ export default function AuthorityVehicleEntriesPage() {
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
-                  setPage(1);
                 }}
                 className="w-full border-none bg-transparent p-0 text-sm font-normal text-[#343434] outline-none placeholder:text-[#343434]/60 focus:ring-0"
               />
@@ -114,12 +188,17 @@ export default function AuthorityVehicleEntriesPage() {
             {/* Filter Button */}
             <button 
               onClick={() => setIsFilterDrawerOpen(true)}
-              className="flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-white px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer"
+              className="relative flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-white px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M2 4.66667H14M4 8H12M6.66667 11.3333H9.33333" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               <span className="text-sm font-normal text-[#343434]">Filter</span>
+              {activeFiltersCount > 0 && (
+                <div className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#0C83FF] text-[10px] font-bold text-white ring-2 ring-white">
+                  {activeFiltersCount}
+                </div>
+              )}
             </button>
           </div>
 
@@ -132,12 +211,11 @@ export default function AuthorityVehicleEntriesPage() {
                     "Token Number",
                     "Vehicle Number",
                     "Naaka Incharge",
-                    "Material Type",
-                    "Quantity Entered",
+                    "Materials",
                     "Entry Date & Time",
                   ].map((header, idx) => (
                     <th key={header} className="px-2 py-3 text-left">
-                      <div className={`flex items-center gap-2 ${idx < 5 ? "border-r border-[rgba(0,0,0,0.1)]" : ""} pr-2`}>
+                      <div className={`flex items-center gap-2 ${idx < 4 ? "border-r border-[rgba(0,0,0,0.1)]" : ""} pr-2`}>
                         <span className="text-xs font-semibold text-[#333333] opacity-70 uppercase">{header}</span>
                       </div>
                     </th>
@@ -147,7 +225,7 @@ export default function AuthorityVehicleEntriesPage() {
               <tbody>
                 {isLoading ? (
                    <tr>
-                     <td colSpan={6} className="px-2 py-8 text-center text-sm text-[#343434]/60">
+                     <td colSpan={5} className="px-2 py-8 text-center text-sm text-[#343434]/60">
                        <div className="flex justify-center items-center gap-2">
                          <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#0C83FF] border-t-transparent"></div>
                          <span>Loading vehicle entries...</span>
@@ -156,17 +234,17 @@ export default function AuthorityVehicleEntriesPage() {
                    </tr>
                 ) : entries.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-2 py-8 text-center text-sm text-[#343434]/60">
+                    <td colSpan={5} className="px-2 py-8 text-center text-sm text-[#343434]/60">
                       No vehicle entries found.
                     </td>
                   </tr>
                 ) : (
-                  entries.map((item) => (
+                  entries.map((item, index) => (
                     <tr key={item.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                       <td className="px-2 py-3">
                         <div className="flex items-center gap-2">
                           <span 
-                            onClick={() => handleEntryClick(item.vehicle_entry_id)}
+                            onClick={() => handleEntryClick(item.id)}
                             className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer"
                           >
                             {item.token_number || "N/A"}
@@ -182,11 +260,11 @@ export default function AuthorityVehicleEntriesPage() {
                                 alt="Warning" 
                                 width={15} 
                                 height={13} 
-                                className="cursor-help"
+                                className="cursor-pointer"
                               />
                               <AnimatePresence>
                                 {hoveredToken === item.id && (
-                                  <WarningTooltip text="Dumping Pictures are not added." />
+                                  <WarningTooltip text="Dumping Pictures are not added." index={index} />
                                 )}
                               </AnimatePresence>
                             </div>
@@ -200,10 +278,20 @@ export default function AuthorityVehicleEntriesPage() {
                         <span className="text-sm font-normal text-[#343434] opacity-70">{item.naka_incharge_name}</span>
                       </td>
                       <td className="px-2 py-3">
-                        <span className="text-sm font-normal text-[#343434] opacity-70">{item.material_name}</span>
-                      </td>
-                      <td className="px-2 py-3">
-                        <span className="text-sm font-normal text-[#343434] opacity-70">{item.material_quantity}</span>
+                        <div 
+                          className="relative inline-flex items-center"
+                          onMouseEnter={() => setHoveredMaterials(item.id)}
+                          onMouseLeave={() => setHoveredMaterials(null)}
+                        >
+                          <span className="text-sm font-medium text-[#0C83FF] cursor-pointer border-b border-dotted border-[#0C83FF]">
+                            {item.materials.length} {item.materials.length === 1 ? "Material" : "Materials"}
+                          </span>
+                          <AnimatePresence>
+                            {hoveredMaterials === item.id && (
+                              <MaterialsTooltip materials={item.materials} index={index} />
+                            )}
+                          </AnimatePresence>
+                        </div>
                       </td>
                       <td className="px-2 py-3">
                         <span className="text-sm font-normal text-[#343434] opacity-70">
@@ -231,6 +319,8 @@ export default function AuthorityVehicleEntriesPage() {
       <VehicleFilterDrawer 
         isOpen={isFilterDrawerOpen}
         onClose={() => setIsFilterDrawerOpen(false)}
+        filters={filters}
+        onApply={(newFilters) => setFilters(newFilters)}
       />
 
       <VehicleDetailDrawer 
