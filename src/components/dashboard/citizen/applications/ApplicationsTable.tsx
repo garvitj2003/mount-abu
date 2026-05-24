@@ -83,7 +83,17 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
   const { data: applications = [], isLoading } = useApplications({
     flag: "CITIZEN",
     citizen_user_id: user?.user_id,
+    limit: 100, // Fetch more for client-side pagination/filtering
   });
+
+  // Reset page when search or filter changes
+  const prevParams = useRef({ search, filter });
+  useEffect(() => {
+    if (search !== prevParams.current.search || filter !== prevParams.current.filter) {
+      prevParams.current = { search, filter };
+      if (page !== 1) setPage(1);
+    }
+  }, [search, filter, page, setPage]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -362,17 +372,28 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
             <Image src="/dashboard/icons/applications.svg" alt="View" width={24} height={24} />
             <span className="text-sm font-normal text-[#343434]">View Application</span>
           </button>
-          <div className="h-[1px] w-full bg-[#D6D9DE]" />
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleWithdraw(openDropdownId);
-            }}
-            className="flex h-10 w-full items-center gap-[11px] rounded-lg p-2 hover:bg-red-50 transition-colors cursor-pointer"
-          >
-            <Image src="/dashboard/icons/withdraw.svg" alt="Withdraw" width={24} height={24} />
-            <span className="text-sm font-normal text-[#EF4444]">Withdraw Application</span>
-          </button>
+
+          {(() => {
+            const app = applications.find(a => a.id === openDropdownId);
+            if (app && app.status !== "WITHDRAWN") {
+              return (
+                <>
+                  <div className="h-[1px] w-full bg-[#D6D9DE]" />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (openDropdownId) handleWithdraw(openDropdownId);
+                    }}
+                    className="flex h-10 w-full items-center gap-[11px] rounded-lg p-2 hover:bg-red-50 transition-colors cursor-pointer"
+                  >
+                    <Image src="/dashboard/icons/withdraw.svg" alt="Withdraw" width={24} height={24} />
+                    <span className="text-sm font-normal text-[#EF4444]">Withdraw Application</span>
+                  </button>
+                </>
+              );
+            }
+            return null;
+          })()}
         </div>
       )}
 

@@ -254,17 +254,28 @@ export default function ComplaintsTable({ onComplaintClick }: ComplaintsTablePro
             <Image src="/dashboard/icons/complaints.svg" alt="View" width={24} height={24} />
             <span className="text-sm font-normal text-[#343434]">View Complain</span>
           </button>
-          <div className="h-[1px] w-full bg-[#D6D9DE]" />
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              if (openDropdownId) handleWithdraw(openDropdownId);
-            }}
-            className="flex h-10 w-full items-center gap-[11px] rounded-lg p-2 hover:bg-red-50 transition-colors cursor-pointer"
-          >
-            <Image src="/dashboard/icons/withdraw.svg" alt="Withdraw" width={24} height={24} />
-            <span className="text-sm font-normal text-[#EF4444]">Withdraw Complain</span>
-          </button>
+          
+          {(() => {
+            const item = complaints.find(c => c.id === openDropdownId);
+            if (item && item.status !== "WITHDRAWN") {
+              return (
+                <>
+                  <div className="h-[1px] w-full bg-[#D6D9DE]" />
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (openDropdownId) handleWithdraw(openDropdownId);
+                    }}
+                    className="flex h-10 w-full items-center gap-[11px] rounded-lg p-2 hover:bg-red-50 transition-colors cursor-pointer"
+                  >
+                    <Image src="/dashboard/icons/withdraw.svg" alt="Withdraw" width={24} height={24} />
+                    <span className="text-sm font-normal text-[#EF4444]">Withdraw Complain</span>
+                  </button>
+                </>
+              );
+            }
+            return null;
+          })()}
         </div>
       )}
 

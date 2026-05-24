@@ -226,12 +226,15 @@ export default function NewApplicationPage() {
           )
       );
 
-      // MAX 10 IMAGES
-      const limitedImages = uniqueImages.slice(0, 10);
+      // MAX 10 IMAGES VALIDATION
+      if (uniqueImages.length > 10) {
+        alert("You can only upload a maximum of 10 property photos. Please remove some images and try again.");
+        return;
+      }
 
       setFiles((prev) => ({
         ...prev,
-        propertyPhotos: limitedImages,
+        propertyPhotos: uniqueImages,
       }));
 
       return;
@@ -452,46 +455,6 @@ export default function NewApplicationPage() {
       console.error("Final submission failed", error);
       const message = (error as any)?.response?.data?.detail || "Final submission failed.";
       alert(message);
-    }
-  };
-
-  const onSaveDraft = async () => {
-    try {
-      if (currentStep === 1) {
-        const validation = step1Schema.safeParse(formData);
-        if (!validation.success) {
-          alert("Please fill required fields before saving draft.");
-          return;
-        }
-        if (!applicationId) {
-          const initialRequirements: any[] = [];
-          materials.forEach(m => {
-            if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
-              initialRequirements.push({ material_id: m.id, material_qty: Number(m.qty) });
-            }
-          });
-          extraMaterials.forEach(m => {
-            if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
-              initialRequirements.push({
-                material_id: null,
-                custom_name: m.name,
-                custom_unit: m.unit,
-                material_qty: Number(m.qty)
-              });
-            }
-          });
-          const response = await ApplicationService.createApplication({
-            ...formData,
-            material_requirements: initialRequirements
-          });
-          setApplicationId(response.id);
-          queryClient.invalidateQueries({ queryKey: ["applications"] });
-        }
-      }
-      alert("Draft saved successfully!");
-    } catch (error) {
-      console.error("Save draft failed", error);
-      alert("Failed to save draft.");
     }
   };
 
@@ -978,7 +941,6 @@ export default function NewApplicationPage() {
             <p className="text-xs font-normal text-[#343434] opacity-80">All your new construction and renovation applications go here.</p>
           </div>
         </div>
-        <button onClick={onSaveDraft} className="rounded-lg cursor-pointer border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-3 text-sm font-medium text-[#343434] hover:bg-gray-200 transition-colors">Save as draft</button>
       </div>
       <div className="flex flex-col p-5 overflow-y-auto">
         <div className="w-full rounded-lg border border-[#D6D9DE] bg-white p-5">

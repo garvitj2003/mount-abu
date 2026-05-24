@@ -17,8 +17,6 @@ export async function proxy(request: NextRequest) {
   const path = nextUrl.pathname;
 
   if (
-    path === "/" ||
-    publicRoutes.some((route) => path.startsWith(route)) ||
     path.match(/\.(.*)$/) ||
     path.startsWith("/_next")
   ) {
@@ -28,7 +26,33 @@ export async function proxy(request: NextRequest) {
   let accessToken = cookies.get("access_token")?.value;
   const refreshToken = cookies.get("refresh_token")?.value;
 
-  // 1. No tokens at all -> Redirect to login
+  // 1. If on login page and already authenticated, redirect to dashboard
+  if (path === "/login" && (accessToken || refreshToken)) {
+    // If we only have refresh token, we should still try to redirect, 
+    // but the next block will handle the refresh if needed.
+    // For now, if either exists, we consider them "logged in" enough to not see login page.
+    const tokenToDecode = accessToken || ""; 
+    try {
+      if (tokenToDecode) {
+        const payload = decodeJwt(tokenToDecode);
+        const role = payload.role as string;
+        return NextResponse.redirect(new URL(role === "CITIZEN" ? "/citizen" : "/authority", request.url));
+      }
+    } catch (e) {
+      // If decode fails, just let them see the login page
+      console.error("Redirection Decode Error:", e);
+    }
+  }
+
+  // 2. Allow other public routes
+  if (
+    path === "/" ||
+    publicRoutes.some((route) => path.startsWith(route))
+  ) {
+    return NextResponse.next();
+  }
+
+  // 3. No tokens at all -> Redirect to login
   if (!accessToken && !refreshToken) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
