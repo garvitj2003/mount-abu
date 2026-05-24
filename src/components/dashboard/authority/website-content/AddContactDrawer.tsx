@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { type components } from "@/types/api";
 import { useCreateContact, useUpdateContact } from "@/hooks/useWebsiteContent";
+import { contactSchema } from "@/lib/validations/contact";
 
 type ContactDiaryCreate = components["schemas"]["ContactDiaryCreate"];
 type ContactDiaryUpdate = components["schemas"]["ContactDiaryUpdate"];
@@ -32,6 +33,8 @@ export default function AddContactDrawer({ isOpen, onClose, data }: AddContactDr
     status: true,
   });
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   useEffect(() => {
     if (data) {
       setFormData({
@@ -55,25 +58,33 @@ export default function AddContactDrawer({ isOpen, onClose, data }: AddContactDr
   }, [data, isOpen]);
 
   const handleSubmit = async () => {
-    if (!formData.office_department.trim() || !formData.contact_person.trim()) {
-      alert("Please enter department and contact person");
+    setErrors({});
+    const validation = contactSchema.safeParse(formData);
+
+    if (!validation.success) {
+      const fieldErrors = validation.error.flatten().fieldErrors;
+      const newErrors: Record<string, string> = {};
+      Object.entries(fieldErrors).forEach(([key, messages]) => {
+        if (messages && messages.length > 0) newErrors[key] = messages[0];
+      });
+      setErrors(newErrors);
       return;
     }
     
     try {
       if (isEdit && data) {
         const updateData: ContactDiaryUpdate = {
-          office_department: formData.office_department,
-          contact_person: formData.contact_person,
-          designation: formData.designation,
-          phone_number: formData.phone_number,
-          email_address: formData.email_address,
-          status: formData.status,
+          office_department: validation.data.office_department,
+          contact_person: validation.data.contact_person,
+          designation: validation.data.designation,
+          phone_number: validation.data.phone_number,
+          email_address: validation.data.email_address,
+          status: validation.data.status as boolean,
         };
         await updateContact({ id: data.id, data: updateData });
         alert("Contact updated successfully!");
       } else {
-        await createContact(formData);
+        await createContact(validation.data as any);
         alert("Contact added successfully!");
       }
       onClose();
@@ -130,10 +141,11 @@ export default function AddContactDrawer({ isOpen, onClose, data }: AddContactDr
                 <input 
                   type="text"
                   placeholder="Municipal Corporation Office"
-                  className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
+                  className={`w-full h-[44px] rounded-lg border ${errors.office_department ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40`}
                   value={formData.office_department}
                   onChange={(e) => setFormData({ ...formData, office_department: e.target.value })}
                 />
+                {errors.office_department && <p className="text-[10px] text-red-500">{errors.office_department}</p>}
               </div>
 
               <div className="space-y-1.5">
@@ -141,10 +153,11 @@ export default function AddContactDrawer({ isOpen, onClose, data }: AddContactDr
                 <input 
                   type="text"
                   placeholder="Shri. Rajesh Kumar"
-                  className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
+                  className={`w-full h-[44px] rounded-lg border ${errors.contact_person ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40`}
                   value={formData.contact_person}
                   onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
                 />
+                {errors.contact_person && <p className="text-[10px] text-red-500">{errors.contact_person}</p>}
               </div>
 
               <div className="space-y-1.5">
@@ -152,10 +165,11 @@ export default function AddContactDrawer({ isOpen, onClose, data }: AddContactDr
                 <input 
                   type="text"
                   placeholder="Assistant Engineer"
-                  className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
+                  className={`w-full h-[44px] rounded-lg border ${errors.designation ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40`}
                   value={formData.designation || ""}
                   onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
                 />
+                {errors.designation && <p className="text-[10px] text-red-500">{errors.designation}</p>}
               </div>
 
               <div className="space-y-1.5">
@@ -163,10 +177,11 @@ export default function AddContactDrawer({ isOpen, onClose, data }: AddContactDr
                 <input 
                   type="text"
                   placeholder="98XXXXXXXX"
-                  className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
+                  className={`w-full h-[44px] rounded-lg border ${errors.phone_number ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40`}
                   value={formData.phone_number || ""}
                   onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
                 />
+                {errors.phone_number && <p className="text-[10px] text-red-500">{errors.phone_number}</p>}
               </div>
 
               <div className="space-y-1.5">
@@ -174,10 +189,11 @@ export default function AddContactDrawer({ isOpen, onClose, data }: AddContactDr
                 <input 
                   type="email"
                   placeholder="office@mountabu.gov.in"
-                  className="w-full h-[44px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40"
+                  className={`w-full h-[44px] rounded-lg border ${errors.email_address ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] placeholder:opacity-40`}
                   value={formData.email_address || ""}
                   onChange={(e) => setFormData({ ...formData, email_address: e.target.value })}
                 />
+                {errors.email_address && <p className="text-[10px] text-red-500">{errors.email_address}</p>}
               </div>
 
               <div className="flex items-center justify-between py-2">

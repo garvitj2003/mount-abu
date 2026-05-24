@@ -68,6 +68,7 @@ export function useUpdatePhaseStatus() {
     onSuccess: (_, { applicationId }) => {
       queryClient.invalidateQueries({ queryKey: ["token"] });
       queryClient.invalidateQueries({ queryKey: ["application", applicationId] });
+      queryClient.invalidateQueries({ queryKey: ["tokens"] });
     },
   });
 }
