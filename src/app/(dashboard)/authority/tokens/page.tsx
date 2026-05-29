@@ -11,8 +11,8 @@ import { usePagination } from "@/hooks/usePagination";
 const ProgressBar = ({ progress }: { progress: number }) => (
   <div className="flex items-center gap-3 w-full max-w-[120px]">
     <div className="h-1.5 w-full rounded-full bg-[#E5E7EB]">
-      <div 
-        className="h-1.5 rounded-full bg-[#0C83FF]" 
+      <div
+        className="h-1.5 rounded-full bg-[#0C83FF]"
         style={{ width: `${progress}%` }}
       />
     </div>
@@ -82,15 +82,15 @@ export default function AuthorityTokensPage() {
       {/* Content */}
       <div className="p-5">
         <div className="flex flex-col gap-4 rounded-lg border border-[#D6D9DE] bg-white p-4">
-          
+
           {/* Filters Bar */}
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               {/* Search Bar */}
               <div className="flex w-[209px] items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-60">
-                  <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 <input
                   type="text"
@@ -165,7 +165,7 @@ export default function AuthorityTokensPage() {
                   {tokens.map((token, idx) => (
                     <tr key={idx} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                       <td className="px-2 py-3">
-                        <span 
+                        <span
                           onClick={() => {
                             const params = new URLSearchParams(window.location.search);
                             router.push(`/authority/tokens/${token.transport_code}?${params.toString()}`);
@@ -190,19 +190,18 @@ export default function AuthorityTokensPage() {
                       </td>
                       <td className="px-2 py-3">
                         <div className="flex items-center gap-1.5">
-                          <Image 
-                            src={token.status === "PENDING" ? "/dashboard/icons/timer-round.svg" : "/dashboard/icons/tick-round-green.svg"} 
-                            alt="Status" 
-                            width={14} 
-                            height={14} 
+                          <Image
+                            src={token.status === "PENDING" ? "/dashboard/icons/timer-round.svg" : token.status === "WITHHELD" ? "/dashboard/icons/withheld.svg" : token.status === "TERMINATED" ? "/dashboard/icons/cross-round-red.svg" : "/dashboard/icons/tick-round-green.svg"}
+                            alt="Status"
+                            width={14}
+                            height={14}
                           />
-                          <span className={`text-sm font-normal ${
-                            token.status === 'COMPLETED' ? 'text-gray-500' : 
-                            token.status === 'PENDING' ? 'text-[#B39632]' : 
-                            token.status === 'TERMINATED' ? 'text-red-500' :
-                            token.status === 'WITHHELD' ? 'text-purple-500' :
-                            'text-[#059669]'
-                          }`}>
+                          <span className={`text-sm font-normal ${token.status === 'COMPLETED' ? 'text-gray-500' :
+                            token.status === 'PENDING' ? 'text-[#B39632]' :
+                              token.status === 'TERMINATED' ? 'text-red-500' :
+                                token.status === 'WITHHELD' ? 'text-[#9C832C]' :
+                                  'text-[#059669]'
+                            }`}>
                             {token.status}
                           </span>
                         </div>
@@ -210,9 +209,9 @@ export default function AuthorityTokensPage() {
                       <td className="px-2 py-3 text-center">
                         <button className="text-[#343434] hover:bg-gray-200 rounded p-1 transition-colors">
                           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path d="M8 8.66667C8.36819 8.66667 8.66667 8.36819 8.66667 8C8.66667 7.63181 8.36819 7.33333 8 7.33333C7.63181 7.33333 7.33333 7.63181 7.33333 8C7.33333 8.36819 7.63181 8.66667 8 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M13.3333 8.66667C13.7015 8.66667 14 8.36819 14 8C14 7.63181 13.7015 7.33333 13.3333 7.33333C12.9651 7.33333 12.6667 7.63181 12.6667 8C12.6667 8.36819 12.9651 8.66667 13.3333 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M2.66667 8.66667C3.03486 8.66667 3.33333 8.36819 3.33333 8C3.33333 7.63181 3.03486 7.33333 2.66667 7.33333C2.29848 7.33333 2 7.63181 2 8C2 8.36819 2.29848 8.66667 2.66667 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M8 8.66667C8.36819 8.66667 8.66667 8.36819 8.66667 8C8.66667 7.63181 8.36819 7.33333 8 7.33333C7.63181 7.33333 7.33333 7.63181 7.33333 8C7.33333 8.36819 7.63181 8.66667 8 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M13.3333 8.66667C13.7015 8.66667 14 8.36819 14 8C14 7.63181 13.7015 7.33333 13.3333 7.33333C12.9651 7.33333 12.6667 7.63181 12.6667 8C12.6667 8.36819 12.9651 8.66667 13.3333 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M2.66667 8.66667C3.03486 8.66667 3.33333 8.36819 3.33333 8C3.33333 7.63181 3.03486 7.33333 2.66667 7.33333C2.29848 7.33333 2 7.63181 2 8C2 8.36819 2.29848 8.66667 2.66667 8.66667Z" stroke="#343434" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </button>
                       </td>

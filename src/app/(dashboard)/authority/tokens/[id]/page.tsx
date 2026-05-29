@@ -41,20 +41,20 @@ const DetailItem = ({ label, value }: { label: string; value: string | null | un
   </div>
 );
 
-const Header = ({ 
-  token, 
+const Header = ({
+  token,
   onBack,
   onHold,
   onResume,
   onTerminate
-}: { 
-  token: TokenDetailResponse; 
+}: {
+  token: TokenDetailResponse;
   onBack: () => void;
   onHold: () => void;
   onResume: () => void;
   onTerminate: () => void;
 }) => {
-  const dateRange = token.valid_from && token.valid_till 
+  const dateRange = token.valid_from && token.valid_till
     ? `${new Date(token.valid_from).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} - ${new Date(token.valid_till).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`
     : "—";
 
@@ -80,7 +80,7 @@ const Header = ({
         {!isTerminated && (
           <>
             {isWithheld ? (
-              <button 
+              <button
                 onClick={onResume}
                 className="flex items-center gap-2.5 rounded-lg border border-[#059669] bg-[#059669] px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 transition-opacity cursor-pointer"
               >
@@ -88,7 +88,7 @@ const Header = ({
                 Resume Token
               </button>
             ) : (
-              <button 
+              <button
                 onClick={onHold}
                 className="flex items-center gap-2.5 rounded-lg border border-[#FFD648] bg-[#FFD648] px-4 py-2.5 text-sm font-medium text-[#343434] hover:opacity-90 transition-opacity cursor-pointer"
               >
@@ -96,7 +96,7 @@ const Header = ({
                 Hold Token
               </button>
             )}
-            <button 
+            <button
               onClick={onTerminate}
               className="flex items-center gap-2.5 rounded-lg border border-[#EF4444] bg-[#EF4444] px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 transition-opacity cursor-pointer"
             >
@@ -114,8 +114,8 @@ const Sidebar = ({ token }: { token: TokenDetailResponse }) => (
   <div className="flex w-[238px] flex-col gap-5 rounded-lg border border-[#D6D9DE] bg-white p-4 h-fit sticky top-[80px]">
     {/* QR Code */}
     <div className="relative aspect-square w-full rounded border border-[#D6D9DE] p-4 bg-white flex items-center justify-center">
-      <QRCodeSVG 
-        value={token.transport_code} 
+      <QRCodeSVG
+        value={token.transport_code}
         size={180}
         level="H"
         includeMargin={false}
@@ -126,16 +126,16 @@ const Sidebar = ({ token }: { token: TokenDetailResponse }) => (
       <DetailItem label="Application Number" value={token.application_number} />
       <DetailItem label="Applicant Name" value={token.applicant_name} />
       <DetailItem label="Property Address" value={token.property_address} />
-      
+
       <div className="flex gap-4">
         <DetailItem label="Property Usage" value={token.property_usage} />
-        <DetailItem label="Type of Work" value={token.application_type.toLowerCase() === "new" ? 'New Construction' : token.application_type.toLowerCase() === "renovation" ? 'Repair & Renovation' : '' } />
+        <DetailItem label="Type of Work" value={token.application_type.toLowerCase() === "new" ? 'New Construction' : token.application_type.toLowerCase() === "renovation" ? 'Repair & Renovation' : ''} />
       </div>
 
       <div className="h-px w-full bg-[#D6D9DE] my-1" />
-      
+
       <p className="text-[12px] font-medium text-[#498AA9]">Authority & System Information</p>
-      
+
       <DetailItem label="Issued By" value={token.authority.issued_by} />
       <DetailItem label="Issued On" value={token.authority.issued_on ? new Date(token.authority.issued_on).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "—"} />
       <DetailItem label="Token Generated From" value={token.authority.token_generated_from} />
@@ -143,11 +143,11 @@ const Sidebar = ({ token }: { token: TokenDetailResponse }) => (
   </div>
 );
 
-const TableRow = ({ 
-  entry, onClick 
-}: { 
-  entry: components["schemas"]["VehicleEntryResponse"]; 
-  onClick: () => void 
+const TableRow = ({
+  entry, onClick
+}: {
+  entry: components["schemas"]["VehicleEntryResponse"];
+  onClick: () => void
 }) => (
   <tr className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
     <td className="p-3 text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer" onClick={onClick}>
@@ -173,7 +173,7 @@ export default function TokenDetailsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const transportCode = params.id as string;
-  
+
   const handleBack = () => {
     const paramsString = searchParams.toString();
     if (paramsString) {
@@ -195,19 +195,19 @@ export default function TokenDetailsPage() {
     start_date?: string;
     end_date?: string;
   }>({});
-  
+
   const { data: token, isLoading, error } = useTokenDetail(transportCode);
   const { mutate: updateStatus } = useUpdatePhaseStatus();
 
   const filteredEntries = useMemo(() => {
     if (!token?.vehicle_entries) return [];
-    
+
     return token.vehicle_entries.filter(entry => {
       // Search
-      const matchesSearch = !search || 
+      const matchesSearch = !search ||
         entry.vehicle_number?.toLowerCase().includes(search.toLowerCase()) ||
         entry.material_name?.toLowerCase().includes(search.toLowerCase());
-      
+
       if (!matchesSearch) return false;
 
       // Vehicle Number filter
@@ -246,12 +246,12 @@ export default function TokenDetailsPage() {
 
   const handleTokenAction = (remarks: string) => {
     if (!token) return;
-    
-    const newStatus = 
-      modalConfig.type === "HOLD" ? "WITHHELD" : 
-      modalConfig.type === "TERMINATE" ? "TERMINATED" : 
-      "ACTIVE";
-    
+
+    const newStatus =
+      modalConfig.type === "HOLD" ? "WITHHELD" :
+        modalConfig.type === "TERMINATE" ? "TERMINATED" :
+          "ACTIVE";
+
     updateStatus({
       applicationId: token.application_id,
       phase: token.phase,
@@ -284,9 +284,9 @@ export default function TokenDetailsPage() {
 
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest relative overflow-y-auto">
-      <Header 
-        token={token} 
-        onBack={handleBack} 
+      <Header
+        token={token}
+        onBack={handleBack}
         onHold={() => setModalConfig({ isOpen: true, type: "HOLD" })}
         onResume={() => setModalConfig({ isOpen: true, type: "RESUME" })}
         onTerminate={() => setModalConfig({ isOpen: true, type: "TERMINATE" })}
@@ -302,9 +302,8 @@ export default function TokenDetailsPage() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab as any)}
-                className={`relative px-4 py-4 text-sm font-medium transition-colors cursor-pointer ${
-                  activeTab === tab ? "text-[#0C83FF]" : "text-[#343434] opacity-60 hover:opacity-100"
-                }`}
+                className={`relative px-4 py-4 text-sm font-medium transition-colors cursor-pointer ${activeTab === tab ? "text-[#0C83FF]" : "text-[#343434] opacity-60 hover:opacity-100"
+                  }`}
               >
                 {tab}
                 {activeTab === tab && (
@@ -319,23 +318,23 @@ export default function TokenDetailsPage() {
             <div className="flex items-center justify-between gap-4">
               <div className="flex w-[209px] items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-60">
-                  <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <input 
-                  type="text" 
-                  placeholder="Search" 
+                <input
+                  type="text"
+                  placeholder="Search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full border-none bg-transparent p-0 text-sm font-normal text-[#343434] outline-none placeholder:text-[#343434]/60 focus:ring-0" 
+                  className="w-full border-none bg-transparent p-0 text-sm font-normal text-[#343434] outline-none placeholder:text-[#343434]/60 focus:ring-0"
                 />
               </div>
-              
-              <button 
+
+              <button
                 onClick={() => setIsFilterDrawerOpen(true)}
                 className="flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-3 py-2 text-sm font-medium text-[#343434] cursor-pointer"
               >
-                <Image src="/dashboard/icons/applications/chevron-down.svg" alt="" width={14} height={14} className="rotate-90 opacity-60" />
+                <Image src="/dashboard/icons/applications/filter.svg" alt="" width={14} height={14} className=" opacity-60" />
                 Filter
               </button>
             </div>
@@ -355,7 +354,7 @@ export default function TokenDetailsPage() {
                   </thead>
                   <tbody>
                     {filteredEntries.map((entry, idx) => (
-                      <TableRow 
+                      <TableRow
                         key={idx}
                         entry={entry}
                         onClick={() => handleEntryClick(entry.id)}
@@ -372,24 +371,79 @@ export default function TokenDetailsPage() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b border-[#D6D9DE] bg-gray-50/50">
-                      {["Material Name", "Permitted Quantity", "Consumed Quantity", "Remaining Quantity"].map((h) => (
+                      {[
+                        "Material Name",
+                        "Permitted Quantity",
+                        "Consumed Quantity",
+                        "Remaining Quantity",
+                        "Status",
+                      ].map((h) => (
                         <th key={h} className="p-3 text-left">
-                          <span className="text-[11px] font-semibold uppercase text-[#333333] opacity-70">{h}</span>
+                          <span className="text-[11px] font-semibold uppercase text-[#333333] opacity-70">
+                            {h}
+                          </span>
                         </th>
                       ))}
                     </tr>
                   </thead>
+
                   <tbody>
-                    {token.materials.map((m, i) => (
-                      <tr key={i} className="border-b border-[#D6D9DE]">
-                        <td className="p-3 text-sm font-medium text-[#343434]">{m.material_name} ({m.unit})</td>
-                        <td className="p-3 text-sm text-[#343434]">{m.approved_quantity}</td>
-                        <td className="p-3 text-sm text-[#343434]">{m.consumed_quantity}</td>
-                        <td className="p-3 text-sm font-semibold text-[#059669]">{m.remaining_quantity}</td>
-                      </tr>
-                    ))}
+                    {token.materials.map((m, i) => {
+                      const isAvailable = Number(m.remaining_quantity) > 0;
+
+                      return (
+                        <tr key={i} className="border-b border-[#D6D9DE]">
+                          <td className="p-3 text-sm font-medium text-[#343434]">
+                            {m.material_name} ({m.unit})
+                          </td>
+
+                          <td className="p-3 text-sm text-[#343434]">
+                            {m.approved_quantity}
+                          </td>
+
+                          <td className="p-3 text-sm text-[#343434]">
+                            {m.consumed_quantity}
+                          </td>
+
+                          <td
+                            className="p-3 text-sm text-[#343434]"
+                          >
+                            {m.remaining_quantity}
+                          </td>
+
+                          {/* Status */}
+                          <td className="p-3 ">
+                            <span
+                              className={`inline-flex items-center gap-2 text-sm font-medium ${isAvailable ? "text-[#059669]" : "text-red-500"
+                                }`}
+                            >
+                              <Image
+                                src={
+                                  !isAvailable
+                                    ? "/dashboard/icons/cross-round-red.svg"
+                                    : "/dashboard/icons/tick-round-green.svg"
+                                }
+                                alt="Status"
+                                width={14}
+                                height={14}
+                              />
+
+                              {isAvailable ? "Available" : "Utilized"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+
                     {token.materials.length === 0 && (
-                      <tr><td colSpan={4} className="p-10 text-center text-sm opacity-50 italic">No material data available.</td></tr>
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="p-10 text-center text-sm opacity-50 italic"
+                        >
+                          No material data available.
+                        </td>
+                      </tr>
                     )}
                   </tbody>
                 </table>
@@ -399,7 +453,7 @@ export default function TokenDetailsPage() {
         </div>
       </div>
 
-      <VehicleFilterDrawer 
+      <VehicleFilterDrawer
         isOpen={isFilterDrawerOpen}
         onClose={() => setIsFilterDrawerOpen(false)}
         filters={filters}
@@ -408,7 +462,7 @@ export default function TokenDetailsPage() {
         materialOptions={Array.from(new Set(token.vehicle_entries.map(e => e.material_name || "").filter(Boolean)))}
       />
 
-      <VehicleDetailDrawer 
+      <VehicleDetailDrawer
         isOpen={isDetailDrawerOpen}
         onClose={() => {
           setIsDetailDrawerOpen(false);

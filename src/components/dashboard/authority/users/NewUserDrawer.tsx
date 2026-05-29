@@ -236,10 +236,6 @@ export default function NewUserDrawer({ isOpen, onClose, user }: NewUserDrawerPr
                   {errors.password && (
                     <p className="text-xs text-red-500">{errors.password}</p>
                   )}
-
-                  <p className="text-xs text-gray-500">
-                    Optional. User can set via OTP if left blank.
-                  </p>
                 </div>
               )}
 

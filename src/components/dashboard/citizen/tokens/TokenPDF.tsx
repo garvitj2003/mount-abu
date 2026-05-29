@@ -67,14 +67,14 @@ const TokenPDF: React.FC<TokenPDFProps> = ({ token, componentRef }) => {
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', borderBottom: '1px solid #E5E7EB', paddingBottom: '24px', marginBottom: '32px' }}>
             <img src="/images/footer/logo.png" alt="Logo" style={{ height: '80px', width: 'auto', marginBottom: '16px' }} />
             <h1 style={{ fontSize: '24px', fontWeight: '700', textAlign: 'center', margin: 0 }}>
-              Office of the Sub-Divisional Officer (S.D.M.), Mount Abu
+              Office of the Sub-Divisional Magistrate (S.D.M.), Mount Abu
             </h1>
           </div>
 
           {/* Top Info */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '32px' }}>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <span style={{ fontWeight: '700' }}>Serial No:</span>
+              <span style={{ fontWeight: '700' }}>Application No:</span>
               <span>{token.application_number}</span>
             </div>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
@@ -95,7 +95,7 @@ const TokenPDF: React.FC<TokenPDFProps> = ({ token, componentRef }) => {
             </div>
             <div style={{ display: 'flex', gap: '16px' }}>
               <span style={{ fontWeight: '700', minWidth: '220px' }}>Name of Work</span>
-              <span style={{ flex: 1 }}>{token.application_type} - {token.property_usage}</span>
+              <span style={{ flex: 1 }}>{token.application_type === "RENOVATION" ? "Repair & Renovation" : "New Construction"} - {token.property_usage}</span>
             </div>
             <div style={{ display: 'flex', gap: '16px' }}>
               <span style={{ fontWeight: '700', minWidth: '220px' }}>Name of Contractor</span>
@@ -136,7 +136,7 @@ const TokenPDF: React.FC<TokenPDFProps> = ({ token, componentRef }) => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '48px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <span style={{ fontWeight: '700' }}>Serial No:</span>
+                <span style={{ fontWeight: '700' }}>Token No:</span>
                 <span>{token.token_number}</span>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -163,8 +163,8 @@ const TokenPDF: React.FC<TokenPDFProps> = ({ token, componentRef }) => {
             </div>
 
             <div style={{ border: '1px solid #E5E7EB', padding: '8px', backgroundColor: 'white' }}>
-              <QRCodeSVG 
-                value={token.transport_code} 
+              <QRCodeSVG
+                value={token.transport_code}
                 size={150}
                 level="H"
               />

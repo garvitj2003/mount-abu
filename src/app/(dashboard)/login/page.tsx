@@ -214,7 +214,7 @@ export default function LoginPage() {
       />
       <button
         onClick={() => setView("citizen")}
-        className={`relative flex flex-1 items-center justify-center gap-2 py-2 text-xs font-semibold transition-colors ${(view === "citizen" || view === "otp") ? "text-[#0C83FF]" : "text-[#343434]"
+        className={`cursor-pointer relative flex flex-1 items-center justify-center gap-2 py-2 text-xs font-semibold transition-colors ${(view === "citizen" || view === "otp") ? "text-[#0C83FF]" : "text-[#343434]"
           }`}
       >
         <Image
@@ -228,7 +228,7 @@ export default function LoginPage() {
       </button>
       <button
         onClick={() => setView("authority")}
-        className={`relative flex flex-1 items-center justify-center gap-2 py-2 text-xs font-semibold transition-colors ${view === "authority" ? "text-[#0C83FF]" : "text-[#343434]"
+        className={`cursor-pointer relative flex flex-1 items-center justify-center gap-2 py-2 text-xs font-semibold transition-colors ${view === "authority" ? "text-[#0C83FF]" : "text-[#343434]"
           }`}
       >
         <Image
@@ -274,7 +274,7 @@ export default function LoginPage() {
             <button
               onClick={handleGetOtp}
               disabled={isLoading}
-              className="flex h-[54px] w-full items-center justify-center rounded-lg bg-[#0C83FF] text-sm font-normal text-white hover:bg-blue-600 transition-colors disabled:opacity-70"
+              className="cursor-pointer flex h-[54px] w-full items-center justify-center rounded-lg bg-[#0C83FF] text-sm font-normal text-white hover:bg-blue-600 transition-colors disabled:opacity-70"
             >
               {isLoading ? "Sending..." : "Get OTP"}
             </button>
@@ -320,7 +320,7 @@ export default function LoginPage() {
 
             <div className="flex justify-between items-center text-sm">
               <span className="text-[#343434]">Didn’t received OTP?</span>
-              <button onClick={handleGetOtp} className="font-bold text-[#0C83FF] disabled:opacity-50" disabled={isLoading}>
+              <button onClick={handleGetOtp} className="font-bold text-[#0C83FF] disabled:opacity-50 cursor-pointer" disabled={isLoading}>
                 {resendLogin ? "Sending..." : "Resend Now"}
               </button>
             </div>
@@ -372,7 +372,7 @@ export default function LoginPage() {
                   className="w-full h-full border-none bg-transparent text-sm text-[#343434] placeholder-[#343434]/30 focus:ring-0 focus:outline-none"
                   placeholder="Password"
                 />
-                <button onClick={() => setShowPassword(!showPassword)}>
+                <button className="cursor-pointer" onClick={() => setShowPassword(!showPassword)}>
                   <Image src={
                     showPassword ? "/dashboard/icons/login/visibilityClose.svg" : "/dashboard/icons/login/visibility.svg"} alt="Toggle Password" width={24} height={24} />
                 </button>
@@ -389,7 +389,7 @@ export default function LoginPage() {
                 </div>
                 <span className="text-sm text-[#343434]">Remember Me</span>
               </label>
-              <button onClick={() => setView("forgot-password")} className="text-sm font-bold text-[#0C83FF]">
+              <button onClick={() => setView("forgot-password")} className="text-sm font-bold text-[#0C83FF] cursor-pointer">
                 Forgot Password?
               </button>
             </div>

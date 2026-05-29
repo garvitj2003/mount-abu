@@ -1,11 +1,11 @@
 "use client";
+import { easeInOut, motion } from "motion/react";
 import Image from "next/image";
-import { motion, easeInOut } from "motion/react";
 import { usePathname } from "next/navigation";
 
 export default function OverlappingFrames() {
     const pathname = usePathname();
-    
+
     // Only render on the landing page
     if (pathname !== "/") return null;
 
@@ -36,8 +36,11 @@ export default function OverlappingFrames() {
                 // End: Flies away to Top Left immediately on load
                 animate={{
                     opacity: 0,
-                    x: -1200, // Increased travel distance
-                    y: -1200,
+                    x: typeof window !== "undefined" && window.innerWidth < 768 ? 0 : -1200,
+                    y:
+                        typeof window !== "undefined" && window.innerWidth < 768
+                            ? "-150vh"
+                            : -1200,
                     transition: exitTransition,
                 }}
             >

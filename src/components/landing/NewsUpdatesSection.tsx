@@ -5,6 +5,7 @@ import { motion, Variants, AnimatePresence } from "motion/react";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useEvents, useNotices } from "@/hooks/useWebsiteContent";
+import Link from "next/link";
 
 const fadeIn: Variants = {
     hidden: { opacity: 0, y: 30 },
@@ -156,7 +157,7 @@ export default function NewsUpdatesSection() {
                         </h2>
                     </div>
 
-                    <button onClick={() => router.push('/events-and-notice')} className="flex items-center gap-2.5 px-6 py-3 rounded-md bg-[#D4AF37]/50 backdrop-blur-[4px] hover:bg-[#D4AF37]/60 transition-colors">
+                    <button onClick={() => router.push('/events-and-notice')} className="flex items-center gap-2.5 px-6 py-3 rounded-md bg-[#D4AF37]/50 backdrop-blur-[4px] hover:bg-[#D4AF37]/60 transition-colors cursor-pointer">
                         <span className="font-montserrat text-white text-base underline">View More</span>
                     </button>
                 </motion.div>
@@ -188,12 +189,12 @@ export default function NewsUpdatesSection() {
                                             exit="exit"
                                             className="relative z-10"
                                         >
-                                            <p className="font-montserrat text-xs md:text-sm text-[#666] mb-4">
+                                            <p className="font-montserrat  text-xs md:text-sm text-[#666] mb-4">
                                                 {currentItem.tag}
                                             </p>
-                                            <h3 className="font-montserrat font-semibold text-xl md:text-2xl lg:text-3xl text-[#3d6b4f] leading-tight mb-3">
+                                            <Link href={`/events-and-notice/${currentItem.id}?type=event`} className="font-montserrat font-semibold text-xl md:text-2xl lg:text-3xl text-[#3d6b4f] leading-tight mb-3 cursor-pointer">
                                                 {currentItem.title}
-                                            </h3>
+                                            </Link>
                                             <p className="font-montserrat text-sm md:text-base text-[#888] mb-8">
                                                 {currentItem.dateRange}
                                             </p>
@@ -247,6 +248,7 @@ export default function NewsUpdatesSection() {
 
                                 {/* Right Image */}
                                 <AnimatePresence mode="wait">
+
                                     <motion.div
                                         key={`image-${currentItem.id}`}
                                         variants={slideFromRight}
@@ -255,13 +257,15 @@ export default function NewsUpdatesSection() {
                                         exit="exit"
                                         className="relative w-full md:w-[55%] h-[250px] md:h-auto min-h-[250px] md:min-h-full order-1 md:order-2"
                                     >
-                                        <Image
-                                            src={currentItem.image}
-                                            alt={currentItem.title}
-                                            fill
-                                            unoptimized
-                                            className="object-cover"
-                                        />
+                                        <Link href={`/events-and-notice/${currentItem.id}?type=event`}>
+                                            <Image
+                                                src={currentItem.image}
+                                                alt={currentItem.title}
+                                                fill
+                                                unoptimized
+                                                className="object-cover"
+                                            />
+                                        </Link>
                                     </motion.div>
                                 </AnimatePresence>
                             </div>
@@ -306,20 +310,11 @@ export default function NewsUpdatesSection() {
                                                     {notice.date}
                                                 </p>
                                             </div>
-                                            {notice.pdfLink ? (
-                                                <a 
-                                                    href={notice.pdfLink}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="bg-[#655734] hover:bg-[#52462a] transition-colors backdrop-blur-[4px] px-4 py-2.5 rounded-[6px] text-white font-montserrat text-sm whitespace-nowrap underline"
-                                                >
+                                            
+                                                <Link  href={`/events-and-notice/${notice.id}?type=notice`} className="bg-[#655734] hover:bg-[#52462a] transition-colors backdrop-blur-[4px] px-4 py-2.5 rounded-[6px] text-white font-montserrat text-sm whitespace-nowrap underline">
                                                     View More
-                                                </a>
-                                            ) : (
-                                                <button className="bg-[#655734] hover:bg-[#52462a] transition-colors backdrop-blur-[4px] px-4 py-2.5 rounded-[6px] text-white font-montserrat text-sm whitespace-nowrap underline">
-                                                    View More
-                                                </button>
-                                            )}
+                                                </Link>
+                                           
                                         </div>
                                     ))
                                 ) : (
@@ -329,7 +324,7 @@ export default function NewsUpdatesSection() {
                         </div>
                     </motion.div>
                 </div>
-            </div>
-        </section>
+            </div >
+        </section >
     );
 }
