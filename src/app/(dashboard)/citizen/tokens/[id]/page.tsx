@@ -46,11 +46,13 @@ const Header = ({
   token,
   onBack,
   onDownload,
+  onShare,
   isDownloading
 }: {
   token: TokenDetailResponse;
   onBack: () => void;
   onDownload: () => void;
+  onShare: () => void;
   isDownloading: boolean;
 }) => {
   const validity = token.valid_from && token.valid_till
@@ -73,7 +75,7 @@ const Header = ({
       </div>
 
       <div className="flex items-center gap-2">
-        <button className="flex items-center gap-2.5 rounded-lg border border-[#498AA9] bg-[#E9F1F5] px-4 py-2.5 text-sm font-medium text-[#247297] hover:opacity-90 transition-opacity cursor-pointer">
+        <button onClick={onShare} className="flex items-center gap-2.5 rounded-lg border border-[#498AA9] bg-[#E9F1F5] px-4 py-2.5 text-sm font-medium text-[#247297] hover:opacity-90 transition-opacity cursor-pointer">
           <Image src="/dashboard/icons/applications/share.svg" alt="" width={18} height={18} />
           Share
         </button>
@@ -181,13 +183,13 @@ export default function CitizenTokenDetailsPage() {
 
   const filteredEntries = useMemo(() => {
     if (!token?.vehicle_entries) return [];
-    
+
     return token.vehicle_entries.filter(entry => {
       // Search
-      const matchesSearch = !search || 
+      const matchesSearch = !search ||
         entry.vehicle_number?.toLowerCase().includes(search.toLowerCase()) ||
         entry.material_name?.toLowerCase().includes(search.toLowerCase());
-      
+
       if (!matchesSearch) return false;
 
       // Vehicle Number filter
@@ -249,6 +251,57 @@ export default function CitizenTokenDetailsPage() {
     }
   };
 
+  const handleShare = async () => {
+    if (!token) return;
+
+    const workType =
+      token.application_type?.toLowerCase() === "new"
+        ? "New Construction"
+        : token.application_type?.toLowerCase() === "renovation"
+          ? "Repair & Renovation"
+          : token.application_type;
+
+    const vehicleCount = token.vehicle_entries?.length || 0;
+
+    const materialSummary = token.materials
+      ?.map(
+        (m) =>
+          `${m.material_name}: ${m.consumed_quantity}/${m.approved_quantity} ${m.unit}`
+      )
+      .join(", ");
+
+    const shareText = `
+Token Details
+
+Token No: ${token.token_number}
+Application No: ${token.application_number}
+Applicant Name: ${token.applicant_name}
+
+Type of Work: ${workType}
+
+Vehicle Entries: ${vehicleCount}
+
+Material Summary:
+${materialSummary}
+
+Status: ${token.status}
+`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `Token ${token.token_number}`,
+          text: shareText,
+        });
+      } else {
+        await navigator.clipboard.writeText(shareText);
+        alert("Token details copied to clipboard");
+      }
+    } catch (error) {
+      console.error("Share failed:", error);
+    }
+  };
+
   if (isLoading) return (
     <div className="flex h-full w-full items-center justify-center bg-[#F5F6F7]">
       <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0C83FF] border-t-transparent"></div>
@@ -268,6 +321,7 @@ export default function CitizenTokenDetailsPage() {
         token={token}
         onBack={handleBack}
         onDownload={handleDownload}
+        onShare={handleShare}
         isDownloading={isDownloading}
       />
 
@@ -358,22 +412,54 @@ export default function CitizenTokenDetailsPage() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b border-[#D6D9DE] bg-gray-50/50">
-                      {["Material Name", "Permitted Quantity", "Consumed Quantity", "Remaining Quantity"].map((h) => (
+                      {[
+                        "Material Name",
+                        "Permitted Quantity",
+                        "Consumed Quantity",
+                        "Remaining Quantity",
+                        "Status",
+                      ].map((h) => (
                         <th key={h} className="p-3 text-left">
-                          <span className="text-[11px] font-semibold uppercase text-[#333333] opacity-70">{h}</span>
+                          <span className="text-[11px] font-semibold uppercase text-[#333333] opacity-70">
+                            {h}
+                          </span>
                         </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {token.materials.map((m, i) => (
-                      <tr key={i} className="border-b border-[#D6D9DE]">
-                        <td className="p-3 text-sm font-medium text-[#343434]">{m.material_name} ({m.unit})</td>
-                        <td className="p-3 text-sm text-[#343434]">{m.approved_quantity}</td>
-                        <td className="p-3 text-sm text-[#343434]">{m.consumed_quantity}</td>
-                        <td className="p-3 text-sm font-semibold text-[#059669]">{m.remaining_quantity}</td>
-                      </tr>
-                    ))}
+                    {token.materials.map((m, i) => {
+                      const isAvailable = Number(m.remaining_quantity) > 0;
+                      return (
+
+                        <tr key={i} className="border-b border-[#D6D9DE]">
+                          <td className="p-3 text-sm font-medium text-[#343434]">{m.material_name} ({m.unit})</td>
+                          <td className="p-3 text-sm text-[#343434]">{m.approved_quantity}</td>
+                          <td className="p-3 text-sm text-[#343434]">{m.consumed_quantity}</td>
+                          <td className="p-3 text-sm font-semibold text-[#059669]">{m.remaining_quantity}</td>
+                          {/* Status */}
+                          <td className="p-3 ">
+                            <span
+                              className={`inline-flex items-center gap-2 text-sm font-medium ${isAvailable ? "text-[#059669]" : "text-red-500"
+                                }`}
+                            >
+                              <Image
+                                src={
+                                  !isAvailable
+                                    ? "/dashboard/icons/cross-round-red.svg"
+                                    : "/dashboard/icons/tick-round-green.svg"
+                                }
+                                alt="Status"
+                                width={14}
+                                height={14}
+                              />
+
+                              {isAvailable ? "Available" : "Utilized"}
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                    })}
                     {token.materials.length === 0 && (
                       <tr><td colSpan={4} className="p-10 text-center text-sm opacity-50 italic">No material data available.</td></tr>
                     )}

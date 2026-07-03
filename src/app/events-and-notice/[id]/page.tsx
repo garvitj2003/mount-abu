@@ -85,6 +85,7 @@ export default function EventNoticeDetailPage({
         location: "",
         status: notice.status,
         time: "",
+        pdfLink: notice.document_url || "",
       };
     }
     return null;
@@ -110,6 +111,7 @@ export default function EventNoticeDetailPage({
         image: n.image_url || "/images/news/vasant-panchami.jpeg",
         date: formatDate(n.published_on),
         type: "notice",
+
       }));
   }, [type, eventsData, noticesData, id]);
 
@@ -128,6 +130,25 @@ export default function EventNoticeDetailPage({
   if (!item) {
     notFound();
   }
+
+  const handleShare = async () => {
+    const shareUrl = window.location.href;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: item.title,
+          text: item.description,
+          url: shareUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        alert("Link copied to clipboard");
+      }
+    } catch (error) {
+      console.log("Share cancelled or failed", error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#FFFBEF] flex flex-col font-montserrat">
@@ -157,13 +178,7 @@ export default function EventNoticeDetailPage({
               </div>
 
               <div className="flex items-center gap-3 self-end md:self-auto">
-                <button className="w-10 h-10 rounded-full bg-[#2D4A2D] flex items-center justify-center text-white hover:bg-[#1f331f] transition-colors">
-                  <Heart size={18} />
-                </button>
-                <button className="w-10 h-10 rounded-full bg-[#2D4A2D] flex items-center justify-center text-white hover:bg-[#1f331f] transition-colors">
-                  <Clock size={18} />
-                </button>
-                <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-[#2D4A2D] hover:bg-gray-50 transition-colors">
+                <button onClick={handleShare} className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-[#2D4A2D] hover:bg-gray-50 transition-colors">
                   <Share2 size={18} />
                 </button>
               </div>
@@ -206,6 +221,23 @@ export default function EventNoticeDetailPage({
                   fill
                   className="object-cover"
                 />
+
+                {item.type === "notice" && item.pdfLink && (
+                  <button
+                    onClick={() => {
+                      window.open(item.pdfLink, "_blank", "noopener,noreferrer");
+                    }}
+                    className="absolute top-4 right-4 z-20 w-14 h-14 bg-[#FFF5F5] border border-[#EA2A28] rounded-[16px] flex items-center justify-center hover:bg-[#FFE5E5] transition-colors cursor-pointer shadow-md"
+                  >
+                    <Image
+                      src="/images/icons/download-icon.svg"
+                      alt="Download PDF"
+                      width={50}
+                      height={50}
+                      className="object-contain"
+                    />
+                  </button>
+                )}
               </div>
             </motion.div>
 

@@ -324,7 +324,7 @@ export default function AuthorityApplicationsPage() {
                 {/* Renovation Dropdown */}
                 {roleFilters?.renovation && roleFilters.renovation.length > 0 && (
                   <FilterTabDropdown
-                    label="Renovation"
+                    label="Repair & Renovation"
                     options={roleFilters.renovation}
                     selectedFlag={selectedFlag}
                     category="Renovation"

@@ -241,7 +241,7 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
                 : "bg-white text-[#343434] hover:bg-gray-50"
               }`}
           >
-            Renovation
+            Repair & Renovation
           </button>
         </div>
       </div>

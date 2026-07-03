@@ -72,6 +72,7 @@ export default function ApplicationMaterialsDrawer({
       )
     );
   }, [(app as any).inspections]);
+  
 
   const handleToggleMaterial = (id: number) => {
     setSelectedMaterials(prev => ({ ...prev, [id]: !prev[id] }));

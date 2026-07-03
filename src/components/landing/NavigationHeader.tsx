@@ -31,8 +31,8 @@ const menuItems: MenuItem[] = [
     children: [
       { label: "Digital Construction Token", href: "/login" },
       { label: "Complaint Redressal & Tracking", href: "/login" },
-      { label: "Vital Certificates (Birth/Death)", href: "#services" },
-      { label: "Marriage Certificate", href: "#services" },
+      { label: "Vital Certificates (Birth/Death)", href: "https://pehchan.rajasthan.gov.in/pehchan2/Mainpage.aspx" },
+      { label: "Marriage Certificate", href: "https://pehchan.rajasthan.gov.in/pehchan2/Mainpage.aspx" },
     ],
   },
   { label: "City Profile", href: "#city-profile" },
@@ -44,30 +44,33 @@ const menuItems: MenuItem[] = [
     ],
   },
   {
-    label: "Information & Guidelines",
-    children: [
-      {
-        label: "Nagar Palika Act",
-        href: "https://drive.google.com/file/d/1k5A-CDzAPz3xCGLcsETX8F3GYdZZxmVP/view?usp=drivesdk",
-      },
-      {
-        label: "Wards Map",
-        href: "https://drive.google.com/file/d/1cJExzDqt1iCDeGogL1rOSnEMN-D56tzz/view?usp=drivesdk",
-      },
-      {
-        label: "Construction Guidelines",
-        href: "https://drive.google.com/file/d/1PA4DyI-cEGMtTJCSimeTy-QfZ5QR-e57/view?usp=drivesdk",
-      },
-      { label: "Solid Waste Management", href: "#info-guidelines" },
-      {
-        label: "Land Purchase Guidelines",
-        href: "https://drive.google.com/file/d/1k5A-CDzAPz3xCGLcsETX8F3GYdZZxmVP/view?usp=drivesdk",
-      },
-      { label: "Restaurant Licences", href: "#info-guidelines" },
-      { label: "Taxes", href: "#info-guidelines" },
-      { label: "Budget", href: "#info-guidelines" },
-    ],
+    label: "Information & Guidelines",  href: "#info-guidelines"
   },
+  // {
+  //   label: "Information & Guidelines",
+  //   children: [
+  //     {
+  //       label: "Nagar Palika Act",
+  //       href: "https://drive.google.com/file/d/1k5A-CDzAPz3xCGLcsETX8F3GYdZZxmVP/view?usp=drivesdk",
+  //     },
+  //     {
+  //       label: "Wards Map",
+  //       href: "https://drive.google.com/file/d/1cJExzDqt1iCDeGogL1rOSnEMN-D56tzz/view?usp=drivesdk",
+  //     },
+  //     {
+  //       label: "Construction Guidelines",
+  //       href: "https://drive.google.com/file/d/1PA4DyI-cEGMtTJCSimeTy-QfZ5QR-e57/view?usp=drivesdk",
+  //     },
+  //     { label: "Solid Waste Management", href: "#info-guidelines" },
+  //     {
+  //       label: "Land Purchase Guidelines",
+  //       href: "https://drive.google.com/file/d/1k5A-CDzAPz3xCGLcsETX8F3GYdZZxmVP/view?usp=drivesdk",
+  //     },
+  //     { label: "Restaurant Licences", href: "#info-guidelines" },
+  //     { label: "Taxes", href: "#info-guidelines" },
+  //     { label: "Budget", href: "#info-guidelines" },
+  //   ],
+  // },
   { label: "Testimonials", href: "#testimonials" },
   { label: "Contact Diary", href: "#contact" },
   {
