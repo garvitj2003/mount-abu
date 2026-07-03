@@ -8,7 +8,7 @@ import { useUser } from "@/hooks/useUser";
 import { useApplicationStore } from "@/store/useApplicationStore";
 import { ApplicationService } from "@/services/applicationService";
 import { useWards, useMaterials } from "@/hooks/useMasterData";
-import { step1Schema } from "@/lib/validations/application";
+import { step1Schema, extraMaterialSchema, dbMaterialsSchema } from "@/lib/validations/application";
 import { type components } from "@/types/api";
 import WardMapModal from "@/components/dashboard/WardMapModal";
 
@@ -145,7 +145,7 @@ export default function NewApplicationPage() {
     { id: number; name: string; unit: string; qty: string }[]
   >([]);
 
-  const [pendingExtra, setPendingExtra] = useState({ name: "", unit: "Kg", qty: "" });
+  const [pendingExtra, setPendingExtra] = useState({ name: "", unit: "Kg", qty: "", customUnit: "" });
   const [agreed, setAgreed] = useState(false);
 
   const steps = [
@@ -291,9 +291,40 @@ export default function NewApplicationPage() {
   };
 
   const addExtraMaterial = () => {
-    if (!pendingExtra.name || !pendingExtra.qty) return;
-    setExtraMaterials([...extraMaterials, { id: Date.now(), ...pendingExtra }]);
-    setPendingExtra({ name: "", unit: "Kg", qty: "" });
+    setErrors({});
+    const validation = extraMaterialSchema.safeParse(pendingExtra);
+
+    if (!validation.success) {
+      const fieldErrors = validation.error.flatten().fieldErrors;
+      const newErrors: Record<string, string> = {};
+
+      Object.entries(fieldErrors).forEach(([key, messages]) => {
+        if (messages && messages.length > 0) {
+          newErrors[key] = messages[0];
+        }
+      });
+
+      validation.error.issues.forEach((err) => {
+        if (err.path.includes("customUnit")) {
+          newErrors["customUnit"] = err.message;
+        }
+      });
+
+      setErrors(newErrors);
+      return;
+    }
+
+    const finalUnit = pendingExtra.unit === "other" ? (pendingExtra.customUnit || "") : pendingExtra.unit;
+    setExtraMaterials([
+      ...extraMaterials,
+      {
+        id: Date.now(),
+        name: pendingExtra.name,
+        qty: pendingExtra.qty,
+        unit: finalUnit
+      }
+    ]);
+    setPendingExtra({ name: "", unit: "Kg", qty: "", customUnit: "" });
   };
 
   const removeExtraMaterial = (id: number) => {
@@ -408,6 +439,22 @@ export default function NewApplicationPage() {
 
   const onNextStep3 = async () => {
     if (!applicationId) return;
+    setErrors({});
+    const validation = dbMaterialsSchema.safeParse(materials);
+
+    if (!validation.success) {
+      const newErrors: Record<string, string> = {};
+      validation.error.issues.forEach((issue) => {
+        const index = issue.path[0] as number;
+        const material = materials[index];
+        if (material) {
+          newErrors[`material_${material.id}`] = issue.message;
+        }
+      });
+      setErrors(newErrors);
+      return;
+    }
+
     try {
       const requirements: any[] = [];
 
@@ -463,7 +510,7 @@ export default function NewApplicationPage() {
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-5">
           <label className="w-[228px] text-[12px] font-normal text-[#343434] font-onest">Applicant name (As per aadhar only)</label>
-          <input type="text" placeholder="Enter your name" className={`h-[34px] w-[313px] rounded-lg border ${errors.applicant_name ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none placeholder:opacity-30 focus:border-[#0C83FF] font-onest`} value={formData.applicant_name} onChange={(e) => updateFormData({ applicant_name: e.target.value })} />
+          <input type="text" placeholder="Enter your name" className={`h-[34px] w-[313px] rounded-lg border ${errors.applicant_name ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none placeholder:opacity-60 focus:border-[#0C83FF] font-onest`} value={formData.applicant_name} onChange={(e) => updateFormData({ applicant_name: e.target.value })} />
         </div>
         {errors.applicant_name && <p className="ml-[248px] text-[10px] text-red-500">{errors.applicant_name}</p>}
       </div>
@@ -471,7 +518,7 @@ export default function NewApplicationPage() {
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-5">
           <label className="w-[228px] text-[12px] font-normal text-[#343434] font-onest">Farher’s name (As per aadhar only)</label>
-          <input type="text" placeholder="Enter your father name" className={`h-[34px] w-[313px] rounded-lg border ${errors.father_name ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none placeholder:opacity-30 focus:border-[#0C83FF] font-onest`} value={formData.father_name} onChange={(e) => updateFormData({ father_name: e.target.value })} />
+          <input type="text" placeholder="Enter your father name" className={`h-[34px] w-[313px] rounded-lg border ${errors.father_name ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none placeholder:opacity-60 focus:border-[#0C83FF] font-onest`} value={formData.father_name} onChange={(e) => updateFormData({ father_name: e.target.value })} />
         </div>
         {errors.father_name && <p className="ml-[248px] text-[10px] text-red-500">{errors.father_name}</p>}
       </div>
@@ -484,7 +531,7 @@ export default function NewApplicationPage() {
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-5">
           <label className="w-[228px] text-[12px] font-normal text-[#343434] font-onest">Email address</label>
-          <input type="email" placeholder="Enter your email" className={`h-[34px] w-[313px] rounded-lg border ${errors.email ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none placeholder:opacity-30 focus:border-[#0C83FF] font-onest`} value={formData.email || ""} onChange={(e) => updateFormData({ email: e.target.value })} />
+          <input type="email" placeholder="Enter your email" className={`h-[34px] w-[313px] rounded-lg border ${errors.email ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none placeholder:opacity-60 focus:border-[#0C83FF] font-onest`} value={formData.email || ""} onChange={(e) => updateFormData({ email: e.target.value })} />
         </div>
         {errors.email && <p className="ml-[248px] text-[10px] text-red-500">{errors.email}</p>}
       </div>
@@ -492,7 +539,7 @@ export default function NewApplicationPage() {
       <div className="flex flex-col gap-1">
         <div className="flex gap-5">
           <label className="mt-1 w-[228px] text-[12px] font-normal text-[#343434] font-onest">Current Address</label>
-          <textarea placeholder="Enter Current Address" className={`h-[84px] w-[313px] resize-none rounded-lg border ${errors.current_address ? "border-red-500" : "border-[#D6D9DE]"} p-3 text-sm text-[#343434] outline-none placeholder:opacity-30 focus:border-[#0C83FF] font-onest`} value={formData.current_address} onChange={(e) => updateFormData({ current_address: e.target.value })} />
+          <textarea placeholder="Enter Current Address" className={`h-[84px] w-[313px] resize-none rounded-lg border ${errors.current_address ? "border-red-500" : "border-[#D6D9DE]"} p-3 text-sm text-[#343434] outline-none placeholder:opacity-60 focus:border-[#0C83FF] font-onest`} value={formData.current_address} onChange={(e) => updateFormData({ current_address: e.target.value })} />
         </div>
         {errors.current_address && <p className="ml-[248px] text-[10px] text-red-500">{errors.current_address}</p>}
       </div>
@@ -508,7 +555,7 @@ export default function NewApplicationPage() {
               </div>
               <span className="text-sm text-black font-onest font-normal">Same as current address.</span>
             </label>
-            <textarea placeholder="Enter property address" className={`h-[84px] w-[313px] resize-none rounded-lg border ${errors.property_address ? "border-red-500" : "border-[#D6D9DE]"} p-3 text-sm text-[#343434] outline-none placeholder:opacity-30 focus:border-[#0C83FF] font-onest`} value={formData.property_address} onChange={(e) => updateFormData({ property_address: e.target.value })} />
+            <textarea placeholder="Enter property address" className={`h-[84px] w-[313px] resize-none rounded-lg border ${errors.property_address ? "border-red-500" : "border-[#D6D9DE]"} p-3 text-sm text-[#343434] outline-none placeholder:opacity-60 focus:border-[#0C83FF] font-onest`} value={formData.property_address} onChange={(e) => updateFormData({ property_address: e.target.value })} />
           </div>
         </div>
         {errors.property_address && <p className="ml-[248px] text-[10px] text-red-500">{errors.property_address}</p>}
@@ -532,14 +579,14 @@ export default function NewApplicationPage() {
       <div className="flex flex-col gap-1">
         <div className="flex gap-5">
           <label className="mt-1 w-[228px] text-[12px] font-normal text-[#343434] font-onest">Work description</label>
-          <textarea placeholder="Describe the work" className={`h-[97px] w-[313px] resize-none rounded-lg border ${errors.work_description ? "border-red-500" : "border-[#D6D9DE]"} p-3 text-sm text-[#343434] outline-none placeholder:opacity-30 focus:border-[#0C83FF] font-onest`} value={formData.work_description} onChange={(e) => updateFormData({ work_description: e.target.value })} />
+          <textarea placeholder="Describe the work" className={`h-[97px] w-[313px] resize-none rounded-lg border ${errors.work_description ? "border-red-500" : "border-[#D6D9DE]"} p-3 text-sm text-[#343434] outline-none placeholder:opacity-60 focus:border-[#0C83FF] font-onest`} value={formData.work_description} onChange={(e) => updateFormData({ work_description: e.target.value })} />
         </div>
         {errors.work_description && <p className="ml-[248px] text-[10px] text-red-500">{errors.work_description}</p>}
       </div>
 
       <div className="flex items-center gap-5">
         <label className="w-[228px] text-[12px] font-normal text-[#343434] font-onest">Contractor name</label>
-        <input type="text" placeholder="Enter contractor name" className="h-[34px] w-[313px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none placeholder:opacity-30 focus:border-[#0C83FF] font-onest" value={formData.contractor_name || ""} onChange={(e) => updateFormData({ contractor_name: e.target.value })} />
+        <input type="text" placeholder="Enter contractor name" className="h-[34px] w-[313px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none placeholder:opacity-60 focus:border-[#0C83FF] font-onest" value={formData.contractor_name || ""} onChange={(e) => updateFormData({ contractor_name: e.target.value })} />
       </div>
 
       <div className="flex items-center gap-5">
@@ -859,25 +906,37 @@ export default function NewApplicationPage() {
         </div>
         <div className="flex flex-col flex-1">
           <div className="flex h-10 items-center justify-between border-b border-[#D6D9DE] pl-2 pr-0"><span className="text-[12px] font-semibold uppercase text-[#333333] opacity-70 font-onest">Estimated Material</span><div className="h-4 w-[1px] bg-black/10" /></div>
-          {items.map((m) => (<div key={m.id} className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><div className="h-[34px] w-full rounded-lg border border-[#D6D9DE] bg-white px-3 flex items-center"><input type="text" className="w-full text-sm text-[#343434] outline-none font-onest" value={m.qty} onChange={(e) => handleMaterialQtyChange(m.id, e.target.value)} /></div></div>))}
+          {items.map((m) => (<div key={m.id} className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><div className={`h-[34px] w-full rounded-lg border ${errors[`material_${m.id}`] ? "border-red-500" : "border-[#D6D9DE]"} bg-white px-3 flex items-center`}><input type="text" className="w-full text-sm text-[#343434] outline-none font-onest" value={m.qty} onChange={(e) => handleMaterialQtyChange(m.id, e.target.value)} /></div></div>))}
         </div>
       </div>
     );
     return (
       <div className="space-y-10">
-        <div className="flex w-full max-w-[805px] gap-5">{MaterialTable(group1)}{MaterialTable(group2)}</div>
+        <div>
+          <div className="flex w-full max-w-[805px] gap-5">{MaterialTable(group1)}{MaterialTable(group2)}</div>
+          {materials.some(m => errors[`material_${m.id}`]) && (
+            <div className="text-[11px] text-red-500 flex flex-col gap-1 mt-2 font-onest max-w-[805px]">
+              {materials.map(m => {
+                if (errors[`material_${m.id}`]) {
+                  return <span key={m.id}>* {m.name}: {errors[`material_${m.id}`]}</span>;
+                }
+                return null;
+              })}
+            </div>
+          )}
+        </div>
         <div className="flex w-full max-w-[805px] flex-col gap-5">
           <div className="flex items-center justify-center gap-2.5 py-[7px]"><span className="text-sm font-medium text-[#343434] font-onest">Add Extra Materials</span><div className="h-px flex-1 bg-[#D6D9DE]" /></div>
           <div className="flex gap-2">
             <div className="flex-1 flex flex-row">
               <div className="flex flex-col flex-1">
                 <div className="flex h-10 items-center justify-between border-b border-[#D6D9DE] pl-2 pr-0"><span className="text-[12px] font-semibold uppercase text-[#333333] opacity-70 font-onest">Material Name</span><div className="h-4 w-[1px] bg-black/10" /></div>
-                <div className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><div className="h-[34px] w-full rounded-lg border border-[#D6D9DE] bg-white px-3 flex items-center"><input type="text" placeholder="Material name" className="w-full text-sm text-[#343434] outline-none placeholder:opacity-20 font-onest" value={pendingExtra.name} onChange={(e) => setPendingExtra({ ...pendingExtra, name: e.target.value })} /></div></div>
+                <div className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><div className="h-[34px] w-full rounded-lg border border-[#D6D9DE] bg-white px-3 flex items-center"><input type="text" placeholder="Material name" className="w-full text-sm text-[#343434] outline-none placeholder:opacity-60 font-onest" value={pendingExtra.name} onChange={(e) => setPendingExtra({ ...pendingExtra, name: e.target.value })} /></div></div>
                 {extraMaterials.map(m => (<div key={m.id} className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><span className="text-sm font-medium text-[#343434] font-onest pl-3">{m.name}</span></div>))}
               </div>
               <div className="flex flex-col flex-1">
                 <div className="flex h-10 items-center justify-between border-b border-[#D6D9DE] pl-2 pr-0"><span className="text-[12px] font-semibold uppercase text-[#333333] opacity-70 font-onest">Estimated Material</span><div className="h-4 w-[1px] bg-black/10" /></div>
-                <div className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><div className="flex h-[34px] w-full items-center justify-between rounded-lg border border-[#D6D9DE] bg-white px-3"><input type="text" placeholder="Enter Qty" className="w-full text-sm text-[#343434] outline-none placeholder:opacity-20 font-onest" value={pendingExtra.qty} onChange={(e) => setPendingExtra({ ...pendingExtra, qty: e.target.value })} /><div className="flex items-center gap-1 border-l border-[#D6D9DE] pl-2 ml-2"><select className="bg-transparent text-sm text-[#343434] outline-none font-onest" value={pendingExtra.unit} onChange={(e) => setPendingExtra({ ...pendingExtra, unit: e.target.value })}><option value="Kg">Kg</option><option value="Nos">Nos</option><option value="Bags">Bags</option></select></div></div></div>
+                <div className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><div className="flex h-[34px] w-full items-center justify-between rounded-lg border border-[#D6D9DE] bg-white px-3"><input type="text" placeholder="Enter Qty" className="w-full text-sm text-[#343434] outline-none placeholder:opacity-60 font-onest" value={pendingExtra.qty} onChange={(e) => setPendingExtra({ ...pendingExtra, qty: e.target.value })} /><div className="flex items-center gap-1 border-l border-[#D6D9DE] pl-2 ml-2"><select className="bg-transparent text-sm text-[#343434] outline-none font-onest" value={pendingExtra.unit} onChange={(e) => setPendingExtra({ ...pendingExtra, unit: e.target.value, customUnit: e.target.value === "other" ? "" : pendingExtra.customUnit })}><option value="Kg">Kg</option><option value="Nos">Nos</option><option value="Bags">Bags</option><option value="other">Other</option></select>{pendingExtra.unit === "other" && (<input type="text" placeholder="Specify unit" className="w-20 border-l border-[#D6D9DE] pl-2 ml-2 text-sm text-[#343434] outline-none placeholder:opacity-60 font-onest" value={pendingExtra.customUnit} onChange={(e) => setPendingExtra({ ...pendingExtra, customUnit: e.target.value })} />)}</div></div></div>
                 {extraMaterials.map(m => (<div key={m.id} className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><span className="text-sm font-medium text-[#343434] font-onest pl-3">{m.qty} {m.unit}</span></div>))}
               </div>
             </div>
@@ -886,6 +945,13 @@ export default function NewApplicationPage() {
               {extraMaterials.map(m => (<button key={m.id} onClick={() => removeExtraMaterial(m.id)} className="h-12 flex items-center justify-center text-[#EF4444] hover:opacity-80 transition-opacity"><Image src="/dashboard/icons/applications/remove-material.svg" alt="remove" width={22} height={22} /></button>))}
             </div>
           </div>
+          {(errors.name || errors.qty || errors.customUnit) && (
+            <div className="text-[11px] text-red-500 flex flex-col gap-1 mt-1 font-onest">
+              {errors.name && <span>* Material Name: {errors.name}</span>}
+              {errors.qty && <span>* Estimated Material: {errors.qty}</span>}
+              {errors.customUnit && <span>* Unit: {errors.customUnit}</span>}
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-5 pt-5"><div className="flex w-full max-w-[805px] justify-end gap-5">
           <button onClick={() => setCurrentStep(2)} className="flex items-center justify-center gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-6 py-3 text-sm font-medium text-[#343434] hover:bg-gray-200 transition-colors font-onest font-medium"><Image src="/dashboard/icons/applications/arrow-back.svg" alt="back" width={14} height={14} /> Back</button>

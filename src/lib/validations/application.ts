@@ -22,3 +22,55 @@ export const materialRowSchema = z.object({
 });
 
 export const materialsSchema = z.array(materialRowSchema);
+
+export const extraMaterialSchema = z.object({
+  name: z.string().min(1, "Material name is required"),
+  qty: z.string()
+    .min(1, "Estimated material is required")
+    .refine((val) => val.trim() !== "", {
+      message: "Estimated material is required",
+    })
+    .refine((val) => !isNaN(Number(val)), {
+      message: "Estimated material must be a numerical value",
+    })
+    .refine((val) => Number(val) > 0, {
+      message: "Estimated material must be greater than 0",
+    }),
+  unit: z.string().min(1, "Unit is required"),
+  customUnit: z.string().optional(),
+}).refine((data) => {
+  if (data.unit === "other") {
+    return !!data.customUnit && data.customUnit.trim().length > 0;
+  }
+  return true;
+}, {
+  message: "Please specify the custom unit",
+  path: ["customUnit"],
+}).refine((data) => {
+  if (data.unit === "other" && data.customUnit) {
+    return /^[a-zA-Z\s]+$/.test(data.customUnit);
+  }
+  return true;
+}, {
+  message: "Custom unit must contain letters only",
+  path: ["customUnit"],
+});
+
+export const dbMaterialRowSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  unit: z.string(),
+  qty: z.string().optional().refine((val) => {
+    if (!val || val.trim() === "") return true;
+    return !isNaN(Number(val));
+  }, {
+    message: "Must be a numerical value",
+  }).refine((val) => {
+    if (!val || val.trim() === "") return true;
+    return Number(val) > 0;
+  }, {
+    message: "Must be greater than 0",
+  }),
+});
+
+export const dbMaterialsSchema = z.array(dbMaterialRowSchema);
