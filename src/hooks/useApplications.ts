@@ -13,6 +13,7 @@ export function useApplications(params: {
   search?: string;
   ward_id?: number;
   property_usage?: string;
+  jurisdiction_zone?: string;
 }) {
   return useQuery({
     queryKey: ["applications", params],

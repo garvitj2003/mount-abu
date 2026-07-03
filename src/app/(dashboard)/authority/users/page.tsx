@@ -258,7 +258,7 @@ export default function AuthorityUserManagementPage() {
                   </th>
                   <th className="px-2 py-3 text-left w-[15%]">
                     <div className="flex items-center gap-2 border-r border-[rgba(0,0,0,0.1)] pr-2">
-                      <span className="text-xs font-semibold text-[#333333] opacity-70 uppercase">Department</span>
+                      <span className="text-xs font-semibold text-[#333333] opacity-70 uppercase">Jurisdiction</span>
                     </div>
                   </th>
                   <th className="px-2 py-3 text-left w-[15%]">
@@ -306,8 +306,7 @@ export default function AuthorityUserManagementPage() {
                         </td>
                         <td className="px-2 py-3">
                         <span className="text-sm font-normal text-[#343434] opacity-70">
-                            {/* UserResponse lacks department_id currently. Placeholder logic or fetch if updated. */}
-                            —
+                            {user.jurisdiction_zone || "—"}
                         </span>
                         </td>
                         <td className="px-2 py-3">

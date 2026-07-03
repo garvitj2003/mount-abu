@@ -131,12 +131,14 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
   };
 
   const handleViewApplication = (app: ApplicationResponse) => {
-    const params = new URLSearchParams(window.location.search).toString();
-    const query = params ? `?${params}` : "";
+    const params = new URLSearchParams(window.location.search);
     if (app.status === "PENDING") {
+      params.set("id", app.id.toString());
+      const query = params.toString() ? `?${params.toString()}` : "";
       setApplicationId(app.id);
       router.push(`/citizen/applications/new-application${query}`);
     } else {
+      const query = params.toString() ? `?${params.toString()}` : "";
       router.push(`/citizen/applications/${app.id}${query}`);
     }
   };

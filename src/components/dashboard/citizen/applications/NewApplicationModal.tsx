@@ -17,7 +17,7 @@ export default function NewApplicationModal({
 
   const handleSelect = (type: string) => {
     onClose();
-    router.push("/citizen/applications/new-application");
+    router.push(`/citizen/applications/new-application?type=${type.toUpperCase()}`);
   };
 
   return (

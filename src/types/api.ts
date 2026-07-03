@@ -1612,6 +1612,15 @@ export interface components {
             is_agriculture_land: boolean;
             /** @description Property Usage Type */
             property_usage: components["schemas"]["PropertyUsageType"];
+            /** @description Existing Structure Type */
+            existing_structure?: components["schemas"]["StructureType"] | null;
+            /** @description Construction Floor Level */
+            construction_floor?: components["schemas"]["StructureType"] | null;
+            /**
+             * @description Jurisdiction Zone (ULB / UIT)
+             * @default ULB
+             */
+            jurisdiction_zone: components["schemas"]["JurisdictionZone"];
             /**
              * Ward Id
              * @description Ward/Zone ID
@@ -1652,7 +1661,7 @@ export interface components {
          * ApplicationFlags
          * @enum {string}
          */
-        ApplicationFlags: "ALL" | "CITIZEN" | "OBJECTED_CITIZEN_ACTION" | "NEW_APPLICATION_REQUIRES_NODAL_OFFICER_ACTION" | "NEW_APPLICATION_REQUIRES_JEN_INSPECTION" | "NEW_APPLICATION_REQUIRES_JEN_FIELD_INSPECTION" | "NEW_APPLICATION_REQUIRES_JEN_MATERIAL_ENTRY" | "NEW_APPLICATION_REQUIRES_NODAL_OFFICER_TOKEN_GENERATION" | "RENOVATION_REQUIRES_COMMISSIONER_FORWARD" | "RENOVATION_REQUIRES_DEPT_COMMENT" | "RENOVATION_REQUIRES_JEN_FIELD_INSPECTION" | "RENOVATION_REQUIRES_JEN_MATERIAL_ENTRY" | "RENOVATION_REQUIRES_COMMISSIONER_ACTION" | "RENOVATION_REQUIRES_NODAL_OFFICER_ACTION" | "RENOVATION_REQUIRES_NODAL_OFFICER_TOKEN_GENERATION" | "RENOVATION_REQUIRES_NODAL_OFFICER_APPROVAL_PHASE_1" | "RENOVATION_REQUIRES_NODAL_OFFICER_APPROVAL_PHASE_2" | "RENOVATION_REQUIRES_NODAL_OFFICER_APPROVAL_PHASE_3" | "RENOVATION_REQUIRES_NODAL_OFFICER_APPROVAL_PHASE_4" | "RENOVATION_REQUIRES_NODAL_OFFICER_APPROVAL_PHASE_5" | "RENOVATION_OVERDUE_COMMENTS" | "RENOVATION_OVERDUE_COMMENTS_JEN" | "RENOVATION_OVERDUE_COMMENTS_ATP" | "RENOVATION_OVERDUE_COMMENTS_LAND" | "RENOVATION_OVERDUE_COMMENTS_LEGAL" | "PHASE_READY_FOR_NAKA" | "NAKA_INCHARGE_ACTION";
+        ApplicationFlags: "ALL" | "CITIZEN" | "OBJECTED_CITIZEN_ACTION" | "ALL_DEPT" | "NEW_APPLICATION_REQUIRES_NODAL_OFFICER_ACTION" | "NEW_APPLICATION_REQUIRES_JEN_INSPECTION" | "NEW_APPLICATION_REQUIRES_JEN_FIELD_INSPECTION" | "NEW_APPLICATION_REQUIRES_JEN_MATERIAL_ENTRY" | "NEW_APPLICATION_REQUIRES_NODAL_OFFICER_TOKEN_GENERATION" | "RENOVATION_REQUIRES_COMMISSIONER_FORWARD" | "RENOVATION_REQUIRES_DEPT_COMMENT" | "RENOVATION_REQUIRES_JEN_FIELD_INSPECTION" | "RENOVATION_REQUIRES_JEN_MATERIAL_ENTRY" | "RENOVATION_REQUIRES_COMMISSIONER_ACTION" | "RENOVATION_REQUIRES_NODAL_OFFICER_ACTION" | "RENOVATION_REQUIRES_NODAL_OFFICER_TOKEN_GENERATION" | "RENOVATION_REQUIRES_NODAL_OFFICER_APPROVAL_PHASE_1" | "RENOVATION_REQUIRES_NODAL_OFFICER_APPROVAL_PHASE_2" | "RENOVATION_REQUIRES_NODAL_OFFICER_APPROVAL_PHASE_3" | "RENOVATION_REQUIRES_NODAL_OFFICER_APPROVAL_PHASE_4" | "RENOVATION_REQUIRES_NODAL_OFFICER_APPROVAL_PHASE_5" | "RENOVATION_OVERDUE_COMMENTS" | "RENOVATION_OVERDUE_COMMENTS_JEN" | "RENOVATION_OVERDUE_COMMENTS_ATP" | "RENOVATION_OVERDUE_COMMENTS_LAND" | "RENOVATION_OVERDUE_COMMENTS_LEGAL" | "PHASE_READY_FOR_NAKA" | "NAKA_INCHARGE_ACTION";
         /** ApplicationMaterialRequirements */
         ApplicationMaterialRequirements: {
             /**
@@ -1731,6 +1740,9 @@ export interface components {
             /** Is Agriculture Land */
             is_agriculture_land: boolean;
             property_usage: components["schemas"]["PropertyUsageType"];
+            existing_structure?: components["schemas"]["StructureType"] | null;
+            construction_floor?: components["schemas"]["StructureType"] | null;
+            jurisdiction_zone: components["schemas"]["JurisdictionZone"];
             /** Department Id */
             department_id: number | null;
             /** Ward Id */
@@ -2417,7 +2429,7 @@ export interface components {
             applicant_name: string;
             /**
              * Applicant Mobile
-             * @description Mobile number
+             * @description 10-digit mobile number
              */
             applicant_mobile: string;
             /** Latitude */
@@ -2608,7 +2620,7 @@ export interface components {
         CreateUserRequest: {
             /**
              * Mobile
-             * @description User's mobile number
+             * @description User's 10-digit mobile number
              */
             mobile: string;
             /**
@@ -2628,6 +2640,8 @@ export interface components {
              * @description Optional username for the user
              */
             username?: string | null;
+            /** @description User's jurisdiction zone (ULB / UIT) */
+            jurisdiction_zone?: components["schemas"]["JurisdictionZone"] | null;
         };
         /** DepartmentCreate */
         DepartmentCreate: {
@@ -2916,6 +2930,11 @@ export interface components {
             inspected: boolean;
         };
         /**
+         * JurisdictionZone
+         * @enum {string}
+         */
+        JurisdictionZone: "ULB" | "UIT";
+        /**
          * KpiCard
          * @description A single KPI card with optional period-over-period comparison.
          */
@@ -3103,6 +3122,7 @@ export interface components {
             role: string;
             /** Is Active */
             is_active: boolean;
+            jurisdiction_zone?: components["schemas"]["JurisdictionZone"] | null;
         };
         /**
          * MediaCategory
@@ -3495,7 +3515,7 @@ export interface components {
          * PropertyUsageType
          * @enum {string}
          */
-        PropertyUsageType: "DOMESTIC" | "COMMERCIAL" | "HOTEL";
+        PropertyUsageType: "DOMESTIC" | "COMMERCIAL" | "HOTEL" | "GOVERNMENT";
         /** RefreshTokenRequest */
         RefreshTokenRequest: {
             /**
@@ -3620,6 +3640,11 @@ export interface components {
             /** Count */
             count: number;
         };
+        /**
+         * StructureType
+         * @enum {string}
+         */
+        StructureType: "NONE" | "FENCING" | "G" | "G+1" | "G+2" | "G+3";
         /**
          * SuccessResponse
          * @description Generic success response.
@@ -3786,6 +3811,7 @@ export interface components {
              * @default false
              */
             is_new_user: boolean;
+            jurisdiction_zone?: components["schemas"]["JurisdictionZone"] | null;
         };
         /**
          * TokenUtilizationRow
@@ -3825,7 +3851,7 @@ export interface components {
             name?: string | null;
             /**
              * Mobile
-             * @description Updated mobile number
+             * @description Updated 10-digit mobile number
              */
             mobile?: string | null;
             /**
@@ -3838,6 +3864,8 @@ export interface components {
              * @description Status of the user (active or not)
              */
             is_active?: boolean | null;
+            /** @description Updated jurisdiction zone (ULB / UIT) */
+            jurisdiction_zone?: components["schemas"]["JurisdictionZone"] | null;
         };
         /**
          * UserCreatedResponse
@@ -3873,6 +3901,7 @@ export interface components {
             username?: string | null;
             /** Is Active */
             is_active: boolean;
+            jurisdiction_zone?: components["schemas"]["JurisdictionZone"] | null;
         };
         /**
          * UserRole
@@ -4614,6 +4643,8 @@ export interface operations {
                 ward_id?: number | null;
                 /** @description Filter by property usage */
                 property_usage?: components["schemas"]["PropertyUsageType"] | null;
+                /** @description Filter by jurisdiction zone (ALL / ULB / UIT) */
+                jurisdiction_zone?: string | null;
                 /** @description Citizen user ID (required when flag=CITIZEN) */
                 citizen_user_id?: number | null;
             };

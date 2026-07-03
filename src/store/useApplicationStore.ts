@@ -36,6 +36,9 @@ const initialFormData: ApplicationFormData = {
   property_usage: "DOMESTIC",
   ward_id: 0,
   title: "Construction/Renovation Permit Request",
+  jurisdiction_zone: "ULB",
+  existing_structure: "NONE",
+  construction_floor: "NONE",
 };
 
 export const useApplicationStore = create<ApplicationState>((set) => ({

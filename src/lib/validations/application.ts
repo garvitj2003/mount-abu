@@ -11,9 +11,20 @@ export const step1Schema = z.object({
   work_description: z.string().min(10, "Please provide a more detailed description"),
   contractor_name: z.string().optional().nullable(),
   is_agriculture_land: z.boolean(),
-  property_usage: z.enum(["DOMESTIC", "COMMERCIAL", "HOTEL"] as const),
+  property_usage: z.enum(["DOMESTIC", "COMMERCIAL", "GOVERNMENT"] as const),
   ward_id: z.number({ message: "Please select a ward/zone" }).min(1, "Please select a ward/zone"),
   title: z.string(),
+  jurisdiction_zone: z.enum(["ULB", "UIT"] as const),
+  existing_structure: z.enum(["NONE", "FENCING", "G", "G+1", "G+2", "G+3"] as const),
+  construction_floor: z.enum(["NONE", "FENCING", "G", "G+1", "G+2", "G+3"] as const),
+}).refine((data) => {
+  if (data.existing_structure === "G+3") {
+    return false;
+  }
+  return true;
+}, {
+  message: "Application cannot be created if existing structure is G+3",
+  path: ["existing_structure"],
 });
 
 export const materialRowSchema = z.object({

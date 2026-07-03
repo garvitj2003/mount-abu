@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@/hooks/useUser";
 import { useApplicationStore } from "@/store/useApplicationStore";
@@ -17,6 +17,9 @@ type DepartmentResponse = components["schemas"]["DepartmentResponse"];
 
 export default function NewApplicationPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const idParam = searchParams.get("id");
+  const typeParam = searchParams.get("type");
   const queryClient = useQueryClient();
   const { data: user, isPending: isUserLoading } = useUser();
   const { data: wards = [], isPending: isWardsLoading } = useWards();
@@ -41,6 +44,26 @@ export default function NewApplicationPage() {
 
   const [dragActive, setDragActive] = useState<string | null>(null);
 
+  const hasResetOnMount = useRef(false);
+
+  // Sync URL query param `id` with Zustand store `applicationId`
+  useEffect(() => {
+    if (idParam) {
+      const parsedId = Number(idParam);
+      if (!isNaN(parsedId) && applicationId !== parsedId) {
+        setApplicationId(parsedId);
+      }
+    } else {
+      if (!hasResetOnMount.current) {
+        resetApplication();
+        if (typeParam === "NEW" || typeParam === "RENOVATION") {
+          updateFormData({ type: typeParam });
+        }
+        hasResetOnMount.current = true;
+      }
+    }
+  }, [idParam, typeParam, applicationId, setApplicationId, resetApplication, updateFormData]);
+
   // Resume Application Logic
   useEffect(() => {
     const resumeApplication = async () => {
@@ -62,6 +85,9 @@ export default function NewApplicationPage() {
           is_agriculture_land: app.is_agriculture_land,
           property_usage: app.property_usage as any,
           ward_id: app.ward_id || 0,
+          jurisdiction_zone: app.jurisdiction_zone as any,
+          existing_structure: (app.existing_structure || "NONE") as any,
+          construction_floor: (app.construction_floor || "NONE") as any,
         });
 
         // 2. Populate Materials (Local State)
@@ -118,6 +144,40 @@ export default function NewApplicationPage() {
       updateFormData({ email: formData.email || "" });
     }
   }, [user, updateFormData, formData.email]);
+
+  // Dynamic calculation for construction_floor
+  useEffect(() => {
+    const type = formData.type;
+    const existing = formData.existing_structure || "NONE";
+    let targetFloor: typeof formData.construction_floor = "NONE";
+
+    if (type === "RENOVATION") {
+      targetFloor = existing as any;
+    } else {
+      // type === "NEW"
+      if (existing === "NONE") {
+        if (
+          formData.construction_floor === "NONE" ||
+          formData.construction_floor === "FENCING" ||
+          formData.construction_floor === "G"
+        ) {
+          targetFloor = formData.construction_floor;
+        } else {
+          targetFloor = "NONE";
+        }
+      } else {
+        const STRUCTURE_LEVELS = ["NONE", "FENCING", "G", "G+1", "G+2", "G+3"] as const;
+        const idx = STRUCTURE_LEVELS.indexOf(existing as any);
+        if (idx !== -1 && idx < STRUCTURE_LEVELS.length - 1) {
+          targetFloor = STRUCTURE_LEVELS[idx + 1] as any;
+        }
+      }
+    }
+
+    if (formData.construction_floor !== targetFloor) {
+      updateFormData({ construction_floor: targetFloor });
+    }
+  }, [formData.type, formData.existing_structure, formData.construction_floor, updateFormData]);
 
   // Form State Step 2 (Files)
   const [files, setFiles] = useState<{ [key: string]: File | File[] | null }>({
@@ -377,6 +437,12 @@ export default function NewApplicationPage() {
         material_requirements: initialRequirements
       });
       setApplicationId(response.id);
+
+      // Update URL to include the new application ID
+      const params = new URLSearchParams(window.location.search);
+      params.set("id", response.id.toString());
+      router.replace(`/citizen/applications/new-application?${params.toString()}`);
+
       queryClient.invalidateQueries({ queryKey: ["applications"] });
       setCurrentStep(2);
     } catch (error) {
@@ -505,8 +571,10 @@ export default function NewApplicationPage() {
     }
   };
 
-  const renderStep1 = () => (
-    <div className="space-y-5">
+  const renderStep1 = () => {
+    const canChangeFloor = formData.type === "NEW" && formData.existing_structure === "NONE";
+    return (
+      <div className="space-y-5">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-5">
           <label className="w-[228px] text-[12px] font-normal text-[#343434] font-onest">Applicant name (As per aadhar only)</label>
@@ -566,7 +634,12 @@ export default function NewApplicationPage() {
         <div className="flex items-center gap-5 py-1">
           {["RENOVATION", "NEW"].map((type) => (
             <label key={type} className="flex cursor-pointer items-center gap-1">
-              <input type="radio" className="hidden" checked={formData.type === type} onChange={() => updateFormData({ type: type as any })} />
+              <input type="radio" className="hidden" checked={formData.type === type} onChange={() => {
+                updateFormData({ type: type as any });
+                const params = new URLSearchParams(window.location.search);
+                params.set("type", type);
+                router.replace(`/citizen/applications/new-application?${params.toString()}`);
+              }} />
               <div className="flex h-5 w-5 items-center justify-center">
                 <Image src={formData.type === type ? "/dashboard/icons/applications/radio-selected.svg" : "/dashboard/icons/applications/radio-unselected.svg"} alt="radio" width={20} height={20} />
               </div>
@@ -607,7 +680,7 @@ export default function NewApplicationPage() {
       <div className="flex items-center gap-5">
         <label className="w-[228px] text-[12px] font-normal text-[#343434] font-onest">Property usage</label>
         <div className="flex w-[315px] items-center gap-5 py-1">
-          {["DOMESTIC", "COMMERCIAL", "HOTEL"].map((usage) => (
+          {["DOMESTIC", "COMMERCIAL", "GOVERNMENT"].map((usage) => (
             <label key={usage} className="flex cursor-pointer items-center gap-1">
               <input type="radio" className="hidden" checked={formData.property_usage === usage} onChange={() => updateFormData({ property_usage: usage as any })} />
               <div className="flex h-5 w-5 items-center justify-center">
@@ -617,6 +690,72 @@ export default function NewApplicationPage() {
             </label>
           ))}
         </div>
+      </div>
+
+      <div className="flex items-center gap-5">
+        <label className="w-[228px] text-[12px] font-normal text-[#343434] font-onest">Jurisdiction Zone</label>
+        <div className="flex w-[315px] items-center gap-10 py-1">
+          {["ULB", "UIT"].map((zone) => (
+            <label key={zone} className="flex cursor-pointer items-center gap-1">
+              <input type="radio" className="hidden" checked={formData.jurisdiction_zone === zone} onChange={() => updateFormData({ jurisdiction_zone: zone as any })} />
+              <div className="flex h-5 w-5 items-center justify-center">
+                <Image src={formData.jurisdiction_zone === zone ? "/dashboard/icons/applications/radio-selected.svg" : "/dashboard/icons/applications/radio-unselected.svg"} alt="radio" width={20} height={20} />
+              </div>
+              <span className="text-sm text-black font-onest font-normal uppercase">{zone}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-5">
+          <label className="w-[228px] text-[12px] font-normal text-[#343434] font-onest">Existing Structure</label>
+          <div className="relative h-[34px] w-[313px]">
+            <select className={`h-full w-full appearance-none rounded-lg border ${errors.existing_structure ? "border-red-500" : "border-[#D6D9DE]"} bg-white px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] font-onest`} value={formData.existing_structure || "NONE"} onChange={(e) => updateFormData({ existing_structure: e.target.value as any })}>
+              <option value="NONE">None</option>
+              <option value="FENCING">Fencing</option>
+              <option value="G">G (Ground Floor)</option>
+              <option value="G+1">G+1</option>
+              <option value="G+2">G+2</option>
+              <option value="G+3">G+3</option>
+            </select>
+            <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"><Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} /></div>
+          </div>
+        </div>
+        {errors.existing_structure && <p className="ml-[248px] text-[10px] text-red-500">{errors.existing_structure}</p>}
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-5">
+          <label className="w-[228px] text-[12px] font-normal text-[#343434] font-onest">Proposed Construction Floor</label>
+          <div className="relative h-[34px] w-[313px]">
+            <select
+              disabled={!canChangeFloor}
+              className={`h-full w-full appearance-none rounded-lg border ${errors.construction_floor ? "border-red-500" : "border-[#D6D9DE]"} ${!canChangeFloor ? "bg-[#F0F0F0] cursor-not-allowed text-gray-500" : "bg-white text-[#343434]"} px-3 text-sm outline-none focus:border-[#0C83FF] font-onest`}
+              value={formData.construction_floor || "NONE"}
+              onChange={(e) => updateFormData({ construction_floor: e.target.value as any })}
+            >
+              {canChangeFloor ? (
+                <>
+                  <option value="NONE">None</option>
+                  <option value="FENCING">Fencing</option>
+                  <option value="G">G (Ground Floor)</option>
+                </>
+              ) : (
+                <>
+                  <option value="NONE">None</option>
+                  <option value="FENCING">Fencing</option>
+                  <option value="G">G (Ground Floor)</option>
+                  <option value="G+1">G+1</option>
+                  <option value="G+2">G+2</option>
+                  <option value="G+3">G+3</option>
+                </>
+              )}
+            </select>
+            <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"><Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} /></div>
+          </div>
+        </div>
+        {errors.construction_floor && <p className="ml-[248px] text-[10px] text-red-500">{errors.construction_floor}</p>}
       </div>
 
       <div className="flex flex-col gap-1">
@@ -652,7 +791,8 @@ export default function NewApplicationPage() {
         onClose={() => setIsWardModalOpen(false)}
       />
     </div>
-  );
+    );
+  };
 
 
 

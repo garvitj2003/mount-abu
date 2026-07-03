@@ -38,6 +38,7 @@ export const ApplicationService = {
     search?: string;
     ward_id?: number;
     property_usage?: string;
+    jurisdiction_zone?: string;
   }): Promise<ApplicationResponse[]> {
     const response = await api.get<ApplicationResponse[]>("/api/applications", {
       params,

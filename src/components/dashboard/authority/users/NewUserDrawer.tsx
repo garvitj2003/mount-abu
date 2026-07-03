@@ -47,6 +47,7 @@ export default function NewUserDrawer({ isOpen, onClose, user }: NewUserDrawerPr
     role: "JEN", // Default role
     username: "",
     password: "",
+    jurisdiction_zone: "ULB",
   });
 
   useEffect(() => {
@@ -57,6 +58,7 @@ export default function NewUserDrawer({ isOpen, onClose, user }: NewUserDrawerPr
         role: user.role,
         username: user.username || "",
         password: "",
+        jurisdiction_zone: user.jurisdiction_zone || "ULB",
       });
     } else {
       setFormData({
@@ -65,6 +67,7 @@ export default function NewUserDrawer({ isOpen, onClose, user }: NewUserDrawerPr
         role: "JEN",
         username: "",
         password: "",
+        jurisdiction_zone: "ULB",
       });
     }
   }, [user, isOpen]);
@@ -95,6 +98,7 @@ export default function NewUserDrawer({ isOpen, onClose, user }: NewUserDrawerPr
           name: formData.name,
           mobile: formData.mobile,
           username: formData.username,
+          jurisdiction_zone: formData.jurisdiction_zone,
         };
         await updateUser({ userId: user.id, data: updateData });
         alert("User updated successfully!");
@@ -250,6 +254,32 @@ export default function NewUserDrawer({ isOpen, onClose, user }: NewUserDrawerPr
                   disabled={isEdit}
                 />
                 {isEdit && <p className="text-xs text-gray-400">Role cannot be changed after creation.</p>}
+              </div>
+
+              {/* Jurisdiction Zone */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-[#343434]">Jurisdiction Zone</label>
+                <div className="flex items-center gap-6 py-1">
+                  {["ULB", "UIT"].map((zone) => (
+                    <label key={zone} className="flex cursor-pointer items-center gap-1.5">
+                      <input
+                        type="radio"
+                        className="hidden"
+                        checked={formData.jurisdiction_zone === zone}
+                        onChange={() => setFormData({ ...formData, jurisdiction_zone: zone as any })}
+                      />
+                      <div className="flex h-5 w-5 items-center justify-center">
+                        <Image
+                          src={formData.jurisdiction_zone === zone ? "/dashboard/icons/applications/radio-selected.svg" : "/dashboard/icons/applications/radio-unselected.svg"}
+                          alt="radio"
+                          width={20}
+                          height={20}
+                        />
+                      </div>
+                      <span className="text-sm text-black font-normal uppercase">{zone}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
 
             </div>

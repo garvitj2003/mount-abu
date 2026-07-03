@@ -86,6 +86,8 @@ export default function AuthorityApplicationsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedWardId, setSelectedWardId] = useState<number | null>(null);
   const [selectedPropertyUsage, setSelectedPropertyUsage] = useState<string>("");
+  const [selectedJurisdictionZone, setSelectedJurisdictionZone] = useState<string>("");
+  const hasInitializedDefaultZone = useRef(false);
 
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [dropdownPos, setDropdownPosition] = useState({ top: 0, left: 0 });
@@ -112,6 +114,14 @@ export default function AuthorityApplicationsPage() {
     }
   }, [debouncedSearch, page, setPage]);
 
+  // Set default jurisdiction zone from user profile on mount / refresh
+  useEffect(() => {
+    if (user?.jurisdiction_zone && !hasInitializedDefaultZone.current) {
+      setSelectedJurisdictionZone(user.jurisdiction_zone);
+      hasInitializedDefaultZone.current = true;
+    }
+  }, [user]);
+
   const { data: applications = [], isLoading } = useApplications({
     flag: selectedFlag,
     offset: (page - 1) * limit,
@@ -119,6 +129,7 @@ export default function AuthorityApplicationsPage() {
     search: debouncedSearch || undefined,
     ward_id: selectedWardId || undefined,
     property_usage: selectedPropertyUsage || undefined,
+    jurisdiction_zone: selectedJurisdictionZone || undefined,
   });
 
   // Since API doesn't return total count, we estimate total pages
@@ -139,13 +150,26 @@ export default function AuthorityApplicationsPage() {
     return ["SUPERADMIN", "COMMISSIONER", "NODAL_OFFICER"].includes(user.role);
   }, [user?.role]);
 
+  const canViewAllDept = useMemo(() => {
+    if (!user?.role) return false;
+    return ["JEN", "DEPT_LAND", "DEPT_LEGAL", "DEPT_ATP"].includes(user.role) || user.role.startsWith("DEPT");
+  }, [user?.role]);
+
   const isNodalOrAdmin = useMemo(() => {
     if (!user?.role) return false;
     return ["SUPERADMIN", "NODAL_OFFICER"].includes(user.role);
   }, [user?.role]);
 
   useEffect(() => {
-    if (user?.role && !canViewAll && selectedFlag === "ALL") {
+    if (!user?.role) return;
+
+    if (canViewAll) {
+      setSelectedCategory("All");
+      setSelectedFlag("ALL");
+    } else if (canViewAllDept) {
+      setSelectedCategory("All");
+      setSelectedFlag("ALL_DEPT");
+    } else {
       const filters = ROLE_FILTERS[user.role];
       if (filters) {
         if (filters.newConstruction.length > 0) {
@@ -157,7 +181,7 @@ export default function AuthorityApplicationsPage() {
         }
       }
     }
-  }, [user?.role, canViewAll, selectedFlag]);
+  }, [user?.role, canViewAll, canViewAllDept]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -283,17 +307,51 @@ export default function AuthorityApplicationsPage() {
                 width="160px"
               />
 
+              {/* Jurisdiction Dropdown */}
+              <CustomDropdown
+                label="Jurisdiction"
+                options={[
+                  { label: "All Jurisdictions", value: "" },
+                  { label: "ULB", value: "ULB" },
+                  { label: "UIT", value: "UIT" }
+                ]}
+                value={selectedJurisdictionZone}
+                onSelect={(val) => {
+                  setSelectedJurisdictionZone(val);
+                  setPage(1);
+                }}
+                placeholder="Select Jurisdiction"
+                width="160px"
+              />
+
               {/* Status Divider */}
               <div className="h-6 w-[1px] bg-[#D6D9DE] mx-1"></div>
 
               {/* Role-Based Filters */}
               <div className="flex items-center gap-2">
-                {/* All Tab */}
+                {/* All Tab (Admins/Nodal Officer) */}
                 {canViewAll && (
                   <button
                     onClick={() => {
                       setSelectedCategory("All");
                       setSelectedFlag("ALL");
+                      setPage(1);
+                    }}
+                    className={`h-[38px] px-4 text-sm rounded-lg border transition-colors flex items-center justify-center ${selectedCategory === "All"
+                      ? "bg-[#E7F3FF] border-[#0C83FF] text-[#0C83FF] font-semibold"
+                      : "bg-white border-[#D6D9DE] text-[#343434] hover:bg-gray-50"
+                      }`}
+                  >
+                    All
+                  </button>
+                )}
+
+                {/* All Tab (Department / JEN) */}
+                {canViewAllDept && (
+                  <button
+                    onClick={() => {
+                      setSelectedCategory("All");
+                      setSelectedFlag("ALL_DEPT");
                       setPage(1);
                     }}
                     className={`h-[38px] px-4 text-sm rounded-lg border transition-colors flex items-center justify-center ${selectedCategory === "All"
