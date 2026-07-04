@@ -75,7 +75,7 @@ export function useUpdatePhaseStatus() {
 }
 
 export function useApplicationComments(applicationId: number, options?: { enabled?: boolean }) {
-  return useQuery<components["schemas"]["CommentResponse"][]>({
+  return useQuery<components["schemas"]["backend__schemas__response__application__CommentResponse"][]>({
     queryKey: ["application-comments", applicationId],
     queryFn: () => ApplicationService.getComments(applicationId),
     enabled: !!applicationId,
@@ -91,5 +91,14 @@ export function useAddComment() {
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["application-comments", id] });
     },
+  });
+}
+
+export function useOrganizationSuggestions(propertyUsage: string, options?: { enabled?: boolean }) {
+  return useQuery<string[]>({
+    queryKey: ["organization-suggestions", propertyUsage],
+    queryFn: () => ApplicationService.getOrganizationSuggestions(propertyUsage),
+    enabled: !!propertyUsage && propertyUsage !== "DOMESTIC",
+    ...options,
   });
 }

@@ -17,6 +17,7 @@ export const step1Schema = z.object({
   jurisdiction_zone: z.enum(["ULB", "UIT"] as const),
   existing_structure: z.enum(["NONE", "FENCING", "G", "G+1", "G+2", "G+3"] as const),
   construction_floor: z.enum(["NONE", "FENCING", "G", "G+1", "G+2", "G+3"] as const),
+  organization_name: z.string().optional().nullable(),
 }).refine((data) => {
   if (data.existing_structure === "G+3") {
     return false;
@@ -25,6 +26,14 @@ export const step1Schema = z.object({
 }, {
   message: "Application cannot be created if existing structure is G+3",
   path: ["existing_structure"],
+}).refine((data) => {
+  if (data.property_usage !== "DOMESTIC" && (!data.organization_name || !data.organization_name.trim())) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Organization name is required for commercial/government properties",
+  path: ["organization_name"],
 });
 
 export const materialRowSchema = z.object({

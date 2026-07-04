@@ -8,12 +8,37 @@ import { useUser } from "@/hooks/useUser";
 import { useApplicationStore } from "@/store/useApplicationStore";
 import { ApplicationService } from "@/services/applicationService";
 import { useWards, useMaterials } from "@/hooks/useMasterData";
+import { useOrganizationSuggestions } from "@/hooks/useApplications";
 import { step1Schema, extraMaterialSchema, dbMaterialsSchema } from "@/lib/validations/application";
 import { type components } from "@/types/api";
 import WardMapModal from "@/components/dashboard/WardMapModal";
 
 type WardResponse = components["schemas"]["WardResponse"];
 type DepartmentResponse = components["schemas"]["DepartmentResponse"];
+
+const STRUCTURE_LEVELS = ["NONE", "FENCING", "G", "G+1", "G+2", "G+3"] as const;
+
+function getAllowedFloorOptions(type: "NEW" | "RENOVATION", existing: string) {
+  const ext = existing || "NONE";
+  if (type === "NEW") {
+    if (ext === "NONE") {
+      return ["NONE", "FENCING", "G"];
+    } else {
+      const idx = STRUCTURE_LEVELS.indexOf(ext as any);
+      if (idx !== -1 && idx < STRUCTURE_LEVELS.length - 1) {
+        return [STRUCTURE_LEVELS[idx + 1]];
+      }
+      return ["NONE"];
+    }
+  } else {
+    // type === "RENOVATION"
+    const idx = STRUCTURE_LEVELS.indexOf(ext as any);
+    if (idx !== -1) {
+      return STRUCTURE_LEVELS.slice(0, idx + 1);
+    }
+    return ["NONE"];
+  }
+}
 
 export default function NewApplicationPage() {
   const router = useRouter();
@@ -43,6 +68,9 @@ export default function NewApplicationPage() {
   const [isWardModalOpen, setIsWardModalOpen] = useState(false);
 
   const [dragActive, setDragActive] = useState<string | null>(null);
+  const { data: orgSuggestions = [], isPending: isLoadingOrgs } = useOrganizationSuggestions(formData.property_usage);
+  const [selectedOrgDropdown, setSelectedOrgDropdown] = useState<string>("");
+  const [customOrgName, setCustomOrgName] = useState<string>("");
 
   const hasResetOnMount = useRef(false);
 
@@ -88,6 +116,7 @@ export default function NewApplicationPage() {
           jurisdiction_zone: app.jurisdiction_zone as any,
           existing_structure: (app.existing_structure || "NONE") as any,
           construction_floor: (app.construction_floor || "NONE") as any,
+          organization_name: app.organization_name || "",
         });
 
         // 2. Populate Materials (Local State)
@@ -114,7 +143,7 @@ export default function NewApplicationPage() {
         }
 
         // 3. Determine Step
-        const requiredDocs = ["AADHAAR", "OWNERSHIP_DOCUMENTS", "PROPERTY_PHOTOS", "PERMISSION_DOCUMENTS"];
+        const requiredDocs = ["AADHAAR", "OWNERSHIP_DOCUMENTS", "PROPERTY_PHOTOS", "PERMISSION_DOCUMENTS", "DETAILED_DESIGN_ESTIMATE"];
         const uploadedDocTypes = app.documents?.map(d => d.document_type) || [];
         const allDocsUploaded = requiredDocs.every(type => uploadedDocTypes.includes(type as any));
 
@@ -152,7 +181,13 @@ export default function NewApplicationPage() {
     let targetFloor: typeof formData.construction_floor = "NONE";
 
     if (type === "RENOVATION") {
-      targetFloor = existing as any;
+      const idxExisting = STRUCTURE_LEVELS.indexOf(existing as any);
+      const idxCurrent = STRUCTURE_LEVELS.indexOf(formData.construction_floor || "NONE");
+      if (idxCurrent > idxExisting) {
+        targetFloor = existing as any;
+      } else {
+        targetFloor = formData.construction_floor || "NONE";
+      }
     } else {
       // type === "NEW"
       if (existing === "NONE") {
@@ -166,7 +201,6 @@ export default function NewApplicationPage() {
           targetFloor = "NONE";
         }
       } else {
-        const STRUCTURE_LEVELS = ["NONE", "FENCING", "G", "G+1", "G+2", "G+3"] as const;
         const idx = STRUCTURE_LEVELS.indexOf(existing as any);
         if (idx !== -1 && idx < STRUCTURE_LEVELS.length - 1) {
           targetFloor = STRUCTURE_LEVELS[idx + 1] as any;
@@ -179,12 +213,34 @@ export default function NewApplicationPage() {
     }
   }, [formData.type, formData.existing_structure, formData.construction_floor, updateFormData]);
 
+  // Synchronize organization dropdown states with loaded suggestions and form state
+  useEffect(() => {
+    if (formData.property_usage === "DOMESTIC") {
+      setSelectedOrgDropdown("");
+      setCustomOrgName("");
+      return;
+    }
+
+    if (formData.organization_name) {
+      if (orgSuggestions.includes(formData.organization_name)) {
+        setSelectedOrgDropdown(formData.organization_name);
+      } else {
+        setSelectedOrgDropdown("other");
+        setCustomOrgName(formData.organization_name);
+      }
+    } else {
+      setSelectedOrgDropdown("");
+      setCustomOrgName("");
+    }
+  }, [formData.organization_name, orgSuggestions, formData.property_usage]);
+
   // Form State Step 2 (Files)
   const [files, setFiles] = useState<{ [key: string]: File | File[] | null }>({
     aadharCard: null,
     ownershipDocument: null,
     propertyPhotos: [],
     permissionDocuments: null,
+    detailedDesignEstimate: null,
   });
 
   // Form State Step 3 (Materials)
@@ -460,6 +516,7 @@ export default function NewApplicationPage() {
         { key: "ownershipDocument", type: "OWNERSHIP_DOCUMENTS" },
         { key: "propertyPhotos", type: "PROPERTY_PHOTOS" },
         { key: "permissionDocuments", type: "PERMISSION_DOCUMENTS" },
+        { key: "detailedDesignEstimate", type: "DETAILED_DESIGN_ESTIMATE" },
       ];
 
       let completed = 0;
@@ -572,7 +629,8 @@ export default function NewApplicationPage() {
   };
 
   const renderStep1 = () => {
-    const canChangeFloor = formData.type === "NEW" && formData.existing_structure === "NONE";
+    const canChangeFloor = formData.type === "RENOVATION" || (formData.type === "NEW" && formData.existing_structure === "NONE");
+    const allowedOptions = getAllowedFloorOptions(formData.type, formData.existing_structure || "NONE");
     return (
       <div className="space-y-5">
       <div className="flex flex-col gap-1">
@@ -629,25 +687,7 @@ export default function NewApplicationPage() {
         {errors.property_address && <p className="ml-[248px] text-[10px] text-red-500">{errors.property_address}</p>}
       </div>
 
-      <div className="flex items-center gap-5">
-        <label className="w-[228px] text-[12px] font-normal text-[#343434] font-onest">Type of work</label>
-        <div className="flex items-center gap-5 py-1">
-          {["RENOVATION", "NEW"].map((type) => (
-            <label key={type} className="flex cursor-pointer items-center gap-1">
-              <input type="radio" className="hidden" checked={formData.type === type} onChange={() => {
-                updateFormData({ type: type as any });
-                const params = new URLSearchParams(window.location.search);
-                params.set("type", type);
-                router.replace(`/citizen/applications/new-application?${params.toString()}`);
-              }} />
-              <div className="flex h-5 w-5 items-center justify-center">
-                <Image src={formData.type === type ? "/dashboard/icons/applications/radio-selected.svg" : "/dashboard/icons/applications/radio-unselected.svg"} alt="radio" width={20} height={20} />
-              </div>
-              <span className="text-sm text-black font-onest font-normal capitalize">{type.toLowerCase()}</span>
-            </label>
-          ))}
-        </div>
-      </div>
+
 
       <div className="flex flex-col gap-1">
         <div className="flex gap-5">
@@ -682,7 +722,11 @@ export default function NewApplicationPage() {
         <div className="flex w-[315px] items-center gap-5 py-1">
           {["DOMESTIC", "COMMERCIAL", "GOVERNMENT"].map((usage) => (
             <label key={usage} className="flex cursor-pointer items-center gap-1">
-              <input type="radio" className="hidden" checked={formData.property_usage === usage} onChange={() => updateFormData({ property_usage: usage as any })} />
+              <input type="radio" className="hidden" checked={formData.property_usage === usage} onChange={() => {
+                updateFormData({ property_usage: usage as any, organization_name: "" });
+                setSelectedOrgDropdown("");
+                setCustomOrgName("");
+              }} />
               <div className="flex h-5 w-5 items-center justify-center">
                 <Image src={formData.property_usage === usage ? "/dashboard/icons/applications/radio-selected.svg" : "/dashboard/icons/applications/radio-unselected.svg"} alt="radio" width={20} height={20} />
               </div>
@@ -692,16 +736,88 @@ export default function NewApplicationPage() {
         </div>
       </div>
 
+      {/* Organization Name (shown only for COMMERCIAL and GOVERNMENT) */}
+      {formData.property_usage !== "DOMESTIC" && (
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-5">
+            <label className="w-[228px] text-[12px] font-normal text-[#343434] font-onest">Organization Name</label>
+            <div className="flex flex-col gap-1.5">
+              {isLoadingOrgs ? (
+                <div className="flex h-[34px] w-[313px] items-center gap-2 px-3 text-sm text-gray-500 font-onest">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+                  Loading suggestions...
+                </div>
+              ) : orgSuggestions.length === 0 ? (
+                // If suggestions is empty array, show standard text input
+                <input
+                  type="text"
+                  placeholder="Name your organization"
+                  className={`h-[34px] w-[313px] rounded-lg border ${errors.organization_name ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none placeholder:opacity-60 focus:border-[#0C83FF] font-onest`}
+                  value={formData.organization_name || ""}
+                  onChange={(e) => updateFormData({ organization_name: e.target.value })}
+                />
+              ) : (
+                // If suggestions are available, show select dropdown
+                <div className="flex flex-col gap-2">
+                  <div className="relative h-[34px] w-[313px]">
+                    <select
+                      className={`h-full w-full appearance-none rounded-lg border ${errors.organization_name && !selectedOrgDropdown ? "border-red-500" : "border-[#D6D9DE]"} bg-white px-3 text-sm text-[#343434] outline-none focus:border-[#0C83FF] font-onest`}
+                      value={selectedOrgDropdown}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSelectedOrgDropdown(val);
+                        if (val === "other") {
+                          updateFormData({ organization_name: customOrgName });
+                        } else {
+                          updateFormData({ organization_name: val });
+                        }
+                      }}
+                    >
+                      <option value="">Select Organization</option>
+                      {orgSuggestions.map((org) => (
+                        <option key={org} value={org}>
+                          {org}
+                        </option>
+                      ))}
+                      <option value="other">Other</option>
+                    </select>
+                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                      <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} />
+                    </div>
+                  </div>
+
+                  {/* Show custom input if other is selected */}
+                  {selectedOrgDropdown === "other" && (
+                    <input
+                      type="text"
+                      placeholder="Name your organization"
+                      className={`h-[34px] w-[313px] rounded-lg border ${errors.organization_name ? "border-red-500" : "border-[#D6D9DE]"} px-3 text-sm text-[#343434] outline-none placeholder:opacity-60 focus:border-[#0C83FF] font-onest`}
+                      value={customOrgName}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCustomOrgName(val);
+                        updateFormData({ organization_name: val });
+                      }}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          {errors.organization_name && <p className="ml-[248px] text-[10px] text-red-500">{errors.organization_name}</p>}
+        </div>
+      )}
+
       <div className="flex items-center gap-5">
         <label className="w-[228px] text-[12px] font-normal text-[#343434] font-onest">Jurisdiction Zone</label>
         <div className="flex w-[315px] items-center gap-10 py-1">
           {["ULB", "UIT"].map((zone) => (
-            <label key={zone} className="flex cursor-pointer items-center gap-1">
+            <label key={zone} className="flex cursor-pointer items-center gap-1.5">
               <input type="radio" className="hidden" checked={formData.jurisdiction_zone === zone} onChange={() => updateFormData({ jurisdiction_zone: zone as any })} />
               <div className="flex h-5 w-5 items-center justify-center">
                 <Image src={formData.jurisdiction_zone === zone ? "/dashboard/icons/applications/radio-selected.svg" : "/dashboard/icons/applications/radio-unselected.svg"} alt="radio" width={20} height={20} />
               </div>
-              <span className="text-sm text-black font-onest font-normal uppercase">{zone}</span>
+              <span className="text-sm text-black font-onest font-normal capitalize">{zone === "ULB" ? "Urban" : "Rural"}</span>
             </label>
           ))}
         </div>
@@ -735,22 +851,11 @@ export default function NewApplicationPage() {
               value={formData.construction_floor || "NONE"}
               onChange={(e) => updateFormData({ construction_floor: e.target.value as any })}
             >
-              {canChangeFloor ? (
-                <>
-                  <option value="NONE">None</option>
-                  <option value="FENCING">Fencing</option>
-                  <option value="G">G (Ground Floor)</option>
-                </>
-              ) : (
-                <>
-                  <option value="NONE">None</option>
-                  <option value="FENCING">Fencing</option>
-                  <option value="G">G (Ground Floor)</option>
-                  <option value="G+1">G+1</option>
-                  <option value="G+2">G+2</option>
-                  <option value="G+3">G+3</option>
-                </>
-              )}
+              {allowedOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt === "NONE" ? "None" : opt === "FENCING" ? "Fencing" : opt === "G" ? "G (Ground Floor)" : opt}
+                </option>
+              ))}
             </select>
             <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"><Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={10} height={6} /></div>
           </div>
@@ -820,6 +925,12 @@ export default function NewApplicationPage() {
       {
         key: "permissionDocuments",
         label: "Permission Documents",
+        hint: "PDF Only",
+        accept: ".pdf",
+      },
+      {
+        key: "detailedDesignEstimate",
+        label: "Detailed Design Estimate",
         hint: "PDF Only",
         accept: ".pdf",
       },
@@ -1013,7 +1124,8 @@ export default function NewApplicationPage() {
                 uploading ||
                 !files.aadharCard ||
                 !files.ownershipDocument ||
-                !files.permissionDocuments
+                !files.permissionDocuments ||
+                !files.detailedDesignEstimate
               }
               className="flex items-center justify-center gap-2 rounded-lg bg-[#0C83FF] px-6 py-3 font-onest text-sm font-medium text-white transition-colors hover:bg-blue-600 disabled:opacity-50"
             >

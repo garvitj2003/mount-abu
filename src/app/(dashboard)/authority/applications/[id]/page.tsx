@@ -146,7 +146,12 @@ const Sidebar = ({ app }: { app: ApplicationResponse }) => {
 
         <DetailItem label="Agriculture Land" value={app.is_agriculture_land} />
         <DetailItem label="Property Usage" value={app.property_usage} />
+        {app.organization_name && <DetailItem label="Organization Name" value={app.organization_name} />}
         <DetailItem label="Type of Work" value={app.type.toLowerCase() === "new" ? 'New Construction' : app.type.toLowerCase() === "renovation" ? 'Repair & Renovation' : ''} />
+        <DetailItem label="Jurisdiction" value={app.jurisdiction_zone === "ULB" ? "Urban" : app.jurisdiction_zone === "UIT" ? "Rural" : "—"} />
+        <DetailItem label="Contractor Name" value={app.contractor_name} />
+        <DetailItem label="Existing Structure" value={app.existing_structure} />
+        <DetailItem label="Proposed Construction Floor" value={app.construction_floor} />
 
         <div className="h-px w-full bg-[#D6D9DE] my-1" />
 
@@ -207,6 +212,15 @@ const DocumentCard = ({ doc }: { doc: components["schemas"]["ApplicationDocument
 };
 
 const MainContent = ({ app }: { app: ApplicationResponse }) => {
+  const [selectedPhaseFilter, setSelectedPhaseFilter] = useState<number | "all">("all");
+
+  const numStagesToDisplay = useMemo(() => {
+    if (app.phase_materials && app.phase_materials.length > 0) {
+      return Math.max(...app.phase_materials.map(pm => pm.phase));
+    }
+    return app.inspections?.[0]?.recommended_phases || app.num_stages || 0;
+  }, [app.phase_materials, app.inspections, app.num_stages]);
+
   const attachedDocs = useMemo(() => {
     const docs = app.documents?.filter((d) => d.document_type !== "GEO_TAGGED_PHOTO") || [];
     // Sort: PDF (non-image) first, then Images
@@ -229,6 +243,62 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
       }))
     ) || [];
   }, [app.inspections]);
+
+  const mergedMaterialsToDisplay = useMemo(() => {
+    const list: {
+      key: string;
+      material_id?: number | null;
+      name: string;
+      unit: string;
+      isCustom: boolean;
+      requestedQty: number;
+    }[] = [];
+
+    app.materials?.forEach((mat) => {
+      const isCustom = !mat.material_id;
+      const name = isCustom ? mat.custom_name || "" : mat.material_name || "";
+      const unit = isCustom ? mat.custom_unit || "" : mat.unit || "";
+      const key = isCustom ? `custom-${name.toLowerCase()}` : `master-${mat.material_id}`;
+      
+      const exists = list.some(item => item.key === key);
+      if (!exists) {
+        list.push({
+          key,
+          material_id: mat.material_id,
+          name,
+          unit,
+          isCustom,
+          requestedQty: mat.quantity,
+        });
+      } else {
+        const existingItem = list.find(item => item.key === key);
+        if (existingItem) {
+          existingItem.requestedQty += mat.quantity;
+        }
+      }
+    });
+
+    app.phase_materials?.forEach((pm) => {
+      const isCustom = !pm.material_id;
+      const key = isCustom ? `custom-${(pm.custom_name || "").toLowerCase()}` : `master-${pm.material_id}`;
+      
+      const exists = list.some(item => item.key === key);
+      if (!exists) {
+        const name = isCustom ? pm.custom_name || "" : pm.material_name || "";
+        const unit = isCustom ? pm.custom_unit || "" : pm.unit || "";
+        list.push({
+          key,
+          material_id: pm.material_id,
+          name,
+          unit,
+          isCustom,
+          requestedQty: 0,
+        });
+      }
+    });
+
+    return list;
+  }, [app.materials, app.phase_materials]);
 
   return (
     <div className="flex flex-1 flex-col gap-5 rounded-lg border border-[#D6D9DE] bg-white p-5">
@@ -302,7 +372,37 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
 
       {/* Material Details */}
       <div className="flex flex-col gap-3 mt-5">
-        <h3 className="text-[12px] font-bold text-[#343434] uppercase tracking-wider">Material Details</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-[12px] font-bold text-[#343434] uppercase tracking-wider">Material Details</h3>
+          
+          {/* Phase Filter Dropdown */}
+          {numStagesToDisplay > 0 && (
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-[#343434] font-medium font-onest">Filter by Phase:</label>
+              <div className="relative h-[30px] w-[140px]">
+                <select
+                  value={selectedPhaseFilter}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSelectedPhaseFilter(val === "all" ? "all" : parseInt(val));
+                  }}
+                  className="h-full w-full appearance-none rounded-lg border border-[#D6D9DE] bg-white px-3 py-1 pr-8 text-xs text-[#343434] outline-none focus:border-[#0C83FF] font-onest"
+                >
+                  <option value="all">All Phases</option>
+                  {Array.from({ length: numStagesToDisplay }).map((_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      Phase {i + 1}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                  <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={8} height={5} />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="w-full overflow-x-auto rounded-lg border border-[#D6D9DE]">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -310,36 +410,46 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
                 <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Material Name</th>
                 <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Estimated Material</th>
                 <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Estimated by JEN</th>
-                {Array.from({ length: app.num_stages || 0 }).map((_, i) => (
-                  <th
-                    key={i}
-                    className={`p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE] last:border-r-0 ${[
-                      "bg-[#E7F3FF]", // Phase 1
-                      "bg-[#FFEEB4]", // Phase 2
-                      "bg-[#E6F7F5]", // Phase 3
-                      "bg-[#FFF1F0]", // Phase 4
-                      "bg-[#F0F7FF]", // Phase 5
-                    ][i % 5]
-                      }`}
-                  >
-                    Phase {i + 1}
-                  </th>
-                ))}
+                {Array.from({ length: numStagesToDisplay })
+                  .map((_, i) => i + 1)
+                  .filter((p) => selectedPhaseFilter === "all" || selectedPhaseFilter === p)
+                  .map((p) => (
+                    <th
+                      key={p}
+                      className={`p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE] last:border-r-0 ${[
+                        "bg-[#E7F3FF]", // Phase 1
+                        "bg-[#FFEEB4]", // Phase 2
+                        "bg-[#E6F7F5]", // Phase 3
+                        "bg-[#FFF1F0]", // Phase 4
+                        "bg-[#F0F7FF]", // Phase 5
+                      ][(p - 1) % 5]
+                        }`}
+                    >
+                      Phase {p}
+                    </th>
+                  ))}
               </tr>
             </thead>
             <tbody>
-              {app.materials?.map((mat) => {
+              {mergedMaterialsToDisplay.map((item) => {
                 const jenTotal = app.phase_materials
-                  ?.filter(pm => pm.material_id === mat.material_id)
+                  ?.filter(pm => {
+                    if (item.isCustom) {
+                      return !pm.material_id && pm.custom_name?.toLowerCase() === item.name.toLowerCase();
+                    } else {
+                      return pm.material_id === item.material_id;
+                    }
+                  })
                   .reduce((acc, curr) => acc + curr.quantity, 0) || 0;
 
                 return (
-                  <tr key={mat.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
+                  <tr key={item.key} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                     <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">
-                      {mat.material_name} {mat.unit && `(${mat.unit})`}
+                      {item.name} {item.unit && `(${item.unit})`}
+                      {item.isCustom && <span className="ml-2 rounded bg-orange-50 px-1.5 py-0.5 text-[9px] font-medium text-orange-600 border border-orange-200">Custom</span>}
                     </td>
                     <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">
-                      {mat.quantity} Units
+                      {item.requestedQty > 0 ? `${item.requestedQty} Units` : "—"}
                     </td>
                     <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">
                       <div className={`rounded border px-3 py-1.5 text-xs font-bold ${jenTotal > 0 ? "bg-white border-[#D6D9DE] text-[#0C83FF]" : "bg-gray-50 border-transparent text-gray-400"
@@ -347,35 +457,41 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
                         {jenTotal > 0 ? `${jenTotal} Units` : "—"}
                       </div>
                     </td>
-                    {Array.from({ length: app.num_stages || 0 }).map((_, i) => {
-                      const phaseNum = i + 1;
-                      const phaseQty = app.phase_materials?.find(
-                        pm => pm.material_id === mat.material_id && pm.phase === phaseNum
-                      )?.quantity;
+                    {Array.from({ length: numStagesToDisplay })
+                      .map((_, i) => i + 1)
+                      .filter((p) => selectedPhaseFilter === "all" || selectedPhaseFilter === p)
+                      .map((phaseNum) => {
+                        const phaseQty = app.phase_materials?.find(pm => {
+                          if (item.isCustom) {
+                            return !pm.material_id && pm.custom_name?.toLowerCase() === item.name.toLowerCase() && pm.phase === phaseNum;
+                          } else {
+                            return pm.material_id === item.material_id && pm.phase === phaseNum;
+                          }
+                        })?.quantity;
 
-                      return (
-                        <td
-                          key={i}
-                          className={`p-3 text-sm font-medium text-black border-r border-[#D6D9DE] last:border-r-0 ${[
-                            "bg-[#E7F3FF]",
-                            "bg-[#FFEEB4]",
-                            "bg-[#E6F7F5]",
-                            "bg-[#FFF1F0]",
-                            "bg-[#F0F7FF]",
-                          ][i % 5]
-                            }`}
-                        >
-                          {phaseQty !== undefined ? `${phaseQty} Units` : "—"}
-                        </td>
-                      );
-                    })}
+                        return (
+                          <td
+                            key={phaseNum}
+                            className={`p-3 text-sm font-medium text-black border-r border-[#D6D9DE] last:border-r-0 ${[
+                              "bg-[#E7F3FF]",
+                              "bg-[#FFEEB4]",
+                              "bg-[#E6F7F5]",
+                              "bg-[#FFF1F0]",
+                              "bg-[#F0F7FF]",
+                            ][(phaseNum - 1) % 5]
+                              }`}
+                          >
+                            {phaseQty !== undefined ? `${phaseQty} Units` : "—"}
+                          </td>
+                        );
+                      })}
                   </tr>
                 );
               })}
-              {!app.materials?.length && (
+              {!mergedMaterialsToDisplay.length && (
                 <tr>
                   <td
-                    colSpan={3 + (app.num_stages || 0)}
+                    colSpan={3 + (selectedPhaseFilter === "all" ? numStagesToDisplay : 1)}
                     className="p-10 text-center text-gray-400 text-sm italic"
                   >
                     No material requirements specified.

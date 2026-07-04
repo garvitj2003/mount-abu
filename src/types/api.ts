@@ -312,6 +312,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/applications/organizations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Organization Suggestions
+         * @description Get unique list of organization names for property usage type (COMMERCIAL / GOVERNMENT).
+         */
+        get: operations["get_organization_suggestions_api_applications_organizations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/{application_id}/document": {
         parameters: {
             query?: never;
@@ -480,7 +500,7 @@ export interface paths {
         get?: never;
         /**
          * Update Phase Materials
-         * @description JEN or SUPERADMIN updates phase materials for an application.
+         * @description JEN, SUPERADMIN, or NODAL_OFFICER updates phase materials for an application.
          */
         put: operations["update_phase_materials_api_applications__application_id__phase_materials_put"];
         post?: never;
@@ -1626,6 +1646,11 @@ export interface components {
              * @description Ward/Zone ID
              */
             ward_id: number;
+            /**
+             * Organization Name
+             * @description Organization Name
+             */
+            organization_name?: string | null;
             /** @description Application Type */
             type: components["schemas"]["ApplicationType"];
             /**
@@ -1656,7 +1681,7 @@ export interface components {
          * @description ...
          * @enum {string}
          */
-        ApplicationDocumentType: "APPLICATION" | "INSPECTION" | "OTHER" | "AADHAAR" | "APPLICANT_PHOTO" | "OWNERSHIP_DOCUMENTS" | "PERMISSION_DOCUMENTS" | "PROPERTY_PHOTOS" | "SUPPORTING_DOCUMENTS" | "SITE_INSPECTION" | "GEO_TAGGED_PHOTO";
+        ApplicationDocumentType: "APPLICATION" | "INSPECTION" | "OTHER" | "AADHAAR" | "APPLICANT_PHOTO" | "OWNERSHIP_DOCUMENTS" | "PERMISSION_DOCUMENTS" | "PROPERTY_PHOTOS" | "SUPPORTING_DOCUMENTS" | "SITE_INSPECTION" | "GEO_TAGGED_PHOTO" | "DETAILED_DESIGN_ESTIMATE";
         /**
          * ApplicationFlags
          * @enum {string}
@@ -1743,6 +1768,8 @@ export interface components {
             existing_structure?: components["schemas"]["StructureType"] | null;
             construction_floor?: components["schemas"]["StructureType"] | null;
             jurisdiction_zone: components["schemas"]["JurisdictionZone"];
+            /** Organization Name */
+            organization_name?: string | null;
             /** Department Id */
             department_id: number | null;
             /** Ward Id */
@@ -1776,7 +1803,7 @@ export interface components {
              * Comments
              * @default []
              */
-            comments: components["schemas"]["CommentResponse"][];
+            comments: components["schemas"]["backend__schemas__response__application__CommentResponse"][];
             /**
              * Inspections
              * @default []
@@ -2327,27 +2354,20 @@ export interface components {
              */
             media_paths?: string[] | null;
         };
-        /**
-         * CommentResponse
-         * @description Response schema for application comments.
-         */
+        /** CommentResponse */
         CommentResponse: {
             /** Id */
             id: number;
-            /** Application Id */
-            application_id: number;
             /** Comment */
             comment: string;
-            /** Comment By */
-            comment_by: number;
-            /** Commenter Name */
-            commenter_name?: string | null;
-            /** @default GENERAL */
-            comment_type: components["schemas"]["CommentType"] | null;
-            /** Media Paths */
-            media_paths?: unknown[] | null;
             /** Created At */
             created_at?: string | null;
+            /** Comment By */
+            comment_by?: number | null;
+            /** Media Path */
+            media_path?: string | null;
+            /** Access Url */
+            access_url?: string | null;
         };
         /**
          * CommentType
@@ -2516,7 +2536,7 @@ export interface components {
              * Comments
              * @default []
              */
-            comments: components["schemas"]["backend__schemas__response__complaint__CommentResponse"][];
+            comments: components["schemas"]["CommentResponse"][];
         };
         /**
          * ComplaintRow
@@ -4171,6 +4191,28 @@ export interface components {
             phase_materials?: components["schemas"]["PhaseMaterialEntry"][] | null;
         };
         /**
+         * CommentResponse
+         * @description Response schema for application comments.
+         */
+        backend__schemas__response__application__CommentResponse: {
+            /** Id */
+            id: number;
+            /** Application Id */
+            application_id: number;
+            /** Comment */
+            comment: string;
+            /** Comment By */
+            comment_by: number;
+            /** Commenter Name */
+            commenter_name?: string | null;
+            /** @default GENERAL */
+            comment_type: components["schemas"]["CommentType"] | null;
+            /** Media Paths */
+            media_paths?: unknown[] | null;
+            /** Created At */
+            created_at?: string | null;
+        };
+        /**
          * TokenResponse
          * @description Lightweight token for the token-list table.
          */
@@ -4192,21 +4234,6 @@ export interface components {
             /** Valid Till */
             valid_till?: string | null;
             status: components["schemas"]["ApplicationPhaseStatus"];
-        };
-        /** CommentResponse */
-        backend__schemas__response__complaint__CommentResponse: {
-            /** Id */
-            id: number;
-            /** Comment */
-            comment: string;
-            /** Created At */
-            created_at?: string | null;
-            /** Comment By */
-            comment_by?: number | null;
-            /** Media Path */
-            media_path?: string | null;
-            /** Access Url */
-            access_url?: string | null;
         };
         /**
          * MessageResponse
@@ -4782,6 +4809,38 @@ export interface operations {
             };
         };
     };
+    get_organization_suggestions_api_applications_organizations_get: {
+        parameters: {
+            query: {
+                /** @description Filter suggestions by COMMERCIAL or GOVERNMENT */
+                property_usage: components["schemas"]["PropertyUsageType"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     upload_document_api_applications__application_id__document_post: {
         parameters: {
             query?: never;
@@ -5301,7 +5360,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CommentResponse"][];
+                    "application/json": components["schemas"]["backend__schemas__response__application__CommentResponse"][];
                 };
             };
             /** @description Validation Error */

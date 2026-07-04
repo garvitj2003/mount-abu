@@ -25,7 +25,7 @@ type ApplicationStatus =
 const PROPERTY_USAGE_OPTIONS = [
   { label: "Domestic", value: "DOMESTIC" },
   { label: "Commercial", value: "COMMERCIAL" },
-  { label: "Hotel", value: "HOTEL" },
+  { label: "Government", value: "GOVERNMENT" },
 ];
 
 const StatusBadge = ({ status }: { status: ApplicationStatus }) => {

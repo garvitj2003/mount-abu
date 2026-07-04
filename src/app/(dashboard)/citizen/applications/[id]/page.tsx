@@ -113,8 +113,14 @@ const DetailsCard = ({ app }: { app: ApplicationResponse }) => {
           <div className="grid grid-cols-3 gap-5">
             <DetailItem label="Is this property on agriculture land?" value={app.is_agriculture_land} />
             <DetailItem label="Property usage" value={app.property_usage} />
-            {/* <DetailItem label="Type of work" value={app.type} /> */}
+            <DetailItem label="Jurisdiction" value={app.jurisdiction_zone === "ULB" ? "Urban" : app.jurisdiction_zone === "UIT" ? "Rural" : "—"} />
           </div>
+
+          {app.organization_name && (
+            <div className="grid grid-cols-3 gap-5">
+              <DetailItem label="Organization Name" value={app.organization_name} />
+            </div>
+          )}
 
           {/* Row 3 */}
           <div className="grid grid-cols-3 gap-5">
@@ -133,6 +139,13 @@ const DetailsCard = ({ app }: { app: ApplicationResponse }) => {
           <div className="grid grid-cols-2 gap-5">
             <DetailItem label="Type of work" value={app.type.toLowerCase() === "new" ? 'New Construction' : app.type.toLowerCase() === "renovation" ? 'Repair & Renovation' : ''} />
             <DetailItem label="Work Description" value={app.work_description} />
+          </div>
+
+          {/* Row 6 */}
+          <div className="grid grid-cols-3 gap-5">
+            <DetailItem label="Contractor Name" value={app.contractor_name} />
+            <DetailItem label="Existing Structure" value={app.existing_structure} />
+            <DetailItem label="Proposed Construction Floor" value={app.construction_floor} />
           </div>
         </div>
       </div>

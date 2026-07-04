@@ -103,11 +103,11 @@ export default function ApplicationActionPanel({
             <ActionButton key="obj" label="Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={onObjectionClick} />
           );
         }
-        if ((userRole === "JEN" || userRole === "SUPERADMIN")) {
+        if (userRole === "JEN" || userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN") {
           actionList.push(
             <ActionButton 
               key="add-phase" 
-              label="Add Phase" 
+              label="Add/Edit Phase" 
               icon="/dashboard/icons/applications/calendar.svg" 
               variant="primary" 
               onClick={onAddPhaseClick} 
@@ -138,11 +138,11 @@ export default function ApplicationActionPanel({
             <ActionButton key="obj" label="Raise Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={onObjectionClick} />
           );
         }
-        if (userRole === "JEN") {
+        if (userRole === "JEN" || userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN") {
           actionList.push(
             <ActionButton 
               key="add-phase" 
-              label="Add Phase" 
+              label="Add/Edit Phase" 
               icon="/dashboard/icons/applications/calendar.svg" 
               variant="primary" 
               onClick={onAddPhaseClick} 

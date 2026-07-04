@@ -134,13 +134,20 @@ export const ApplicationService = {
     return response.data;
   },
 
-  async getComments(applicationId: number): Promise<components["schemas"]["CommentResponse"][]> {
-    const response = await api.get<components["schemas"]["CommentResponse"][]>(`/api/applications/${applicationId}/comments`);
+  async getComments(applicationId: number): Promise<components["schemas"]["backend__schemas__response__application__CommentResponse"][]> {
+    const response = await api.get<components["schemas"]["backend__schemas__response__application__CommentResponse"][]>(`/api/applications/${applicationId}/comments`);
     return response.data;
   },
 
   async addComment(applicationId: number, data: components["schemas"]["CommentRequest"]): Promise<any> {
     const response = await api.put(`/api/applications/${applicationId}/comment`, data);
+    return response.data;
+  },
+
+  async getOrganizationSuggestions(propertyUsage: string): Promise<string[]> {
+    const response = await api.get<string[]>("/api/applications/organizations", {
+      params: { property_usage: propertyUsage },
+    });
     return response.data;
   },
 };

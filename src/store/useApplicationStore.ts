@@ -39,6 +39,7 @@ const initialFormData: ApplicationFormData = {
   jurisdiction_zone: "ULB",
   existing_structure: "NONE",
   construction_floor: "NONE",
+  organization_name: "",
 };
 
 export const useApplicationStore = create<ApplicationState>((set) => ({
