@@ -146,7 +146,7 @@ const Sidebar = ({ token }: { token: TokenDetailResponse }) => (
 const TableRow = ({
   entry, onClick
 }: {
-  entry: components["schemas"]["VehicleEntryResponse"];
+  entry: components["schemas"]["backend__schemas__response__application__VehicleEntryResponse"];
   onClick: () => void
 }) => (
   <tr className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">

@@ -2,7 +2,8 @@
 
 import { type components } from "@/types/api";
 import Image from "next/image";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
+import DropdownSelect from "@/components/ui/DropdownSelect";
 
 type ApplicationResponse = components["schemas"]["ApplicationResponse"];
 type UserRole = components["schemas"]["UserRole"];
@@ -40,7 +41,7 @@ const ActionButton = ({
       onClick={onClick}
       disabled={loading || disabled}
       title={title}
-      className={`flex items-center justify-center gap-2.5 rounded-lg border border-solid px-4 py-2.5 text-sm font-medium transition-all hover:opacity-90 disabled:opacity-50 ${styles[variant]} ${disabled ? "cursor-not-allowed" : ""}`}
+      className={`flex items-center justify-center gap-2 rounded-lg border border-solid px-2.5 py-2 text-sm font-medium transition-all hover:opacity-90 disabled:opacity-50 ${styles[variant]} ${disabled ? "cursor-not-allowed" : ""}`}
     >
       {icon && !loading && <Image src={icon} alt="" width={16} height={16} className={variant === 'primary' || variant === 'danger' || variant === 'success' ? 'invert brightness-0' : ''} />}
       {loading ? "..." : label}
@@ -51,7 +52,7 @@ const ActionButton = ({
 interface ApplicationActionPanelProps {
   app: ApplicationResponse;
   userRole?: UserRole;
-  onAction: (action: WorkflowAction, remarks?: string) => void;
+  onAction: (action: WorkflowAction, remarks?: string, extra?: { phase?: number }) => void;
   onCommentClick?: () => void;
   onRejectClick?: () => void;
   onObjectionClick?: () => void;
@@ -70,6 +71,12 @@ export default function ApplicationActionPanel({
   isPending = false 
 }: ApplicationActionPanelProps) {
   
+  const totalPhases = useMemo(() => {
+    return app.phase_materials && app.phase_materials.length > 0
+      ? Math.max(...app.phase_materials.map(pm => pm.phase))
+      : (app.inspections?.[0]?.recommended_phases || app.num_stages || 0);
+  }, [app.phase_materials, app.inspections, app.num_stages]);
+
   const hasGeoPhotos = useMemo(() => 
     app.inspections && app.inspections.length > 0, 
   [app.inspections]);
@@ -82,6 +89,97 @@ export default function ApplicationActionPanel({
     const status = app.status;
 
     const actionList: React.ReactNode[] = [];
+
+    const options = Array.from({ length: totalPhases }).map((_, i) => ({
+      label: `Phase ${i + 1}`,
+      value: i + 1,
+    }));
+
+    const renderOption = (option: { label: string; value: string | number }) => {
+      const p = option.value as number;
+      const isAlreadyGenerated = app.tokens?.some(t => t.phase === p);
+      const prevToken = app.tokens?.find(t => t.phase === p - 1);
+      const isPrevCompleted = prevToken?.status === "COMPLETED";
+      const isBlocked = !isAlreadyGenerated && p > 1 && !isPrevCompleted;
+      
+      let statusText = "";
+      if (isAlreadyGenerated) {
+        statusText = " (Generated)";
+      } else if (isBlocked) {
+        statusText = " (Blocked)";
+      }
+
+      return (
+        <div className={`flex w-full justify-between items-center ${isAlreadyGenerated || isBlocked ? "opacity-40 cursor-not-allowed" : ""}`}>
+          <span>{option.label}</span>
+          <span className="text-[10px] italic">{statusText}</span>
+        </div>
+      );
+    };
+
+    const handleDropdownChange = (val: string | number) => {
+      const p = val as number;
+      const isAlreadyGenerated = app.tokens?.some(t => t.phase === p);
+      if (isAlreadyGenerated) {
+        alert(`Token already generated for Phase ${p}`);
+        return;
+      }
+      
+      if (p > 1) {
+        const prevToken = app.tokens?.find(t => t.phase === p - 1);
+        if (!prevToken) {
+          alert(`Token for Phase ${p - 1} must be generated and completed first`);
+          return;
+        }
+        if (prevToken.status !== "COMPLETED") {
+          alert(`Token for Phase ${p - 1} must be completed (currently ${prevToken.status.toLowerCase()})`);
+          return;
+        }
+      }
+
+      onAction("GENERATE_TOKENS", undefined, { phase: p });
+    };
+
+    const pushGenerateTokenButtons = () => {
+      if ((userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN") && totalPhases > 0) {
+        actionList.push(
+          <div key="generate-token-group" className="flex items-center">
+            <DropdownSelect
+              options={options}
+              value={null}
+              onChange={handleDropdownChange}
+              placeholder="Generate Token"
+              className="w-48 h-[44px]"
+              triggerClassName="bg-[#059669] text-white border-[#059669] hover:bg-[#047857] transition-colors"
+              renderOption={renderOption}
+              renderTrigger={(selectedOption, isOpen) => (
+                <div className="flex w-full items-center justify-between font-semibold font-onest text-white text-sm">
+                  <span className="flex items-center gap-2">
+                    <Image
+                      src="/dashboard/icons/applications/calendar.svg"
+                      alt=""
+                      width={16}
+                      height={16}
+                      className="invert brightness-0"
+                    />
+                    Generate Token
+                  </span>
+                  <div className={`pointer-events-none transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
+                    <Image
+                      src="/dashboard/icons/applications/chevron-down.svg"
+                      alt="down"
+                      width={10}
+                      height={6}
+                      className="invert brightness-0"
+                    />
+                  </div>
+                </div>
+              )}
+            />
+          </div>
+        );
+      }
+    };
 
     // Flow: NEW CONSTRUCTION
     if (isNew) {
@@ -97,7 +195,7 @@ export default function ApplicationActionPanel({
           <ActionButton key="clear-app" label="Clear Objection and Approve" variant="success" onClick={() => onAction("APPROVE")} />
         );
       }
-      if (status === "APPROVED") {
+      if (status === "APPROVED" || status === "TOKEN_GENERATED") {
         if (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN") {
           actionList.push(
             <ActionButton key="obj" label="Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={onObjectionClick} />
@@ -116,12 +214,7 @@ export default function ApplicationActionPanel({
             />
           );
         }
-        // Assuming a flag or status for Token Generation after JEN action
-        if ((userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN") && app.phase_materials.length > 0 ) {
-           actionList.push(
-             <ActionButton key="token" label="Generate Tokens" variant="success" onClick={() => onAction("GENERATE_TOKENS")} />
-           );
-        }
+        pushGenerateTokenButtons();
       }
     }
 
@@ -163,22 +256,18 @@ export default function ApplicationActionPanel({
           <ActionButton key="clear-app" label="Clear Objection and Approve" variant="success" onClick={() => onAction("APPROVE")} />
         );
       }
-      if (status === "APPROVED") {
+      if (status === "APPROVED" || status === "TOKEN_GENERATED") {
         if (userRole === "COMMISSIONER" || userRole === "SUPERADMIN") {
           actionList.push(
             <ActionButton key="obj" label="Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={onObjectionClick} />
           );
         }
-        if (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN" && app.phase_materials.length > 0) {
-          actionList.push(
-            <ActionButton key="token" label="Generate Tokens" variant="success" onClick={() => onAction("GENERATE_TOKENS")} />
-          );
-        }
+        pushGenerateTokenButtons();
       }
     }
 
     return actionList;
-  }, [userRole, app.status, app.type, app.num_stages, app.inspections, onAction, onRejectClick, onObjectionClick, hasGeoPhotos]);
+  }, [userRole, app.status, app.type, app.num_stages, app.inspections, app.phase_materials, app.tokens, onAction, onRejectClick, onObjectionClick, hasGeoPhotos, totalPhases]);
 
   return (
     <div className="flex items-center gap-2">

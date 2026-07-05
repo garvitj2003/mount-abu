@@ -554,7 +554,7 @@ export default function ApplicationDetailsPage() {
   const handleAction = async (
     action: WorkflowAction,
     remarks?: string,
-    extra?: { num_stages?: number; phase_materials?: components["schemas"]["PhaseMaterialEntry"][] }
+    extra?: { phase?: number; num_stages?: number; phase_materials?: components["schemas"]["PhaseMaterialEntry"][] }
   ) => {
     try {
       // 1. Call Workflow Action API
@@ -563,7 +563,6 @@ export default function ApplicationDetailsPage() {
         data: {
           action,
           remarks: remarks || `Action ${action} performed by ${user?.role}`,
-          ...(action === "GENERATE_TOKENS" ? { num_stages: app?.inspections[0].recommended_phases } : {}),
           ...extra
         }
       });
