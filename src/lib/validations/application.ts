@@ -19,7 +19,7 @@ export const step1Schema = z.object({
   construction_floor: z.enum(["NONE", "FENCING", "G", "G+1", "G+2", "G+3"] as const),
   organization_name: z.string().optional().nullable(),
 }).refine((data) => {
-  if (data.existing_structure === "G+3") {
+  if (data.type === "NEW" && data.existing_structure === "G+3") {
     return false;
   }
   return true;
