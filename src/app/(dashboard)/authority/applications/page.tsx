@@ -82,6 +82,7 @@ export default function AuthorityApplicationsPage() {
 
   const [selectedCategory, setSelectedCategory] = useState<"All" | "New" | "Renovation">("All");
   const [selectedFlag, setSelectedFlag] = useState<ApplicationFlag>("ALL");
+  const [isPendingWithMe, setIsPendingWithMe] = useState(false);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedWardId, setSelectedWardId] = useState<number | null>(null);
@@ -123,7 +124,7 @@ export default function AuthorityApplicationsPage() {
   }, [user]);
 
   const { data: applications = [], isLoading } = useApplications({
-    flag: selectedFlag,
+    flag: isPendingWithMe ? "PENDING_WITH_ME" : selectedFlag,
     offset: (page - 1) * limit,
     limit,
     search: debouncedSearch || undefined,
@@ -262,19 +263,39 @@ export default function AuthorityApplicationsPage() {
 
           {/* Filters Row */}
           <div className="flex flex-wrap items-center justify-between gap-4">
-            {/* Search */}
-            <div className="flex w-[209px] items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-60">
-                <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full border-none bg-transparent p-0 text-sm font-normal text-[#343434] outline-none placeholder:text-[#343434]/60 focus:ring-0"
-              />
+            {/* Left Filter Group (Search & Pending with me) */}
+            <div className="flex items-center gap-2">
+              {/* Search */}
+              <div className="flex w-[209px] items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-60">
+                  <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full border-none bg-transparent p-0 text-sm font-normal text-[#343434] outline-none placeholder:text-[#343434]/60 focus:ring-0"
+                />
+              </div>
+
+              {/* Pending with me button for authority roles except superadmin */}
+              {user?.role && user.role !== "SUPERADMIN" && (
+                <button
+                  onClick={() => {
+                    setIsPendingWithMe(!isPendingWithMe);
+                    setPage(1);
+                  }}
+                  className={`h-[38px] px-4 text-sm rounded-lg border transition-colors flex items-center justify-center gap-1.5 ${isPendingWithMe
+                    ? "bg-[#E6F4EA] border-[#137333] text-[#137333] font-semibold shadow-sm"
+                    : "bg-white border-[#D6D9DE] text-[#343434] hover:bg-gray-50"
+                    }`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${isPendingWithMe ? "bg-[#137333]" : "bg-gray-400"}`}></span>
+                  Pending with me
+                </button>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -329,15 +350,17 @@ export default function AuthorityApplicationsPage() {
 
               {/* Role-Based Filters */}
               <div className="flex items-center gap-2">
+
                 {/* All Tab (Admins/Nodal Officer) */}
                 {canViewAll && (
                   <button
                     onClick={() => {
                       setSelectedCategory("All");
                       setSelectedFlag("ALL");
+                      setIsPendingWithMe(false);
                       setPage(1);
                     }}
-                    className={`h-[38px] px-4 text-sm rounded-lg border transition-colors flex items-center justify-center ${selectedCategory === "All"
+                    className={`h-[38px] px-4 text-sm rounded-lg border transition-colors flex items-center justify-center ${selectedCategory === "All" && !isPendingWithMe
                       ? "bg-[#E7F3FF] border-[#0C83FF] text-[#0C83FF] font-semibold"
                       : "bg-white border-[#D6D9DE] text-[#343434] hover:bg-gray-50"
                       }`}
@@ -352,9 +375,10 @@ export default function AuthorityApplicationsPage() {
                     onClick={() => {
                       setSelectedCategory("All");
                       setSelectedFlag("ALL_DEPT");
+                      setIsPendingWithMe(false);
                       setPage(1);
                     }}
-                    className={`h-[38px] px-4 text-sm rounded-lg border transition-colors flex items-center justify-center ${selectedCategory === "All"
+                    className={`h-[38px] px-4 text-sm rounded-lg border transition-colors flex items-center justify-center ${selectedCategory === "All" && !isPendingWithMe
                       ? "bg-[#E7F3FF] border-[#0C83FF] text-[#0C83FF] font-semibold"
                       : "bg-white border-[#D6D9DE] text-[#343434] hover:bg-gray-50"
                       }`}
@@ -370,10 +394,11 @@ export default function AuthorityApplicationsPage() {
                     options={roleFilters.newConstruction}
                     selectedFlag={selectedFlag}
                     category="New"
-                    currentCategory={selectedCategory}
+                    currentCategory={isPendingWithMe ? "All" : selectedCategory}
                     onSelect={(flag) => {
                       setSelectedCategory("New");
                       setSelectedFlag(flag);
+                      setIsPendingWithMe(false);
                       setPage(1);
                     }}
                   />
@@ -386,10 +411,11 @@ export default function AuthorityApplicationsPage() {
                     options={roleFilters.renovation}
                     selectedFlag={selectedFlag}
                     category="Renovation"
-                    currentCategory={selectedCategory}
+                    currentCategory={isPendingWithMe ? "All" : selectedCategory}
                     onSelect={(flag) => {
                       setSelectedCategory("Renovation");
                       setSelectedFlag(flag);
+                      setIsPendingWithMe(false);
                       setPage(1);
                     }}
                   />
