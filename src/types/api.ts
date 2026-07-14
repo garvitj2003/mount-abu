@@ -518,7 +518,11 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
+        /**
+         * Update Inspection
+         * @description JEN updates a site inspection report.
+         */
+        put: operations["update_inspection_api_applications__application_id__inspection_put"];
         /**
          * Create Inspection
          * @description JEN creates a site inspection report.
@@ -1803,7 +1807,7 @@ export interface components {
              * Comments
              * @default []
              */
-            comments: components["schemas"]["CommentResponse"][];
+            comments: components["schemas"]["backend__schemas__response__application__CommentResponse"][];
             /**
              * Inspections
              * @default []
@@ -1813,7 +1817,9 @@ export interface components {
              * Tokens
              * @default []
              */
-            tokens: components["schemas"]["TokenResponse"][];
+            tokens: components["schemas"]["backend__schemas__response__application__TokenResponse"][];
+            /** Rejection Remarks */
+            rejection_remarks?: string | null;
         };
         /**
          * ApplicationStatus
@@ -2354,27 +2360,20 @@ export interface components {
              */
             media_paths?: string[] | null;
         };
-        /**
-         * CommentResponse
-         * @description Response schema for application comments.
-         */
+        /** CommentResponse */
         CommentResponse: {
             /** Id */
             id: number;
-            /** Application Id */
-            application_id: number;
             /** Comment */
             comment: string;
-            /** Comment By */
-            comment_by: number;
-            /** Commenter Name */
-            commenter_name?: string | null;
-            /** @default GENERAL */
-            comment_type: components["schemas"]["CommentType"] | null;
-            /** Media Paths */
-            media_paths?: unknown[] | null;
             /** Created At */
             created_at?: string | null;
+            /** Comment By */
+            comment_by?: number | null;
+            /** Media Path */
+            media_path?: string | null;
+            /** Access Url */
+            access_url?: string | null;
         };
         /**
          * CommentType
@@ -2543,7 +2542,7 @@ export interface components {
              * Comments
              * @default []
              */
-            comments: components["schemas"]["backend__schemas__response__complaint__CommentResponse"][];
+            comments: components["schemas"]["CommentResponse"][];
         };
         /**
          * ComplaintRow
@@ -2938,6 +2937,37 @@ export interface components {
             recommended_phases?: number | null;
         };
         /**
+         * InspectionReportUpdate
+         * @description JEN updates an inspection report.
+         */
+        InspectionReportUpdate: {
+            /**
+             * Latitude
+             * @description GPS Latitude
+             */
+            latitude?: number | null;
+            /**
+             * Longitude
+             * @description GPS Longitude
+             */
+            longitude?: number | null;
+            /**
+             * Remarks
+             * @description Inspection remarks
+             */
+            remarks?: string | null;
+            /**
+             * Media Paths
+             * @description Media/photo paths from inspection
+             */
+            media_paths?: string[] | null;
+            /**
+             * Recommended Phases
+             * @description JEN's recommended number of phases
+             */
+            recommended_phases?: number | null;
+        };
+        /**
          * JenApplicationRow
          * @description Compact application record for JEN's latest-applications table.
          */
@@ -3182,9 +3212,15 @@ export interface components {
              */
             message: string;
         };
-        /** MessageResponse */
+        /**
+         * MessageResponse
+         * @description Response with a message.
+         */
         MessageResponse: {
-            /** Message */
+            /**
+             * Message
+             * @description Response message
+             */
             message: string;
         };
         /**
@@ -3819,28 +3855,26 @@ export interface components {
              */
             remaining_material_quantity: number;
         };
-        /**
-         * TokenResponse
-         * @description Lightweight token for the token-list table.
-         */
+        /** TokenResponse */
         TokenResponse: {
-            /** Transport Code */
-            transport_code: string;
-            /** Token Number */
-            token_number: string;
-            /** Application Number */
-            application_number: string;
-            /** Applicant Name */
-            applicant_name?: string | null;
-            /** Mobile */
-            mobile?: string | null;
-            /** Phase */
-            phase: number;
-            /** Remaining Quantity Pct */
-            remaining_quantity_pct?: number | null;
-            /** Valid Till */
-            valid_till?: string | null;
-            status: components["schemas"]["ApplicationPhaseStatus"];
+            /** Access Token */
+            access_token: string;
+            /** Refresh Token */
+            refresh_token: string;
+            /** Token Type */
+            token_type: string;
+            /** Role */
+            role: string;
+            /** User Id */
+            user_id: number;
+            /** Name */
+            name: string;
+            /**
+             * Is New User
+             * @default false
+             */
+            is_new_user: boolean;
+            jurisdiction_zone?: components["schemas"]["JurisdictionZone"] | null;
         };
         /**
          * TokenUtilizationRow
@@ -4187,26 +4221,55 @@ export interface components {
              */
             phase_materials?: components["schemas"]["PhaseMaterialEntry"][] | null;
         };
-        /** TokenResponse */
-        backend__controllers__auth__TokenResponse: {
-            /** Access Token */
-            access_token: string;
-            /** Refresh Token */
-            refresh_token: string;
-            /** Token Type */
-            token_type: string;
-            /** Role */
-            role: string;
-            /** User Id */
-            user_id: number;
-            /** Name */
-            name: string;
-            /**
-             * Is New User
-             * @default false
-             */
-            is_new_user: boolean;
-            jurisdiction_zone?: components["schemas"]["JurisdictionZone"] | null;
+        /** MessageResponse */
+        backend__controllers__auth__MessageResponse: {
+            /** Message */
+            message: string;
+        };
+        /**
+         * CommentResponse
+         * @description Response schema for application comments.
+         */
+        backend__schemas__response__application__CommentResponse: {
+            /** Id */
+            id: number;
+            /** Application Id */
+            application_id: number;
+            /** Comment */
+            comment: string;
+            /** Comment By */
+            comment_by: number;
+            /** Commenter Name */
+            commenter_name?: string | null;
+            /** @default GENERAL */
+            comment_type: components["schemas"]["CommentType"] | null;
+            /** Media Paths */
+            media_paths?: unknown[] | null;
+            /** Created At */
+            created_at?: string | null;
+        };
+        /**
+         * TokenResponse
+         * @description Lightweight token for the token-list table.
+         */
+        backend__schemas__response__application__TokenResponse: {
+            /** Transport Code */
+            transport_code: string;
+            /** Token Number */
+            token_number: string;
+            /** Application Number */
+            application_number: string;
+            /** Applicant Name */
+            applicant_name?: string | null;
+            /** Mobile */
+            mobile?: string | null;
+            /** Phase */
+            phase: number;
+            /** Remaining Quantity Pct */
+            remaining_quantity_pct?: number | null;
+            /** Valid Till */
+            valid_till?: string | null;
+            status: components["schemas"]["ApplicationPhaseStatus"];
         };
         /**
          * VehicleEntryResponse
@@ -4245,32 +4308,6 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
-        /** CommentResponse */
-        backend__schemas__response__complaint__CommentResponse: {
-            /** Id */
-            id: number;
-            /** Comment */
-            comment: string;
-            /** Created At */
-            created_at?: string | null;
-            /** Comment By */
-            comment_by?: number | null;
-            /** Media Path */
-            media_path?: string | null;
-            /** Access Url */
-            access_url?: string | null;
-        };
-        /**
-         * MessageResponse
-         * @description Response with a message.
-         */
-        backend__schemas__response__meta__MessageResponse: {
-            /**
-             * Message
-             * @description Response message
-             */
-            message: string;
-        };
     };
     responses: never;
     parameters: never;
@@ -4299,7 +4336,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MessageResponse"];
+                    "application/json": components["schemas"]["backend__controllers__auth__MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4332,7 +4369,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__controllers__auth__TokenResponse"];
+                    "application/json": components["schemas"]["TokenResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4365,7 +4402,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__controllers__auth__TokenResponse"];
+                    "application/json": components["schemas"]["TokenResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4447,7 +4484,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MessageResponse"];
+                    "application/json": components["schemas"]["backend__controllers__auth__MessageResponse"];
                 };
             };
         };
@@ -4511,7 +4548,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__meta__MessageResponse"];
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4577,7 +4614,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__meta__MessageResponse"];
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4612,7 +4649,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__meta__MessageResponse"];
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4643,7 +4680,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__meta__MessageResponse"];
+                    "application/json": components["schemas"]["MessageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -5174,6 +5211,41 @@ export interface operations {
             };
         };
     };
+    update_inspection_api_applications__application_id__inspection_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InspectionReportUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     create_inspection_api_applications__application_id__inspection_post: {
         parameters: {
             query?: never;
@@ -5360,7 +5432,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CommentResponse"][];
+                    "application/json": components["schemas"]["backend__schemas__response__application__CommentResponse"][];
                 };
             };
             /** @description Validation Error */
@@ -5396,7 +5468,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TokenResponse"][];
+                    "application/json": components["schemas"]["backend__schemas__response__application__TokenResponse"][];
                 };
             };
             /** @description Validation Error */
@@ -5427,7 +5499,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TokenResponse"][];
+                    "application/json": components["schemas"]["backend__schemas__response__application__TokenResponse"][];
                 };
             };
             /** @description Validation Error */

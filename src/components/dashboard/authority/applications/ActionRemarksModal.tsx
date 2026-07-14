@@ -89,10 +89,10 @@ export default function ActionRemarksModal({
 
               <div className="flex flex-col items-center gap-1 text-center">
                 <h3 className="text-[16px] font-semibold text-[#343434]">
-                  Are you sure?
+                  {isReject ? "This action cannot be reversed. Are you sure?" : "Are you sure?"}
                 </h3>
-                <p className="text-[14px] font-medium text-[#343434] opacity-70">
-                  {isReject ? "You want to reject this application?" : "You want to raise an objection for this application?"}
+                 <p className="text-[14px] font-medium text-[#343434] opacity-70">
+                  {isReject ? "Rejecting this application will result in a final state and no further actions can be performed." : "You want to raise an objection for this application?"}
                 </p>
               </div>
 

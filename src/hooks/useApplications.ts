@@ -75,7 +75,7 @@ export function useUpdatePhaseStatus() {
 }
 
 export function useApplicationComments(applicationId: number, options?: { enabled?: boolean }) {
-  return useQuery<components["schemas"]["CommentResponse"][]>({
+  return useQuery<components["schemas"]["backend__schemas__response__application__CommentResponse"][]>({
     queryKey: ["application-comments", applicationId],
     queryFn: () => ApplicationService.getComments(applicationId),
     enabled: !!applicationId,
@@ -100,5 +100,17 @@ export function useOrganizationSuggestions(propertyUsage: string, options?: { en
     queryFn: () => ApplicationService.getOrganizationSuggestions(propertyUsage),
     enabled: !!propertyUsage && propertyUsage !== "DOMESTIC",
     ...options,
+  });
+}
+
+export function useUpdateInspection() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: components["schemas"]["InspectionReportUpdate"] }) => 
+      ApplicationService.updateInspection(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ["application", id] });
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+    },
   });
 }

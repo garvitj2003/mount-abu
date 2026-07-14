@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { type components } from "@/types/api";
 import { useMaterials } from "@/hooks/useMasterData";
+import { useUpdateInspection } from "@/hooks/useApplications";
 
 type ApplicationResponse = components["schemas"]["ApplicationResponse"];
 type PhaseMaterialEntry = components["schemas"]["PhaseMaterialEntry"];
@@ -29,6 +30,61 @@ export default function AddPhaseDrawer({
   const [activeStage, setActiveStage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const updateInspectionMutation = useUpdateInspection();
+  const [isAddingPhase, setIsAddingPhase] = useState(false);
+  const wasOpenRef = useRef(false);
+
+  const [showAddPhaseConfirm, setShowAddPhaseConfirm] = useState(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+  const [pendingPhaseMaterials, setPendingPhaseMaterials] = useState<PhaseMaterialEntry[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleAddNewPhase = async () => {
+    if (!app.inspections || app.inspections.length === 0) {
+      alert("No inspection report found to update recommended phases.");
+      return;
+    }
+    const newPhases = totalPhases + 1;
+    setIsAddingPhase(true);
+    try {
+      await updateInspectionMutation.mutateAsync({
+        id: app.id,
+        data: {
+          latitude: app.inspections[0].latitude,
+          longitude: app.inspections[0].longitude,
+          remarks: app.inspections[0].remarks || "Adding new phase",
+          media_paths: (app.inspections[0].media_paths as string[]) || [],
+          recommended_phases: newPhases,
+        },
+      });
+
+      // Initialize the new phase in local state
+      const applicantCustomMaterials = app.materials?.filter(m => !m.material_id) || [];
+      setEstimates(prev => ({
+        ...prev,
+        [newPhases]: {}
+      }));
+      setCustomMaterials(prev => ({
+        ...prev,
+        [newPhases]: applicantCustomMaterials.map((mat) => ({
+          id: mat.id,
+          name: mat.custom_name || "",
+          unit: mat.custom_unit || "Kg",
+          qty: "0",
+          isApplicantCustom: true,
+        }))
+      }));
+
+      // Automatically switch to the newly created stage
+      setActiveStage(newPhases);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to add a new phase.");
+    } finally {
+      setIsAddingPhase(false);
+    }
+  };
+
   // Estimates for master materials: { [stageNumber]: { [materialId]: quantity } }
   const [estimates, setEstimates] = useState<Record<number, Record<number, number>>>({});
   
@@ -40,9 +96,10 @@ export default function AddPhaseDrawer({
   // State for pending custom material addition
   const [pendingCustom, setPendingCustom] = useState({ name: "", unit: "Kg", qty: "", customUnit: "" });
 
-  // Initialize/Reset estimates and custom materials when modal opens or app data changes
+  // Initialize/Reset estimates and custom materials when modal opens
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !wasOpenRef.current) {
+      wasOpenRef.current = true;
       const initialEstimates: Record<number, Record<number, number>> = {};
       const initialCustom: Record<number, { id: number; name: string; unit: string; qty: string; isApplicantCustom?: boolean }[]> = {};
       
@@ -100,6 +157,8 @@ export default function AddPhaseDrawer({
       setActiveStage(1);
       setSearchQuery("");
       setPendingCustom({ name: "", unit: "Kg", qty: "", customUnit: "" });
+    } else if (!isOpen) {
+      wasOpenRef.current = false;
     }
   }, [isOpen, app.phase_materials, app.materials, totalPhases]);
 
@@ -162,7 +221,7 @@ export default function AddPhaseDrawer({
     return dbMaterials.filter(m => m.name.toLowerCase().includes(query));
   }, [dbMaterials, searchQuery]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     const phase_materials: PhaseMaterialEntry[] = [];
     
     // 1. Collect master materials
@@ -204,7 +263,20 @@ export default function AddPhaseDrawer({
       return;
     }
 
-    await onConfirm(totalPhases, phase_materials);
+    setPendingPhaseMaterials(phase_materials);
+    setShowSubmitConfirm(true);
+  };
+
+  const handleFinalSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      await onConfirm(totalPhases, pendingPhaseMaterials);
+      setShowSubmitConfirm(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -246,22 +318,35 @@ export default function AddPhaseDrawer({
             </div>
 
             {/* Stage Selector Sub-header */}
-            <div className="border-b border-[#D6D9DE] bg-white px-6 py-3 flex items-center gap-4">
-              <label className="text-[13px] font-semibold text-[#343434]">Active Phase:</label>
-              <div className="flex gap-2">
-                {Array.from({ length: totalPhases }).map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setActiveStage(i + 1)}
-                    className={`h-9 min-w-24 rounded-lg border px-4 text-xs font-semibold transition-colors cursor-pointer ${
-                      activeStage === i + 1 
-                        ? "bg-[#0C83FF] text-white border-[#0C83FF]" 
-                        : "bg-white text-[#343434] border-[#D6D9DE] hover:bg-gray-50"
-                    }`}
-                  >
-                    Phase {i + 1}
-                  </button>
-                ))}
+            <div className="border-b border-[#D6D9DE] bg-white px-6 py-3 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <label className="text-[13px] font-semibold text-[#343434]">Active Phase:</label>
+                <div className="flex gap-2">
+                  {Array.from({ length: totalPhases }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setActiveStage(i + 1)}
+                      className={`h-9 min-w-24 rounded-lg border px-4 text-xs font-semibold transition-colors cursor-pointer ${
+                        activeStage === i + 1 
+                          ? "bg-[#0C83FF] text-white border-[#0C83FF]" 
+                          : "bg-white text-[#343434] border-[#D6D9DE] hover:bg-gray-50"
+                      }`}
+                    >
+                      Phase {i + 1}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={isAddingPhase}
+                  onClick={() => setShowAddPhaseConfirm(true)}
+                  className="flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[#0C83FF] bg-blue-50 px-4 text-xs font-semibold text-[#0C83FF] hover:bg-blue-100 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {isAddingPhase ? "Adding..." : "+ Add New Phase"}
+                </button>
               </div>
             </div>
 
@@ -459,8 +544,96 @@ export default function AddPhaseDrawer({
               </button>
             </div>
           </motion.div>
+
+          {/* Confirmation Modals */}
+          <ConfirmModal
+            isOpen={showAddPhaseConfirm}
+            onClose={() => setShowAddPhaseConfirm(false)}
+            onConfirm={handleAddNewPhase}
+            title="Add New Phase"
+            message={`Are you sure you want to add a new phase to this application? This will update the recommended phases to ${totalPhases + 1}.`}
+            confirmLabel="Add Phase"
+            isPending={isAddingPhase}
+          />
+
+          <ConfirmModal
+            isOpen={showSubmitConfirm}
+            onClose={() => setShowSubmitConfirm(false)}
+            onConfirm={handleFinalSubmit}
+            title="Confirm Materials Submission"
+            message="Are you sure you want to confirm and submit all phase material allocations?"
+            confirmLabel="Confirm & Submit"
+            isPending={isPending || isSubmitting}
+          />
         </div>
       )}
     </AnimatePresence>
   );
 }
+
+interface ConfirmModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmLabel: string;
+  isPending?: boolean;
+}
+
+const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmLabel, isPending }: ConfirmModalProps) => {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-black/40 backdrop-blur-xs"
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="relative z-10 w-full max-w-[400px] overflow-hidden rounded-xl bg-white shadow-2xl font-onest flex flex-col"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-[#D6D9DE] bg-[#F4F4F4] p-4 px-5">
+              <h2 className="text-[15px] font-bold text-[#343434]">{title}</h2>
+              <button
+                onClick={onClose}
+                className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md hover:bg-gray-200 transition-colors"
+              >
+                <Image src="/dashboard/icons/close.svg" alt="Close" width={14} height={14} />
+              </button>
+            </div>
+            {/* Body */}
+            <div className="p-6 flex flex-col gap-2">
+              <h3 className="text-[16px] font-semibold text-[#343434]">Are you sure?</h3>
+              <p className="text-[14px] text-[#343434] opacity-70 leading-relaxed">{message}</p>
+            </div>
+            {/* Footer */}
+            <div className="flex items-center gap-3 border-t border-[#D6D9DE] p-4 bg-white">
+              <button
+                onClick={onClose}
+                disabled={isPending}
+                className="flex-1 h-[40px] rounded-lg border border-[#D6D9DE] bg-white text-sm font-semibold text-[#343434] hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onConfirm}
+                disabled={isPending}
+                className="flex-1 h-[40px] flex items-center justify-center rounded-lg bg-[#0C83FF] text-sm font-semibold text-white hover:bg-blue-600 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {isPending ? "Confirming..." : confirmLabel}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+};
