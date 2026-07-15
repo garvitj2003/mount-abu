@@ -77,6 +77,7 @@ export default function AddPhaseDrawer({
 
       // Automatically switch to the newly created stage
       setActiveStage(newPhases);
+      setShowAddPhaseConfirm(false);
     } catch (err: any) {
       console.error(err);
       const errorMsg = err.response?.data?.detail || err.response?.data?.message || "Failed to add a new phase.";
@@ -325,14 +326,14 @@ export default function AddPhaseDrawer({
 
             {/* Stage Selector Sub-header */}
             <div className="border-b border-[#D6D9DE] bg-white px-6 py-3 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <label className="text-[13px] font-semibold text-[#343434]">Active Phase:</label>
-                <div className="flex gap-2">
+              <div className="flex items-center gap-4 min-w-0 flex-1">
+                <label className="text-[13px] font-semibold text-[#343434] shrink-0">Active Phase:</label>
+                <div className="flex gap-2 overflow-x-auto scrollbar-none py-1 min-w-0 flex-1">
                   {Array.from({ length: totalPhases }).map((_, i) => (
                     <button
                       key={i}
                       onClick={() => setActiveStage(i + 1)}
-                      className={`h-9 min-w-24 rounded-lg border px-4 text-xs font-semibold transition-colors cursor-pointer ${
+                      className={`h-9 min-w-24 shrink-0 rounded-lg border px-4 text-xs font-semibold transition-colors cursor-pointer ${
                         activeStage === i + 1 
                           ? "bg-[#0C83FF] text-white border-[#0C83FF]" 
                           : "bg-white text-[#343434] border-[#D6D9DE] hover:bg-gray-50"

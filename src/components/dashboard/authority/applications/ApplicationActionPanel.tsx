@@ -73,6 +73,8 @@ export default function ApplicationActionPanel({
 }: ApplicationActionPanelProps) {
   const [showApproveConfirm, setShowApproveConfirm] = useState(false);
   const [showForwardConfirm, setShowForwardConfirm] = useState(false);
+  const [showGenerateConfirm, setShowGenerateConfirm] = useState(false);
+  const [pendingGeneratePhase, setPendingGeneratePhase] = useState<number | null>(null);
   
   const totalPhases = useMemo(() => {
     return app.phase_materials && app.phase_materials.length > 0
@@ -106,16 +108,19 @@ export default function ApplicationActionPanel({
       const isBlocked = !isAlreadyGenerated && p > 1 && !isPrevCompleted;
       
       let statusText = "";
+      let statusColor = "text-[#343434]/60";
       if (isAlreadyGenerated) {
         statusText = " (Generated)";
+        statusColor = "text-[#059669] font-medium";
       } else if (isBlocked) {
         statusText = " (Blocked)";
+        statusColor = "text-[#EF4444]";
       }
 
       return (
         <div className={`flex w-full justify-between items-center ${isAlreadyGenerated || isBlocked ? "opacity-40 cursor-not-allowed" : ""}`}>
           <span>{option.label}</span>
-          <span className="text-[10px] italic">{statusText}</span>
+          <span className={`text-[10px] italic ${statusColor}`}>{statusText}</span>
         </div>
       );
     };
@@ -140,7 +145,8 @@ export default function ApplicationActionPanel({
         }
       }
 
-      onAction("GENERATE_TOKENS", undefined, { phase: p });
+      setPendingGeneratePhase(p);
+      setShowGenerateConfirm(true);
     };
 
     const pushGenerateTokenButtons = () => {
@@ -241,7 +247,7 @@ export default function ApplicationActionPanel({
             <ActionButton key="obj" label="Raise Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={onObjectionClick} />
           );
         }
-        if (hasGeoPhotos && (userRole === "JEN" || userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN")) {
+        if (hasGeoPhotos && (userRole === "JEN" || userRole === "SUPERADMIN")) {
           actionList.push(
             <ActionButton 
               key="add-phase" 
@@ -297,7 +303,7 @@ export default function ApplicationActionPanel({
     }
 
     return actionList;
-  }, [userRole, app.status, app.type, app.num_stages, app.inspections, app.phase_materials, app.tokens, onAction, onRejectClick, onObjectionClick, hasGeoPhotos, totalPhases]);
+  }, [userRole, app.status, app.type, app.num_stages, app.inspections, app.phase_materials, app.tokens, onAction, onRejectClick, onObjectionClick, hasGeoPhotos, totalPhases, setShowGenerateConfirm, setPendingGeneratePhase]);
 
   return (
     <>
@@ -334,6 +340,24 @@ export default function ApplicationActionPanel({
         title="Forward Application"
         message="Are you sure you want to forward this application to the departments?"
         confirmLabel="Forward"
+      />
+
+      <ConfirmModal
+        isOpen={showGenerateConfirm}
+        onClose={() => {
+          setShowGenerateConfirm(false);
+          setPendingGeneratePhase(null);
+        }}
+        onConfirm={() => {
+          if (pendingGeneratePhase !== null) {
+            onAction("GENERATE_TOKENS", undefined, { phase: pendingGeneratePhase });
+          }
+          setShowGenerateConfirm(false);
+          setPendingGeneratePhase(null);
+        }}
+        title="Generate Token"
+        message={`Are you sure you want to generate the token for Phase ${pendingGeneratePhase}?`}
+        confirmLabel="Generate"
       />
     </>
   );

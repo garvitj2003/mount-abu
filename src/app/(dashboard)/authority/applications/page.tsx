@@ -39,10 +39,14 @@ const StatusBadge = ({ status }: { status: ApplicationStatus }) => {
       textColor = "text-gray-600";
       break;
     case "SUBMITTED":
-    case "FORWARDED":
       bgColor = "bg-[#FFEEB4]";
       textColor = "text-[#9C832C]";
       label = "Under Review";
+      break;
+    case "FORWARDED":
+      bgColor = "bg-[#FFEEB4]";
+      textColor = "text-[#9C832C]";
+      label = "Forwarded";
       break;
     case "APPROVED":
     case "TOKEN_GENERATED":

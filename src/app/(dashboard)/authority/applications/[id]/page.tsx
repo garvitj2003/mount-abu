@@ -126,10 +126,63 @@ const DetailItem = ({ label, value }: { label: string; value: string | null | un
   </div>
 );
 
+const StatusBadge = ({ status }: { status: components["schemas"]["ApplicationStatus"] }) => {
+  let bgColor = "";
+  let textColor = "";
+  let label = status.replace("_", " ");
+
+  switch (status) {
+    case "PENDING":
+      bgColor = "bg-gray-100";
+      textColor = "text-gray-600";
+      break;
+    case "SUBMITTED":
+      bgColor = "bg-[#FFEEB4]";
+      textColor = "text-[#9C832C]";
+      label = "Under Review";
+      break;
+    case "FORWARDED":
+      bgColor = "bg-[#FFEEB4]";
+      textColor = "text-[#9C832C]";
+      label = "Pending Dep Review";
+      break;
+    case "APPROVED":
+    case "TOKEN_GENERATED":
+      bgColor = "bg-[#99D4C2]";
+      textColor = "text-[#04694A]";
+      label = status === "TOKEN_GENERATED" ? "Token Issued" : "Approved";
+      break;
+    case "OBJECTED":
+      bgColor = "bg-orange-100";
+      textColor = "text-orange-700";
+      label = "Objection";
+      break;
+    case "REJECTED":
+      bgColor = "bg-[#F8B2B2]";
+      textColor = "text-[#922929]";
+      break;
+    case "WITHHELD":
+      bgColor = "bg-purple-100";
+      textColor = "text-purple-700";
+      break;
+  }
+
+  return (
+    <div
+      className={`inline-flex items-center justify-center rounded px-2 py-1 w-fit ${bgColor}`}
+    >
+      <span className={`text-[11px] font-normal capitalize ${textColor}`}>{label.toLowerCase()}</span>
+    </div>
+  );
+};
+
 const Sidebar = ({ app }: { app: ApplicationResponse }) => {
   return (
     <div className="flex w-[238px] flex-col gap-5 rounded-lg border border-[#D6D9DE] bg-white p-5 h-fit sticky top-[80px]">
-      <h2 className="text-[12px] font-bold text-[#343434] uppercase tracking-wider">Application Details</h2>
+      <div className="flex flex-col gap-1.5">
+        <h2 className="text-[12px] font-bold text-[#343434] uppercase tracking-wider">Application Details</h2>
+        <StatusBadge status={app.status} />
+      </div>
 
       <div className="flex flex-col gap-5">
         <DetailItem label="Applicant name" value={app.applicant_name} />
