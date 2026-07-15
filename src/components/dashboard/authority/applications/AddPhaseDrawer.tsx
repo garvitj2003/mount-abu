@@ -224,10 +224,12 @@ export default function AddPhaseDrawer({
 
   const handleSubmit = () => {
     const phase_materials: PhaseMaterialEntry[] = [];
+    const generatedPhases = new Set(app.tokens?.map(t => t.phase) || []);
     
     // 1. Collect master materials
     Object.entries(estimates).forEach(([stageStr, mats]) => {
       const stage = parseInt(stageStr);
+      if (generatedPhases.has(stage)) return;
       Object.entries(mats).forEach(([matIdStr, qty]) => {
         if (qty > 0) {
           const matId = parseInt(matIdStr);
@@ -246,6 +248,7 @@ export default function AddPhaseDrawer({
     // 2. Collect custom materials
     Object.entries(customMaterials).forEach(([stageStr, mats]) => {
       const stage = parseInt(stageStr);
+      if (generatedPhases.has(stage)) return;
       mats.forEach((mat) => {
         const qty = parseInt(mat.qty) || 0;
         if (qty > 0) {
@@ -279,6 +282,8 @@ export default function AddPhaseDrawer({
       setIsSubmitting(false);
     }
   };
+
+  const isPhaseGenerated = app.tokens?.some(t => t.phase === activeStage) || false;
 
   return (
     <AnimatePresence>
@@ -402,8 +407,9 @@ export default function AddPhaseDrawer({
                                 min="0"
                                 value={estimates[activeStage]?.[mat.id] || ""}
                                 onChange={(e) => handleQtyChange(activeStage, mat.id, e.target.value)}
-                                className="w-full h-[34px] rounded-lg border border-[#D6D9DE] bg-white px-3 text-sm font-medium outline-none focus:border-[#0C83FF]"
+                                className="w-full h-[34px] rounded-lg border border-[#D6D9DE] bg-white px-3 text-sm font-medium outline-none focus:border-[#0C83FF] disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                                 placeholder="0"
+                                disabled={isPhaseGenerated}
                               />
                             </td>
                           </tr>
@@ -422,67 +428,76 @@ export default function AddPhaseDrawer({
                 </div>
 
                 {/* Add Custom Material Form */}
-                <div className="bg-white rounded-xl border border-[#D6D9DE] p-4 gap-3 flex flex-col mb-4">
-                  <div>
-                    <label className="text-[11px] font-semibold text-[#343434] opacity-70 uppercase block mb-1">Material Name</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Special Wood Panels"
-                      value={pendingCustom.name}
-                      onChange={(e) => setPendingCustom(prev => ({ ...prev, name: e.target.value }))}
-                      className="h-[34px] w-full rounded-lg border border-[#D6D9DE] px-3 text-sm outline-none focus:border-[#0C83FF]"
-                    />
+                {isPhaseGenerated ? (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4 flex flex-col gap-1">
+                    <p className="text-[12px] font-bold text-yellow-800 uppercase tracking-wider">Phase is Locked</p>
+                    <p className="text-xs text-yellow-700 leading-relaxed font-medium">
+                      This phase is locked because its token has already been generated. Materials cannot be modified.
+                    </p>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-3">
+                ) : (
+                  <div className="bg-white rounded-xl border border-[#D6D9DE] p-4 gap-3 flex flex-col mb-4">
                     <div>
-                      <label className="text-[11px] font-semibold text-[#343434] opacity-70 uppercase block mb-1">Unit</label>
-                      <select
-                        value={pendingCustom.unit}
-                        onChange={(e) => setPendingCustom(prev => ({ ...prev, unit: e.target.value }))}
-                        className="h-[34px] w-full rounded-lg border border-[#D6D9DE] px-3 text-sm bg-white outline-none focus:border-[#0C83FF]"
-                      >
-                        <option value="Kg">Kg</option>
-                        <option value="Bag">Bag</option>
-                        <option value="Quintal">Quintal</option>
-                        <option value="Metric Ton">Metric Ton</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="text-[11px] font-semibold text-[#343434] opacity-70 uppercase block mb-1">Quantity</label>
-                      <input
-                        type="number"
-                        min="1"
-                        placeholder="Quantity"
-                        value={pendingCustom.qty}
-                        onChange={(e) => setPendingCustom(prev => ({ ...prev, qty: e.target.value }))}
-                        className="h-[34px] w-full rounded-lg border border-[#D6D9DE] px-3 text-sm outline-none focus:border-[#0C83FF]"
-                      />
-                    </div>
-                  </div>
-
-                  {pendingCustom.unit === "Other" && (
-                    <div>
-                      <label className="text-[11px] font-semibold text-[#343434] opacity-70 uppercase block mb-1">Specify Custom Unit</label>
+                      <label className="text-[11px] font-semibold text-[#343434] opacity-70 uppercase block mb-1">Material Name</label>
                       <input
                         type="text"
-                        placeholder="e.g. Boxes, Litres"
-                        value={pendingCustom.customUnit}
-                        onChange={(e) => setPendingCustom(prev => ({ ...prev, customUnit: e.target.value }))}
+                        placeholder="e.g. Special Wood Panels"
+                        value={pendingCustom.name}
+                        onChange={(e) => setPendingCustom(prev => ({ ...prev, name: e.target.value }))}
                         className="h-[34px] w-full rounded-lg border border-[#D6D9DE] px-3 text-sm outline-none focus:border-[#0C83FF]"
                       />
                     </div>
-                  )}
 
-                  <button
-                    onClick={handleAddCustomMaterial}
-                    className="h-[38px] w-full rounded-lg bg-[#0C83FF] text-white text-xs font-semibold hover:bg-blue-600 transition-colors cursor-pointer"
-                  >
-                    + Add to Phase {activeStage}
-                  </button>
-                </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[11px] font-semibold text-[#343434] opacity-70 uppercase block mb-1">Unit</label>
+                        <select
+                          value={pendingCustom.unit}
+                          onChange={(e) => setPendingCustom(prev => ({ ...prev, unit: e.target.value }))}
+                          className="h-[34px] w-full rounded-lg border border-[#D6D9DE] px-3 text-sm bg-white outline-none focus:border-[#0C83FF]"
+                        >
+                          <option value="Kg">Kg</option>
+                          <option value="Bag">Bag</option>
+                          <option value="Quintal">Quintal</option>
+                          <option value="Metric Ton">Metric Ton</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-[11px] font-semibold text-[#343434] opacity-70 uppercase block mb-1">Quantity</label>
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="Quantity"
+                          value={pendingCustom.qty}
+                          onChange={(e) => setPendingCustom(prev => ({ ...prev, qty: e.target.value }))}
+                          className="h-[34px] w-full rounded-lg border border-[#D6D9DE] px-3 text-sm outline-none focus:border-[#0C83FF]"
+                        />
+                      </div>
+                    </div>
+
+                    {pendingCustom.unit === "Other" && (
+                      <div>
+                        <label className="text-[11px] font-semibold text-[#343434] opacity-70 uppercase block mb-1">Specify Custom Unit</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Boxes, Litres"
+                          value={pendingCustom.customUnit}
+                          onChange={(e) => setPendingCustom(prev => ({ ...prev, customUnit: e.target.value }))}
+                          className="h-[34px] w-full rounded-lg border border-[#D6D9DE] px-3 text-sm outline-none focus:border-[#0C83FF]"
+                        />
+                      </div>
+                    )}
+
+                    <button
+                      onClick={handleAddCustomMaterial}
+                      className="h-[38px] w-full rounded-lg bg-[#0C83FF] text-white text-xs font-semibold hover:bg-blue-600 transition-colors cursor-pointer"
+                    >
+                      + Add to Phase {activeStage}
+                    </button>
+                  </div>
+                )}
 
                 {/* Custom Materials List for Active Phase */}
                 <div className="flex-1 overflow-y-auto space-y-2">
@@ -507,10 +522,11 @@ export default function AddPhaseDrawer({
                             min="0"
                             value={mat.qty}
                             onChange={(e) => handleCustomQtyChange(activeStage, mat.id, e.target.value)}
-                            className="w-16 h-[28px] rounded border border-[#D6D9DE] bg-white px-2 text-xs font-semibold outline-none focus:border-[#0C83FF] text-center"
+                            className="w-16 h-[28px] rounded border border-[#D6D9DE] bg-white px-2 text-xs font-semibold outline-none focus:border-[#0C83FF] text-center disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                             placeholder="Qty"
+                            disabled={isPhaseGenerated}
                           />
-                          {!mat.isApplicantCustom && (
+                          {!mat.isApplicantCustom && !isPhaseGenerated && (
                             <button
                               onClick={() => handleRemoveCustomMaterial(activeStage, mat.id)}
                               className="p-1 hover:bg-red-50 rounded text-red-500 transition-colors cursor-pointer"

@@ -102,7 +102,7 @@ export default function ApplicationActionPanel({
       const p = option.value as number;
       const isAlreadyGenerated = app.tokens?.some(t => t.phase === p);
       const prevToken = app.tokens?.find(t => t.phase === p - 1);
-      const isPrevCompleted = prevToken?.status === "COMPLETED";
+      const isPrevCompleted = prevToken?.status === "COMPLETED" || prevToken?.status === "TERMINATED";
       const isBlocked = !isAlreadyGenerated && p > 1 && !isPrevCompleted;
       
       let statusText = "";
@@ -131,11 +131,11 @@ export default function ApplicationActionPanel({
       if (p > 1) {
         const prevToken = app.tokens?.find(t => t.phase === p - 1);
         if (!prevToken) {
-          alert(`Token for Phase ${p - 1} must be generated and completed first`);
+          alert(`Token for Phase ${p - 1} must be generated and completed or terminated first`);
           return;
         }
-        if (prevToken.status !== "COMPLETED") {
-          alert(`Token for Phase ${p - 1} must be completed (currently ${prevToken.status.toLowerCase()})`);
+        if (prevToken.status !== "COMPLETED" && prevToken.status !== "TERMINATED") {
+          alert(`Token for Phase ${p - 1} must be completed or terminated (currently ${prevToken.status.toLowerCase()})`);
           return;
         }
       }
