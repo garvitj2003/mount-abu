@@ -579,9 +579,10 @@ export default function ApplicationDetailsPage() {
       }
 
       alert(`Application ${action === "OBJECT" ? "objection raised" : action.toLowerCase() + "ed"} successfully.`);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Action failed", err);
-      alert("Failed to perform action. Please try again.");
+      const errorMsg = err.response?.data?.detail || err.response?.data?.message || "Failed to perform action. Please try again.";
+      alert(errorMsg);
     }
   };
 
@@ -658,9 +659,10 @@ export default function ApplicationDetailsPage() {
             });
 
             setIsAddPhaseOpen(false);
-          } catch (err) {
+          } catch (err: any) {
             console.error("Phase submission failed", err);
-            alert("Failed to submit phase details. Please try again.");
+            const errorMsg = err.response?.data?.detail || err.response?.data?.message || "Failed to submit phase details. Please try again.";
+            alert(errorMsg);
           }
         }}
         isPending={addPhaseMaterials.isPending}

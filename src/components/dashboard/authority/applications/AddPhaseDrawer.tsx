@@ -79,7 +79,8 @@ export default function AddPhaseDrawer({
       setActiveStage(newPhases);
     } catch (err: any) {
       console.error(err);
-      alert(err.response?.data?.message || "Failed to add a new phase.");
+      const errorMsg = err.response?.data?.detail || err.response?.data?.message || "Failed to add a new phase.";
+      alert(errorMsg);
     } finally {
       setIsAddingPhase(false);
     }
