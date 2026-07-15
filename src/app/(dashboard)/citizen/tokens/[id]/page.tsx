@@ -122,7 +122,7 @@ const Sidebar = ({ token, sidebarRef }: { token: TokenDetailResponse; sidebarRef
 
       <p className="text-[12px] font-medium text-[#498AA9]">Authority & System Information</p>
 
-      <DetailItem label="Issued By" value={token.authority.issued_by} />
+      <DetailItem label="Issued By" value={token.authority.issued_by?.split("(")[0].trim()} />
       <DetailItem label="Issued On" value={token.authority.issued_on ? new Date(token.authority.issued_on).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "—"} />
       <DetailItem label="Token Generated From" value={token.authority.token_generated_from} />
     </div>

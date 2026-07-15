@@ -152,7 +152,7 @@ const TokenPDF: React.FC<TokenPDFProps> = ({ token, componentRef }) => {
               <div style={{ marginTop: '32px', border: '1px solid #E5E7EB', borderRadius: '4px', padding: '16px', display: 'flex', alignItems: 'center', gap: '16px', maxWidth: '350px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', fontSize: '12px', lineHeight: '1.4' }}>
                   <p style={{ margin: 0 }}>Digitally Signed by</p>
-                  <p style={{ fontWeight: '700', margin: '2px 0' }}>{token.authority.issued_by || "Authority Name"}</p>
+                  <p style={{ fontWeight: '700', margin: '2px 0' }}>{token.authority.issued_by?.split("(")[0].trim()|| "Authority Name"}</p>
                   <p style={{ margin: 0 }}>Department</p>
                   <p style={{ margin: 0 }}>Date {formatDateTime(token.authority.issued_on)}</p>
                 </div>

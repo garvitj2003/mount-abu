@@ -1,8 +1,19 @@
 "use client";
 
 import TokensTable from "@/components/dashboard/citizen/tokens/TokensTable";
+import Image from "next/image";
 
 export default function TokensPage() {
+
+const handleExportExcel = () => {
+  window.dispatchEvent(new Event("export-tokens-excel"));
+};
+
+const handleExportPDF = () => {
+  window.dispatchEvent(new Event("export-tokens-pdf"));
+};
+
+
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest">
       {/* Header */}
@@ -15,6 +26,28 @@ export default function TokensPage() {
             View and track material entry tokens issued for your approved renovation applications.
           </p>
         </div>
+
+         <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleExportPDF}
+        
+                    className="flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-2 text-sm font-medium text-[#343434] hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+        
+                    <Image src="/dashboard/icons/applications/pdficon.svg" alt="" width={14} height={14} className="opacity-60" />
+                    Export PDF
+                  </button>
+                  <div className="h-6 w-px bg-[#D6D9DE] mx-1" />
+                  <button
+                    onClick={handleExportExcel}
+        
+                    className="flex items-center gap-2 rounded-lg bg-[#0C83FF] px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+        
+                    <Image src="/dashboard/icons/applications/csvicon.svg" alt="" width={14} height={14} className="invert brightness-0" />
+                    Export Excel
+                  </button>
+                  </div>
       </div>
 
       {/* Content */}

@@ -259,7 +259,7 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
       const name = isCustom ? mat.custom_name || "" : mat.material_name || "";
       const unit = isCustom ? mat.custom_unit || "" : mat.unit || "";
       const key = isCustom ? `custom-${name.toLowerCase()}` : `master-${mat.material_id}`;
-      
+
       const exists = list.some(item => item.key === key);
       if (!exists) {
         list.push({
@@ -281,7 +281,7 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
     app.phase_materials?.forEach((pm) => {
       const isCustom = !pm.material_id;
       const key = isCustom ? `custom-${(pm.custom_name || "").toLowerCase()}` : `master-${pm.material_id}`;
-      
+
       const exists = list.some(item => item.key === key);
       if (!exists) {
         const name = isCustom ? pm.custom_name || "" : pm.material_name || "";
@@ -374,7 +374,7 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
       <div className="flex flex-col gap-3 mt-5">
         <div className="flex items-center justify-between">
           <h3 className="text-[12px] font-bold text-[#343434] uppercase tracking-wider">Material Details</h3>
-          
+
           {/* Phase Filter Dropdown */}
           {numStagesToDisplay > 0 && (
             <div className="flex items-center gap-2">
@@ -408,7 +408,7 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
             <thead>
               <tr className="border-b border-[#D6D9DE] bg-gray-50">
                 <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Material Name</th>
-                <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Estimated Material</th>
+                <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Requested Material</th>
                 <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Estimated by JEN</th>
                 {Array.from({ length: numStagesToDisplay })
                   .map((_, i) => i + 1)
@@ -445,16 +445,16 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
                 return (
                   <tr key={item.key} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                     <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">
-                      {item.name} {item.unit && `(${item.unit})`}
+                      {item.name}
                       {item.isCustom && <span className="ml-2 rounded bg-orange-50 px-1.5 py-0.5 text-[9px] font-medium text-orange-600 border border-orange-200">Custom</span>}
                     </td>
                     <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">
-                      {item.requestedQty > 0 ? `${item.requestedQty} Units` : "—"}
+                      {item.requestedQty > 0 ? `${item.requestedQty} ${item.unit && item.unit}` : "—"}
                     </td>
                     <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">
                       <div className={`rounded border px-3 py-1.5 text-xs font-bold ${jenTotal > 0 ? "bg-white border-[#D6D9DE] text-[#0C83FF]" : "bg-gray-50 border-transparent text-gray-400"
                         }`}>
-                        {jenTotal > 0 ? `${jenTotal} Units` : "—"}
+                        {jenTotal > 0 ? `${jenTotal} ${item.unit}` : "—"}
                       </div>
                     </td>
                     {Array.from({ length: numStagesToDisplay })
@@ -481,7 +481,7 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
                             ][(phaseNum - 1) % 5]
                               }`}
                           >
-                            {phaseQty !== undefined ? `${phaseQty} Units` : "—"}
+                            {phaseQty !== undefined ? `${phaseQty} ${item.unit}` : "—"}
                           </td>
                         );
                       })}

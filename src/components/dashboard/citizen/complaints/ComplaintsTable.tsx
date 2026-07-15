@@ -7,6 +7,9 @@ import { useUser } from "@/hooks/useUser";
 import { type components } from "@/types/api";
 import TablePagination from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 type ComplaintResponse = components["schemas"]["ComplaintResponse"];
 type ComplaintStatus = components["schemas"]["ComplaintStatus"];
@@ -138,6 +141,234 @@ export default function ComplaintsTable({ onComplaintClick }: ComplaintsTablePro
 
   const totalPages = Math.ceil(filteredComplaints.length / limit);
   const paginatedComplaints = filteredComplaints.slice((page - 1) * limit, page * limit);
+
+
+  const getExportInfo = () => {
+    return [
+      [
+        "Downloaded By",
+        user?.name?.trim()
+          ? `${user.name} (${user.mobile})`
+          : user?.mobile || "Citizen"
+      ],
+      [
+        "Download Date",
+        new Date().toLocaleString()
+      ],
+      [
+        "Status Filter",
+        filter === "All"
+          ? "All"
+          : filter
+      ],
+      [
+        "Search",
+        search || "No Search"
+      ],
+      [
+        "Page",
+        page
+      ],
+      [
+        "Limit",
+        limit
+      ],
+      [
+        "Total Records",
+        paginatedComplaints.length
+      ]
+    ];
+  };
+
+  const exportToExcel = () => {
+
+    const info = getExportInfo();
+
+
+    const data = paginatedComplaints.map((item) => ({
+      "Complaint ID": `#CMP-${item.id.toString().padStart(4, "0")}`,
+      "Title": item.title,
+      "Ward No.": item.ward_id || "-",
+      "Location": item.location_address || "-",
+      "Submitted On": new Date(item.created_at || "")
+        .toLocaleDateString("en-GB"),
+      "Status": item.status
+    }));
+
+
+    const ws = XLSX.utils.aoa_to_sheet([
+      ["Citizen Complaints Export"],
+      [],
+      ...info,
+      [],
+      [
+        "Complaint ID",
+        "Title",
+        "Ward No.",
+        "Location",
+        "Submitted On",
+        "Status"
+      ],
+      ...data.map(item => Object.values(item))
+    ]);
+
+
+    const wb = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      ws,
+      "Complaints"
+    );
+
+
+    XLSX.writeFile(
+      wb,
+      "Citizen_Complaints.xlsx"
+    );
+
+  };
+
+  const exportToPDF = () => {
+
+    const doc = new jsPDF();
+
+
+    doc.setFontSize(16);
+
+    doc.text(
+      "Citizen Complaints",
+      14,
+      15
+    );
+
+
+    doc.setFontSize(10);
+
+
+    let y = 25;
+
+
+    getExportInfo().forEach(([key, value]) => {
+
+      doc.text(
+        `${key}: ${value}`,
+        14,
+        y
+      );
+
+      y += 6;
+
+    });
+
+
+    autoTable(doc, {
+
+      startY: y + 5,
+
+
+      head: [[
+        "Complaint ID",
+        "Title",
+        "Ward No.",
+        "Location",
+        "Submitted On",
+        "Status"
+      ]],
+
+
+      body: paginatedComplaints.map(item => [
+
+        `#CMP-${item.id.toString().padStart(4, "0")}`,
+
+        item.title,
+
+        item.ward_id || "-",
+
+        item.location_address || "-",
+
+        new Date(item.created_at || "")
+          .toLocaleDateString("en-GB"),
+
+        item.status
+
+      ]),
+
+
+      styles: {
+        fontSize: 8,
+        cellPadding: 2
+      },
+
+
+      headStyles: {
+        fillColor: [12, 131, 255]
+      }
+
+    });
+
+
+    doc.save(
+      "Citizen_Complaints.pdf"
+    );
+
+
+  };
+
+  useEffect(() => {
+
+
+    const handleExcel = () => {
+      exportToExcel();
+    };
+
+
+    const handlePDF = () => {
+      exportToPDF();
+    };
+
+
+
+    window.addEventListener(
+      "export-complaints-excel",
+      handleExcel
+    );
+
+
+    window.addEventListener(
+      "export-complaints-pdf",
+      handlePDF
+    );
+
+
+
+    return () => {
+
+      window.removeEventListener(
+        "export-complaints-excel",
+        handleExcel
+      );
+
+
+      window.removeEventListener(
+        "export-complaints-pdf",
+        handlePDF
+      );
+
+
+    };
+
+
+  }, [
+    paginatedComplaints,
+    filter,
+    search,
+    page,
+    limit,
+    user
+  ]);
+
+
 
   if (isLoading) {
     return (

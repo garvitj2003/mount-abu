@@ -11,6 +11,9 @@ import { useRouter } from "next/navigation";
 import { useWards } from "@/hooks/useMasterData";
 import CustomDropdown from "@/components/ui/CustomDropdown";
 import { usePagination } from "@/hooks/usePagination";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 type ApplicationStatus =
   | "PENDING"
@@ -95,6 +98,9 @@ export default function AuthorityApplicationsPage() {
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const triggerRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
 
   // Debounce search effect
   useEffect(() => {
@@ -245,6 +251,141 @@ export default function AuthorityApplicationsPage() {
     ...wards.map(w => ({ label: w.name, value: w.id }))
   ], [wards]);
 
+
+  const handleExportExcel = () => {
+    try {
+      setIsExportingExcel(true);
+
+      const wb = XLSX.utils.book_new();
+      const wsData: any[][] = [];
+
+      // ================= User Information =================
+      wsData.push(["Applications Report"]);
+      wsData.push([]);
+
+      wsData.push(["Name", user?.name ?? "-"]);
+      wsData.push(["Role", user?.role ?? "-"]);
+      wsData.push(["Mobile", user?.mobile ?? "-"]);
+      wsData.push([
+        "Generated On",
+        new Date().toLocaleString("en-IN"),
+      ]);
+
+      wsData.push([]);
+
+      // ================= Applications =================
+      wsData.push(["Applications"]);
+      wsData.push([
+        "Application No",
+        "Applicant Name",
+        "Application Type",
+        "Ward / Zone",
+        "Property Usage",
+        "Submitted On",
+        "Current Status",
+      ]);
+
+      applications.forEach((app) => {
+        wsData.push([
+          app.id.toString().padStart(5, "0"),
+          app.applicant_name,
+          app.type.toLowerCase() === "new"
+            ? "New Construction"
+            : "Repair & Renovation",
+          app.ward_zone || "-",
+          app.property_usage || "-",
+          app.created_at
+            ? new Date(app.created_at).toLocaleDateString("en-GB")
+            : "-",
+          app.status.replaceAll("_", " "),
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      XLSX.utils.book_append_sheet(
+        wb,
+        ws,
+        "Applications"
+      );
+
+      XLSX.writeFile(
+        wb,
+        `Applications_${Date.now()}.xlsx`
+      );
+    } finally {
+      setIsExportingExcel(false);
+    }
+  };
+
+  const handleExportPDF = () => {
+    setIsExportingPDF(true);
+
+    try {
+      const pdf = new jsPDF("landscape");
+
+      // ================= Title =================
+      pdf.setFontSize(18);
+      pdf.text("Applications Report", 14, 15);
+
+      // ================= User Information =================
+      pdf.setFontSize(10);
+
+      pdf.text(`Name: ${user?.name ?? "-"}`, 14, 24);
+      pdf.text(`Role: ${user?.role ?? "-"}`, 14, 30);
+      pdf.text(`Mobile: ${user?.mobile ?? "-"}`, 14, 36);
+      pdf.text(
+        `Generated On: ${new Date().toLocaleString("en-IN")}`,
+        14,
+        42
+      );
+
+      // ================= Table =================
+      autoTable(pdf, {
+        startY: 48,
+        head: [[
+          "Application No",
+          "Applicant",
+          "Application Type",
+          "Ward / Zone",
+          "Property Usage",
+          "Submitted On",
+          "Status",
+        ]],
+        body: applications.map((app) => [
+          app.id.toString().padStart(5, "0"),
+          app.applicant_name,
+          app.type === "NEW"
+            ? "New Construction"
+            : "Repair & Renovation",
+          app.ward_zone || "-",
+          app.property_usage || "-",
+          app.created_at
+            ? new Date(app.created_at).toLocaleDateString("en-GB")
+            : "-",
+          app.status.replaceAll("_", " "),
+        ]),
+        styles: {
+          fontSize: 9,
+          cellPadding: 3,
+        },
+        headStyles: {
+          fillColor: [12, 131, 255],
+          textColor: 255,
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245],
+        },
+      });
+
+      pdf.save("Applications_Report.pdf");
+    } finally {
+      setIsExportingPDF(false);
+    }
+  };
+
+
+
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest relative">
       {/* Header */}
@@ -254,6 +395,54 @@ export default function AuthorityApplicationsPage() {
           <p className="text-xs font-normal text-[#343434] opacity-80">
             View, verify, and take action on construction and renovation applications submitted by citizens within municipal limits.
           </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+
+          {/* Export PDF */}
+          <button
+            onClick={handleExportPDF}
+            disabled={isExportingPDF}
+            className="flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-2 text-sm font-medium text-[#343434] hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {isExportingPDF ? (
+              <div className="h-3 w-3 animate-spin rounded-full border-2 border-[#343434] border-t-transparent" />
+            ) : (
+              <Image
+                src="/dashboard/icons/applications/pdficon.svg"
+                alt=""
+                width={14}
+                height={14}
+                className="opacity-60"
+              />
+            )}
+
+            {isExportingPDF ? "Exporting..." : "Export PDF"}
+          </button>
+
+          <div className="h-6 w-px bg-[#D6D9DE]" />
+
+          {/* Export Excel */}
+          <button
+            onClick={handleExportExcel}
+            disabled={isExportingExcel}
+            className="flex items-center gap-2 rounded-lg bg-[#0C83FF] px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {isExportingExcel ? (
+              <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            ) : (
+              <Image
+                src="/dashboard/icons/applications/csvicon.svg"
+                alt=""
+                width={14}
+                height={14}
+                className="invert brightness-0"
+              />
+            )}
+
+            {isExportingExcel ? "Exporting..." : "Export Excel"}
+          </button>
+
         </div>
       </div>
 
@@ -465,7 +654,7 @@ export default function AuthorityApplicationsPage() {
                           }}
                           className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer"
                         >
-                          #{app.id.toString().padStart(5, '0')}
+                          {app.id.toString().padStart(5, '0')}
                         </span>
                       </td>
                       <td className="px-2 py-3">

@@ -19,11 +19,30 @@ interface ApplicationStepperProps {
 }
 
 export default function ApplicationStepper({ app }: ApplicationStepperProps) {
+
+  console.log("APP", app);
+
   const steps: Step[] = useMemo(() => {
     const isNew = app.type === "NEW";
     const status = app.status;
     const isObjection = status === "OBJECTED";
     const inspectionDone = app.inspections.length > 0;
+
+    const phaseAdded = app.phase_materials.length > 0;
+
+    const requiredComments = [
+      "ATP Department",
+      "Legal Department",
+      "Land Department",
+      "Junior Engineer",
+    ];
+
+    const hasDeptComments = requiredComments.every((role) =>
+      app.comments.some((c) => c.commenter_name === role)
+    );
+
+    const deptAndInspectionDone = hasDeptComments && inspectionDone && phaseAdded;
+
 
     let s: Omit<Step, "id" | "status">[] = [];
 
@@ -38,9 +57,8 @@ export default function ApplicationStepper({ app }: ApplicationStepperProps) {
       s = [
         { label: "Submitted", role: "Applicant" },
         { label: "Forward to Dept", role: "Commissioner" },
-        { label: "Dept Comments", role: "JEN/ATP/LEGAL/LAND" },
+        { label: "Dept Comments & Inspection", role: "JEN/ATP/LEGAL/LAND" },
         { label: "Approval", role: "Commissioner" },
-        { label: "Inspection", role: "JEN" },
         { label: "Token Generated", role: "Nodal Officer" },
       ];
     }
@@ -67,18 +85,16 @@ export default function ApplicationStepper({ app }: ApplicationStepperProps) {
       }
     } else {
       // RENOVATION: Submitted -> Forward to Dept -> Dept Comments -> Approval -> Inspection -> Token Generated
-      if (status === "SUBMITTED") currentIndex = 1;
-      else if (status === "FORWARDED") {
-        const hasDeptComments = app.comments.some(
-          (c) => c.comment_type !== "GENERAL" && c.commenter_name !== app.applicant_name
-        );
-        currentIndex = hasDeptComments ? 3 : 2;
+      if (status === "SUBMITTED") {
+        currentIndex = 1;
+      } else if (status === "FORWARDED") {
+        // Dept comments + Inspection dono hone chahiye
+        currentIndex = deptAndInspectionDone ? 3 : 2;
       } else if (status === "APPROVED") {
-        currentIndex = inspectionDone ? 5 : 4;
+        currentIndex = 4;
       } else if (status === "TOKEN_GENERATED") {
-        currentIndex = 6;
+        currentIndex = 5;
       } else if (isObjection) {
-        // Default to 'Forward to Dept' step for RENOVATION
         currentIndex = 1;
       }
     }
