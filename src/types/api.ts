@@ -4197,7 +4197,7 @@ export interface components {
          * @description Actions that can be taken on an application.
          * @enum {string}
          */
-        WorkflowAction: "APPROVE" | "REJECT" | "OBJECT" | "FORWARD" | "GENERATE_TOKENS" | "WITHDRAW";
+        WorkflowAction: "APPROVE" | "REJECT" | "OBJECT" | "FORWARD" | "GENERATE_TOKENS" | "WITHDRAW" | "CLEAR_OBJECTION";
         /**
          * WorkflowActionRequest
          * @description Request body for workflow actions (approve/reject/object/forward).

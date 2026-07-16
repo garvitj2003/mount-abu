@@ -13,6 +13,7 @@ interface CommentsDrawerProps {
   onClose: () => void;
   applicationId: number;
   applicationNumber: string;
+  userRole?: string;
 }
 
 const formatDate = (dateString?: string | null) => {
@@ -72,19 +73,30 @@ export default function CommentsDrawer({
   onClose,
   applicationId,
   applicationNumber,
+  userRole,
 }: CommentsDrawerProps) {
   const { data: comments = [], isLoading } = useApplicationComments(applicationId, { enabled: isOpen });
   const { mutateAsync: addComment } = useAddComment();
   
   const [newComment, setNewComment] = useState("");
+  const [commentType, setCommentType] = useState<"GENERAL" | "DEPT_REVIEW">("GENERAL");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const isAuthority = userRole && userRole !== "CITIZEN";
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [comments, isOpen]);
+
+  // Reset type when drawer opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setCommentType("GENERAL");
+    }
+  }, [isOpen]);
 
   const handleSend = async () => {
     if (!newComment.trim() || isSubmitting) return;
@@ -95,7 +107,7 @@ export default function CommentsDrawer({
         id: applicationId,
         data: {
           comment: newComment,
-          comment_type: "GENERAL",
+          comment_type: commentType,
         },
       });
       setNewComment("");
@@ -157,6 +169,44 @@ export default function CommentsDrawer({
             </div>
 
             <div className="border-t border-[#D6D9DE] p-4 bg-white flex flex-col gap-3">
+              {isAuthority && (
+                <div className="flex flex-col gap-1.5 px-1 pb-1">
+                  {/* Visibility Explainer Label */}
+                  <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                    {commentType === "DEPT_REVIEW" 
+                      ? "🔒 Internal: Visible only to Authorities, hidden from Citizen"
+                      : "🌐 Public: Visible to Citizen & all Authorities"
+                    }
+                  </span>
+                  
+                  {/* Selector Buttons */}
+                  <div className="flex gap-2 p-1 bg-[#E5E7EB] rounded-lg">
+                    <button
+                      type="button"
+                      onClick={() => setCommentType("GENERAL")}
+                      className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer text-center ${
+                        commentType === "GENERAL" 
+                          ? "bg-white text-[#343434] shadow-xs" 
+                          : "text-gray-500 hover:text-gray-700"
+                      }`}
+                    >
+                      General Comment
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCommentType("DEPT_REVIEW")}
+                      className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer text-center ${
+                        commentType === "DEPT_REVIEW" 
+                          ? "bg-[#008080] text-white shadow-xs" 
+                          : "text-gray-500 hover:text-gray-700"
+                      }`}
+                    >
+                      Department Review
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center gap-3 rounded-xl border border-[#D6D9DE] bg-[#F9FAFB] px-4 py-2 focus-within:border-[#0C83FF] transition-all">
                 <input
                   type="text"

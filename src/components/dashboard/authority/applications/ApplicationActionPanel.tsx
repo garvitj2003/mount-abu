@@ -56,7 +56,7 @@ interface ApplicationActionPanelProps {
   onAction: (action: WorkflowAction, remarks?: string, extra?: { phase?: number }) => void;
   onCommentClick?: () => void;
   onRejectClick?: () => void;
-  onObjectionClick?: () => void;
+  onObjectionClick?: (role: string) => void;
   onAddPhaseClick?: () => void;
   isPending?: boolean;
 }
@@ -75,6 +75,24 @@ export default function ApplicationActionPanel({
   const [showForwardConfirm, setShowForwardConfirm] = useState(false);
   const [showGenerateConfirm, setShowGenerateConfirm] = useState(false);
   const [pendingGeneratePhase, setPendingGeneratePhase] = useState<number | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  
+  const objectionOptions = useMemo(() => {
+    if (app.type === "NEW") {
+      return [
+        { label: "Junior Engineer (JEN)", value: "JEN" },
+        { label: "Applicant / Citizen", value: "CITIZEN" },
+      ];
+    } else {
+      return [
+        { label: "Land Department", value: "DEPT_LAND" },
+        { label: "Legal Department", value: "DEPT_LEGAL" },
+        { label: "ATP Department", value: "DEPT_ATP" },
+        { label: "Junior Engineer (JEN)", value: "JEN" },
+        { label: "Applicant / Citizen", value: "CITIZEN" },
+      ];
+    }
+  }, [app.type]);
   
   const totalPhases = useMemo(() => {
     return app.phase_materials && app.phase_materials.length > 0
@@ -194,20 +212,66 @@ export default function ApplicationActionPanel({
     if (isNew) {
       if (status === "SUBMITTED" && (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN")) {
         actionList.push(
-          <ActionButton key="obj" label="Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={onObjectionClick} />,
+          <div key="obj-dropdown-group" className="flex items-center">
+            <DropdownSelect
+              options={objectionOptions}
+              value=""
+              onChange={(val) => onObjectionClick?.(val as string)}
+              className="h-[38px]"
+              triggerClassName="bg-[#FFD648] text-[#343434] border-[#FFD648] font-medium font-onest hover:opacity-90 transition-opacity rounded-lg px-2.5 flex items-center justify-between gap-2 cursor-pointer"
+              renderTrigger={(selectedOpt, isOpen) => (
+                <div className="flex items-center gap-2">
+                  <Image src="/dashboard/icons/warning.svg" alt="" width={16} height={16} />
+                  <span>Objection</span>
+                  <div className={`pointer-events-none transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
+                    <Image
+                      src="/dashboard/icons/applications/chevron-down.svg"
+                      alt="down"
+                      width={10}
+                      height={6}
+                      className="opacity-60"
+                    />
+                  </div>
+                </div>
+              )}
+            />
+          </div>,
           <ActionButton key="rej" label="Reject" icon="/dashboard/icons/cross-round-red.svg" variant="danger" onClick={onRejectClick} />,
           <ActionButton key="app" label="Approve" variant="success" onClick={() => setShowApproveConfirm(true)} />
         );
       }
       if (status === "OBJECTED" && (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN")) {
         actionList.push(
-          <ActionButton key="clear-app" label="Clear Objection and Approve" variant="success" onClick={() => setShowApproveConfirm(true)} />
+          <ActionButton key="clear-app" label="Clear Objection" variant="success" onClick={() => setShowClearConfirm(true)} />
         );
       }
       if (status === "APPROVED" || status === "TOKEN_GENERATED") {
         if (status === "APPROVED" && (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN")) {
           actionList.push(
-            <ActionButton key="obj" label="Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={onObjectionClick} />,
+            <div key="obj-dropdown-group" className="flex items-center">
+              <DropdownSelect
+                options={objectionOptions}
+                value=""
+                onChange={(val) => onObjectionClick?.(val as string)}
+                className="h-[38px]"
+                triggerClassName="bg-[#FFD648] text-[#343434] border-[#FFD648] font-medium font-onest hover:opacity-90 transition-opacity rounded-lg px-2.5 flex items-center justify-between gap-2 cursor-pointer"
+                renderTrigger={(selectedOpt, isOpen) => (
+                  <div className="flex items-center gap-2">
+                    <Image src="/dashboard/icons/warning.svg" alt="" width={16} height={16} />
+                    <span>Objection</span>
+                    <div className={`pointer-events-none transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
+                      <Image
+                        src="/dashboard/icons/applications/chevron-down.svg"
+                        alt="down"
+                        width={10}
+                        height={6}
+                        className="opacity-60"
+                      />
+                    </div>
+                  </div>
+                )}
+              />
+            </div>,
             <ActionButton key="rej" label="Reject" icon="/dashboard/icons/cross-round-red.svg" variant="danger" onClick={onRejectClick} />
           );
         }
@@ -244,7 +308,30 @@ export default function ApplicationActionPanel({
       if (status === "FORWARDED") {
         if (userRole === "SUPERADMIN" || userRole === "COMMISSIONER") {
           actionList.push(
-            <ActionButton key="obj" label="Raise Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={onObjectionClick} />
+            <div key="obj-dropdown-group" className="flex items-center">
+              <DropdownSelect
+                options={objectionOptions}
+                value=""
+                onChange={(val) => onObjectionClick?.(val as string)}
+                className="h-[38px]"
+                triggerClassName="bg-[#FFD648] text-[#343434] border-[#FFD648] font-medium font-onest hover:opacity-90 transition-opacity rounded-lg px-2.5 flex items-center justify-between gap-2 cursor-pointer"
+                renderTrigger={(selectedOpt, isOpen) => (
+                  <div className="flex items-center gap-2">
+                    <Image src="/dashboard/icons/warning.svg" alt="" width={16} height={16} />
+                    <span>Raise Objection</span>
+                    <div className={`pointer-events-none transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
+                      <Image
+                        src="/dashboard/icons/applications/chevron-down.svg"
+                        alt="down"
+                        width={10}
+                        height={6}
+                        className="opacity-60"
+                      />
+                    </div>
+                  </div>
+                )}
+              />
+            </div>
           );
         }
         if (hasGeoPhotos && (userRole === "JEN" || userRole === "SUPERADMIN")) {
@@ -270,20 +357,39 @@ export default function ApplicationActionPanel({
         }
       }
       if (status === "OBJECTED") {
-        if (userRole === "COMMISSIONER" || userRole === "SUPERADMIN") {
+        if (userRole === "COMMISSIONER" || userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN") {
           actionList.push(
-            <ActionButton key="clear-app" label="Clear Objection and Approve" variant="success" onClick={() => setShowApproveConfirm(true)} />
-          );
-        } else if (userRole === "NODAL_OFFICER") {
-          actionList.push(
-            <ActionButton key="pending-comm" label="Pending Commissioner Approval" disabled variant="secondary" />
+            <ActionButton key="clear-app" label="Clear Objection" variant="success" onClick={() => setShowClearConfirm(true)} />
           );
         }
       }
       if (status === "APPROVED" || status === "TOKEN_GENERATED") {
         if (status === "APPROVED" && (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN")) {
           actionList.push(
-            <ActionButton key="obj" label="Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={onObjectionClick} />,
+            <div key="obj-dropdown-group" className="flex items-center">
+              <DropdownSelect
+                options={objectionOptions}
+                value=""
+                onChange={(val) => onObjectionClick?.(val as string)}
+                className="h-[38px]"
+                triggerClassName="bg-[#FFD648] text-[#343434] border-[#FFD648] font-medium font-onest hover:opacity-90 transition-opacity rounded-lg px-2.5 flex items-center justify-between gap-2 cursor-pointer"
+                renderTrigger={(selectedOpt, isOpen) => (
+                  <div className="flex items-center gap-2">
+                    <Image src="/dashboard/icons/warning.svg" alt="" width={16} height={16} />
+                    <span>Objection</span>
+                    <div className={`pointer-events-none transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
+                      <Image
+                        src="/dashboard/icons/applications/chevron-down.svg"
+                        alt="down"
+                        width={10}
+                        height={6}
+                        className="opacity-60"
+                      />
+                    </div>
+                  </div>
+                )}
+              />
+            </div>,
             <ActionButton key="rej" label="Reject" icon="/dashboard/icons/cross-round-red.svg" variant="danger" onClick={onRejectClick} />
           );
         }
@@ -303,7 +409,7 @@ export default function ApplicationActionPanel({
     }
 
     return actionList;
-  }, [userRole, app.status, app.type, app.num_stages, app.inspections, app.phase_materials, app.tokens, onAction, onRejectClick, onObjectionClick, hasGeoPhotos, totalPhases, setShowGenerateConfirm, setPendingGeneratePhase]);
+  }, [userRole, app.status, app.type, app.num_stages, app.inspections, app.phase_materials, app.tokens, onAction, onRejectClick, onObjectionClick, hasGeoPhotos, totalPhases, setShowGenerateConfirm, setPendingGeneratePhase, setShowClearConfirm]);
 
   return (
     <>
@@ -358,6 +464,18 @@ export default function ApplicationActionPanel({
         title="Generate Token"
         message={`Are you sure you want to generate the token for Phase ${pendingGeneratePhase}?`}
         confirmLabel="Generate"
+      />
+
+      <ConfirmModal
+        isOpen={showClearConfirm}
+        onClose={() => setShowClearConfirm(false)}
+        onConfirm={() => {
+          onAction("CLEAR_OBJECTION");
+          setShowClearConfirm(false);
+        }}
+        title="Clear Objection"
+        message="Are you sure you want to clear this objection? The application will be restored to its pre-objection state."
+        confirmLabel="Clear"
       />
     </>
   );

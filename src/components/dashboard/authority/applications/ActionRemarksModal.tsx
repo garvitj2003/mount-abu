@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -21,6 +21,12 @@ export default function ActionRemarksModal({
 }: ActionRemarksModalProps) {
   const [remarks, setRemarks] = useState("");
 
+  useEffect(() => {
+    if (isOpen) {
+      setRemarks("");
+    }
+  }, [isOpen]);
+
   const handleConfirm = () => {
     if (!remarks.trim()) {
       alert(`Please provide a reason for ${type === "REJECT" ? "rejection" : "objection"}.`);
@@ -38,7 +44,7 @@ export default function ActionRemarksModal({
   
   const mainColor = isReject ? "#EF4444" : "#FFD648";
   const bgColor = isReject ? "#FEE2E2" : "#FFFBEB";
-  const iconSrc = isReject ? "/dashboard/icons/cross-round-red.svg" : "/dashboard/icons/question-mark.svg";
+  const iconSrc = isReject ? "/dashboard/icons/cross-round-red.svg" : "/dashboard/icons/warning.svg";
 
   return (
     <AnimatePresence>
@@ -97,6 +103,8 @@ export default function ActionRemarksModal({
               </div>
 
               <div className="h-px w-full bg-[#D6D9DE] my-2" />
+
+
 
               <textarea
                 placeholder={placeholder}

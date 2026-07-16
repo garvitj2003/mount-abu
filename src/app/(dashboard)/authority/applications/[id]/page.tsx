@@ -69,7 +69,7 @@ const Header = ({
   onAction: (action: WorkflowAction, remarks?: string) => void;
   onCommentClick?: () => void;
   onRejectClick?: () => void;
-  onObjectionClick?: () => void;
+  onObjectionClick?: (role: string) => void;
   onAddPhaseClick?: () => void;
 }) => {
   const warning = useMemo(() => {
@@ -602,6 +602,7 @@ export default function ApplicationDetailsPage() {
     isOpen: false,
     type: "REJECT",
   });
+  const [objectionRedirectRole, setObjectionRedirectRole] = useState<string>("");
   const [isAddPhaseOpen, setIsAddPhaseOpen] = useState(false);
 
   const handleAction = async (
@@ -666,7 +667,10 @@ export default function ApplicationDetailsPage() {
         onAction={handleAction}
         onCommentClick={() => setIsCommentsOpen(true)}
         onRejectClick={() => setRemarksModal({ isOpen: true, type: "REJECT" })}
-        onObjectionClick={() => setRemarksModal({ isOpen: true, type: "OBJECT" })}
+        onObjectionClick={(role) => {
+          setObjectionRedirectRole(role);
+          setRemarksModal({ isOpen: true, type: "OBJECT" });
+        }}
         onAddPhaseClick={() => setIsAddPhaseOpen(true)}
       />
 
@@ -686,6 +690,7 @@ export default function ApplicationDetailsPage() {
         onClose={() => setIsCommentsOpen(false)}
         applicationId={id}
         applicationNumber={`#${app.id.toString().padStart(5, '0')}`}
+        userRole={user?.role}
       />
 
       <ActionRemarksModal
@@ -693,7 +698,7 @@ export default function ApplicationDetailsPage() {
         type={remarksModal.type}
         onClose={() => setRemarksModal({ ...remarksModal, isOpen: false })}
         onConfirm={async (remarks) => {
-          await handleAction(remarksModal.type, remarks);
+          await handleAction(remarksModal.type, remarks, { objection_to_role: objectionRedirectRole } as any);
           setRemarksModal({ ...remarksModal, isOpen: false });
         }}
         isPending={workflowAction.isPending}
