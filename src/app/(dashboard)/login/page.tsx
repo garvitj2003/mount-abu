@@ -5,7 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { useRouter } from "next/navigation";
 import { AuthService } from "@/services/authService";
-import { loginWithOtpAction, loginWithPasswordAction } from "@/app/actions/auth";
+import { loginWithOtpAction, loginWithPasswordAction, verifyLoginOtpAction } from "@/app/actions/auth";
 import { mobileSchema, otpSchema } from "@/lib/validations/auth";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useQueryClient } from "@tanstack/react-query";
@@ -16,6 +16,7 @@ type LoginView =
   | "citizen"
   | "authority"
   | "otp"
+  | "authority-otp"
   | "forgot-password"
   | "reset-otp"
   | "new-password"
@@ -67,6 +68,11 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [resendLogin, setResendLogin] = useState(false)
   const [error, setError] = useState<string | null>(null);
+
+  // Authority OTP States
+  const [maskedMobile, setMaskedMobile] = useState("");
+  const [tempUsername, setTempUsername] = useState("");
+  const [tempNonce, setTempNonce] = useState("");
 
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
@@ -190,15 +196,54 @@ export default function LoginPage() {
       const encryptedPassword = encryptData(password, publicKey);
       const result = await loginWithPasswordAction(encryptedUsername, encryptedPassword);
       if (result.success) {
-        await queryClient.invalidateQueries({ queryKey: ["user"] });
-        // Redirect based on role or to authority default
-        router.push("/authority");
+        if (result.otpRequired) {
+          setMaskedMobile(result.maskedMobile || "");
+          setTempUsername(result.username || "");
+          setTempNonce(result.nonce || "");
+          setOtp(["", "", "", "", "", ""]);
+          setView("authority-otp");
+        } else {
+          await queryClient.invalidateQueries({ queryKey: ["user"] });
+          router.push("/authority");
+        }
       } else {
         setError(result.error || "Login failed");
       }
     } catch (err) {
       console.error(err);
       setError("An unexpected error occurred during encryption or login.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLoginWithAuthorityOtp = async () => {
+    setError(null);
+    const otpString = otp.join("");
+    const validation = otpSchema.safeParse(otpString);
+    if (!validation.success) {
+      setError(validation.error.issues[0]?.message || "Invalid OTP");
+      return;
+    }
+
+    if (!publicKey) {
+      setError("Encryption key not loaded. Please refresh.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const encryptedOtp = encryptData(otpString, publicKey);
+      const result = await verifyLoginOtpAction(tempUsername, encryptedOtp, tempNonce);
+      if (result.success) {
+        await queryClient.invalidateQueries({ queryKey: ["user"] });
+        router.push("/authority");
+      } else {
+        setError(result.error || "OTP verification failed");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("An unexpected error occurred during encryption or OTP verification.");
     } finally {
       setIsLoading(false);
     }
@@ -339,6 +384,68 @@ export default function LoginPage() {
             >
               <Image src="/dashboard/icons/login/back-arrow.svg" alt="" width={20} height={20} />
               Change contact number
+            </button>
+          </div>
+        );
+
+      case "authority-otp":
+        return (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <h2 className="text-lg font-semibold text-[#343434]">Enter OTP Code</h2>
+              <p className="text-xs text-[#343434]">
+                Enter 6 digit code sent to +91-{maskedMobile}
+              </p>
+            </div>
+
+            <div className="flex justify-between gap-2">
+              {otp.map((digit, i) => (
+                <div key={i} className="relative h-[54px] w-full">
+                  <input
+                    id={`otp-${i}`}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(i, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                    className={`absolute inset-0 z-10 h-full w-full rounded-lg border bg-transparent text-center text-[24px] font-bold text-[#343434] focus:border-[#0C83FF] focus:ring-1 focus:ring-[#0C83FF] outline-none caret-transparent ${error ? 'border-red-500' : 'border-[#B1B1B1]'}`}
+                  />
+                  {digit === "" && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <svg width="10" height="10" viewBox="0 0 13 13" fill="none">
+                        <circle cx="6.5" cy="6.5" r="6.5" fill="#DDDDDD" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {error && <p className="text-[10px] text-red-500 mt-[-16px]">{error}</p>}
+
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-[#343434]">Didn’t received OTP?</span>
+              <button onClick={handleLoginWithPassword} className="font-bold text-[#0C83FF] disabled:opacity-50 cursor-pointer" disabled={isLoading}>
+                {isLoading ? "Sending..." : "Resend Now"}
+              </button>
+            </div>
+
+            <button
+              onClick={handleLoginWithAuthorityOtp}
+              disabled={isLoading}
+              className="cursor-pointer flex h-[54px] w-full items-center justify-center rounded-lg bg-[#0C83FF] text-sm font-normal text-white hover:bg-blue-600 transition-colors disabled:opacity-70"
+            >
+              {isLoading ? "Verifying..." : "Login Now"}
+            </button>
+
+            <button
+              onClick={() => { setView("authority"); setError(null); }}
+              className="cursor-pointer flex h-[54px] w-full items-center justify-center gap-2 rounded-lg border border-[#C9C9C9] text-sm font-normal text-[#343434] hover:bg-gray-50 transition-colors"
+            >
+              <Image src="/dashboard/icons/login/back-arrow.svg" alt="" width={20} height={20} />
+              Back to credentials
             </button>
           </div>
         );

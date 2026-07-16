@@ -92,7 +92,18 @@ export async function loginWithPasswordAction(username: string, password: string
       return { success: false, error: errorData?.detail || "Login failed" };
     }
 
-    const tokens: TokenResponse = await response.json();
+    const result = await response.json();
+    if (result.otp_required) {
+      return {
+        success: true,
+        otpRequired: true,
+        maskedMobile: result.masked_mobile,
+        username: result.username,
+        nonce: result.nonce,
+      };
+    }
+
+    const tokens = result as TokenResponse;
     await setAuthCookies(tokens);
 
     return { 
@@ -105,6 +116,39 @@ export async function loginWithPasswordAction(username: string, password: string
     };
   } catch (error) {
     console.error("Login Action Error:", error);
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+/**
+ * Server Action for Verifying Authority OTP.
+ */
+export async function verifyLoginOtpAction(username: string, otp: string, nonce?: string) {
+  try {
+    const response = await fetch(`${API_URL}/auth/verify-login-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, otp, nonce }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return { success: false, error: errorData?.detail || "OTP verification failed" };
+    }
+
+    const tokens: TokenResponse = await response.json();
+    await setAuthCookies(tokens);
+
+    return { 
+      success: true, 
+      user: {
+        name: tokens.name,
+        role: tokens.role,
+        id: tokens.user_id
+      }
+    };
+  } catch (error) {
+    console.error("Verify Login OTP Action Error:", error);
     return { success: false, error: "An unexpected error occurred" };
   }
 }
