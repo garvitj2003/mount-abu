@@ -13,6 +13,13 @@ export const ROLE_PERMISSIONS: Partial<Record<UserRole, string[]>> = {
     "/authority/master-data",
     "/authority/audit-logs",
   ],
+  COLLECTOR: [
+    "/authority/applications",
+    "/authority/complaints",
+    "/authority/tokens",
+    "/authority/vehicle-entries",
+    "/authority/audit-logs",
+  ],
   NODAL_OFFICER: [
     "/authority/applications",
     "/authority/token",

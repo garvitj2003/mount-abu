@@ -30,6 +30,7 @@ const ROLE_OPTIONS: { label: string; value: UserRole }[] = [
   { label: "Assistant Engineer", value: "AEN" },
   { label: "Revenue Inspector", value: "RIN" },
   { label: "Sanitation Inspector", value: "SIN" },
+  { label: "Collector", value: "COLLECTOR" },
 ];
 
 export default function NewUserDrawer({ isOpen, onClose, user }: NewUserDrawerProps) {

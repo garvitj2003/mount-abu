@@ -27,6 +27,7 @@ const ROLE_LABELS: Record<string, string> = {
   AEN: "Assistant Engineer",
   RIN: "Revenue Inspector",
   SIN: "Sanitation Inspector",
+  COLLECTOR: "Collector",
   CITIZEN: "Citizen"
 };
 

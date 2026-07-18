@@ -105,7 +105,7 @@ export default function ApplicationActionPanel({
   [app.inspections]);
 
   const workflowActions = useMemo(() => {
-    if (!userRole) return [];
+    if (!userRole || userRole === "COLLECTOR") return [];
 
     const isNew = app.type === "NEW";
     const isRenovation = app.type === "RENOVATION";

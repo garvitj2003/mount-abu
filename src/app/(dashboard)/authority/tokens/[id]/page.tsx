@@ -8,6 +8,7 @@ import VehicleDetailDrawer from "@/components/dashboard/authority/vehicle-entrie
 import TokenActionModal from "@/components/dashboard/authority/tokens/TokenActionModal";
 import { useTokenDetail } from "@/hooks/useTokens";
 import { useUpdatePhaseStatus } from "@/hooks/useApplications";
+import { useUser } from "@/hooks/useUser";
 import { type components } from "@/types/api";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -46,13 +47,15 @@ const Header = ({
   onBack,
   onHold,
   onResume,
-  onTerminate
+  onTerminate,
+  userRole,
 }: {
   token: TokenDetailResponse;
   onBack: () => void;
   onHold: () => void;
   onResume: () => void;
   onTerminate: () => void;
+  userRole?: string;
 }) => {
   const dateRange = token.valid_from && token.valid_till
     ? `${new Date(token.valid_from).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} - ${new Date(token.valid_till).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`
@@ -77,7 +80,7 @@ const Header = ({
       </div>
 
       <div className="flex items-center gap-2">
-        {!isTerminated && (
+        {userRole !== "COLLECTOR" && !isTerminated && (
           <>
             {isWithheld ? (
               <button
@@ -198,6 +201,7 @@ export default function TokenDetailsPage() {
     end_date?: string;
   }>({});
 
+  const { data: user } = useUser();
   const { data: token, isLoading, error } = useTokenDetail(transportCode);
   const { mutate: updateStatus } = useUpdatePhaseStatus();
 
@@ -292,6 +296,7 @@ export default function TokenDetailsPage() {
         onHold={() => setModalConfig({ isOpen: true, type: "HOLD" })}
         onResume={() => setModalConfig({ isOpen: true, type: "RESUME" })}
         onTerminate={() => setModalConfig({ isOpen: true, type: "TERMINATE" })}
+        userRole={user?.role}
       />
 
       <div className="flex flex-1 gap-5 p-5">

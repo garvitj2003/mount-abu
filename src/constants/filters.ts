@@ -59,6 +59,23 @@ export const ROLE_FILTERS: Record<string, RoleFilterConfig> = {
       { label: "Overdue Comments", value: "RENOVATION_OVERDUE_COMMENTS" },
     ],
   },
+  COLLECTOR: {
+    newConstruction: [
+      { label: "Requires Nodal Action", value: "NEW_APPLICATION_REQUIRES_NODAL_OFFICER_ACTION" },
+      { label: "Requires JEN Inspection", value: "NEW_APPLICATION_REQUIRES_JEN_INSPECTION" },
+      { label: "Requires JEN Field Inspection", value: "NEW_APPLICATION_REQUIRES_JEN_FIELD_INSPECTION" },
+      { label: "Requires JEN Material Entry", value: "NEW_APPLICATION_REQUIRES_JEN_MATERIAL_ENTRY" },
+      { label: "Requires Token Generation", value: "NEW_APPLICATION_REQUIRES_NODAL_OFFICER_TOKEN_GENERATION" },
+    ],
+    renovation: [
+      { label: "Requires Commissioner Forward", value: "RENOVATION_REQUIRES_COMMISSIONER_FORWARD" },
+      { label: "Requires Dept Comment", value: "RENOVATION_REQUIRES_DEPT_COMMENT" },
+      { label: "Requires Commissioner Action", value: "RENOVATION_REQUIRES_COMMISSIONER_ACTION" },
+      { label: "Requires Nodal Action", value: "RENOVATION_REQUIRES_NODAL_OFFICER_ACTION" },
+      { label: "Requires Token Generation", value: "RENOVATION_REQUIRES_NODAL_OFFICER_TOKEN_GENERATION" },
+      { label: "Overdue Comments", value: "RENOVATION_OVERDUE_COMMENTS" },
+    ],
+  },
   COMMISSIONER: {
     newConstruction: [], // Commissioner mainly deals with renovation/approvals via Nodal Officer usually, but can view ALL
     renovation: [

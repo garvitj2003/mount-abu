@@ -158,7 +158,7 @@ export default function AuthorityApplicationsPage() {
 
   const canViewAll = useMemo(() => {
     if (!user?.role) return false;
-    return ["SUPERADMIN", "COMMISSIONER", "NODAL_OFFICER"].includes(user.role);
+    return ["SUPERADMIN", "COMMISSIONER", "NODAL_OFFICER", "COLLECTOR"].includes(user.role);
   }, [user?.role]);
 
   const canViewAllDept = useMemo(() => {
@@ -168,7 +168,7 @@ export default function AuthorityApplicationsPage() {
 
   const isNodalOrAdmin = useMemo(() => {
     if (!user?.role) return false;
-    return ["SUPERADMIN", "NODAL_OFFICER"].includes(user.role);
+    return ["SUPERADMIN", "NODAL_OFFICER", "COLLECTOR"].includes(user.role);
   }, [user?.role]);
 
   useEffect(() => {
@@ -473,8 +473,8 @@ export default function AuthorityApplicationsPage() {
                 />
               </div>
 
-              {/* Pending with me button for authority roles except superadmin */}
-              {user?.role && user.role !== "SUPERADMIN" && (
+              {/* Pending with me button for authority roles except superadmin and collector */}
+              {user?.role && user.role !== "SUPERADMIN" && user.role !== "COLLECTOR" && (
                 <button
                   onClick={() => {
                     setIsPendingWithMe(!isPendingWithMe);

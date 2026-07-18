@@ -169,7 +169,13 @@ export default function CommentsDrawer({
             </div>
 
             <div className="border-t border-[#D6D9DE] p-4 bg-white flex flex-col gap-3">
-              {isAuthority && (
+              {userRole === "COLLECTOR" ? (
+                <div className="rounded-xl border border-[#D6D9DE] bg-[#F9FAFB] p-3 text-center text-xs font-medium text-gray-500">
+                  Read-only mode (Collector role cannot post comments)
+                </div>
+              ) : (
+                <>
+                  {isAuthority && (
                 <div className="flex flex-col gap-1.5 px-1 pb-1">
                   {/* Visibility Explainer Label */}
                   <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
@@ -231,6 +237,8 @@ export default function CommentsDrawer({
                   </button>
                 </div>
               </div>
+                </>
+              )}
             </div>
           </motion.div>
         </div>

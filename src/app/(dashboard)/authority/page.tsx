@@ -482,7 +482,9 @@ export default function DashboardAuthorityPage() {
 
       else if (
         role === "SUPERADMIN" ||
-        role === "ADMIN"
+        role === "ADMIN" ||
+        role === "NODAL_OFFICER" ||
+        role === "COLLECTOR"
       ) {
 
         // ================= Application Status =================
@@ -798,7 +800,7 @@ export default function DashboardAuthorityPage() {
 
           {/* Role-Specific Views */}
 
-          {(role === "SUPERADMIN" || role === "ADMIN" || role === "NODAL_OFFICER" || role === "COMMISSIONER" || role === "AEN" || role === "SIN" || role === "RIN") && (
+          {(role === "SUPERADMIN" || role === "ADMIN" || role === "NODAL_OFFICER" || role === "COLLECTOR" || role === "COMMISSIONER" || role === "AEN" || role === "SIN" || role === "RIN") && (
             <>
               <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
                 <div className="col-span-1 rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
@@ -817,7 +819,7 @@ export default function DashboardAuthorityPage() {
                 </div>
               </div>
 
-              {(role === "SUPERADMIN" || role === "ADMIN" || role === "NODAL_OFFICER") && (
+              {(role === "SUPERADMIN" || role === "ADMIN" || role === "NODAL_OFFICER" || role === "COLLECTOR") && (
                 <>
                   <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
                     <h3 className="text-xs font-medium text-[#343434] mb-2">Ward-wise Activity Distribution</h3>

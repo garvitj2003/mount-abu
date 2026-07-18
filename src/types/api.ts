@@ -3970,7 +3970,7 @@ export interface components {
          * UserRole
          * @enum {string}
          */
-        UserRole: "SUPERADMIN" | "ADMIN" | "NODAL_OFFICER" | "COMMISSIONER" | "CITIZEN" | "NAKA_INCHARGE" | "DEPT_LAND" | "DEPT_LEGAL" | "DEPT_ATP" | "JEN" | "AEN" | "RIN" | "SIN";
+        UserRole: "SUPERADMIN" | "ADMIN" | "NODAL_OFFICER" | "COMMISSIONER" | "CITIZEN" | "NAKA_INCHARGE" | "DEPT_LAND" | "DEPT_LEGAL" | "DEPT_ATP" | "JEN" | "AEN" | "RIN" | "SIN" | "COLLECTOR";
         /** UserSummary */
         UserSummary: {
             /** Id */
