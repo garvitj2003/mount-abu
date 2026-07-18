@@ -110,38 +110,40 @@ const Header = ({
   );
 };
 
-const Sidebar = ({ token }: { token: TokenDetailResponse }) => (
-  <div className="flex w-[238px] flex-col gap-5 rounded-lg border border-[#D6D9DE] bg-white p-4 h-fit sticky top-[80px]">
-    {/* QR Code */}
-    <div className="relative aspect-square w-full rounded border border-[#D6D9DE] p-4 bg-white flex items-center justify-center">
-      <QRCodeSVG
-        value={token.transport_code}
-        size={180}
-        level="H"
-        includeMargin={false}
-      />
-    </div>
-
-    <div className="flex flex-col gap-4">
-      <DetailItem label="Application Number" value={token.application_number} />
-      <DetailItem label="Applicant Name" value={token.applicant_name} />
-      <DetailItem label="Property Address" value={token.property_address} />
-
-      <div className="flex gap-4">
-        <DetailItem label="Property Usage" value={token.property_usage} />
-        <DetailItem label="Type of Work" value={token.application_type.toLowerCase() === "new" ? 'New Construction' : token.application_type.toLowerCase() === "renovation" ? 'Repair & Renovation' : ''} />
+const Sidebar = ({ token }: { token: TokenDetailResponse }) => {
+  return (
+    <div className="flex w-[238px] flex-col gap-5 rounded-lg border border-[#D6D9DE] bg-white p-4 h-fit sticky top-[80px]">
+      {/* QR Code */}
+      <div className="relative aspect-square w-full rounded border border-[#D6D9DE] p-4 bg-white flex items-center justify-center">
+        <QRCodeSVG
+          value={token.transport_code}
+          size={180}
+          level="H"
+          includeMargin={false}
+        />
       </div>
 
-      <div className="h-px w-full bg-[#D6D9DE] my-1" />
+      <div className="flex flex-col gap-4">
+        <DetailItem label="Application Number" value={token.application_number} />
+        <DetailItem label="Applicant Name" value={token.applicant_name} />
+        <DetailItem label="Property Address" value={token.property_address} />
 
-      <p className="text-[12px] font-medium text-[#498AA9]">Authority & System Information</p>
+        <div className="flex gap-4">
+          <DetailItem label="Property Usage" value={token.property_usage} />
+          <DetailItem label="Type of Work" value={token.application_type.toLowerCase() === "new" ? 'New Construction' : token.application_type.toLowerCase() === "renovation" ? 'Repair & Renovation' : ''} />
+        </div>
 
-      <DetailItem label="Issued By" value={token.authority.issued_by} />
-      <DetailItem label="Issued On" value={token.authority.issued_on ? new Date(token.authority.issued_on).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "—"} />
-      <DetailItem label="Token Generated From" value={token.authority.token_generated_from} />
+        <div className="h-px w-full bg-[#D6D9DE] my-1" />
+
+        <p className="text-[12px] font-medium text-[#498AA9]">Authority & System Information</p>
+
+        <DetailItem label="Issued By"  value={token.authority.issued_by?.split("(")[0].trim()} />
+        <DetailItem label="Issued On" value={token.authority.issued_on ? new Date(token.authority.issued_on).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "—"} />
+        <DetailItem label="Token Generated From" value={token.authority.token_generated_from} />
+      </div>
     </div>
-  </div>
-);
+  )
+};
 
 const TableRow = ({
   entry, onClick

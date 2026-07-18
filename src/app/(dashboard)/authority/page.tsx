@@ -13,6 +13,7 @@ import Image from "next/image";
 import { useMemo, useState, useRef } from "react";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
+import * as XLSX from "xlsx";
 import {
   Bar,
   BarChart,
@@ -124,14 +125,14 @@ export default function DashboardAuthorityPage() {
 
   const kpiData = useMemo(() => {
     if (!dashboard?.kpis) return [];
-    
+
     let filteredKpis = dashboard.kpis;
-    
+
     // For specific roles, only show complaints-related KPIs
     if (role === "AEN" || role === "SIN" || role === "RIN") {
-      filteredKpis = dashboard.kpis.filter(kpi => 
-        kpi.label === "Complaints Received" || 
-        kpi.label === "Complaints Resolved" || 
+      filteredKpis = dashboard.kpis.filter(kpi =>
+        kpi.label === "Complaints Received" ||
+        kpi.label === "Complaints Resolved" ||
         kpi.label === "Complaints Pending" ||
         kpi.label === "Complaints Closed" ||
         kpi.label === "Complaints"
@@ -191,41 +192,128 @@ export default function DashboardAuthorityPage() {
     }));
   }, [dashboard?.complaints_by_category]);
 
+  const formatDateTime = (date: string) => {
+    return new Date(date).toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+
+
   const handleExportPDF = async () => {
     if (!dashboardRef.current) return;
+
     try {
       setIsExportingPDF(true);
-      
-      // Calculate the full scrollable area
-      const width = dashboardRef.current.scrollWidth;
-      const height = dashboardRef.current.scrollHeight;
 
-      const dataUrl = await toPng(dashboardRef.current, {
-        quality: 0.95,
-        backgroundColor: "#F5F6F7",
-        pixelRatio: 2,
-        width,
-        height,
-        style: {
-          overflow: 'visible',
-          height: `${height}px`,
-          width: `${width}px`,
-        }
+      const element = dashboardRef.current;
+
+      // Save original styles
+      const originalOverflow = element.style.overflow;
+      const originalHeight = element.style.height;
+
+      element.style.overflow = "visible";
+      element.style.height = "auto";
+
+      // Expand all scrollable containers
+      const scrollables = element.querySelectorAll<HTMLElement>(
+        '[class*="overflow"]'
+      );
+
+      const previousStyles = Array.from(scrollables).map((el) => ({
+        el,
+        overflow: el.style.overflow,
+        overflowX: el.style.overflowX,
+        overflowY: el.style.overflowY,
+        height: el.style.height,
+        maxHeight: el.style.maxHeight,
+      }));
+
+      scrollables.forEach((el) => {
+        el.style.overflow = "visible";
+        el.style.overflowX = "visible";
+        el.style.overflowY = "visible";
+        el.style.height = "auto";
+        el.style.maxHeight = "none";
       });
 
+      await new Promise((r) => setTimeout(r, 300));
+
+      const image = await toPng(element, {
+        cacheBust: true,
+        pixelRatio: 2,
+        backgroundColor: "#F5F6F7",
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+        style: {
+          width: `${element.scrollWidth}px`,
+          height: `${element.scrollHeight}px`,
+        },
+      });
+
+      // Restore styles
+      previousStyles.forEach((item) => {
+        item.el.style.overflow = item.overflow;
+        item.el.style.overflowX = item.overflowX;
+        item.el.style.overflowY = item.overflowY;
+        item.el.style.height = item.height;
+        item.el.style.maxHeight = item.maxHeight;
+      });
+
+      element.style.overflow = originalOverflow;
+      element.style.height = originalHeight;
+
       const pdf = new jsPDF("p", "mm", "a4");
-      const imgProps = pdf.getImageProperties(dataUrl);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      
-      // If the dashboard is very long, we might need multiple pages, 
-      // but usually for a report a single long page or scaled down is preferred.
-      // Scaling down to fit width is standard for dashboards.
-      pdf.addImage(dataUrl, "PNG", 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
-      pdf.save(`dashboard-report-${new Date().getTime()}.pdf`);
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      // ===== Report Heading =====
+      pdf.setFontSize(18);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Dashboard Report", 14, 15);
+
+      pdf.setFontSize(11);
+      pdf.setFont("helvetica", "normal");
+
+      pdf.text(`Name : ${user?.name ?? "-"}`, 14, 25);
+      pdf.text(`Role : ${user?.role?.replace(/_/g, " ") ?? "Authority"}`, 14, 31);
+      pdf.text(`Mobile : ${user?.mobile ?? "-"}`, 14, 37);
+      pdf.text(
+        `Generated : ${new Date().toLocaleString("en-IN")}`,
+        14,
+        43
+      );
+
+      pdf.setDrawColor(220);
+      pdf.line(14, 48, pageWidth - 14, 48);
+
+      const imgProps = pdf.getImageProperties(image);
+
+      const imgWidth = pageWidth;
+      const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+      const startY = 52;
+
+      pdf.addImage(image, "PNG", 0, startY, imgWidth, imgHeight);
+
+      let heightLeft = imgHeight - (pageHeight - startY);
+
+      while (heightLeft > 0) {
+        pdf.addPage();
+        const position = heightLeft - imgHeight;
+        pdf.addImage(image, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`dashboard-report-${Date.now()}.pdf`);
     } catch (err) {
-      console.error("PDF Export failed", err);
-      alert("Failed to generate PDF. Please try again.");
+      console.error(err);
     } finally {
       setIsExportingPDF(false);
     }
@@ -235,41 +323,362 @@ export default function DashboardAuthorityPage() {
     if (!dashboard) return;
     try {
       setIsExportingCSV(true);
-      let csvContent = "Metric,Value\n";
-      
-      // 1. KPIs Section
-      kpiData.forEach(kpi => {
-        csvContent += `"${kpi.title}",${kpi.count}\n`;
+      const wb = XLSX.utils.book_new();
+      const wsData: any[][] = [];
+
+      // ================= User Information =================
+      wsData.push(["Dashboard Report"]);
+      wsData.push([]);
+
+      wsData.push(["Name", user?.name ?? "-"]);
+      wsData.push(["Role", user?.role ?? "-"]);
+      wsData.push(["Mobile", user?.mobile ?? "-"]);
+      wsData.push([
+        "Generated On",
+        new Date().toLocaleString("en-IN"),
+      ]);
+
+      wsData.push([]);
+
+      // ================= Dashboard Summary =================
+
+      wsData.push(["Dashboard Summary"]);
+      wsData.push(["Metric", "Value"]);
+
+      kpiData.forEach((kpi) => {
+        wsData.push([kpi.title, kpi.count]);
       });
-      csvContent += "\n";
 
-      // 2. Ward Activity
-      if (dashboard.ward_activity && dashboard.ward_activity.length > 0) {
-        csvContent += "Ward,Applications,Approved,Complaints,Tokens Issued\n";
-        dashboard.ward_activity.forEach(w => {
-          csvContent += `"${w.ward_name}",${w.applications},${w.approved},${w.complaints},${w.tokens_issued}\n`;
-        });
-        csvContent += "\n";
+      wsData.push([]);
+
+
+
+      // ================= ROLE WISE =================
+
+      if (role === "NODAL_OFFICER") {
+
+        // ================= Token Status =================
+        if (dashboard.token_status?.length) {
+
+          wsData.push(["Token Status"]);
+          wsData.push(["Status", "Count"]);
+
+          dashboard.token_status.forEach((item) => {
+            wsData.push([
+              formatStatus(item.status),
+              item.count,
+            ]);
+          });
+
+          wsData.push([]);
+        }
+
+        // ================= Material Approved vs Used =================
+        if (dashboard.material_approved_vs_used?.length) {
+
+          wsData.push(["Material Approved vs Used"]);
+          wsData.push([
+            "Material",
+            "Unit",
+            "Approved Quantity",
+            "Used Quantity",
+          ]);
+
+          dashboard.material_approved_vs_used.forEach((item) => {
+            wsData.push([
+              item.material_name,
+              item.unit,
+              item.approved_quantity,
+              item.used_quantity,
+            ]);
+          });
+
+          wsData.push([]);
+        }
+
+        // ================= Token Utilization =================
+        if (dashboard.token_utilization_list?.length) {
+
+          wsData.push(["Token Utilization"]);
+          wsData.push([
+            "Applicant",
+            "Phase",
+            "Material",
+            "Permitted Quantity",
+            "Used Quantity",
+          ]);
+
+          dashboard.token_utilization_list.forEach((row) => {
+            wsData.push([
+              row.applicant_name,
+              `Phase ${row.phase}`,
+              row.material_name,
+              row.permitted_quantity,
+              row.used_quantity,
+            ]);
+          });
+
+          wsData.push([]);
+        }
+
+      } else if (role === "JEN") {
+
+        // ================= Verification Status =================
+        if (dashboard.verification_status?.length) {
+
+          wsData.push(["Verification Status"]);
+          wsData.push(["Status", "Count"]);
+
+          dashboard.verification_status.forEach((item) => {
+            wsData.push([
+              item.status,
+              item.count,
+            ]);
+          });
+
+          wsData.push([]);
+        }
+
+        // ================= Avg Verification Time =================
+        if (dashboard.avg_verification_time_trend?.length) {
+
+          wsData.push(["Average Verification Time Trend"]);
+          wsData.push(["Date", "Average Hours"]);
+
+          dashboard.avg_verification_time_trend.forEach((item) => {
+            wsData.push([
+              item.period,
+              item.avg_hours,
+            ]);
+          });
+
+          wsData.push([]);
+        }
+
+        // ================= Assigned Applications =================
+        if (dashboard.latest_applications?.length) {
+
+          wsData.push(["Assigned Applications"]);
+          wsData.push([
+            "Application ID",
+            "Applicant",
+            "Application Type",
+            "Status",
+          ]);
+
+          dashboard.latest_applications.forEach((app) => {
+            wsData.push([
+              `#${app.application_id}`,
+              app.applicant_name,
+              app.application_type,
+              app.status,
+            ]);
+          });
+
+          wsData.push([]);
+        }
+
       }
 
-      // 3. Recent Complaints
-      if (dashboard.complaint_list && dashboard.complaint_list.length > 0) {
-        csvContent += "Complaint ID,Applicant,Category,Status\n";
-        dashboard.complaint_list.forEach(c => {
-          csvContent += `#${c.complaint_id},"${c.applicant_name}","${c.category_name}",${c.status}\n`;
-        });
+      else if (
+        role === "SUPERADMIN" ||
+        role === "ADMIN"
+      ) {
+
+        // ================= Application Status =================
+        if (dashboard.application_status_breakdown?.length) {
+
+          wsData.push(["Application Status"]);
+          wsData.push(["Status", "Count"]);
+
+          dashboard.application_status_breakdown.forEach((item) => {
+            wsData.push([
+              formatStatus(item.status),
+              item.count,
+            ]);
+          });
+
+          wsData.push([]);
+        }
+
+        // ================= Complaints By Category =================
+        if (dashboard.complaints_by_category?.length) {
+
+          wsData.push(["Complaints By Category"]);
+          wsData.push(["Category", "Count"]);
+
+          dashboard.complaints_by_category.forEach((item) => {
+            wsData.push([
+              item.category_name,
+              item.count,
+            ]);
+          });
+
+          wsData.push([]);
+        }
+
+        // ================= Ward Activity =================
+        if (dashboard.ward_activity?.length) {
+
+          wsData.push(["Ward Activity"]);
+          wsData.push([
+            "Ward",
+            "Applications",
+            "Approved",
+            "Complaints",
+            "Tokens Issued",
+          ]);
+
+          dashboard.ward_activity.forEach((item) => {
+            wsData.push([
+              item.ward_name,
+              item.applications,
+              item.approved,
+              item.complaints,
+              item.tokens_issued,
+            ]);
+          });
+
+          wsData.push([]);
+        }
+
       }
 
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", `dashboard-data-${new Date().getTime()}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      else if (
+        role === "COMMISSIONER" ||
+        role === "AEN" ||
+        role === "SIN" ||
+        role === "RIN"
+      ) {
+
+        // ================= Complaint Resolution Status =================
+        if (dashboard.complaint_resolution_status?.length) {
+
+          wsData.push(["Complaint Resolution Status"]);
+          wsData.push(["Status", "Count"]);
+
+          dashboard.complaint_resolution_status.forEach((item) => {
+            wsData.push([
+              formatStatus(item.status),
+              item.count,
+            ]);
+          });
+
+          wsData.push([]);
+        }
+
+        // ================= Complaints By Category =================
+        if (dashboard.complaints_by_category?.length) {
+
+          wsData.push(["Complaints By Category"]);
+          wsData.push(["Category", "Count"]);
+
+          dashboard.complaints_by_category.forEach((item) => {
+            wsData.push([
+              item.category_name,
+              item.count,
+            ]);
+          });
+
+          wsData.push([]);
+        }
+
+        // ================= Complaint List =================
+        if (dashboard.complaint_list?.length) {
+
+          wsData.push(["Complaint List"]);
+          wsData.push([
+            "Complaint ID",
+            "Applicant",
+            "Category",
+            "Status",
+          ]);
+
+          dashboard.complaint_list.forEach((item) => {
+            wsData.push([
+              `#${item.complaint_id}`,
+              item.applicant_name,
+              item.category_name,
+              item.status,
+            ]);
+          });
+
+          wsData.push([]);
+        }
+
+      }
+
+      else if (role === "NAKA_INCHARGE") {
+
+        // ================= Entries By Naka =================
+        if (dashboard.entries_by_naka?.length) {
+
+          wsData.push(["Entries By Naka"]);
+          wsData.push([
+            "User ID",
+            "User Name",
+            "Entry Count",
+          ]);
+
+          dashboard.entries_by_naka.forEach((item) => {
+            wsData.push([
+              item.user_id,
+              item.user_name,
+              item.entry_count,
+            ]);
+          });
+
+          wsData.push([]);
+        }
+
+        // ================= Vehicle Entry List =================
+        if (dashboard.vehicle_entry_list?.length) {
+
+          wsData.push(["Vehicle Entry List"]);
+          wsData.push([
+            "Application ID",
+            "Vehicle Number",
+            "Material",
+            "Quantity Brought",
+            "Entry Date",
+          ]);
+
+          dashboard.vehicle_entry_list.forEach((item: any) => {
+            wsData.push([
+              "application_id" in item ? item.application_id : "",
+              item.vehicle_number,
+              "material_name" in item ? item.material_name : item.material_type,
+              "quantity_brought" in item
+                ? item.quantity_brought
+                : item.quantity_entered,
+              formatDateTime(item.entry_at),
+            ]);
+          });
+
+          wsData.push([]);
+        }
+
+      }
+
+      else if (
+        role === "DEPT_ATP" ||
+        role === "DEPT_LAND" ||
+        role === "DEPT_LEGAL"
+      ) {
+        // KPI export already handled above
+      }
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      XLSX.utils.book_append_sheet(wb, ws, "Dashboard Report");
+
+      XLSX.writeFile(
+        wb,
+        `dashboard-report-${new Date().getTime()}.xlsx`
+      );
+
     } catch (err) {
-      console.error("CSV Export failed", err);
+      console.error("Excel Export failed", err);
     } finally {
       setIsExportingCSV(false);
     }
@@ -299,7 +708,7 @@ export default function DashboardAuthorityPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button 
+          <button
             onClick={handleExportPDF}
             disabled={isExportingPDF}
             className="flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-2 text-sm font-medium text-[#343434] hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50"
@@ -312,7 +721,7 @@ export default function DashboardAuthorityPage() {
             {isExportingPDF ? "Exporting..." : "Export PDF"}
           </button>
           <div className="h-6 w-px bg-[#D6D9DE] mx-1" />
-          <button 
+          <button
             onClick={handleExportCSV}
             disabled={isExportingCSV}
             className="flex items-center gap-2 rounded-lg bg-[#0C83FF] px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 transition-colors cursor-pointer disabled:opacity-50"

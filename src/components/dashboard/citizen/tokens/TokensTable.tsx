@@ -7,6 +7,10 @@ import { useTokens } from "@/hooks/useTokens";
 import { useUser } from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useEffect } from "react";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // --- Components ---
 
@@ -78,6 +82,209 @@ export default function TokensTable() {
   });
 
   const totalPages = tokens.length === limit ? page + 1 : page;
+
+  const getExportInfo = () => {
+  return [
+    [
+      "Downloaded By",
+      user?.name?.trim()
+        ? `${user.name} (${user.mobile})`
+        : user?.mobile || "Citizen"
+    ],
+    [
+      "Download Date",
+      new Date().toLocaleString()
+    ],
+    [
+      "Search",
+      search || "No Search"
+    ],
+    [
+      "Page",
+      page
+    ],
+    [
+      "Limit",
+      limit
+    ],
+    [
+      "Total Records",
+      tokens.length
+    ]
+  ];
+};
+
+
+const exportToExcel = () => {
+
+  const info = getExportInfo();
+
+  const data = tokens.map((item) => ({
+    "Token Number": item.token_number,
+    "Application No.": item.application_number,
+    "Remaining Quantity": `${Math.round(item.remaining_quantity_pct || 0)}%`,
+    "Valid Till": item.valid_till
+      ? new Date(item.valid_till).toLocaleDateString("en-GB")
+      : "-",
+    "Token Status": item.status
+  }));
+
+
+  const ws = XLSX.utils.aoa_to_sheet([
+    ["Citizen Tokens Export"],
+    [],
+    ...info,
+    [],
+    [
+      "Token Number",
+      "Application No.",
+      "Remaining Quantity",
+      "Valid Till",
+      "Token Status"
+    ],
+    ...data.map(item => Object.values(item))
+  ]);
+
+
+  const wb = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(
+    wb,
+    ws,
+    "Tokens"
+  );
+
+
+  XLSX.writeFile(
+    wb,
+    "Citizen_Tokens.xlsx"
+  );
+};
+
+
+
+const exportToPDF = () => {
+
+  const doc = new jsPDF();
+
+  // Title
+  doc.setFontSize(16);
+  doc.text(
+    "Citizen Tokens",
+    14,
+    15
+  );
+
+
+  // Info section small text
+  doc.setFontSize(9);
+
+  let y = 25;
+
+  getExportInfo().forEach(([key, value]) => {
+
+    doc.text(
+      `${key}: ${value}`,
+      14,
+      y
+    );
+
+    y += 5;
+
+  });
+
+
+  // Table
+  autoTable(doc, {
+
+    startY: y + 5,
+
+    head: [[
+      "Token Number",
+      "Application No.",
+      "Remaining Qty",
+      "Valid Till",
+      "Status"
+    ]],
+
+    body: tokens.map(item => [
+
+      item.token_number,
+
+      item.application_number,
+
+      `${Math.round(item.remaining_quantity_pct || 0)}%`,
+
+      item.valid_till
+        ? new Date(item.valid_till).toLocaleDateString("en-GB")
+        : "-",
+
+      item.status
+
+    ]),
+
+
+    styles:{
+      fontSize:8,
+      cellPadding:2
+    }
+
+  });
+
+
+  doc.save(
+    "Citizen_Tokens.pdf"
+  );
+
+};
+
+useEffect(() => {
+
+  const handleExcel = () => {
+    exportToExcel();
+  };
+
+
+  const handlePDF = () => {
+    exportToPDF();
+  };
+
+
+  window.addEventListener(
+    "export-tokens-excel",
+    handleExcel
+  );
+
+
+  window.addEventListener(
+    "export-tokens-pdf",
+    handlePDF
+  );
+
+
+  return () => {
+
+    window.removeEventListener(
+      "export-tokens-excel",
+      handleExcel
+    );
+
+
+    window.removeEventListener(
+      "export-tokens-pdf",
+      handlePDF
+    );
+
+  };
+
+
+}, [
+  tokens,
+  user,
+  search,
+  page,
+  limit
+]);
 
   return (
     <div className="flex w-full flex-col gap-4 rounded-lg border border-[#D6D9DE] bg-white p-4 font-onest">

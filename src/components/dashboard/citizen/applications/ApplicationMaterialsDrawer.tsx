@@ -72,7 +72,7 @@ export default function ApplicationMaterialsDrawer({
       )
     );
   }, [(app as any).inspections]);
-  
+
 
   const handleToggleMaterial = (id: number) => {
     setSelectedMaterials(prev => ({ ...prev, [id]: !prev[id] }));
@@ -121,14 +121,14 @@ export default function ApplicationMaterialsDrawer({
 
               {/* Utilized Material Table */}
               <div className="space-y-3">
-                <p className="px-3 text-[12px] font-medium text-[#498AA9] uppercase">Utilized Material</p>
+                <p className="px-3 text-[12px] font-medium text-[#498AA9] uppercase">Requested Material</p>
                 <div className="overflow-hidden rounded-lg border border-[#D6D9DE]">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-[#D6D9DE] bg-white">
                         <th className="w-10 p-2 border-r border-[#D6D9DE]"></th>
                         <th className="p-2 text-[11px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Material Name</th>
-                        <th className="p-2 text-[11px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Utilized Qty</th>
+                        <th className="p-2 text-[11px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Requested Qty</th>
                         <th className="p-2 text-[11px] font-semibold text-[#333333] opacity-70 uppercase">Extra Material Qty</th>
                       </tr>
                     </thead>
@@ -145,7 +145,7 @@ export default function ApplicationMaterialsDrawer({
                             {mat.material_name}
                           </td>
                           <td className="p-2 text-[13px] font-medium text-[#343434] border-r border-[#D6D9DE]">
-                            {mat.quantity} Units
+                            {mat.quantity} {mat.unit}
                           </td>
                           <td className="p-2">
                             <input
@@ -157,7 +157,8 @@ export default function ApplicationMaterialsDrawer({
                             />
                           </td>
                         </tr>
-                      ))}
+                      )
+                      )}
                     </tbody>
                   </table>
                 </div>

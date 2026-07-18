@@ -9,6 +9,11 @@ import VehicleDetailDrawer from "@/components/dashboard/authority/vehicle-entrie
 import { useVehicleEntries } from "@/hooks/useVehicleEntries";
 import { format } from "date-fns";
 import { usePagination } from "@/hooks/usePagination";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { useUser } from "@/hooks/useUser";
+
 
 const WarningTooltip = ({ text, index }: { text: string; index: number }) => {
   const isFirstFewRows = index < 3;
@@ -18,21 +23,19 @@ const WarningTooltip = ({ text, index }: { text: string; index: number }) => {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: isFirstFewRows ? -10 : 10, scale: 0.95 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className={`absolute left-1/2 z-[100] -translate-x-1/2 ${
-        isFirstFewRows ? "top-full mt-2" : "bottom-full mb-2"
-      }`}
+      className={`absolute left-1/2 z-[100] -translate-x-1/2 ${isFirstFewRows ? "top-full mt-2" : "bottom-full mb-2"
+        }`}
     >
       <div className="relative rounded-lg bg-[#343434] px-3 py-2 shadow-lg">
         <p className="whitespace-nowrap text-xs font-medium text-white">
           {text}
         </p>
         {/* Triangle Arrow */}
-        <div 
-          className={`absolute left-1/2 -translate-x-1/2 border-x-8 border-x-transparent ${
-            isFirstFewRows 
-              ? "bottom-full border-b-8 border-b-[#343434]" 
-              : "top-full border-t-8 border-t-[#343434]"
-          }`} 
+        <div
+          className={`absolute left-1/2 -translate-x-1/2 border-x-8 border-x-transparent ${isFirstFewRows
+            ? "bottom-full border-b-8 border-b-[#343434]"
+            : "top-full border-t-8 border-t-[#343434]"
+            }`}
         />
       </div>
     </motion.div>
@@ -47,9 +50,8 @@ const MaterialsTooltip = ({ materials, index }: { materials: { material_name: st
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: isFirstFewRows ? -10 : 10, scale: 0.95 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className={`absolute left-1/2 z-[100] -translate-x-1/2 ${
-        isFirstFewRows ? "top-full mt-2" : "bottom-full mb-2"
-      }`}
+      className={`absolute left-1/2 z-[100] -translate-x-1/2 ${isFirstFewRows ? "top-full mt-2" : "bottom-full mb-2"
+        }`}
     >
       <div className="relative rounded-lg bg-[#343434] px-4 py-3 shadow-xl w-max max-w-[320px]">
         <div className="flex flex-col gap-2">
@@ -64,19 +66,21 @@ const MaterialsTooltip = ({ materials, index }: { materials: { material_name: st
           ))}
         </div>
         {/* Triangle Arrow */}
-        <div 
-          className={`absolute left-1/2 -translate-x-1/2 border-x-8 border-x-transparent ${
-            isFirstFewRows 
-              ? "bottom-full border-b-8 border-b-[#343434]" 
-              : "top-full border-t-8 border-t-[#343434]"
-          }`} 
+        <div
+          className={`absolute left-1/2 -translate-x-1/2 border-x-8 border-x-transparent ${isFirstFewRows
+            ? "bottom-full border-b-8 border-b-[#343434]"
+            : "top-full border-t-8 border-t-[#343434]"
+            }`}
         />
       </div>
     </motion.div>
   );
 };
 
+
+
 export default function AuthorityVehicleEntriesPage() {
+  const { data: user } = useUser();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filters, setFilters] = useState<{
@@ -92,6 +96,9 @@ export default function AuthorityVehicleEntriesPage() {
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
   const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
   const { page, limit, setPage, setLimit } = usePagination();
+
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
 
   // Debounce search effect
   useEffect(() => {
@@ -150,6 +157,135 @@ export default function AuthorityVehicleEntriesPage() {
     return page + 1;
   }, [entries.length, page, limit]);
 
+  const handleExportExcel = () => {
+    setIsExportingExcel(true);
+
+    try {
+      const wb = XLSX.utils.book_new();
+      const wsData: any[][] = [];
+
+      // ================= User Information =================
+      wsData.push(["Vehicle Entry Records"]);
+      wsData.push([]);
+
+      wsData.push(["Name", user?.name ?? "-"]);
+      wsData.push(["Role", user?.role ?? "-"]);
+      wsData.push(["Mobile", user?.mobile ?? "-"]);
+      wsData.push([
+        "Generated On",
+        new Date().toLocaleString("en-IN"),
+      ]);
+
+      wsData.push([]);
+
+      // ================= Vehicle Entries =================
+      wsData.push(["Vehicle Entries"]);
+      wsData.push([
+        "Token Number",
+        "Vehicle Number",
+        "Naaka Incharge",
+        "Materials",
+        "Entry Date & Time",
+      ]);
+
+      entries.forEach((item) => {
+        wsData.push([
+          item.token_number || "-",
+          item.vehicle_number || "-",
+          item.naka_incharge_name || "-",
+          item.materials
+            .map(
+              (m) => `${m.material_name} (${m.quantity} ${m.unit})`
+            )
+            .join(", "),
+          format(new Date(item.entry_at), "dd MMM yyyy hh:mm a"),
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      XLSX.utils.book_append_sheet(wb, ws, "Vehicle Entries");
+
+      XLSX.writeFile(
+        wb,
+        `vehicle-entries-${new Date().toISOString().slice(0, 10)}.xlsx`
+      );
+    } finally {
+      setIsExportingExcel(false);
+    }
+  };
+
+
+  const handleExportPDF = () => {
+    setIsExportingPDF(true);
+
+    try {
+      const doc = new jsPDF("landscape");
+
+      doc.setFontSize(18);
+      doc.text("Vehicle Entry Records", 14, 15);
+
+      doc.setFontSize(10);
+      doc.text(`Name: ${user?.name ?? "-"}`, 14, 24);
+      doc.text(`Role: ${user?.role ?? "-"}`, 14, 30);
+      doc.text(`Mobile: ${user?.mobile ?? "-"}`, 14, 36);
+      doc.text(
+        `Generated On: ${new Date().toLocaleString("en-IN")}`,
+        14,
+        42
+      );
+
+      autoTable(doc, {
+        startY: 48,
+        head: [[
+          "Token Number",
+          "Vehicle Number",
+          "Naaka Incharge",
+          "Materials",
+          "Entry Date & Time",
+        ]],
+
+        body: entries.map((item) => [
+          item.token_number || "-",
+          item.vehicle_number || "-",
+          item.naka_incharge_name || "-",
+          item.materials
+            .map(
+              (m) => `${m.material_name} (${m.quantity} ${m.unit})`
+            )
+            .join(", "),
+          format(new Date(item.entry_at), "dd MMM yyyy hh:mm a"),
+        ]),
+
+        styles: {
+          fontSize: 8,
+          cellPadding: 3,
+          overflow: "linebreak",
+          valign: "middle",
+        },
+
+        headStyles: {
+          fillColor: [12, 131, 255],
+          textColor: 255,
+        },
+
+        alternateRowStyles: {
+          fillColor: [245, 245, 245],
+        },
+
+        columnStyles: {
+          3: { cellWidth: 90 },
+        },
+      });
+
+      doc.save(
+        `vehicle-entries-${new Date().toISOString().slice(0, 10)}.pdf`
+      );
+    } finally {
+      setIsExportingPDF(false);
+    }
+  };
+
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest">
       {/* Header */}
@@ -160,19 +296,51 @@ export default function AuthorityVehicleEntriesPage() {
             View and monitor vehicle-wise material entry details recorded at naka points against approved construction tokens.
           </p>
         </div>
+        <div className="flex items-center gap-3">
+
+          <button
+            onClick={handleExportPDF}
+            disabled={isExportingPDF}
+            className="flex cursor-pointer items-center gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-2 text-sm font-medium hover:bg-gray-100"
+          >
+            <Image
+              src="/dashboard/icons/applications/pdficon.svg"
+              alt=""
+              width={15}
+              height={15}
+            />
+            {isExportingPDF ? "Exporting..." : "Export PDF"}
+          </button>
+
+          <button
+            onClick={handleExportExcel}
+            disabled={isExportingExcel}
+            className="flex cursor-pointer items-center gap-2 rounded-lg bg-[#0C83FF] px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            <Image
+              src="/dashboard/icons/applications/csvicon.svg"
+              alt=""
+              width={15}
+              height={15}
+              className="invert brightness-0"
+            />
+            {isExportingExcel ? "Exporting..." : "Export Excel"}
+          </button>
+
+        </div>
       </div>
 
       {/* Content */}
       <div className="p-5">
         <div className="flex w-full flex-col gap-4 rounded-lg border border-[#D6D9DE] bg-white p-4">
-          
+
           {/* Top Bar: Search and Filter */}
           <div className="flex items-center justify-between gap-4">
             {/* Search */}
             <div className="flex w-[209px] items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-60">
-                <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <input
                 type="text"
@@ -186,12 +354,12 @@ export default function AuthorityVehicleEntriesPage() {
             </div>
 
             {/* Filter Button */}
-            <button 
+            <button
               onClick={() => setIsFilterDrawerOpen(true)}
               className="relative flex items-center gap-2 rounded-lg border border-[#D6D9DE] bg-white px-4 py-2 hover:bg-gray-50 transition-colors cursor-pointer"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M2 4.66667H14M4 8H12M6.66667 11.3333H9.33333" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M2 4.66667H14M4 8H12M6.66667 11.3333H9.33333" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <span className="text-sm font-normal text-[#343434]">Filter</span>
               {activeFiltersCount > 0 && (
@@ -224,14 +392,14 @@ export default function AuthorityVehicleEntriesPage() {
               </thead>
               <tbody>
                 {isLoading ? (
-                   <tr>
-                     <td colSpan={5} className="px-2 py-8 text-center text-sm text-[#343434]/60">
-                       <div className="flex justify-center items-center gap-2">
-                         <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#0C83FF] border-t-transparent"></div>
-                         <span>Loading vehicle entries...</span>
-                       </div>
-                     </td>
-                   </tr>
+                  <tr>
+                    <td colSpan={5} className="px-2 py-8 text-center text-sm text-[#343434]/60">
+                      <div className="flex justify-center items-center gap-2">
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#0C83FF] border-t-transparent"></div>
+                        <span>Loading vehicle entries...</span>
+                      </div>
+                    </td>
+                  </tr>
                 ) : entries.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-2 py-8 text-center text-sm text-[#343434]/60">
@@ -243,23 +411,23 @@ export default function AuthorityVehicleEntriesPage() {
                     <tr key={item.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                       <td className="px-2 py-3">
                         <div className="flex items-center gap-2">
-                          <span 
+                          <span
                             onClick={() => handleEntryClick(item.id)}
                             className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer"
                           >
                             {item.token_number || "N/A"}
                           </span>
                           {!item.has_dumping_photos && (
-                            <div 
+                            <div
                               className="relative flex items-center"
                               onMouseEnter={() => setHoveredToken(item.id)}
                               onMouseLeave={() => setHoveredToken(null)}
                             >
-                              <Image 
-                                src="/dashboard/icons/warning.svg" 
-                                alt="Warning" 
-                                width={15} 
-                                height={13} 
+                              <Image
+                                src="/dashboard/icons/warning.svg"
+                                alt="Warning"
+                                width={15}
+                                height={13}
                                 className="cursor-pointer"
                               />
                               <AnimatePresence>
@@ -278,7 +446,7 @@ export default function AuthorityVehicleEntriesPage() {
                         <span className="text-sm font-normal text-[#343434] opacity-70">{item.naka_incharge_name}</span>
                       </td>
                       <td className="px-2 py-3">
-                        <div 
+                        <div
                           className="relative inline-flex items-center"
                           onMouseEnter={() => setHoveredMaterials(item.id)}
                           onMouseLeave={() => setHoveredMaterials(null)}
@@ -316,14 +484,14 @@ export default function AuthorityVehicleEntriesPage() {
         </div>
       </div>
 
-      <VehicleFilterDrawer 
+      <VehicleFilterDrawer
         isOpen={isFilterDrawerOpen}
         onClose={() => setIsFilterDrawerOpen(false)}
         filters={filters}
         onApply={(newFilters) => setFilters(newFilters)}
       />
 
-      <VehicleDetailDrawer 
+      <VehicleDetailDrawer
         isOpen={isDetailDrawerOpen}
         onClose={() => {
           setIsDetailDrawerOpen(false);

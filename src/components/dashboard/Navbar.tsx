@@ -81,7 +81,7 @@ export default function Navbar() {
               Mount abu
             </span>
             <span className="text-[13px] font-medium uppercase leading-tight text-black">
-              nagar palkia
+              nagar palika
             </span>
           </div>
         </Link>

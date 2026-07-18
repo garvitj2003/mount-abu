@@ -6,6 +6,10 @@ import TablePagination from "@/components/ui/TablePagination";
 import { useAuditLogs } from "@/hooks/useAudit";
 import { type components } from "@/types/api";
 import { usePagination } from "@/hooks/usePagination";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { useUser } from "@/hooks/useUser";
 
 type AuditAction = components["schemas"]["AuditAction"];
 
@@ -21,6 +25,7 @@ export default function AuthorityAuditLogsPage() {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveTab] = useState("ALL");
   const { page, limit, setPage, setLimit } = usePagination();
+  const { data: user } = useUser();
 
   // Reset page when search changes
   const prevSearch = useRef(search);
@@ -62,6 +67,113 @@ export default function AuthorityAuditLogsPage() {
     }
   };
 
+  const handleExportExcel = () => {
+    const wb = XLSX.utils.book_new();
+
+    const wsData: any[][] = [];
+
+    // ================= User Information =================
+    wsData.push(["Audit Logs Report"]);
+    wsData.push([]);
+
+    wsData.push(["Name", user?.name ?? "-"]);
+    wsData.push(["Role", user?.role ?? "-"]);
+    wsData.push(["Mobile", user?.mobile ?? "-"]);
+    wsData.push([
+      "Generated On",
+      new Date().toLocaleString("en-IN"),
+    ]);
+
+    wsData.push([]);
+
+    // ================= Audit Logs =================
+    wsData.push(["Audit Logs"]);
+    wsData.push([
+      "Date & Time",
+      "Record Reference",
+      "User ID",
+      "Module",
+      "Action",
+      "Status",
+    ]);
+
+    logs.forEach((log) => {
+      wsData.push([
+        formatDate(log.created_at),
+        `${log.entity_type.substring(0, 3).toUpperCase()}-${log.id
+          .toString()
+          .padStart(5, "0")}`,
+        `User #${log.user_id}`,
+        log.entity_type,
+        log.action,
+        "Success",
+      ]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    XLSX.utils.book_append_sheet(wb, ws, "Audit Logs");
+
+    XLSX.writeFile(
+      wb,
+      `Audit_Logs_${Date.now()}.xlsx`
+    );
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF("landscape");
+
+    doc.setFontSize(18);
+    doc.text("Audit Logs Report", 14, 15);
+
+    doc.setFontSize(10);
+    doc.text(`Name: ${user?.name ?? "-"}`, 14, 24);
+    doc.text(`Role: ${user?.role ?? "-"}`, 14, 30);
+    doc.text(`Mobile: ${user?.mobile ?? "-"}`, 14, 36);
+    doc.text(
+      `Generated On: ${new Date().toLocaleString("en-IN")}`,
+      14,
+      42
+    );
+
+    autoTable(doc, {
+      startY: 48,
+      head: [[
+        "Date & Time",
+        "Record Reference",
+        "User ID",
+        "Module",
+        "Action",
+        "Status",
+      ]],
+      body: logs.map((log) => [
+        formatDate(log.created_at),
+        `${log.entity_type.substring(0, 3).toUpperCase()}-${log.id
+          .toString()
+          .padStart(5, "0")}`,
+        `User #${log.user_id}`,
+        log.entity_type,
+        log.action,
+        "Success",
+      ]),
+      styles: {
+        fontSize: 8,
+        cellPadding: 3,
+        overflow: "linebreak",
+      },
+      headStyles: {
+        fillColor: [12, 131, 255],
+        textColor: 255,
+        fontStyle: "bold",
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+    });
+
+    doc.save("Audit_Logs.pdf");
+  };
+
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest relative overflow-y-auto">
       {/* Header */}
@@ -74,13 +186,13 @@ export default function AuthorityAuditLogsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-2 text-sm font-medium text-[#343434] hover:bg-gray-100 transition-colors cursor-pointer">
-            <Image src="/dashboard/icons/applications/download.svg" alt="" width={14} height={14} className="opacity-70" />
+          <button onClick={handleExportPDF} className="flex items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-2 text-sm font-medium text-[#343434] hover:bg-gray-100 transition-colors cursor-pointer">
+            <Image src="/dashboard/icons/applications/pdficon.svg" alt="" width={14} height={14} className="opacity-70" />
             Export PDF
           </button>
           <div className="h-6 w-px bg-[#D6D9DE] mx-1" />
-          <button className="flex items-center gap-2.5 rounded-lg bg-[#0C83FF] px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 transition-colors cursor-pointer shadow-sm">
-            <Image src="/dashboard/icons/applications/step-upload.svg" alt="" width={14} height={14} className="invert brightness-0" />
+          <button onClick={handleExportExcel} className="flex items-center gap-2.5 rounded-lg bg-[#0C83FF] px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 transition-colors cursor-pointer shadow-sm">
+            <Image src="/dashboard/icons/applications/csvicon.svg" alt="" width={14} height={14} className="invert brightness-0" />
             Export Excel
           </button>
         </div>
@@ -89,13 +201,13 @@ export default function AuthorityAuditLogsPage() {
       {/* Content */}
       <div className="p-5">
         <div className="flex flex-col gap-4 rounded-lg border border-[#D6D9DE] bg-white p-4">
-          
+
           {/* Search and Tabs */}
           <div className="flex items-center justify-between gap-4">
             <div className="flex w-[209px] items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-60">
-                <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <input
                 type="text"
@@ -114,11 +226,10 @@ export default function AuthorityAuditLogsPage() {
                     setActiveTab(filter.value);
                     setPage(1);
                   }}
-                  className={`px-4 py-2 text-sm font-medium transition-colors border-r border-[#D6D9DE] last:border-r-0 ${
-                    activeFilter === filter.value 
-                      ? "bg-[#E7F3FF] text-[#0C83FF]" 
-                      : "bg-white text-[#343434] hover:bg-gray-50"
-                  }`}
+                  className={`px-4 py-2 text-sm font-medium transition-colors border-r border-[#D6D9DE] last:border-r-0 ${activeFilter === filter.value
+                    ? "bg-[#E7F3FF] text-[#0C83FF]"
+                    : "bg-white text-[#343434] hover:bg-gray-50"
+                    }`}
                 >
                   {filter.label}
                 </button>

@@ -7,6 +7,11 @@ import TablePagination from "@/components/ui/TablePagination";
 import { useTokens } from "@/hooks/useTokens";
 import CustomDropdown from "@/components/ui/CustomDropdown";
 import { usePagination } from "@/hooks/usePagination";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { useUser } from "@/hooks/useUser";
+
 
 const ProgressBar = ({ progress }: { progress: number }) => (
   <div className="flex items-center gap-3 w-full max-w-[120px]">
@@ -34,6 +39,10 @@ export default function AuthorityTokensPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("");
   const { page, limit, setPage, setLimit } = usePagination();
+  const { data: user } = useUser();
+
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
 
   // Debounce search effect
   useEffect(() => {
@@ -67,6 +76,129 @@ export default function AuthorityTokensPage() {
     return page + 1;
   }, [tokens.length, page, limit]);
 
+  const handleExportExcel = () => {
+    setIsExportingExcel(true);
+
+    try {
+      const wb = XLSX.utils.book_new();
+      const wsData: any[][] = [];
+
+      // ================= User Information =================
+      wsData.push(["Tokens Report"]);
+      wsData.push([]);
+
+      wsData.push(["Name", user?.name ?? "-"]);
+      wsData.push(["Role", user?.role ?? "-"]);
+      wsData.push(["Mobile", user?.mobile ?? "-"]);
+      wsData.push([
+        "Generated On",
+        new Date().toLocaleString("en-IN"),
+      ]);
+
+      wsData.push([]);
+
+      // ================= Tokens =================
+      wsData.push(["Tokens"]);
+      wsData.push([
+        "Token Number",
+        "Application No",
+        "Remaining Quantity",
+        "Valid Till",
+        "Status",
+      ]);
+
+      tokens.forEach((token) => {
+        wsData.push([
+          token.token_number,
+          token.application_number
+            ? `${token.application_number.toString().padStart(5, "0")}`
+            : "-",
+          `${Math.round(token.remaining_quantity_pct || 0)}%`,
+          token.valid_till
+            ? new Date(token.valid_till).toLocaleDateString("en-GB")
+            : "-",
+          token.status,
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      XLSX.utils.book_append_sheet(wb, ws, "Tokens");
+
+      XLSX.writeFile(
+        wb,
+        `tokens-${new Date().toISOString().slice(0, 10)}.xlsx`
+      );
+    } finally {
+      setIsExportingExcel(false);
+    }
+  };
+
+  const handleExportPDF = () => {
+    setIsExportingPDF(true);
+
+    try {
+      const pdf = new jsPDF("landscape");
+
+      pdf.setFontSize(18);
+      pdf.text("Tokens Report", 14, 15);
+
+      pdf.setFontSize(10);
+      pdf.text(`Name: ${user?.name ?? "-"}`, 14, 24);
+      pdf.text(`Role: ${user?.role ?? "-"}`, 14, 30);
+      pdf.text(`Mobile: ${user?.mobile ?? "-"}`, 14, 36);
+      pdf.text(
+        `Generated On: ${new Date().toLocaleString("en-IN")}`,
+        14,
+        42
+      );
+
+      autoTable(pdf, {
+        startY: 48,
+
+        head: [[
+          "Token Number",
+          "Application No",
+          "Remaining Quantity",
+          "Valid Till",
+          "Status",
+        ]],
+
+        body: tokens.map((token) => [
+          token.token_number,
+          token.application_number
+            ? `${token.application_number.toString().padStart(5, "0")}`
+            : "-",
+          `${Math.round(token.remaining_quantity_pct || 0)}%`,
+          token.valid_till
+            ? new Date(token.valid_till).toLocaleDateString("en-GB")
+            : "-",
+          token.status,
+        ]),
+
+        styles: {
+          fontSize: 8,
+          cellPadding: 3,
+        },
+
+        headStyles: {
+          fillColor: [12, 131, 255],
+          textColor: 255,
+        },
+
+        alternateRowStyles: {
+          fillColor: [245, 245, 245],
+        },
+      });
+
+      pdf.save(
+        `tokens-${new Date().toISOString().slice(0, 10)}.pdf`
+      );
+    } finally {
+      setIsExportingPDF(false);
+    }
+  };
+
   return (
     <div className="flex h-full w-full flex-col bg-[#F5F6F7] font-onest relative overflow-y-auto">
       {/* Header */}
@@ -76,6 +208,40 @@ export default function AuthorityTokensPage() {
           <p className="text-xs font-normal text-[#343434] opacity-80">
             View and track material entry tokens issued for your approved renovation applications.
           </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+
+          <button
+            onClick={handleExportPDF}
+            disabled={isExportingPDF}
+            className="flex items-center cursor-pointer gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-2 text-sm font-medium hover:bg-gray-100"
+          >
+            <Image
+              src="/dashboard/icons/applications/pdficon.svg"
+              alt=""
+              width={15}
+              height={15}
+
+            />
+            {isExportingPDF ? "Exporting..." : "Export PDF"}
+          </button>
+
+          <button
+            onClick={handleExportExcel}
+            disabled={isExportingExcel}
+            className="flex items-center cursor-pointer gap-2 rounded-lg bg-[#0C83FF] px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            <Image
+              src="/dashboard/icons/applications/csvicon.svg"
+              alt=""
+              width={15}
+              height={15}
+              className="invert brightness-0 "
+            />
+            {isExportingExcel ? "Exporting..." : "Export Excel"}
+          </button>
+
         </div>
       </div>
 

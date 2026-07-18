@@ -11,6 +11,9 @@ import { ApplicationService } from "@/services/applicationService";
 import { type components } from "@/types/api";
 import TablePagination from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 type ApplicationResponse = components["schemas"]["ApplicationResponse"];
 type ApplicationStatus = components["schemas"]["ApplicationStatus"];
@@ -69,6 +72,7 @@ interface ApplicationsTableProps {
 
 export default function ApplicationsTable({ onComplaintClick }: ApplicationsTableProps) {
   const { data: user } = useUser();
+
   const queryClient = useQueryClient();
   const router = useRouter();
   const { setApplicationId } = useApplicationStore();
@@ -171,6 +175,149 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
   const totalPages = Math.ceil(filteredApplications.length / limit);
   const paginatedApplications = filteredApplications.slice((page - 1) * limit, page * limit);
 
+
+  const getExportInfo = () => {
+    return [
+      [
+        "Downloaded By",
+        user?.name?.trim()
+          ? `${user.name} (${user.mobile})`
+          : user?.mobile || "Citizen"
+      ],
+      ["Download Date", new Date().toLocaleString()],
+      [
+        "Application Type Filter",
+        filter === "All"
+          ? "All"
+          : filter === "NEW"
+            ? "New Construction"
+            : "Repair & Renovation"
+      ],
+      ["Search", search || "No Search"],
+      ["Page", page],
+      ["Limit", limit],
+      ["Total Records", paginatedApplications.length],
+    ];
+  };
+
+  const exportToExcel = () => {
+    const info = getExportInfo();
+
+    const data = paginatedApplications.map((app) => ({
+      "Application ID": `#${app.id.toString().padStart(5, "0")}`,
+      "Application Type":
+        app.type === "NEW"
+          ? "New Construction"
+          : "Repair & Renovation",
+      Applicant: app.applicant_name,
+      "Property Address": app.property_address,
+      Status: app.status,
+      Remarks: app.description || "-",
+    }));
+
+    const ws = XLSX.utils.aoa_to_sheet([
+      ["Citizen Applications Export"],
+      [],
+      ...info,
+      [],
+      [
+        "Application ID",
+        "Application Type",
+        "Applicant",
+        "Property Address",
+        "Status",
+        "Remarks",
+      ],
+      ...data.map((item) => Object.values(item)),
+    ]);
+
+
+    const wb = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      ws,
+      "Applications"
+    );
+
+    XLSX.writeFile(
+      wb,
+      "Citizen_Applications.xlsx"
+    );
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.text("Citizen Applications", 14, 15);
+
+    doc.setFontSize(10);
+
+    const exportInfo = getExportInfo();
+
+    let y = 25;
+
+    exportInfo.forEach(([key, value]) => {
+      doc.text(`${key}: ${value}`, 14, y);
+      y += 6;
+    });
+
+
+    autoTable(doc, {
+      startY: y + 5,
+      head: [[
+        "Application ID",
+        "Type",
+        "Applicant",
+        "Property Address",
+        "Status",
+        "Remarks",
+      ]],
+
+      body: paginatedApplications.map((app) => [
+        `#${app.id.toString().padStart(5, "0")}`,
+        app.type === "NEW"
+          ? "New Construction"
+          : "Repair & Renovation",
+        app.applicant_name,
+        app.property_address,
+        app.status,
+        app.description || "-",
+      ]),
+
+      styles: {
+        fontSize: 8,
+        cellPadding: 2,
+      },
+
+      headStyles: {
+        fillColor: [12, 131, 255],
+      },
+    });
+
+
+    doc.save("Citizen_Applications.pdf");
+  };
+
+  useEffect(() => {
+    const handleExcel = () => {
+      exportToExcel();
+    };
+
+    const handlePDF = () => {
+      exportToPDF();
+    };
+
+    window.addEventListener("export-applications-excel", handleExcel);
+    window.addEventListener("export-applications-pdf", handlePDF);
+
+    return () => {
+      window.removeEventListener("export-applications-excel", handleExcel);
+      window.removeEventListener("export-applications-pdf", handlePDF);
+    };
+  }, [paginatedApplications]);
+
   if (isLoading) {
     return (
       <div className="flex h-64 w-full flex-col items-center justify-center gap-4 rounded-lg border border-[#D6D9DE] bg-white p-4 font-onest">
@@ -221,8 +368,8 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
           <button
             onClick={() => setFilter("All")}
             className={`border-r border-[#D6D9DE] px-4 py-2 text-sm font-semibold transition-colors ${filter === "All"
-                ? "bg-[#E7F3FF] text-[#0C83FF]"
-                : "bg-white text-[#343434] hover:bg-gray-50"
+              ? "bg-[#E7F3FF] text-[#0C83FF]"
+              : "bg-white text-[#343434] hover:bg-gray-50"
               }`}
           >
             All
@@ -230,8 +377,8 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
           <button
             onClick={() => setFilter("NEW")}
             className={`border-r border-[#D6D9DE] px-4 py-2 text-sm font-normal transition-colors ${filter === "NEW"
-                ? "bg-[#E7F3FF] text-[#0C83FF]"
-                : "bg-white text-[#343434] hover:bg-gray-50"
+              ? "bg-[#E7F3FF] text-[#0C83FF]"
+              : "bg-white text-[#343434] hover:bg-gray-50"
               }`}
           >
             New Construction
@@ -239,8 +386,8 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
           <button
             onClick={() => setFilter("RENOVATION")}
             className={`px-4 py-2 text-sm font-normal transition-colors ${filter === "RENOVATION"
-                ? "bg-[#E7F3FF] text-[#0C83FF]"
-                : "bg-white text-[#343434] hover:bg-gray-50"
+              ? "bg-[#E7F3FF] text-[#0C83FF]"
+              : "bg-white text-[#343434] hover:bg-gray-50"
               }`}
           >
             Repair & Renovation
