@@ -389,7 +389,7 @@ export default function DashboardAuthorityPage() {
 
           {/* Role-Specific Views */}
 
-          {(role === "SUPERADMIN" || role === "ADMIN" || role === "COMMISSIONER" || role === "AEN" || role === "SIN" || role === "RIN") && (
+          {(role === "SUPERADMIN" || role === "ADMIN" || role === "NODAL_OFFICER" || role === "COMMISSIONER" || role === "AEN" || role === "SIN" || role === "RIN") && (
             <>
               <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
                 <div className="col-span-1 rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
@@ -408,7 +408,7 @@ export default function DashboardAuthorityPage() {
                 </div>
               </div>
 
-              {(role === "SUPERADMIN" || role === "ADMIN") && (
+              {(role === "SUPERADMIN" || role === "ADMIN" || role === "NODAL_OFFICER") && (
                 <>
                   <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
                     <h3 className="text-xs font-medium text-[#343434] mb-2">Ward-wise Activity Distribution</h3>
@@ -553,63 +553,7 @@ export default function DashboardAuthorityPage() {
             </div>
           )}
 
-          {role === "NODAL_OFFICER" && (
-            <div className="grid grid-cols-1 gap-5">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
-                  <h3 className="text-xs font-medium text-[#343434] mb-2">Token Status</h3>
-                  <ApplicationsByStatusChart data={
-                    dashboard.token_status?.map(s => ({ status: formatStatus(s.status), count: s.count, color: STATUS_COLORS[s.status] || "#94A3B8" })) || []
-                  } />
-                </div>
-                <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
-                  <h3 className="text-xs font-medium text-[#343434] mb-2">Material Approved vs Used</h3>
-                  <div className="h-[250px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={dashboard.material_approved_vs_used || []}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                        <XAxis dataKey="material_name" tick={{ fontSize: 10 }} />
-                        <YAxis tick={{ fontSize: 10 }} />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="approved_quantity" name="Approved" fill="#3B83F6" />
-                        <Bar dataKey="used_quantity" name="Used" fill="#EF4444" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              </div>
-              {dashboard.token_utilization_list && (
-                <div className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-sm">
-                  <h3 className="text-xs font-medium text-[#343434] mb-4">Token Utilization</h3>
-                  <div className="w-full overflow-x-auto rounded-lg border border-[#D6D9DE]">
-                    <table className="w-full text-left border-collapse min-w-[600px]">
-                      <thead>
-                        <tr className="border-b border-[#D6D9DE] bg-gray-50 text-[11px] font-bold text-[#333333] opacity-70 uppercase">
-                          <th className="p-3 border-r border-[#D6D9DE]">Applicant</th>
-                          <th className="p-3 border-r border-[#D6D9DE]">Phase</th>
-                          <th className="p-3 border-r border-[#D6D9DE]">Material</th>
-                          <th className="p-3 border-r border-[#D6D9DE]">Permitted</th>
-                          <th className="p-3">Used</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {dashboard.token_utilization_list.map((row, i) => (
-                          <tr key={i} className="border-b border-[#D6D9DE] last:border-0 hover:bg-gray-50 text-[13px]">
-                            <td className="p-3 font-medium border-r border-[#D6D9DE]">{row.applicant_name}</td>
-                            <td className="p-3 border-r border-[#D6D9DE]">Phase {row.phase}</td>
-                            <td className="p-3 border-r border-[#D6D9DE]">{row.material_name}</td>
-                            <td className="p-3 border-r border-[#D6D9DE]">{row.permitted_quantity}</td>
-                            <td className="p-3">{row.used_quantity}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+
 
         </div>
       </div>
