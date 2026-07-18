@@ -216,12 +216,138 @@ const Sidebar = ({ app }: { app: ApplicationResponse }) => {
   );
 };
 
-const DocumentCard = ({ doc }: { doc: components["schemas"]["ApplicationDocumentResponse"] }) => {
+const ImageViewerModal = ({
+  isOpen,
+  onClose,
+  images,
+  currentIndex,
+  onIndexChange,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  images: { url: string; title?: string; subtitle?: string }[];
+  currentIndex: number;
+  onIndexChange: (newIndex: number) => void;
+}) => {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isOpen) return;
+      if (e.key === "ArrowLeft") onIndexChange(currentIndex > 0 ? currentIndex - 1 : images.length - 1);
+      if (e.key === "ArrowRight") onIndexChange(currentIndex < images.length - 1 ? currentIndex + 1 : 0);
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, currentIndex, images.length, onIndexChange, onClose]);
+
+  if (!isOpen || !images.length) return null;
+
+  const currentImage = images[currentIndex] || images[0];
+
+  const handlePrev = () => {
+    onIndexChange(currentIndex > 0 ? currentIndex - 1 : images.length - 1);
+  };
+
+  const handleNext = () => {
+    onIndexChange(currentIndex < images.length - 1 ? currentIndex + 1 : 0);
+  };
+
+  return (
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-between bg-black/90 backdrop-blur-xs p-6"
+    >
+      {/* Top Bar: Title & Close Button */}
+      <div className="flex w-full items-center justify-between z-20">
+        <div className="text-white/80 text-xs font-semibold">
+          {currentImage.title || "Image Viewer"}
+        </div>
+        <button
+          onClick={onClose}
+          className="flex size-9 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/25 transition-colors cursor-pointer"
+          title="Close (Esc)"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Main Image Container */}
+      <div onClick={(e) => e.stopPropagation()} className="relative flex max-h-[70vh] max-w-[85vw] flex-col items-center justify-center my-auto">
+        <img
+          src={currentImage.url}
+          alt={currentImage.title || "Preview"}
+          className="max-h-[70vh] max-w-[85vw] object-contain rounded-xl shadow-2xl"
+        />
+      </div>
+
+      {/* Fixed Bottom Toolbar: Prev/Next & Counter */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="z-20 flex flex-col items-center gap-2"
+      >
+        {currentImage.subtitle && (
+          <p className="text-[11px] text-white/70 italic text-center max-w-md line-clamp-1">
+            {currentImage.subtitle}
+          </p>
+        )}
+
+        <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md px-5 py-2 rounded-full border border-white/15 shadow-xl">
+          {images.length > 1 && (
+            <button
+              onClick={handlePrev}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-white hover:bg-white/30 text-xs font-medium transition-all cursor-pointer"
+              title="Previous Image (Left Arrow)"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+              Previous
+            </button>
+          )}
+
+          <span className="text-xs font-semibold text-white px-2">
+            {currentIndex + 1} / {images.length}
+          </span>
+
+          {images.length > 1 && (
+            <button
+              onClick={handleNext}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-white hover:bg-white/30 text-xs font-medium transition-all cursor-pointer"
+              title="Next Image (Right Arrow)"
+            >
+              Next
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const DocumentCard = ({
+  doc,
+  onViewImage,
+}: {
+  doc: components["schemas"]["ApplicationDocumentResponse"];
+  onViewImage?: () => void;
+}) => {
   const isImg = isImage(doc);
   const label = doc.document_type.replace(/_/g, " ").toLowerCase();
 
   return (
-    <div className="flex h-[120px] flex-col gap-2 rounded-lg border border-[#D6D9DE] bg-white p-2 transition-all hover:border-[#0C83FF] cursor-pointer group">
+    <div
+      onClick={() => {
+        if (isImg && onViewImage) {
+          onViewImage();
+        }
+      }}
+      className="flex h-[120px] flex-col gap-2 rounded-lg border border-[#D6D9DE] bg-white p-2 transition-all hover:border-[#0C83FF] cursor-pointer group"
+    >
       <div className="relative flex flex-1 items-center justify-center overflow-hidden rounded bg-[#F9FAFB]">
         {isImg ? (
           <Image
@@ -250,15 +376,28 @@ const DocumentCard = ({ doc }: { doc: components["schemas"]["ApplicationDocument
         <p className="max-w-[100px] truncate text-[10px] font-semibold capitalize text-[#343434]">
           {label}
         </p>
-        <a
-          href={doc.access_url || "#"}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="text-[10px] font-semibold text-[#0C83FF] hover:underline"
-        >
-          View
-        </a>
+        {isImg && onViewImage ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewImage();
+            }}
+            className="text-[10px] font-semibold text-[#0C83FF] hover:underline cursor-pointer"
+          >
+            View
+          </button>
+        ) : (
+          <a
+            href={doc.access_url || "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="text-[10px] font-semibold text-[#0C83FF] hover:underline"
+          >
+            View
+          </a>
+        )}
       </div>
     </div>
   );
@@ -266,6 +405,15 @@ const DocumentCard = ({ doc }: { doc: components["schemas"]["ApplicationDocument
 
 const MainContent = ({ app }: { app: ApplicationResponse }) => {
   const [selectedPhaseFilter, setSelectedPhaseFilter] = useState<number | "all">("all");
+  const [viewerConfig, setViewerConfig] = useState<{
+    isOpen: boolean;
+    index: number;
+    list: { url: string; title?: string; subtitle?: string }[];
+  }>({
+    isOpen: false,
+    index: 0,
+    list: [],
+  });
 
   const numStagesToDisplay = useMemo(() => {
     if (app.phase_materials && app.phase_materials.length > 0) {
@@ -286,16 +434,44 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
     });
   }, [app.documents]);
 
+  const attachedDocImages = useMemo(() => {
+    return attachedDocs
+      .filter((d) => isImage(d))
+      .map((d) => ({
+        url: d.access_url || d.document_path || "",
+        title: d.document_type.replace(/_/g, " "),
+        subtitle: d.document_name || undefined,
+      }));
+  }, [attachedDocs]);
+
   const inspectionPhotos = useMemo(() => {
     return app.inspections?.flatMap(ins =>
       (ins.access_urls || []).map(url => ({
         url,
         remarks: ins.remarks,
-        inspector: ins.inspector_name,
+        inspector: ins.inspector_name || `Inspector #${ins.inspected_by}`,
         date: ins.inspected_at
       }))
     ) || [];
   }, [app.inspections]);
+
+  const inspectionPhotoList = useMemo(() => {
+    return inspectionPhotos.map((photo) => ({
+      url: photo.url || "",
+      title: photo.remarks || "Site Photo",
+      subtitle: `By ${photo.inspector} on ${new Date(photo.date).toLocaleDateString()}`,
+    }));
+  }, [inspectionPhotos]);
+
+  const hasInspections = useMemo(() => {
+    return (app.inspections && app.inspections.length > 0) || inspectionPhotos.length > 0;
+  }, [app.inspections, inspectionPhotos]);
+
+  const hasTokens = useMemo(() => {
+    return (app.tokens && app.tokens.length > 0) || (app.phase_materials && app.phase_materials.length > 0);
+  }, [app.tokens, app.phase_materials]);
+
+  const [activeTab, setActiveTab] = useState<"work" | "inspection" | "tokens">("work");
 
   const mergedMaterialsToDisplay = useMemo(() => {
     const list: {
@@ -307,28 +483,20 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
       requestedQty: number;
     }[] = [];
 
-    app.materials?.forEach((mat) => {
-      const isCustom = !mat.material_id;
-      const name = isCustom ? mat.custom_name || "" : mat.material_name || "";
-      const unit = isCustom ? mat.custom_unit || "" : mat.unit || "";
-      const key = isCustom ? `custom-${name.toLowerCase()}` : `master-${mat.material_id}`;
+    app.materials?.forEach((m) => {
+      const isCustom = !m.material_id;
+      const name = isCustom ? m.custom_name || "" : m.material_name || "";
+      const unit = isCustom ? m.custom_unit || "" : m.unit || "";
+      const key = isCustom ? `custom-${name.toLowerCase()}` : `master-${m.material_id}`;
 
-      const exists = list.some(item => item.key === key);
-      if (!exists) {
-        list.push({
-          key,
-          material_id: mat.material_id,
-          name,
-          unit,
-          isCustom,
-          requestedQty: mat.quantity,
-        });
-      } else {
-        const existingItem = list.find(item => item.key === key);
-        if (existingItem) {
-          existingItem.requestedQty += mat.quantity;
-        }
-      }
+      list.push({
+        key,
+        material_id: m.material_id,
+        name,
+        unit,
+        isCustom,
+        requestedQty: m.quantity,
+      });
     });
 
     app.phase_materials?.forEach((pm) => {
@@ -355,206 +523,361 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
 
   return (
     <div className="flex flex-1 flex-col gap-5 rounded-lg border border-[#D6D9DE] bg-white p-5">
-      {/* Work Description */}
-      <div className="flex flex-col gap-1">
-        <p className="text-[10px] font-normal text-[#343434] opacity-60 uppercase">Work Description</p>
-        <p className="text-[12px] font-normal text-[#343434] leading-relaxed">
-          {app.work_description || "No description provided."}
-        </p>
+      {/* Tabs Header */}
+      <div className="flex items-center gap-2.5 border-b border-[#D6D9DE] pb-3">
+        <button
+          type="button"
+          onClick={() => setActiveTab("work")}
+          className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+            activeTab === "work"
+              ? "bg-[#0C83FF] text-white shadow-xs font-bold"
+              : "bg-[#F3F4F6] text-[#343434] hover:bg-[#E5E7EB] hover:text-black"
+          }`}
+        >
+          Work Description & Materials
+        </button>
+
+        <button
+          type="button"
+          onClick={() => hasInspections && setActiveTab("inspection")}
+          disabled={!hasInspections}
+          className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
+            !hasInspections
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-60"
+              : activeTab === "inspection"
+              ? "bg-[#0C83FF] text-white shadow-xs cursor-pointer font-bold"
+              : "bg-[#F3F4F6] text-[#343434] hover:bg-[#E5E7EB] hover:text-black cursor-pointer"
+          }`}
+        >
+          Inspection
+        </button>
+
+        <button
+          type="button"
+          onClick={() => hasTokens && setActiveTab("tokens")}
+          disabled={!hasTokens}
+          className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
+            !hasTokens
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-60"
+              : activeTab === "tokens"
+              ? "bg-[#0C83FF] text-white shadow-xs cursor-pointer font-bold"
+              : "bg-[#F3F4F6] text-[#343434] hover:bg-[#E5E7EB] hover:text-black cursor-pointer"
+          }`}
+        >
+          Tokens
+        </button>
       </div>
 
-      {/* Attached Documents */}
-      <div className="flex flex-col gap-3">
-        <h3 className="text-[12px] font-semibold text-[#4BB5AB] uppercase">Attached Documents</h3>
-        <div className="grid grid-cols-4 gap-3">
-          {attachedDocs.map((doc) => (
-            <DocumentCard key={doc.id} doc={doc} />
-          ))}
-          {!attachedDocs.length && (
-            <p className="text-xs text-gray-400 col-span-4 italic py-4">No documents attached.</p>
-          )}
-        </div>
-      </div>
+      {/* Tab 1: Work Description */}
+      {activeTab === "work" && (
+        <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-1">
+            <p className="text-[10px] font-normal text-[#343434] opacity-60 uppercase">Work Description</p>
+            <p className="text-[12px] font-normal text-[#343434] leading-relaxed">
+              {app.work_description || "No description provided."}
+            </p>
+          </div>
 
-      {/* Geo-Tagged Pictures */}
-      <div className="flex flex-col gap-3">
-        <h3 className="text-[12px] font-semibold text-[#4BB5AB] uppercase">Geo-Tagged Pictures (from Inspection)</h3>
-        <div className="grid grid-cols-4 gap-3">
-          {inspectionPhotos.map((photo, idx) => (
-            <a
-              key={idx}
-              href={photo.url || "#"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="aspect-video relative rounded-lg border border-[#D6D9DE] overflow-hidden bg-gray-100 group cursor-pointer hover:border-[#0C83FF] transition-all block"
-            >
-              <Image
-                src={photo.url || "/sample/application-main.png"}
-                alt="Geo-tagged"
-                fill
-                unoptimized
-                className="object-cover"
-              />
-
-              <div className="absolute bottom-2 right-2 p-1 bg-white rounded-full shadow-sm">
-                <Image
-                  src="/dashboard/icons/applications/visibility-public.svg"
-                  alt=""
-                  width={12}
-                  height={12}
-                />
-              </div>
-
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity p-2 flex flex-col justify-end">
-                <p className="text-[8px] text-white font-medium line-clamp-2">
-                  {photo.remarks}
-                </p>
-
-                <p className="text-[7px] text-white/70 italic">
-                  By {photo.inspector} on{" "}
-                  {new Date(photo.date).toLocaleDateString()}
-                </p>
-              </div>
-            </a>
-          ))}
-          {!inspectionPhotos.length && (
-            <p className="text-xs text-gray-400 col-span-4 italic py-4">No inspection pictures available.</p>
-          )}
-        </div>
-      </div>
-
-      {/* Material Details */}
-      <div className="flex flex-col gap-3 mt-5">
-        <div className="flex items-center justify-between">
-          <h3 className="text-[12px] font-bold text-[#343434] uppercase tracking-wider">Material Details</h3>
-
-          {/* Phase Filter Dropdown */}
-          {numStagesToDisplay > 0 && (
-            <div className="flex items-center gap-2">
-              <label className="text-xs text-[#343434] font-medium font-onest">Filter by Phase:</label>
-              <div className="relative h-[30px] w-[140px]">
-                <select
-                  value={selectedPhaseFilter}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setSelectedPhaseFilter(val === "all" ? "all" : parseInt(val));
-                  }}
-                  className="h-full w-full appearance-none rounded-lg border border-[#D6D9DE] bg-white px-3 py-1 pr-8 text-xs text-[#343434] outline-none focus:border-[#0C83FF] font-onest"
-                >
-                  <option value="all">All Phases</option>
-                  {Array.from({ length: numStagesToDisplay }).map((_, i) => (
-                    <option key={i + 1} value={i + 1}>
-                      Phase {i + 1}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                  <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={8} height={5} />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="w-full overflow-x-auto rounded-lg border border-[#D6D9DE]">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-[#D6D9DE] bg-gray-50">
-                <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Material Name</th>
-                <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Requested Material</th>
-                <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Estimated by JEN</th>
-                {Array.from({ length: numStagesToDisplay })
-                  .map((_, i) => i + 1)
-                  .filter((p) => selectedPhaseFilter === "all" || selectedPhaseFilter === p)
-                  .map((p) => (
-                    <th
-                      key={p}
-                      className={`p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE] last:border-r-0 ${[
-                        "bg-[#E7F3FF]", // Phase 1
-                        "bg-[#FFEEB4]", // Phase 2
-                        "bg-[#E6F7F5]", // Phase 3
-                        "bg-[#FFF1F0]", // Phase 4
-                        "bg-[#F0F7FF]", // Phase 5
-                      ][(p - 1) % 5]
-                        }`}
-                    >
-                      Phase {p}
-                    </th>
-                  ))}
-              </tr>
-            </thead>
-            <tbody>
-              {mergedMaterialsToDisplay.map((item) => {
-                const jenTotal = app.phase_materials
-                  ?.filter(pm => {
-                    if (item.isCustom) {
-                      return !pm.material_id && pm.custom_name?.toLowerCase() === item.name.toLowerCase();
-                    } else {
-                      return pm.material_id === item.material_id;
-                    }
-                  })
-                  .reduce((acc, curr) => acc + curr.quantity, 0) || 0;
-
+          <div className="flex flex-col gap-3">
+            <h3 className="text-[12px] font-semibold text-[#4BB5AB] uppercase">Attached Documents</h3>
+            <div className="grid grid-cols-4 gap-3">
+              {attachedDocs.map((doc) => {
+                const imgIdx = attachedDocImages.findIndex(img => img.url === (doc.access_url || doc.document_path));
                 return (
-                  <tr key={item.key} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
-                    <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">
-                      {item.name}
-                      {item.isCustom && <span className="ml-2 rounded bg-orange-50 px-1.5 py-0.5 text-[9px] font-medium text-orange-600 border border-orange-200">Custom</span>}
-                    </td>
-                    <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">
-                      {item.requestedQty > 0 ? `${item.requestedQty} ${item.unit && item.unit}` : "—"}
-                    </td>
-                    <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">
-                      <div className={`rounded border px-3 py-1.5 text-xs font-bold ${jenTotal > 0 ? "bg-white border-[#D6D9DE] text-[#0C83FF]" : "bg-gray-50 border-transparent text-gray-400"
-                        }`}>
-                        {jenTotal > 0 ? `${jenTotal} ${item.unit}` : "—"}
-                      </div>
-                    </td>
+                  <DocumentCard
+                    key={doc.id}
+                    doc={doc}
+                    onViewImage={imgIdx !== -1 ? () => setViewerConfig({ isOpen: true, index: imgIdx, list: attachedDocImages }) : undefined}
+                  />
+                );
+              })}
+              {!attachedDocs.length && (
+                <p className="text-xs text-gray-400 col-span-4 italic py-4">No documents attached.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 mt-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[12px] font-bold text-[#343434] uppercase tracking-wider">Material Details</h3>
+
+              {numStagesToDisplay > 0 && (
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-[#343434] font-medium font-onest">Filter by Phase:</label>
+                  <div className="relative h-[30px] w-[140px]">
+                    <select
+                      value={selectedPhaseFilter}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSelectedPhaseFilter(val === "all" ? "all" : parseInt(val));
+                      }}
+                      className="h-full w-full appearance-none rounded-lg border border-[#D6D9DE] bg-white px-3 py-1 pr-8 text-xs text-[#343434] outline-none focus:border-[#0C83FF] font-onest"
+                    >
+                      <option value="all">All Phases</option>
+                      {Array.from({ length: numStagesToDisplay }).map((_, i) => (
+                        <option key={i + 1} value={i + 1}>
+                          Phase {i + 1}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                      <Image src="/dashboard/icons/applications/chevron-down.svg" alt="down" width={8} height={5} />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="w-full overflow-x-auto rounded-lg border border-[#D6D9DE]">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-[#D6D9DE] bg-gray-50">
+                    <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Material Name</th>
+                    <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Requested Material</th>
+                    <th className="p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE]">Estimated by JEN</th>
                     {Array.from({ length: numStagesToDisplay })
                       .map((_, i) => i + 1)
                       .filter((p) => selectedPhaseFilter === "all" || selectedPhaseFilter === p)
-                      .map((phaseNum) => {
-                        const phaseQty = app.phase_materials?.find(pm => {
-                          if (item.isCustom) {
-                            return !pm.material_id && pm.custom_name?.toLowerCase() === item.name.toLowerCase() && pm.phase === phaseNum;
-                          } else {
-                            return pm.material_id === item.material_id && pm.phase === phaseNum;
-                          }
-                        })?.quantity;
-
-                        return (
-                          <td
-                            key={phaseNum}
-                            className={`p-3 text-sm font-medium text-black border-r border-[#D6D9DE] last:border-r-0 ${[
-                              "bg-[#E7F3FF]",
-                              "bg-[#FFEEB4]",
-                              "bg-[#E6F7F5]",
-                              "bg-[#FFF1F0]",
-                              "bg-[#F0F7FF]",
-                            ][(phaseNum - 1) % 5]
-                              }`}
-                          >
-                            {phaseQty !== undefined ? `${phaseQty} ${item.unit}` : "—"}
-                          </td>
-                        );
-                      })}
+                      .map((p) => (
+                        <th
+                          key={p}
+                          className={`p-3 text-[12px] font-semibold text-[#333333] opacity-70 uppercase border-r border-[#D6D9DE] last:border-r-0 ${[
+                            "bg-[#E7F3FF]",
+                            "bg-[#FFEEB4]",
+                            "bg-[#E6F7F5]",
+                            "bg-[#FFF1F0]",
+                            "bg-[#F0F7FF]",
+                          ][(p - 1) % 5]
+                            }`}
+                        >
+                          Phase {p}
+                        </th>
+                      ))}
                   </tr>
-                );
-              })}
-              {!mergedMaterialsToDisplay.length && (
-                <tr>
-                  <td
-                    colSpan={3 + (selectedPhaseFilter === "all" ? numStagesToDisplay : 1)}
-                    className="p-10 text-center text-gray-400 text-sm italic"
-                  >
-                    No material requirements specified.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {mergedMaterialsToDisplay.map((item) => {
+                    const jenTotal = app.phase_materials
+                      ?.filter(pm => {
+                        if (item.isCustom) {
+                          return !pm.material_id && pm.custom_name?.toLowerCase() === item.name.toLowerCase();
+                        } else {
+                          return pm.material_id === item.material_id;
+                        }
+                      })
+                      .reduce((acc, curr) => acc + curr.quantity, 0) || 0;
+
+                    return (
+                      <tr key={item.key} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
+                        <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">
+                          {item.name}
+                          {item.isCustom && <span className="ml-2 rounded bg-orange-50 px-1.5 py-0.5 text-[9px] font-medium text-orange-600 border border-orange-200">Custom</span>}
+                        </td>
+                        <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">
+                          {item.requestedQty > 0 ? `${item.requestedQty} ${item.unit && item.unit}` : "—"}
+                        </td>
+                        <td className="p-3 text-sm font-medium text-[#343434] border-r border-[#D6D9DE]">
+                          <div className={`rounded border px-3 py-1.5 text-xs font-bold ${jenTotal > 0 ? "bg-white border-[#D6D9DE] text-[#0C83FF]" : "bg-gray-50 border-transparent text-gray-400"
+                            }`}>
+                            {jenTotal > 0 ? `${jenTotal} ${item.unit}` : "—"}
+                          </div>
+                        </td>
+                        {Array.from({ length: numStagesToDisplay })
+                          .map((_, i) => i + 1)
+                          .filter((p) => selectedPhaseFilter === "all" || selectedPhaseFilter === p)
+                          .map((phaseNum) => {
+                            const phaseQty = app.phase_materials?.find(pm => {
+                              if (item.isCustom) {
+                                return !pm.material_id && pm.custom_name?.toLowerCase() === item.name.toLowerCase() && pm.phase === phaseNum;
+                              } else {
+                                return pm.material_id === item.material_id && pm.phase === phaseNum;
+                              }
+                            })?.quantity;
+
+                            return (
+                              <td
+                                key={phaseNum}
+                                className={`p-3 text-sm font-medium text-black border-r border-[#D6D9DE] last:border-r-0 ${[
+                                  "bg-[#E7F3FF]",
+                                  "bg-[#FFEEB4]",
+                                  "bg-[#E6F7F5]",
+                                  "bg-[#FFF1F0]",
+                                  "bg-[#F0F7FF]",
+                                ][(phaseNum - 1) % 5]
+                                  }`}
+                              >
+                                {phaseQty !== undefined ? `${phaseQty} ${item.unit}` : "—"}
+                              </td>
+                            );
+                          })}
+                      </tr>
+                    );
+                  })}
+                  {!mergedMaterialsToDisplay.length && (
+                    <tr>
+                      <td
+                        colSpan={3 + (selectedPhaseFilter === "all" ? numStagesToDisplay : 1)}
+                        className="p-10 text-center text-gray-400 text-sm italic"
+                      >
+                        No material requirements specified.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Tab 2: Inspection */}
+      {activeTab === "inspection" && (
+        <div className="flex flex-col gap-6">
+          {app.inspections && app.inspections.length > 0 && (
+            <div className="flex flex-col gap-4">
+              <h3 className="text-xs font-bold text-[#343434] uppercase tracking-wider">Site Inspection Reports</h3>
+              <div className="grid grid-cols-1 gap-4">
+                {app.inspections.map((insp) => (
+                  <div key={insp.id} className="rounded-xl border border-[#D6D9DE] bg-white p-5 shadow-xs flex flex-col gap-3">
+                    <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex size-7 items-center justify-center rounded-full bg-[#E7F3FF] text-[#0C83FF]">
+                          <Image src="/dashboard/icons/applications/visibility-public.svg" alt="" width={14} height={14} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-[#343434]">{insp.inspector_name || `Inspector #${insp.inspected_by}`}</p>
+                          <p className="text-[10px] text-gray-500 font-medium">Field Inspector / JEN</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <span className="rounded-md bg-[#F3F4F6] px-2.5 py-1 text-xs font-medium text-[#343434]">
+                          Recommended Phases: <strong className="text-[#0C83FF] font-bold">{insp.recommended_phases || "—"}</strong>
+                        </span>
+                        <span className="text-xs text-gray-400 font-medium">
+                          {new Date(insp.inspected_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
+                    </div>
+
+                    {insp.remarks && (
+                      <div className="rounded-lg bg-[#F9FAFB] border border-[#E5E7EB] p-3 text-xs text-[#343434]">
+                        <span className="font-semibold text-gray-500 block text-[10px] uppercase tracking-wider mb-1">Inspector Remarks</span>
+                        <p className="leading-relaxed">{insp.remarks}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3">
+            <h3 className="text-xs font-bold text-[#343434] uppercase tracking-wider">Geo-Tagged Site Photos</h3>
+            <div className="grid grid-cols-4 gap-3">
+              {inspectionPhotos.map((photo, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => setViewerConfig({ isOpen: true, index: idx, list: inspectionPhotoList })}
+                  className="aspect-video relative rounded-lg border border-[#D6D9DE] overflow-hidden bg-gray-100 group cursor-pointer hover:border-[#0C83FF] transition-all block"
+                >
+                  <Image
+                    src={photo.url || "/sample/application-main.png"}
+                    alt="Geo-tagged"
+                    fill
+                    unoptimized
+                    className="object-cover"
+                  />
+
+                  <div className="absolute bottom-2 right-2 p-1 bg-white rounded-full shadow-xs">
+                    <Image
+                      src="/dashboard/icons/applications/visibility-public.svg"
+                      alt=""
+                      width={12}
+                      height={12}
+                    />
+                  </div>
+
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity p-2 flex flex-col justify-end">
+                    <p className="text-[8px] text-white font-medium line-clamp-2">
+                      {photo.remarks}
+                    </p>
+
+                    <p className="text-[7px] text-white/70 italic">
+                      By {photo.inspector} on{" "}
+                      {new Date(photo.date).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              {!inspectionPhotos.length && (
+                <p className="text-xs text-gray-400 col-span-4 italic py-4">No site photos uploaded.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tab 3: Tokens */}
+      {activeTab === "tokens" && (
+        <div className="flex flex-col gap-5">
+          <h3 className="text-[12px] font-bold text-[#343434] uppercase tracking-wider">Application Tokens & Phases</h3>
+
+          {app.tokens && app.tokens.length > 0 ? (
+            <div className="grid grid-cols-2 gap-4">
+              {app.tokens.map((token) => (
+                <div key={token.token_number} className="rounded-lg border border-[#D6D9DE] bg-[#F9FAFB] p-4 flex flex-col gap-3">
+                  <div className="flex items-center justify-between border-b border-[#D6D9DE] pb-2">
+                    <div>
+                      <p className="text-xs font-bold text-[#343434]">{token.token_number}</p>
+                      <p className="text-[10px] text-gray-500 font-medium">Phase {token.phase}</p>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold text-white ${
+                      token.status === "ACTIVE" ? "bg-[#059669]" :
+                      token.status === "WITHHELD" ? "bg-orange-500" : "bg-gray-500"
+                    }`}>
+                      {token.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-gray-500 text-[10px] block">Valid Till</span>
+                      <span className="font-semibold text-[#343434]">
+                        {token.valid_till ? new Date(token.valid_till).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "—"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 text-[10px] block">Remaining Qty</span>
+                      <span className="font-semibold text-[#0C83FF]">{token.remaining_quantity_pct ?? 100}%</span>
+                    </div>
+                  </div>
+
+                  <a
+                    href={`/authority/tokens/${token.transport_code}`}
+                    className="mt-1 flex items-center justify-center gap-1.5 rounded-lg border border-[#0C83FF] bg-white py-1.5 text-xs font-medium text-[#0C83FF] hover:bg-[#E7F3FF] transition-colors"
+                  >
+                    View Token Details →
+                  </a>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-[#D6D9DE] bg-gray-50 p-6 text-center text-xs text-gray-500 italic">
+              Phase materials estimates are registered, but tokens have not been generated yet.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Image Viewer Lightbox Modal */}
+      <ImageViewerModal
+        isOpen={viewerConfig.isOpen}
+        onClose={() => setViewerConfig((prev) => ({ ...prev, isOpen: false }))}
+        images={viewerConfig.list}
+        currentIndex={viewerConfig.index}
+        onIndexChange={(idx) => setViewerConfig((prev) => ({ ...prev, index: idx }))}
+      />
     </div>
   );
 };

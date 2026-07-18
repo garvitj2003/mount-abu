@@ -196,11 +196,14 @@ export default function VehicleDetailDrawer({
                   <InfoSection title="Entry Proofs">
                     <DetailCard noPadding>
                       <div className="relative h-[180px] w-full bg-gray-100 border-b border-[#D6D9DE]">
-                        {data.entry_proof && data.entry_proof.length > 0 ? (
-                          <Image src={data.entry_proof[0]} alt="Vehicle Entry Proof" fill className="object-cover" unoptimized />
-                        ) : (
-                          <div className="flex h-full items-center justify-center bg-gray-50 text-xs text-[#343434]/40">No Proof Image</div>
-                        )}
+                        {(() => {
+                          const entryProofUrl = Array.isArray(data.entry_proof) ? data.entry_proof[0] : data.entry_proof;
+                          return entryProofUrl ? (
+                            <Image src={entryProofUrl} alt="Vehicle Entry Proof" fill className="object-cover" unoptimized />
+                          ) : (
+                            <div className="flex h-full items-center justify-center bg-gray-50 text-xs text-[#343434]/40">No Proof Image</div>
+                          );
+                        })()}
                       </div>
                       <div className="p-4 space-y-4">
                         <div className="text-center">

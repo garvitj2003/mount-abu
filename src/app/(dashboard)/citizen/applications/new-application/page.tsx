@@ -1230,6 +1230,7 @@ export default function NewApplicationPage() {
             <p><span className="font-bold">4. I declare that</span> I will comply with all directions issued by the Hon&apos;ble National Green Tribunal (NGT) and the Hon&apos;ble Supreme Court and will keep the <span className="font-bold">Mount Abu Eco-Sensitive Zone</span> protected and safe.</p>
             <p><span className="font-bold">5. I declare that</span> I will ensure full compliance with the <span className="font-bold">Mount Abu Zonal Master Plan 2030</span> and the <span className="font-bold">Mount Abu Building Byelaws, 2019.</span></p>
             <p><span className="font-bold">6. I declare that</span> there is no case or dispute pending in any court regarding this property.</p>
+            <p><span className="font-bold">7. This portal is only for permission to transport materials.</span> The entire responsibility for the approval of work (New Construction Approval / Repair / Renovation) lies with the competent authority. In any type of legal proceeding, the material transportation permission granted on the portal should not be presented in court as proof of work approval.</p>
           </div>
           <p className="pt-2 font-medium">Date: {new Date().toLocaleDateString('en-GB').replace(/\//g, '.')}</p>
         </div>
