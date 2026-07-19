@@ -212,30 +212,7 @@ export default function ApplicationActionPanel({
     if (isNew) {
       if (status === "SUBMITTED" && (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN")) {
         actionList.push(
-          <div key="obj-dropdown-group" className="flex items-center">
-            <DropdownSelect
-              options={objectionOptions}
-              value=""
-              onChange={(val) => onObjectionClick?.(val as string)}
-              className="h-[38px]"
-              triggerClassName="bg-[#FFD648] text-[#343434] border-[#FFD648] font-medium font-onest hover:opacity-90 transition-opacity rounded-lg px-2.5 flex items-center justify-between gap-2 cursor-pointer"
-              renderTrigger={(selectedOpt, isOpen) => (
-                <div className="flex items-center gap-2">
-                  <Image src="/dashboard/icons/warning.svg" alt="" width={16} height={16} />
-                  <span>Objection</span>
-                  <div className={`pointer-events-none transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
-                    <Image
-                      src="/dashboard/icons/applications/chevron-down.svg"
-                      alt="down"
-                      width={10}
-                      height={6}
-                      className="opacity-60"
-                    />
-                  </div>
-                </div>
-              )}
-            />
-          </div>,
+          <ActionButton key="obj-btn" label="Raise Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={() => onObjectionClick?.("")} />,
           <ActionButton key="rej" label="Reject" icon="/dashboard/icons/cross-round-red.svg" variant="danger" onClick={onRejectClick} />,
           <ActionButton key="app" label="Approve" variant="success" onClick={() => setShowApproveConfirm(true)} />
         );
@@ -248,30 +225,7 @@ export default function ApplicationActionPanel({
       if (status === "APPROVED" || status === "TOKEN_GENERATED") {
         if (status === "APPROVED" && (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN")) {
           actionList.push(
-            <div key="obj-dropdown-group" className="flex items-center">
-              <DropdownSelect
-                options={objectionOptions}
-                value=""
-                onChange={(val) => onObjectionClick?.(val as string)}
-                className="h-[38px]"
-                triggerClassName="bg-[#FFD648] text-[#343434] border-[#FFD648] font-medium font-onest hover:opacity-90 transition-opacity rounded-lg px-2.5 flex items-center justify-between gap-2 cursor-pointer"
-                renderTrigger={(selectedOpt, isOpen) => (
-                  <div className="flex items-center gap-2">
-                    <Image src="/dashboard/icons/warning.svg" alt="" width={16} height={16} />
-                    <span>Objection</span>
-                    <div className={`pointer-events-none transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
-                      <Image
-                        src="/dashboard/icons/applications/chevron-down.svg"
-                        alt="down"
-                        width={10}
-                        height={6}
-                        className="opacity-60"
-                      />
-                    </div>
-                  </div>
-                )}
-              />
-            </div>,
+            <ActionButton key="obj-btn" label="Raise Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={() => onObjectionClick?.("")} />,
             <ActionButton key="rej" label="Reject" icon="/dashboard/icons/cross-round-red.svg" variant="danger" onClick={onRejectClick} />
           );
         }
@@ -297,7 +251,9 @@ export default function ApplicationActionPanel({
       if (status === "SUBMITTED") {
         if (userRole === "COMMISSIONER" || userRole === "SUPERADMIN") {
           actionList.push(
-            <ActionButton key="fwd" label="Forward to Depts" variant="primary" onClick={() => setShowForwardConfirm(true)} />
+            <ActionButton key="fwd" label="Forward to Depts" variant="primary" onClick={() => setShowForwardConfirm(true)} />,
+            <ActionButton key="obj-btn" label="Raise Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={() => onObjectionClick?.("")} />,
+            <ActionButton key="rej" label="Reject" icon="/dashboard/icons/cross-round-red.svg" variant="danger" onClick={onRejectClick} />
           );
         } else if (userRole === "NODAL_OFFICER") {
           actionList.push(
@@ -308,30 +264,7 @@ export default function ApplicationActionPanel({
       if (status === "FORWARDED") {
         if (userRole === "SUPERADMIN" || userRole === "COMMISSIONER") {
           actionList.push(
-            <div key="obj-dropdown-group" className="flex items-center">
-              <DropdownSelect
-                options={objectionOptions}
-                value=""
-                onChange={(val) => onObjectionClick?.(val as string)}
-                className="h-[38px]"
-                triggerClassName="bg-[#FFD648] text-[#343434] border-[#FFD648] font-medium font-onest hover:opacity-90 transition-opacity rounded-lg px-2.5 flex items-center justify-between gap-2 cursor-pointer"
-                renderTrigger={(selectedOpt, isOpen) => (
-                  <div className="flex items-center gap-2">
-                    <Image src="/dashboard/icons/warning.svg" alt="" width={16} height={16} />
-                    <span>Raise Objection</span>
-                    <div className={`pointer-events-none transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
-                      <Image
-                        src="/dashboard/icons/applications/chevron-down.svg"
-                        alt="down"
-                        width={10}
-                        height={6}
-                        className="opacity-60"
-                      />
-                    </div>
-                  </div>
-                )}
-              />
-            </div>
+            <ActionButton key="obj-btn" label="Raise Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={() => onObjectionClick?.("")} />
           );
         }
         if (hasGeoPhotos && (userRole === "JEN" || userRole === "SUPERADMIN")) {
@@ -362,34 +295,22 @@ export default function ApplicationActionPanel({
             <ActionButton key="clear-app" label="Clear Objection" variant="success" onClick={() => setShowClearConfirm(true)} />
           );
         }
+        if (userRole === "JEN" || userRole === "SUPERADMIN") {
+          actionList.push(
+            <ActionButton 
+              key="add-phase" 
+              label="Add/Edit Phase" 
+              icon="/dashboard/icons/applications/calendar.svg" 
+              variant="primary" 
+              onClick={onAddPhaseClick} 
+            />
+          );
+        }
       }
       if (status === "APPROVED" || status === "TOKEN_GENERATED") {
         if (status === "APPROVED" && (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN")) {
           actionList.push(
-            <div key="obj-dropdown-group" className="flex items-center">
-              <DropdownSelect
-                options={objectionOptions}
-                value=""
-                onChange={(val) => onObjectionClick?.(val as string)}
-                className="h-[38px]"
-                triggerClassName="bg-[#FFD648] text-[#343434] border-[#FFD648] font-medium font-onest hover:opacity-90 transition-opacity rounded-lg px-2.5 flex items-center justify-between gap-2 cursor-pointer"
-                renderTrigger={(selectedOpt, isOpen) => (
-                  <div className="flex items-center gap-2">
-                    <Image src="/dashboard/icons/warning.svg" alt="" width={16} height={16} />
-                    <span>Objection</span>
-                    <div className={`pointer-events-none transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
-                      <Image
-                        src="/dashboard/icons/applications/chevron-down.svg"
-                        alt="down"
-                        width={10}
-                        height={6}
-                        className="opacity-60"
-                      />
-                    </div>
-                  </div>
-                )}
-              />
-            </div>,
+            <ActionButton key="obj-btn" label="Raise Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={() => onObjectionClick?.("")} />,
             <ActionButton key="rej" label="Reject" icon="/dashboard/icons/cross-round-red.svg" variant="danger" onClick={onRejectClick} />
           );
         }

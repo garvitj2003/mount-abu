@@ -571,6 +571,86 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
       {/* Tab 1: Work Description */}
       {activeTab === "work" && (
         <div className="flex flex-col gap-5">
+          {/* Rule 6.3: Objection Reverted Data Card */}
+          {(() => {
+            const objectionsList = (app as any).objections || [];
+            const revertedDocUrl = objectionsList.find((o: any) => o.reverted_document_url)?.reverted_document_url ||
+              (app.comments || []).find((c) => c.comment_type === "OBJECTION_COMMENT" && c.media_paths?.length)?.media_paths?.[0];
+
+            if (!revertedDocUrl) return null;
+
+            return (
+              <div className="flex flex-col gap-2 rounded-xl border border-[#72B7FF] bg-[#E7F3FF] p-4 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#0C83FF] uppercase tracking-wider flex items-center gap-1.5">
+                    📄 Objection Reverted Data
+                  </span>
+                  <span className="text-[10px] text-gray-500 font-medium">Uploaded PDF Document</span>
+                </div>
+                <p className="text-xs text-[#343434]">
+                  Requirement details document attached for objection resolution:
+                </p>
+                <a
+                  href={revertedDocUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-fit flex items-center gap-2 rounded-lg bg-[#0C83FF] px-3.5 py-1.5 text-xs font-semibold text-[#white] hover:bg-blue-600 transition-colors shadow-xs text-white font-bold"
+                >
+                  📥 Download / View Objection Reverted Data PDF →
+                </a>
+              </div>
+            );
+          })()}
+
+          {/* Rule 6.7 & 6.13: Objection & Clearance History Cards */}
+          {((app as any).objections && (app as any).objections.length > 0) && (
+            <div className="flex flex-col gap-3 rounded-xl border border-[#D6D9DE] bg-[#FFFBEB] p-4 shadow-xs">
+              <h3 className="text-xs font-bold text-[#D97706] uppercase tracking-wider">
+                Objection & Clearance Details
+              </h3>
+              <div className="grid grid-cols-1 gap-2.5">
+                {((app as any).objections as any[]).map((obj) => (
+                  <div key={obj.id} className="rounded-lg border border-[#FDE68A] bg-white p-3 text-xs text-[#343434] flex flex-col gap-2 shadow-2xs">
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gray-500">Objection By:</span>
+                        <strong className="text-[#343434] font-bold">{obj.objected_by_name || "Official"} ({obj.objected_by_role})</strong>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gray-500">Objection To:</span>
+                        <strong className="text-[#0C83FF] font-bold">{obj.objected_to_role}</strong>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold text-white ${obj.status === "PENDING" ? "bg-orange-500" : "bg-[#059669]"}`}>
+                        {obj.status === "PENDING" ? "Active Objection" : "Objection Cleared"}
+                      </span>
+                    </div>
+
+                    {obj.remarks && (
+                      <p className="text-xs text-[#343434] leading-relaxed">
+                        <strong className="text-gray-500">Remarks: </strong>{obj.remarks}
+                      </p>
+                    )}
+
+                    {obj.status === "RESOLVED" && (
+                      <div className="mt-1 rounded bg-[#E6F7F5] p-2 text-xs text-[#008080] flex items-center justify-between border border-[#99D4C2]">
+                        <div>
+                          <span className="font-bold">Objection Cleared</span> by{" "}
+                          <strong>{obj.resolved_by_name || "Official"} ({obj.resolved_by_role})</strong>
+                          {obj.resolution_remarks && <p className="text-[11px] mt-0.5 italic text-[#04694A]">"{obj.resolution_remarks}"</p>}
+                        </div>
+                        {obj.resolved_at && (
+                          <span className="text-[10px] text-gray-500 shrink-0 font-mono">
+                            {new Date(obj.resolved_at).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true })}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-col gap-1">
             <p className="text-[10px] font-normal text-[#343434] opacity-60 uppercase">Work Description</p>
             <p className="text-[12px] font-normal text-[#343434] leading-relaxed">
@@ -921,6 +1001,19 @@ export default function ApplicationDetailsPage() {
     }
   }, [searchParams]);
 
+  const participatedRoles = useMemo(() => {
+    const roles = new Set<string>();
+    app?.comments?.forEach((c) => {
+      if ((c as any).commenter_role) {
+        roles.add((c as any).commenter_role);
+      }
+    });
+    if (app?.inspections && app.inspections.length > 0) {
+      roles.add("JEN");
+    }
+    return Array.from(roles);
+  }, [app?.comments, app?.inspections]);
+
   const [remarksModal, setRemarksModal] = useState<{ isOpen: boolean; type: "REJECT" | "OBJECT" }>({
     isOpen: false,
     type: "REJECT",
@@ -934,7 +1027,7 @@ export default function ApplicationDetailsPage() {
     extra?: { phase?: number; num_stages?: number; phase_materials?: components["schemas"]["PhaseMaterialEntry"][] }
   ) => {
     try {
-      // 1. Call Workflow Action API
+      // Call Workflow Action API (backend automatically logs objection comments with appropriate privacy classification)
       await workflowAction.mutateAsync({
         id,
         data: {
@@ -943,17 +1036,6 @@ export default function ApplicationDetailsPage() {
           ...extra
         }
       });
-
-      // 2. If it's an Objection, also call the Comment API
-      if (action === "OBJECT" && remarks) {
-        await addComment({
-          id,
-          data: {
-            comment: remarks,
-            comment_type: "OBJECTION_COMMENT" as any, // Cast as user instructed
-          }
-        });
-      }
 
       alert(`Application ${action === "OBJECT" ? "objection raised" : action.toLowerCase() + "ed"} successfully.`);
     } catch (err: any) {
@@ -1019,9 +1101,17 @@ export default function ApplicationDetailsPage() {
       <ActionRemarksModal
         isOpen={remarksModal.isOpen}
         type={remarksModal.type}
+        appType={app.type}
+        appStatus={app.status}
+        userRole={user?.role}
+        participatedRoles={participatedRoles}
         onClose={() => setRemarksModal({ ...remarksModal, isOpen: false })}
-        onConfirm={async (remarks) => {
-          await handleAction(remarksModal.type, remarks, { objection_to_role: objectionRedirectRole } as any);
+        onConfirm={async (data) => {
+          await handleAction(remarksModal.type, data.remarks, {
+            objection_to_roles: data.objection_to_roles,
+            role_remarks: data.role_remarks,
+            reverted_document_url: data.reverted_document_url,
+          } as any);
           setRemarksModal({ ...remarksModal, isOpen: false });
         }}
         isPending={workflowAction.isPending}
