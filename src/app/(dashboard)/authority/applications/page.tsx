@@ -7,7 +7,7 @@ import FilterTabDropdown from "@/components/ui/FilterTabDropdown";
 import { useUser } from "@/hooks/useUser";
 import { useApplications, useWorkflowAction } from "@/hooks/useApplications";
 import { ROLE_FILTERS, type ApplicationFlag } from "@/constants/filters";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useWards } from "@/hooks/useMasterData";
 import CustomDropdown from "@/components/ui/CustomDropdown";
 import { usePagination } from "@/hooks/usePagination";
@@ -83,18 +83,32 @@ const StatusBadge = ({ status }: { status: ApplicationStatus }) => {
 
 export default function AuthorityApplicationsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: user } = useUser();
   const { data: wards = [] } = useWards();
   const { page, limit, setPage, setLimit } = usePagination();
 
-  const [selectedCategory, setSelectedCategory] = useState<"All" | "New" | "Renovation">("All");
-  const [selectedFlag, setSelectedFlag] = useState<ApplicationFlag>("ALL");
-  const [isPendingWithMe, setIsPendingWithMe] = useState(false);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [selectedWardId, setSelectedWardId] = useState<number | null>(null);
-  const [selectedPropertyUsage, setSelectedPropertyUsage] = useState<string>("");
-  const [selectedJurisdictionZone, setSelectedJurisdictionZone] = useState<string>("");
+  // Initialize state from URL Search Params for persistence across navigation
+  const [selectedCategory, setSelectedCategory] = useState<"All" | "New" | "Renovation">(
+    () => (searchParams.get("category") as any) || "All"
+  );
+  const [selectedFlag, setSelectedFlag] = useState<ApplicationFlag>(
+    () => (searchParams.get("flag") as any) || "ALL"
+  );
+  const [isPendingWithMe, setIsPendingWithMe] = useState(
+    () => searchParams.get("pending_with_me") === "true"
+  );
+  const [search, setSearch] = useState(() => searchParams.get("search") || "");
+  const [debouncedSearch, setDebouncedSearch] = useState(() => searchParams.get("search") || "");
+  const [selectedWardId, setSelectedWardId] = useState<number | null>(
+    () => (searchParams.get("ward_id") ? Number(searchParams.get("ward_id")) : null)
+  );
+  const [selectedPropertyUsage, setSelectedPropertyUsage] = useState<string>(
+    () => searchParams.get("property_usage") || ""
+  );
+  const [selectedJurisdictionZone, setSelectedJurisdictionZone] = useState<string>(
+    () => searchParams.get("jurisdiction_zone") || ""
+  );
   const hasInitializedDefaultZone = useRef(false);
 
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
@@ -127,27 +141,118 @@ export default function AuthorityApplicationsPage() {
 
   // Set default jurisdiction zone from user profile on mount / refresh
   useEffect(() => {
-    if (user?.jurisdiction_zone && !hasInitializedDefaultZone.current) {
+    if (user?.jurisdiction_zone && !hasInitializedDefaultZone.current && !searchParams.get("jurisdiction_zone")) {
       setSelectedJurisdictionZone(user.jurisdiction_zone);
       hasInitializedDefaultZone.current = true;
     }
-  }, [user]);
+  }, [user, searchParams]);
 
-  const { data: applications = [], isLoading } = useApplications({
+  // Primary Tab Filters State
+  const [activePrimaryTab, setActivePrimaryTab] = useState<"NONE" | "PENDING" | "COMPLETED" | "SUBMISSION_DAYS">(
+    () => (searchParams.get("primary_tab") as any) || "NONE"
+  );
+  const [selectedAuthorityRole, setSelectedAuthorityRole] = useState<string>(
+    () => searchParams.get("authority_role") || ""
+  );
+  const [selectedActionName, setSelectedActionName] = useState<string>("");
+  const [pendingDays, setPendingDays] = useState<string>(
+    () => searchParams.get("pending_days") || ""
+  );
+  const [pendingDaysOption, setPendingDaysOption] = useState<string>(() => {
+    const pd = searchParams.get("pending_days");
+    if (!pd) return "";
+    return ["3", "7", "15", "30"].includes(pd) ? pd : "custom";
+  });
+  const [submittedDays, setSubmittedDays] = useState<string>(
+    () => searchParams.get("submitted_days") || ""
+  );
+  const [submittedDaysOption, setSubmittedDaysOption] = useState<string>(() => {
+    const sd = searchParams.get("submitted_days");
+    if (!sd) return "";
+    return ["3", "7", "15", "30"].includes(sd) ? sd : "custom";
+  });
+
+  // Secondary Table Filters State
+  const [selectedWardIds, setSelectedWardIds] = useState<number[]>(() => {
+    const w = searchParams.get("ward_ids");
+    return w ? w.split(",").map(Number).filter(Boolean) : [];
+  });
+  const [selectedTableStatus, setSelectedTableStatus] = useState<string>(
+    () => searchParams.get("status") || ""
+  );
+  const [openHeaderFilter, setOpenHeaderFilter] = useState<"NONE" | "WARD" | "TYPE" | "USAGE" | "STATUS">("NONE");
+
+  // Keep URL search params in sync with active filter states
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (page > 1) params.set("page", String(page));
+    if (limit !== 10) params.set("limit", String(limit));
+    if (debouncedSearch) params.set("search", debouncedSearch);
+    if (activePrimaryTab !== "NONE") params.set("primary_tab", activePrimaryTab);
+    if (selectedAuthorityRole) params.set("authority_role", selectedAuthorityRole);
+    if (pendingDays) params.set("pending_days", pendingDays);
+    if (submittedDays) params.set("submitted_days", submittedDays);
+    if (selectedCategory !== "All") params.set("category", selectedCategory);
+    if (selectedFlag && selectedFlag !== "ALL") params.set("flag", selectedFlag);
+    if (selectedWardIds.length > 0) params.set("ward_ids", selectedWardIds.join(","));
+    if (selectedPropertyUsage) params.set("property_usage", selectedPropertyUsage);
+    if (selectedJurisdictionZone) params.set("jurisdiction_zone", selectedJurisdictionZone);
+    if (selectedTableStatus) params.set("status", selectedTableStatus);
+    if (isPendingWithMe) params.set("pending_with_me", "true");
+
+    const newQuery = params.toString();
+    const newUrl = newQuery ? `${window.location.pathname}?${newQuery}` : window.location.pathname;
+    window.history.replaceState(null, "", newUrl);
+  }, [
+    page,
+    limit,
+    debouncedSearch,
+    activePrimaryTab,
+    selectedAuthorityRole,
+    pendingDays,
+    submittedDays,
+    selectedCategory,
+    selectedFlag,
+    selectedWardIds,
+    selectedPropertyUsage,
+    selectedJurisdictionZone,
+    selectedTableStatus,
+    isPendingWithMe,
+  ]);
+
+  const { data: responseData, isLoading } = useApplications({
     flag: isPendingWithMe ? "PENDING_WITH_ME" : selectedFlag,
     offset: (page - 1) * limit,
     limit,
     search: debouncedSearch || undefined,
     ward_id: selectedWardId || undefined,
+    ward_ids: selectedWardIds.length > 0 ? selectedWardIds.join(",") : undefined,
     property_usage: selectedPropertyUsage || undefined,
     jurisdiction_zone: selectedJurisdictionZone || undefined,
+    primary_tab: activePrimaryTab !== "NONE" ? activePrimaryTab : undefined,
+    authority_role: selectedAuthorityRole || undefined,
+    action_name: selectedActionName || undefined,
+    pending_days: pendingDays ? Number(pendingDays) : undefined,
+    submitted_days: submittedDays ? Number(submittedDays) : undefined,
+    type: selectedCategory === "New" ? "NEW" : selectedCategory === "Renovation" ? "RENOVATION" : undefined,
+    status: selectedTableStatus || undefined,
   });
 
-  // Since API doesn't return total count, we estimate total pages
+  const applications = useMemo(() => {
+    if (!responseData) return [];
+    if (Array.isArray(responseData)) return responseData;
+    return responseData.applications || [];
+  }, [responseData]);
+
+  const totalCount = useMemo(() => {
+    if (!responseData) return 0;
+    if (Array.isArray(responseData)) return responseData.length;
+    return responseData.total || 0;
+  }, [responseData]);
+
   const totalPages = useMemo(() => {
-    if (applications.length < limit) return page;
-    return page + 1;
-  }, [applications.length, page, limit]);
+    return Math.ceil((totalCount || 0) / limit) || 1;
+  }, [totalCount, limit]);
 
   const { mutateAsync: performAction } = useWorkflowAction();
 
@@ -451,81 +556,32 @@ export default function AuthorityApplicationsPage() {
       </div>
 
       {/* Content */}
-      <div className="p-5">
+      <div className="p-5 flex flex-col gap-4">
         <div className="flex w-full flex-col gap-4 rounded-lg border border-[#D6D9DE] bg-white p-4">
 
-          {/* Filters Row */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            {/* Left Filter Group (Search & Pending with me) */}
-            <div className="flex items-center gap-2">
+          {/* Top Filters Row: Search + Primary Workflow Filter Tabs */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-[#F8FAFC] p-3 rounded-xl border border-[#D6D9DE]">
+            <div className="flex flex-wrap items-center gap-3">
               {/* Search */}
-              <div className="flex w-[209px] items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-60">
+              <div className="flex w-[170px] items-center gap-2 rounded-lg border border-[#D6D9DE] bg-white px-2.5 py-2 shadow-2xs">
+                <svg width="15" height="15" viewBox="0 0 16 16" fill="none" className="opacity-60 shrink-0">
                   <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 <input
                   type="text"
-                  placeholder="Search"
+                  placeholder="Search..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full border-none bg-transparent p-0 text-sm font-normal text-[#343434] outline-none placeholder:text-[#343434]/60 focus:ring-0"
+                  className="w-full border-none bg-transparent p-0 text-xs font-normal text-[#343434] outline-none placeholder:text-[#343434]/60 focus:ring-0"
                 />
               </div>
-
-              {/* Pending with me button for authority roles except superadmin and collector */}
-              {user?.role && user.role !== "SUPERADMIN" && user.role !== "COLLECTOR" && (
-                <button
-                  onClick={() => {
-                    setIsPendingWithMe(!isPendingWithMe);
-                    setPage(1);
-                  }}
-                  className={`h-[38px] px-4 text-sm rounded-lg border transition-colors flex items-center justify-center gap-1.5 ${isPendingWithMe
-                    ? "bg-[#E6F4EA] border-[#137333] text-[#137333] font-semibold shadow-sm"
-                    : "bg-white border-[#D6D9DE] text-[#343434] hover:bg-gray-50"
-                    }`}
-                >
-                  <span className={`w-2 h-2 rounded-full ${isPendingWithMe ? "bg-[#137333]" : "bg-gray-400"}`}></span>
-                  Pending with me
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              {/* Ward/Zone Dropdown */}
-              <CustomDropdown
-                label="Ward/Zone"
-                options={wardOptions}
-                value={selectedWardId || ""}
-                onSelect={(val) => {
-                  setSelectedWardId(val ? Number(val) : null);
-                  setPage(1);
-                }}
-                placeholder="Select Ward"
-                width="160px"
-              />
-
-              {/* Property Usage Dropdown */}
-              <CustomDropdown
-                label="Property Usage"
-                options={[
-                  { label: "All Usages", value: "" },
-                  ...PROPERTY_USAGE_OPTIONS
-                ]}
-                value={selectedPropertyUsage}
-                onSelect={(val) => {
-                  setSelectedPropertyUsage(val);
-                  setPage(1);
-                }}
-                placeholder="Select Usage"
-                width="160px"
-              />
 
               {/* Jurisdiction Dropdown */}
               <CustomDropdown
                 label="Jurisdiction"
                 options={[
-                  { label: "All Jurisdictions", value: "" },
+                  { label: "All", value: "" },
                   { label: "ULB", value: "ULB" },
                   { label: "UIT", value: "UIT" }
                 ]}
@@ -534,109 +590,434 @@ export default function AuthorityApplicationsPage() {
                   setSelectedJurisdictionZone(val);
                   setPage(1);
                 }}
-                placeholder="Select Jurisdiction"
-                width="160px"
+                placeholder="All"
+                width="125px"
               />
 
-              {/* Status Divider */}
-              <div className="h-6 w-[1px] bg-[#D6D9DE] mx-1"></div>
-
-              {/* Role-Based Filters */}
-              <div className="flex items-center gap-2">
-
-                {/* All Tab (Admins/Nodal Officer) */}
-                {canViewAll && (
-                  <button
-                    onClick={() => {
-                      setSelectedCategory("All");
-                      setSelectedFlag("ALL");
-                      setIsPendingWithMe(false);
-                      setPage(1);
-                    }}
-                    className={`h-[38px] px-4 text-sm rounded-lg border transition-colors flex items-center justify-center ${selectedCategory === "All" && !isPendingWithMe
-                      ? "bg-[#E7F3FF] border-[#0C83FF] text-[#0C83FF] font-semibold"
+              {/* Pending with me button */}
+              {user?.role && user.role !== "SUPERADMIN" && user.role !== "COLLECTOR" && (
+                <button
+                  onClick={() => {
+                    setIsPendingWithMe(!isPendingWithMe);
+                    setPage(1);
+                  }}
+                  className={`h-[38px] px-3.5 text-xs rounded-lg border transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
+                    isPendingWithMe
+                      ? "bg-[#E6F4EA] border-[#137333] text-[#137333] font-semibold shadow-2xs"
                       : "bg-white border-[#D6D9DE] text-[#343434] hover:bg-gray-50"
-                      }`}
-                  >
-                    All
-                  </button>
-                )}
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${isPendingWithMe ? "bg-[#137333]" : "bg-gray-400"}`}></span>
+                  Pending with me
+                </button>
+              )}
 
-                {/* All Tab (Department / JEN) */}
-                {canViewAllDept && (
-                  <button
-                    onClick={() => {
-                      setSelectedCategory("All");
-                      setSelectedFlag("ALL_DEPT");
-                      setIsPendingWithMe(false);
-                      setPage(1);
-                    }}
-                    className={`h-[38px] px-4 text-sm rounded-lg border transition-colors flex items-center justify-center ${selectedCategory === "All" && !isPendingWithMe
-                      ? "bg-[#E7F3FF] border-[#0C83FF] text-[#0C83FF] font-semibold"
-                      : "bg-white border-[#D6D9DE] text-[#343434] hover:bg-gray-50"
-                      }`}
-                  >
-                    All
-                  </button>
-                )}
+              <div className="h-6 w-[1px] bg-[#D6D9DE] mx-0.5 hidden sm:block"></div>
 
-                {/* New Construction Dropdown */}
-                {roleFilters?.newConstruction && roleFilters.newConstruction.length > 0 && (
-                  <FilterTabDropdown
-                    label="New Construction"
-                    options={roleFilters.newConstruction}
-                    selectedFlag={selectedFlag}
-                    category="New"
-                    currentCategory={isPendingWithMe ? "All" : selectedCategory}
-                    onSelect={(flag) => {
-                      setSelectedCategory("New");
-                      setSelectedFlag(flag);
-                      setIsPendingWithMe(false);
-                      setPage(1);
-                    }}
-                  />
-                )}
+              {/* ── Primary Workflow Tabs (Mutually Exclusive: A, B, C) ── */}
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => {
+                    setActivePrimaryTab(activePrimaryTab === "PENDING" ? "NONE" : "PENDING");
+                    setSubmittedDays("");
+                    setPage(1);
+                  }}
+                  className={`px-3.5 py-2 rounded-lg text-xs font-medium border transition-all cursor-pointer flex items-center gap-1.5 ${
+                    activePrimaryTab === "PENDING"
+                      ? "bg-[#0C83FF] text-white border-[#0C83FF] shadow-sm font-semibold"
+                      : "bg-white text-[#343434] border-[#D6D9DE] hover:bg-gray-50"
+                  }`}
+                >
+                  <span>Pending with Authority</span>
+                </button>
 
-                {/* Renovation Dropdown */}
-                {roleFilters?.renovation && roleFilters.renovation.length > 0 && (
-                  <FilterTabDropdown
-                    label="Repair & Renovation"
-                    options={roleFilters.renovation}
-                    selectedFlag={selectedFlag}
-                    category="Renovation"
-                    currentCategory={isPendingWithMe ? "All" : selectedCategory}
-                    onSelect={(flag) => {
-                      setSelectedCategory("Renovation");
-                      setSelectedFlag(flag);
-                      setIsPendingWithMe(false);
-                      setPage(1);
-                    }}
-                  />
-                )}
+                <button
+                  onClick={() => {
+                    setActivePrimaryTab(activePrimaryTab === "COMPLETED" ? "NONE" : "COMPLETED");
+                    setSubmittedDays("");
+                    setPage(1);
+                  }}
+                  className={`px-3.5 py-2 rounded-lg text-xs font-medium border transition-all cursor-pointer flex items-center gap-1.5 ${
+                    activePrimaryTab === "COMPLETED"
+                      ? "bg-[#0C83FF] text-white border-[#0C83FF] shadow-sm font-semibold"
+                      : "bg-white text-[#343434] border-[#D6D9DE] hover:bg-gray-50"
+                  }`}
+                >
+                  <span>Completed by Authority</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setActivePrimaryTab(activePrimaryTab === "SUBMISSION_DAYS" ? "NONE" : "SUBMISSION_DAYS");
+                    setSelectedAuthorityRole("");
+                    setSelectedActionName("");
+                    setPendingDays("");
+                    setPage(1);
+                  }}
+                  className={`px-3.5 py-2 rounded-lg text-xs font-medium border transition-all cursor-pointer flex items-center gap-1.5 ${
+                    activePrimaryTab === "SUBMISSION_DAYS"
+                      ? "bg-[#0C83FF] text-white border-[#0C83FF] shadow-sm font-semibold"
+                      : "bg-white text-[#343434] border-[#D6D9DE] hover:bg-gray-50"
+                  }`}
+                >
+                  <span>Pending by Submission Days</span>
+                </button>
               </div>
             </div>
+
+            {activePrimaryTab !== "NONE" && (
+              <button
+                onClick={() => {
+                  setActivePrimaryTab("NONE");
+                  setSelectedAuthorityRole("");
+                  setSelectedActionName("");
+                  setPendingDays("");
+                  setPendingDaysOption("");
+                  setSubmittedDays("");
+                  setSubmittedDaysOption("");
+                  setPage(1);
+                }}
+                className="text-xs font-medium text-red-600 hover:text-red-700 transition-colors cursor-pointer px-2 py-1 rounded hover:bg-red-50"
+              >
+                Reset Filters
+              </button>
+            )}
           </div>
+
+          {/* Sub-Filters Inline Bar for Primary Tabs */}
+          {(activePrimaryTab === "PENDING" || activePrimaryTab === "COMPLETED") && (
+            <div className="flex flex-wrap items-center gap-3 bg-[#F0F7FF] border border-[#BFDBFE] p-2.5 rounded-lg transition-all">
+              <CustomDropdown
+                label="Select Authority"
+                options={[
+                  { label: "Select Authority Role", value: "" },
+                  { label: "Nodal Officer", value: "NODAL_OFFICER" },
+                  { label: "Commissioner", value: "COMMISSIONER" },
+                  { label: "Junior Engineer (JEN)", value: "JEN" },
+                  { label: "Land Department", value: "DEPT_LAND" },
+                  { label: "Legal Department", value: "DEPT_LEGAL" },
+                  { label: "ATP Department", value: "DEPT_ATP" },
+                ]}
+                value={selectedAuthorityRole}
+                onSelect={(val) => {
+                  setSelectedAuthorityRole(val);
+                  setSelectedActionName("");
+                  setPage(1);
+                }}
+                width="210px"
+              />
+
+              {activePrimaryTab === "PENDING" && (
+                <div className="flex items-center gap-2">
+                  <CustomDropdown
+                    label="Pending Days"
+                    options={[
+                      { label: "All Pending Days", value: "" },
+                      { label: "> 3 Days", value: "3" },
+                      { label: "> 7 Days", value: "7" },
+                      { label: "> 15 Days", value: "15" },
+                      { label: "> 30 Days", value: "30" },
+                      { label: "Custom...", value: "custom" },
+                    ]}
+                    value={pendingDaysOption}
+                    onSelect={(val) => {
+                      setPendingDaysOption(val);
+                      if (val !== "custom") {
+                        setPendingDays(val);
+                      } else {
+                        setPendingDays("");
+                      }
+                      setPage(1);
+                    }}
+                    width="170px"
+                  />
+
+                  {pendingDaysOption === "custom" && (
+                    <div className="flex items-center gap-1.5 bg-white border border-[#D6D9DE] rounded-lg px-3 py-1.5 shadow-2xs h-[38px]">
+                      <span className="text-xs font-medium text-[#343434]">&gt;</span>
+                      <input
+                        type="number"
+                        min={1}
+                        placeholder="Days"
+                        value={pendingDays}
+                        onChange={(e) => {
+                          setPendingDays(e.target.value);
+                          setPage(1);
+                        }}
+                        className="w-14 border-none bg-transparent p-0 text-xs font-semibold text-[#0C83FF] outline-none text-center"
+                      />
+                      <span className="text-xs font-medium text-gray-500">Days</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activePrimaryTab === "SUBMISSION_DAYS" && (
+            <div className="flex items-center gap-3 bg-[#F0F7FF] border border-[#BFDBFE] p-2.5 rounded-lg transition-all">
+              <CustomDropdown
+                label="Submission Days"
+                options={[
+                  { label: "All Submission Days", value: "" },
+                  { label: "> 3 Days", value: "3" },
+                  { label: "> 7 Days", value: "7" },
+                  { label: "> 15 Days", value: "15" },
+                  { label: "> 30 Days", value: "30" },
+                  { label: "Custom...", value: "custom" },
+                ]}
+                value={submittedDaysOption}
+                onSelect={(val) => {
+                  setSubmittedDaysOption(val);
+                  if (val !== "custom") {
+                    setSubmittedDays(val);
+                  } else {
+                    setSubmittedDays("");
+                  }
+                  setPage(1);
+                }}
+                width="190px"
+              />
+
+              {submittedDaysOption === "custom" && (
+                <div className="flex items-center gap-1.5 bg-white border border-[#D6D9DE] rounded-lg px-3 py-1.5 shadow-2xs h-[38px]">
+                  <span className="text-xs font-medium text-[#343434]">&gt;</span>
+                  <input
+                    type="number"
+                    min={1}
+                    placeholder="Days"
+                    value={submittedDays}
+                    onChange={(e) => {
+                      setSubmittedDays(e.target.value);
+                      setPage(1);
+                    }}
+                    className="w-14 border-none bg-transparent p-0 text-xs font-semibold text-[#0C83FF] outline-none text-center"
+                  />
+                  <span className="text-xs font-medium text-gray-500">Days</span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Table */}
           <div className="w-full overflow-x-auto">
             <table className="w-full min-w-[1000px] border-collapse">
               <thead>
                 <tr className="border-b border-[#D6D9DE]">
-                  {[
-                    "Application No.",
-                    "Applicant Name",
-                    "Application Type",
-                    "Ward / Zone",
-                    "Property Usage",
-                    "Submitted on",
-                    "Current Status",
-                  ].map((header, idx) => (
-                    <th key={header} className="px-2 py-3 text-left">
-                      <div className={`flex items-center gap-2 ${idx < 6 ? "border-r border-[rgba(0,0,0,0.1)]" : ""} pr-2`}>
-                        <span className="text-xs font-semibold text-[#333333] opacity-70 uppercase">{header}</span>
+                  <th className="px-2 py-3 text-left">
+                    <div className="flex items-center gap-2 border-r border-[rgba(0,0,0,0.1)] pr-2">
+                      <span className="text-xs font-semibold text-[#333333] opacity-70 uppercase">Application No.</span>
+                    </div>
+                  </th>
+
+                  <th className="px-2 py-3 text-left">
+                    <div className="flex items-center gap-2 border-r border-[rgba(0,0,0,0.1)] pr-2">
+                      <span className="text-xs font-semibold text-[#333333] opacity-70 uppercase">Applicant Name</span>
+                    </div>
+                  </th>
+
+                  {/* Application Type Header with Popover Filter */}
+                  <th className="px-2 py-3 text-left relative">
+                    <div className="flex items-center justify-between gap-1 border-r border-[rgba(0,0,0,0.1)] pr-2">
+                      <span className="text-xs font-semibold text-[#333333] opacity-70 uppercase">
+                        Application Type
+                      </span>
+                      <button
+                        onClick={() => setOpenHeaderFilter(openHeaderFilter === "TYPE" ? "NONE" : "TYPE")}
+                        className={`p-1 rounded transition-colors cursor-pointer flex items-center gap-1 ${
+                          selectedCategory !== "All"
+                            ? "bg-[#E7F3FF] border border-[#0C83FF] text-[#0C83FF]"
+                            : "hover:bg-gray-100 text-gray-400"
+                        }`}
+                        title="Filter Application Type"
+                      >
+                        <Image src="/dashboard/icons/applications/chevron-down.svg" alt="" width={10} height={6} className={openHeaderFilter === "TYPE" ? "rotate-180 transition-transform" : "transition-transform"} />
+                      </button>
+                    </div>
+
+                    {openHeaderFilter === "TYPE" && (
+                      <div className="absolute top-full left-0 z-50 mt-1 w-48 rounded-lg border border-[#D6D9DE] bg-white p-1.5 shadow-[0px_6px_12px_0px_rgba(0,0,0,0.15)] flex flex-col gap-1">
+                        {[
+                          { label: "All Types", cat: "All" },
+                          { label: "New Construction", cat: "New" },
+                          { label: "Repair & Renovation", cat: "Renovation" },
+                        ].map((opt) => (
+                          <button
+                            key={opt.cat}
+                            onClick={() => {
+                              setSelectedCategory(opt.cat as any);
+                              setOpenHeaderFilter("NONE");
+                              setPage(1);
+                            }}
+                            className={`text-xs text-left px-3 py-2 rounded-md transition-colors ${
+                              selectedCategory === opt.cat ? "bg-[#E7F3FF] text-[#0C83FF] font-semibold" : "text-[#343434] hover:bg-gray-50"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
                       </div>
-                    </th>
-                  ))}
+                    )}
+                  </th>
+
+                  {/* Ward / Zone Header with Multi-Select Popover Filter */}
+                  <th className="px-2 py-3 text-left relative">
+                    <div className="flex items-center justify-between gap-1 border-r border-[rgba(0,0,0,0.1)] pr-2">
+                      <span className="text-xs font-semibold text-[#333333] opacity-70 uppercase">
+                        Ward / Zone {selectedWardIds.length > 0 && `(${selectedWardIds.length})`}
+                      </span>
+                      <button
+                        onClick={() => setOpenHeaderFilter(openHeaderFilter === "WARD" ? "NONE" : "WARD")}
+                        className={`p-1 rounded transition-colors cursor-pointer flex items-center gap-1 ${
+                          selectedWardIds.length > 0
+                            ? "bg-[#E7F3FF] border border-[#0C83FF] text-[#0C83FF]"
+                            : "hover:bg-gray-100 text-gray-400"
+                        }`}
+                        title="Multi-select Wards"
+                      >
+                        <Image src="/dashboard/icons/applications/chevron-down.svg" alt="" width={10} height={6} className={openHeaderFilter === "WARD" ? "rotate-180 transition-transform" : "transition-transform"} />
+                      </button>
+                    </div>
+
+                    {openHeaderFilter === "WARD" && (
+                      <div className="absolute top-full left-0 z-50 mt-1 w-56 rounded-lg border border-[#D6D9DE] bg-white p-3 shadow-[0px_6px_12px_0px_rgba(0,0,0,0.15)] max-h-60 overflow-y-auto flex flex-col gap-2">
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-1.5">
+                          <span className="text-xs font-bold text-[#343434]">Filter Wards</span>
+                          <button
+                            onClick={() => {
+                              setSelectedWardIds([]);
+                              setPage(1);
+                            }}
+                            className="text-[10px] text-blue-600 font-semibold hover:underline cursor-pointer"
+                          >
+                            Clear All
+                          </button>
+                        </div>
+
+                        {wards.map((w) => {
+                          const isSelected = selectedWardIds.includes(w.id);
+                          return (
+                            <label key={w.id} className="flex items-center gap-2 text-xs text-[#343434] cursor-pointer hover:bg-gray-50 p-1.5 rounded-md">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => {
+                                  if (isSelected) {
+                                    setSelectedWardIds(selectedWardIds.filter((id) => id !== w.id));
+                                  } else {
+                                    setSelectedWardIds([...selectedWardIds, w.id]);
+                                  }
+                                  setPage(1);
+                                }}
+                                className="rounded border-gray-300 text-[#0C83FF] focus:ring-[#0C83FF]"
+                              />
+                              <span>{w.name}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </th>
+
+                  {/* Property Usage Header with Popover Filter */}
+                  <th className="px-2 py-3 text-left relative">
+                    <div className="flex items-center justify-between gap-1 border-r border-[rgba(0,0,0,0.1)] pr-2">
+                      <span className="text-xs font-semibold text-[#333333] opacity-70 uppercase">
+                        Property Usage
+                      </span>
+                      <button
+                        onClick={() => setOpenHeaderFilter(openHeaderFilter === "USAGE" ? "NONE" : "USAGE")}
+                        className={`p-1 rounded transition-colors cursor-pointer flex items-center gap-1 ${
+                          selectedPropertyUsage
+                            ? "bg-[#E7F3FF] border border-[#0C83FF] text-[#0C83FF]"
+                            : "hover:bg-gray-100 text-gray-400"
+                        }`}
+                        title="Filter Property Usage"
+                      >
+                        <Image src="/dashboard/icons/applications/chevron-down.svg" alt="" width={10} height={6} className={openHeaderFilter === "USAGE" ? "rotate-180 transition-transform" : "transition-transform"} />
+                      </button>
+                    </div>
+
+                    {openHeaderFilter === "USAGE" && (
+                      <div className="absolute top-full left-0 z-50 mt-1 w-44 rounded-lg border border-[#D6D9DE] bg-white p-1.5 shadow-[0px_6px_12px_0px_rgba(0,0,0,0.15)] flex flex-col gap-1">
+                        {[
+                          { label: "All Usages", value: "" },
+                          { label: "Domestic", value: "DOMESTIC" },
+                          { label: "Commercial", value: "COMMERCIAL" },
+                          { label: "Government", value: "GOVERNMENT" },
+                        ].map((opt) => (
+                          <button
+                            key={opt.value}
+                            onClick={() => {
+                              setSelectedPropertyUsage(opt.value);
+                              setOpenHeaderFilter("NONE");
+                              setPage(1);
+                            }}
+                            className={`text-xs text-left px-3 py-2 rounded-md transition-colors ${
+                              selectedPropertyUsage === opt.value ? "bg-[#E7F3FF] text-[#0C83FF] font-semibold" : "text-[#343434] hover:bg-gray-50"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </th>
+
+                  <th className="px-2 py-3 text-left">
+                    <div className="flex items-center gap-2 border-r border-[rgba(0,0,0,0.1)] pr-2">
+                      <span className="text-xs font-semibold text-[#333333] opacity-70 uppercase">Submitted on</span>
+                    </div>
+                  </th>
+
+                  {/* Current Status Header with Popover Filter */}
+                  <th className="px-2 py-3 text-left relative">
+                    <div className="flex items-center justify-between gap-1 pr-2">
+                      <span className="text-xs font-semibold text-[#333333] opacity-70 uppercase">
+                        Current Status
+                      </span>
+                      <button
+                        onClick={() => setOpenHeaderFilter(openHeaderFilter === "STATUS" ? "NONE" : "STATUS")}
+                        className={`p-1 rounded transition-colors cursor-pointer flex items-center gap-1 ${
+                          selectedTableStatus
+                            ? "bg-[#E7F3FF] border border-[#0C83FF] text-[#0C83FF]"
+                            : "hover:bg-gray-100 text-gray-400"
+                        }`}
+                        title="Filter Status"
+                      >
+                        <Image src="/dashboard/icons/applications/chevron-down.svg" alt="" width={10} height={6} className={openHeaderFilter === "STATUS" ? "rotate-180 transition-transform" : "transition-transform"} />
+                      </button>
+                    </div>
+
+                    {openHeaderFilter === "STATUS" && (
+                      <div className="absolute top-full right-0 z-50 mt-1 w-48 rounded-lg border border-[#D6D9DE] bg-white p-1.5 shadow-[0px_6px_12px_0px_rgba(0,0,0,0.15)] flex flex-col gap-1">
+                        {[
+                          { label: "All Statuses", value: "" },
+                          { label: "Submitted / Under Review", value: "SUBMITTED" },
+                          { label: "Forwarded", value: "FORWARDED" },
+                          { label: "Approved", value: "APPROVED" },
+                          { label: "Token Issued", value: "TOKEN_GENERATED" },
+                          { label: "Objection", value: "OBJECTED" },
+                          { label: "Rejected", value: "REJECTED" },
+                        ].map((opt) => (
+                          <button
+                            key={opt.value}
+                            onClick={() => {
+                              setSelectedTableStatus(opt.value);
+                              setOpenHeaderFilter("NONE");
+                              setPage(1);
+                            }}
+                            className={`text-xs text-left px-3 py-2 rounded-md transition-colors ${
+                              selectedTableStatus === opt.value ? "bg-[#E7F3FF] text-[#0C83FF] font-semibold" : "text-[#343434] hover:bg-gray-50"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </th>
+
                   <th className="px-2 py-3 text-left w-[40px]"></th>
                 </tr>
               </thead>
@@ -763,6 +1144,7 @@ export default function AuthorityApplicationsPage() {
             currentPage={page}
             totalPages={totalPages}
             limit={limit}
+            totalItems={totalCount}
             onPageChange={setPage}
             onLimitChange={setLimit}
           />

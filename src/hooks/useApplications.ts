@@ -6,14 +6,22 @@ type ApplicationFlags = components["schemas"]["ApplicationFlags"];
 type WorkflowActionRequest = components["schemas"]["WorkflowActionRequest"];
 
 export function useApplications(params: { 
-  flag: ApplicationFlags; 
+  flag?: ApplicationFlags; 
   citizen_user_id?: number; 
   offset?: number; 
   limit?: number;
   search?: string;
   ward_id?: number;
+  ward_ids?: string;
   property_usage?: string;
   jurisdiction_zone?: string;
+  primary_tab?: string;
+  authority_role?: string;
+  action_name?: string;
+  pending_days?: number;
+  submitted_days?: number;
+  type?: string;
+  status?: string;
 }) {
   return useQuery({
     queryKey: ["applications", params],

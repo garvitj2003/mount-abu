@@ -31,18 +31,29 @@ export const ApplicationService = {
 
   // Application Flow
   async getApplications(params: {
-    flag: ApplicationFlags;
+    flag?: ApplicationFlags;
     citizen_user_id?: number;
     offset?: number;
     limit?: number;
     search?: string;
     ward_id?: number;
+    ward_ids?: string;
     property_usage?: string;
     jurisdiction_zone?: string;
-  }): Promise<ApplicationResponse[]> {
-    const response = await api.get<ApplicationResponse[]>("/api/applications", {
+    primary_tab?: string;
+    authority_role?: string;
+    action_name?: string;
+    pending_days?: number;
+    submitted_days?: number;
+    type?: string;
+    status?: string;
+  }): Promise<{ applications: ApplicationResponse[]; total: number; offset: number; limit: number }> {
+    const response = await api.get<any>("/api/applications", {
       params,
     });
+    if (Array.isArray(response.data)) {
+      return { applications: response.data, total: response.data.length, offset: params.offset || 0, limit: params.limit || 10 };
+    }
     return response.data;
   },
 

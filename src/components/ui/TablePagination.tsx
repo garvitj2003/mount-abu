@@ -5,6 +5,7 @@ interface TablePaginationProps {
   currentPage: number;
   totalPages: number;
   limit: number;
+  totalItems?: number;
   onPageChange: (page: number) => void;
   onLimitChange?: (limit: number) => void;
 }
@@ -13,6 +14,7 @@ export default function TablePagination({
   currentPage,
   totalPages,
   limit,
+  totalItems,
   onPageChange,
   onLimitChange,
 }: TablePaginationProps) {
@@ -98,6 +100,11 @@ export default function TablePagination({
           )}
         </div>
         <span className="text-[12.77px] font-medium text-[#343434]">Row</span>
+        {totalItems !== undefined && (
+          <span className="text-[12px] font-semibold text-[#0C83FF] bg-[#E7F3FF] border border-[#72B7FF] px-2.5 py-1 rounded-md ml-1">
+            Total: {totalItems}
+          </span>
+        )}
       </div>
 
       <div className="flex items-center gap-3 font-inter">

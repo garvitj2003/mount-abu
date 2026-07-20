@@ -164,7 +164,11 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
     }
   };
 
-  const filteredApplications = applications.filter((app) => {
+  const appsList = Array.isArray(applications)
+    ? applications
+    : (applications as any)?.applications || [];
+
+  const filteredApplications = appsList.filter((app: any) => {
     const matchesFilter = filter === "All" || app.type === filter;
     const matchesSearch =
       app.applicant_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -203,7 +207,7 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
   const exportToExcel = () => {
     const info = getExportInfo();
 
-    const data = paginatedApplications.map((app) => ({
+    const data = paginatedApplications.map((app: any) => ({
       "Application ID": `#${app.id.toString().padStart(5, "0")}`,
       "Application Type":
         app.type === "NEW"
@@ -228,7 +232,7 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
         "Status",
         "Remarks",
       ],
-      ...data.map((item) => Object.values(item)),
+      ...data.map((item: any) => Object.values(item)),
     ]);
 
 
@@ -275,7 +279,7 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
         "Remarks",
       ]],
 
-      body: paginatedApplications.map((app) => [
+      body: paginatedApplications.map((app: any) => [
         `#${app.id.toString().padStart(5, "0")}`,
         app.type === "NEW"
           ? "New Construction"
@@ -436,7 +440,7 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
           </thead>
           <tbody>
             {paginatedApplications.length > 0 ? (
-              paginatedApplications.map((app) => (
+              paginatedApplications.map((app: any) => (
                 <tr key={app.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                   <td className="px-2 py-3">
                     <span
@@ -513,7 +517,7 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
               e.stopPropagation();
               setOpenDropdownId(null);
               // Handle View Application logic
-              const app = applications.find(a => a.id === openDropdownId);
+              const app = appsList.find((a: any) => a.id === openDropdownId);
               if (app) handleResume(app);
             }}
             className="flex h-10 w-full items-center gap-[11px] rounded-lg p-2 hover:bg-gray-100 transition-colors cursor-pointer"
@@ -523,7 +527,7 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
           </button>
 
           {(() => {
-            const app = applications.find(a => a.id === openDropdownId);
+            const app = appsList.find((a: any) => a.id === openDropdownId);
             if (app && app.status !== "WITHDRAWN") {
               return (
                 <>
