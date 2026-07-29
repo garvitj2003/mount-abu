@@ -20,6 +20,11 @@ interface CommentsDrawerProps {
 
 const formatDate = (dateString?: string | null) => {
   if (!dateString) return "Just now";
+  let isoString = dateString;
+  // Ensure the date is parsed as UTC if no timezone indicator is present
+  if (!isoString.endsWith("Z") && !isoString.includes("+") && !/-\d{2}:\d{2}$/.test(isoString)) {
+    isoString = isoString + "Z";
+  }
   return new Intl.DateTimeFormat("en-GB", {
     month: "short",
     day: "numeric",
@@ -27,7 +32,8 @@ const formatDate = (dateString?: string | null) => {
     hour: "numeric",
     minute: "numeric",
     hour12: true,
-  }).format(new Date(dateString));
+    timeZone: "Asia/Kolkata"
+  }).format(new Date(isoString));
 };
 
 const CommentCard = ({ comment }: { comment: CommentResponse }) => {
