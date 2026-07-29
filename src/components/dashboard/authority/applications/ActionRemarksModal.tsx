@@ -28,6 +28,7 @@ const ALL_ROLES = [
   { id: "DEPT_LAND", label: "Land Department" },
   { id: "DEPT_LEGAL", label: "Legal Department" },
   { id: "DEPT_ATP", label: "ATP Department" },
+  { id: "COMMISSIONER", label: "Commissioner" },
 ];
 
 export default function ActionRemarksModal({
@@ -61,6 +62,16 @@ export default function ActionRemarksModal({
     }
   }, [isOpen, appType, appStatus]);
 
+  const visibleRoles = ALL_ROLES.filter((r) => {
+    if (r.id === "COMMISSIONER") {
+      return userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN";
+    }
+    if (appType === "NEW") {
+      return r.id === "CITIZEN" || r.id === "JEN";
+    }
+    return true;
+  });
+
   const toggleRole = (roleId: string) => {
     if (selectedRoles.includes(roleId)) {
       if (selectedRoles.length === 1) return; // Keep at least one selected
@@ -71,6 +82,22 @@ export default function ActionRemarksModal({
   };
 
   const isRoleDisabled = (roleId: string) => {
+    // Commissioner objection rules:
+    if (roleId === "COMMISSIONER") {
+      if (appType === "NEW") {
+        // Allowed from submitted till token gen (i.e. never disabled)
+        return false;
+      }
+      if (appType === "RENOVATION") {
+        // Allowed from forwarded till token gen
+        // If it's submitted (before forwarded), Commissioner is disabled
+        if (appStatus === "SUBMITTED") {
+          return true;
+        }
+        return false;
+      }
+    }
+
     // Rule 6.1: In New Construction at SUBMITTED state (before inspection), JEN is disabled
     if (appType === "NEW" && appStatus === "SUBMITTED" && roleId !== "CITIZEN") {
       return true;
@@ -188,7 +215,7 @@ export default function ActionRemarksModal({
                   </label>
 
                   <div className="flex flex-col gap-2 mt-1">
-                    {ALL_ROLES.filter((r) => appType === "RENOVATION" || r.id === "CITIZEN" || r.id === "JEN").map((role) => {
+                    {visibleRoles.map((role) => {
                       const disabled = isRoleDisabled(role.id);
                       const checked = selectedRoles.includes(role.id);
 

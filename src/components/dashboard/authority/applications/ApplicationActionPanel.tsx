@@ -78,21 +78,30 @@ export default function ApplicationActionPanel({
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   
   const objectionOptions = useMemo(() => {
+    const isNodalOrSuper = userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN";
     if (app.type === "NEW") {
-      return [
+      const opts = [
         { label: "Junior Engineer (JEN)", value: "JEN" },
         { label: "Applicant / Citizen", value: "CITIZEN" },
       ];
+      if (isNodalOrSuper) {
+        opts.push({ label: "Commissioner", value: "COMMISSIONER" });
+      }
+      return opts;
     } else {
-      return [
+      const opts = [
         { label: "Land Department", value: "DEPT_LAND" },
         { label: "Legal Department", value: "DEPT_LEGAL" },
         { label: "ATP Department", value: "DEPT_ATP" },
         { label: "Junior Engineer (JEN)", value: "JEN" },
         { label: "Applicant / Citizen", value: "CITIZEN" },
       ];
+      if (isNodalOrSuper) {
+        opts.push({ label: "Commissioner", value: "COMMISSIONER" });
+      }
+      return opts;
     }
-  }, [app.type]);
+  }, [app.type, userRole]);
   
   const totalPhases = useMemo(() => {
     return app.phase_materials && app.phase_materials.length > 0
@@ -290,7 +299,12 @@ export default function ApplicationActionPanel({
         }
       }
       if (status === "OBJECTED") {
-        if (userRole === "COMMISSIONER" || userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN") {
+        const hasCommObjection = (app as any).objections?.some((o: any) => o.objected_to_role === "COMMISSIONER" && o.status === "PENDING");
+        const canClear = hasCommObjection 
+          ? (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN")
+          : (userRole === "COMMISSIONER" || userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN");
+
+        if (canClear) {
           actionList.push(
             <ActionButton key="clear-app" label="Clear Objection" variant="success" onClick={() => setShowClearConfirm(true)} />
           );
