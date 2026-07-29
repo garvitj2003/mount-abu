@@ -45,14 +45,11 @@ export default function ActionRemarksModal({
   const [remarks, setRemarks] = useState("");
   const [selectedRoles, setSelectedRoles] = useState<string[]>(["CITIZEN"]);
   const [roleRemarks, setRoleRemarks] = useState<Record<string, string>>({});
-  const [revertedFile, setRevertedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setRemarks("");
       setRoleRemarks({});
-      setRevertedFile(null);
       // Default selection rules
       if (appType === "NEW" && appStatus === "SUBMITTED") {
         setSelectedRoles(["CITIZEN"]);
@@ -124,33 +121,10 @@ export default function ActionRemarksModal({
       return;
     }
 
-    let revertedUrl: string | undefined = undefined;
-
-    // Rule 6.3: Upload PDF file if provided for Citizen objection
-    if (type === "OBJECT" && selectedRoles.includes("CITIZEN") && revertedFile) {
-      try {
-        setIsUploading(true);
-        const formData = new FormData();
-        formData.append("file", revertedFile);
-        const res = await api.post("/api/media/upload", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        revertedUrl = res.data?.url || res.data?.file_path;
-      } catch (err) {
-        console.error("Failed to upload objection reverted PDF", err);
-        alert("Failed to upload PDF document. Please try again.");
-        setIsUploading(false);
-        return;
-      } finally {
-        setIsUploading(false);
-      }
-    }
-
     onConfirm({
       remarks,
       objection_to_roles: type === "OBJECT" ? selectedRoles : undefined,
       role_remarks: type === "OBJECT" ? roleRemarks : undefined,
-      reverted_document_url: revertedUrl,
     });
   };
 
@@ -261,25 +235,7 @@ export default function ActionRemarksModal({
                 </div>
               )}
 
-              {/* Rule 6.3: Upload "Objection Reverted Data" PDF for Applicant */}
-              {!isReject && selectedRoles.includes("CITIZEN") && (
-                <div className="flex flex-col gap-1.5 rounded-xl border border-[#72B7FF] bg-[#E7F3FF] p-3">
-                  <label className="text-xs font-semibold text-[#0C83FF] flex items-center gap-1.5">
-                    <span>📄 Attach "Objection Reverted Data" PDF (Optional for Applicant):</span>
-                  </label>
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={(e) => setRevertedFile(e.target.files?.[0] || null)}
-                    className="text-xs text-[#343434] file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-[#0C83FF] file:text-white hover:file:bg-blue-600 cursor-pointer"
-                  />
-                  {revertedFile && (
-                    <p className="text-[10px] text-gray-600 italic">
-                      Selected File: <strong className="text-[#343434]">{revertedFile.name}</strong>
-                    </p>
-                  )}
-                </div>
-              )}
+
 
               <textarea
                 placeholder={placeholder}

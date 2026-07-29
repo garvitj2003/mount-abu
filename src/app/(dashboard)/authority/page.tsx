@@ -137,6 +137,11 @@ export default function DashboardAuthorityPage() {
         kpi.label === "Complaints Closed" ||
         kpi.label === "Complaints"
       );
+    } else if (role === "COLLECTOR") {
+      filteredKpis = dashboard.kpis.filter(kpi =>
+        kpi.label !== "Total Applications" &&
+        kpi.label !== "Applications Approved"
+      );
     }
 
     return filteredKpis.map(kpi => ({
