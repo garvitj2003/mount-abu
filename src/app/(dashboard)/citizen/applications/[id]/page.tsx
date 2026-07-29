@@ -220,6 +220,7 @@ if (error || !app) return (
         onClose={() => setIsCommentsOpen(false)} 
         applicationId={id}
         applicationNumber={`APP-${app.id.toString().padStart(5, '0')}`}
+        rejectionRemarks={app.rejection_remarks}
       />
 
       <ApplicationMaterialsDrawer

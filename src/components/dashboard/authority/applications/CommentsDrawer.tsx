@@ -15,6 +15,7 @@ interface CommentsDrawerProps {
   applicationId: number;
   applicationNumber: string;
   userRole?: string;
+  rejectionRemarks?: string | null;
 }
 
 const formatDate = (dateString?: string | null) => {
@@ -113,6 +114,7 @@ export default function CommentsDrawer({
   applicationId,
   applicationNumber,
   userRole,
+  rejectionRemarks,
 }: CommentsDrawerProps) {
   const { data: comments = [], isLoading } = useApplicationComments(applicationId, { enabled: isOpen });
   const { mutateAsync: addComment } = useAddComment();
@@ -156,16 +158,16 @@ export default function CommentsDrawer({
       if (selectedFile) {
         const formData = new FormData();
         formData.append("file", selectedFile);
-        formData.append("category", "COMMENT");
+        formData.append("category", "GENERAL");
         formData.append("entity_id", applicationId.toString());
 
         const uploadRes = await api.post("/api/media/upload", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
 
-        const fileUrl = uploadRes.data?.url || uploadRes.data?.file_path;
-        if (fileUrl) {
-          mediaPaths.push(fileUrl);
+        const fileKey = uploadRes.data?.object_key || uploadRes.data?.access_url;
+        if (fileKey) {
+          mediaPaths.push(fileKey);
         }
       }
 
@@ -229,8 +231,22 @@ export default function CommentsDrawer({
                 <div className="flex h-full items-center justify-center">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#0C83FF] border-t-transparent" />
                 </div>
-              ) : comments.length > 0 ? (
-                comments.map((c) => <CommentCard key={c.id} comment={c} />)
+              ) : (comments.length > 0 || rejectionRemarks) ? (
+                <div className="flex flex-col gap-4">
+                  {comments.map((c) => <CommentCard key={c.id} comment={c} />)}
+                  
+                  {rejectionRemarks && (
+                    <div className="flex flex-col gap-1 rounded-xl bg-red-50 border border-red-200 p-4 self-start max-w-[85%]">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-red-600">
+                        <span className="h-2 w-2 rounded-full bg-red-600 animate-pulse" />
+                        <span>Rejection Remark</span>
+                      </div>
+                      <p className="text-[13px] font-normal leading-relaxed text-red-900 break-words mt-1">
+                        {rejectionRemarks}
+                      </p>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div className="flex h-full flex-col items-center justify-center text-gray-400 gap-2 opacity-60">
                   <Image src="/dashboard/icons/comment-icon.svg" alt="" width={40} height={40} className="grayscale" />
@@ -339,6 +355,20 @@ export default function CommentsDrawer({
                   </div>
                 </>
               )}
+
+              {/* T&C Commenting Guidelines Line */}
+              <div className="text-[11px] text-[#343434] opacity-75 mt-1 px-1 text-center font-normal">
+                By posting, you agree to follow our{" "}
+                <a
+                  href="https://drive.google.com/file/d/1BL57ofUgugfI23DhAm0uK5ukysjMDW3j/view?usp=drivesdk"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#0C83FF] hover:underline font-semibold"
+                >
+                  Commenting Guidelines
+                </a>
+                .
+              </div>
             </div>
           </motion.div>
         </div>

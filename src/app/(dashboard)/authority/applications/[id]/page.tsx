@@ -1096,6 +1096,7 @@ export default function ApplicationDetailsPage() {
         applicationId={id}
         applicationNumber={`#${app.id.toString().padStart(5, '0')}`}
         userRole={user?.role}
+        rejectionRemarks={app.rejection_remarks}
       />
 
       <ActionRemarksModal

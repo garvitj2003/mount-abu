@@ -256,11 +256,11 @@ export default function ActionRemarksModal({
               </button>
               <button
                 onClick={handleConfirm}
-                disabled={isPending || isUploading || !remarks.trim()}
+                disabled={isPending || !remarks.trim()}
                 className="flex-1 h-[42px] flex items-center justify-center gap-2 rounded-lg text-xs font-semibold text-white transition-colors disabled:opacity-50 cursor-pointer"
                 style={{ backgroundColor: mainColor }}
               >
-                {isPending || isUploading ? "Processing..." : actionLabel}
+                {isPending ? "Processing..." : actionLabel}
               </button>
             </div>
           </motion.div>
