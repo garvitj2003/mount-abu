@@ -12,6 +12,7 @@ export function useAuthorityDashboard(filters?: {
   days?: number; 
   department_id?: number; 
   ward_id?: number;
+  application_type?: string;
 }) {
   return useQuery({
     queryKey: ["dashboard-authority", filters],

@@ -7,7 +7,7 @@ import { useApplicationComments, useAddComment } from "@/hooks/useApplications";
 import { type components } from "@/types/api";
 import api from "@/lib/axios";
 
-type CommentResponse = components["schemas"]["backend__schemas__response__application__CommentResponse"];
+type CommentResponse = components["schemas"]["CommentResponse"];
 
 interface CommentsDrawerProps {
   isOpen: boolean;

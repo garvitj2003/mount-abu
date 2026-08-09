@@ -55,6 +55,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/verify-login-otp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify Login Otp */
+        post: operations["verify_login_otp_auth_verify_login_otp_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/public-key": {
         parameters: {
             query?: never;
@@ -257,7 +274,7 @@ export interface paths {
         };
         /**
          * Get Applications
-         * @description Get applications filtered by flag, search, and other criteria.
+         * @description Get applications filtered by flag, primary tab, search, and secondary criteria.
          */
         get: operations["get_applications_api_applications_get"];
         put?: never;
@@ -1734,38 +1751,88 @@ export interface components {
             /** Unit */
             unit?: string | null;
         };
+        /** ApplicationObjectionResponse */
+        ApplicationObjectionResponse: {
+            /** Id */
+            id: number;
+            /** Application Id */
+            application_id: number;
+            /** Objected By Id */
+            objected_by_id: number;
+            /** Objected By Name */
+            objected_by_name?: string | null;
+            /** Objected By Role */
+            objected_by_role: string;
+            /** Objected To Role */
+            objected_to_role: string;
+            /** Remarks */
+            remarks?: string | null;
+            /** Reverted Document Url */
+            reverted_document_url?: string | null;
+            /** Status */
+            status: string;
+            /** Created At */
+            created_at?: string | null;
+            /** Resolved At */
+            resolved_at?: string | null;
+            /** Resolved By Id */
+            resolved_by_id?: number | null;
+            /** Resolved By Name */
+            resolved_by_name?: string | null;
+            /** Resolved By Role */
+            resolved_by_role?: string | null;
+            /** Resolution Remarks */
+            resolution_remarks?: string | null;
+        };
+        /**
+         * ApplicationPaginatedResponse
+         * @description Paginated applications list response with total count.
+         */
+        ApplicationPaginatedResponse: {
+            /** Applications */
+            applications: components["schemas"]["ApplicationResponse"][];
+            /** Total */
+            total: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            /**
+             * Limit
+             * @default 10
+             */
+            limit: number;
+        };
         /**
          * ApplicationPhaseStatus
          * @enum {string}
          */
         ApplicationPhaseStatus: "PENDING" | "ACTIVE" | "APPROVED" | "WITHHELD" | "REJECTED" | "TERMINATED" | "IN_PROGRESS" | "COMPLETED";
-        /**
-         * ApplicationResponse
-         * @description Application Response Schema.
-         */
+        /** ApplicationResponse */
         ApplicationResponse: {
             /** Id */
             id: number;
+            /**
+             * Applicant Id
+             * @default 0
+             */
+            applicant_id: number | null;
             /** User Id */
             user_id: number;
+            assigned_role?: components["schemas"]["UserRole"] | null;
             /** Applicant Name */
             applicant_name: string;
             /** Father Name */
-            father_name: string;
+            father_name?: string | null;
             /** Mobile */
             mobile: string;
             /** Email */
-            email: string | null;
-            /** Current Address */
-            current_address: string;
+            email?: string | null;
             /** Property Address */
             property_address: string;
-            /** Title */
-            title: string;
-            /** Work Description */
-            work_description: string;
-            /** Contractor Name */
-            contractor_name: string | null;
+            /** Current Address */
+            current_address?: string | null;
             /** Is Agriculture Land */
             is_agriculture_land: boolean;
             property_usage: components["schemas"]["PropertyUsageType"];
@@ -1782,6 +1849,10 @@ export interface components {
             ward_zone?: string | null;
             /** Description */
             description?: string | null;
+            /** Contractor Name */
+            contractor_name?: string | null;
+            /** Work Description */
+            work_description?: string | null;
             status: components["schemas"]["ApplicationStatus"];
             type: components["schemas"]["ApplicationType"];
             /** Num Stages */
@@ -1807,7 +1878,7 @@ export interface components {
              * Comments
              * @default []
              */
-            comments: components["schemas"]["backend__schemas__response__application__CommentResponse"][];
+            comments: components["schemas"]["CommentResponse"][];
             /**
              * Inspections
              * @default []
@@ -1818,8 +1889,15 @@ export interface components {
              * @default []
              */
             tokens: components["schemas"]["backend__schemas__response__application__TokenResponse"][];
+            /**
+             * Objections
+             * @default []
+             */
+            objections: components["schemas"]["ApplicationObjectionResponse"][];
             /** Rejection Remarks */
             rejection_remarks?: string | null;
+            /** Objection To Role */
+            objection_to_role?: string | null;
         };
         /**
          * ApplicationStatus
@@ -2360,20 +2438,29 @@ export interface components {
              */
             media_paths?: string[] | null;
         };
-        /** CommentResponse */
+        /**
+         * CommentResponse
+         * @description Response schema for application comments.
+         */
         CommentResponse: {
             /** Id */
             id: number;
+            /** Application Id */
+            application_id: number;
             /** Comment */
             comment: string;
+            /** Comment By */
+            comment_by: number;
+            /** Commenter Name */
+            commenter_name?: string | null;
+            /** Commenter Role */
+            commenter_role?: string | null;
+            /** @default GENERAL */
+            comment_type: components["schemas"]["CommentType"] | null;
+            /** Media Paths */
+            media_paths?: unknown[] | null;
             /** Created At */
             created_at?: string | null;
-            /** Comment By */
-            comment_by?: number | null;
-            /** Media Path */
-            media_path?: string | null;
-            /** Access Url */
-            access_url?: string | null;
         };
         /**
          * CommentType
@@ -2542,7 +2629,7 @@ export interface components {
              * Comments
              * @default []
              */
-            comments: components["schemas"]["CommentResponse"][];
+            comments: components["schemas"]["backend__schemas__response__complaint__CommentResponse"][];
         };
         /**
          * ComplaintRow
@@ -3044,6 +3131,38 @@ export interface components {
             leaders: components["schemas"]["LeaderResponse"][];
             /** Total */
             total: number | null;
+        };
+        /** LoginPasswordResponse */
+        LoginPasswordResponse: {
+            /**
+             * Otp Required
+             * @default false
+             */
+            otp_required: boolean;
+            /** Masked Mobile */
+            masked_mobile?: string | null;
+            /** Username */
+            username?: string | null;
+            /** Nonce */
+            nonce?: string | null;
+            /** Access Token */
+            access_token?: string | null;
+            /** Refresh Token */
+            refresh_token?: string | null;
+            /** Token Type */
+            token_type?: string | null;
+            /** Role */
+            role?: string | null;
+            /** User Id */
+            user_id?: number | null;
+            /** Name */
+            name?: string | null;
+            /**
+             * Is New User
+             * @default false
+             */
+            is_new_user: boolean;
+            jurisdiction_zone?: components["schemas"]["JurisdictionZone"] | null;
         };
         /** LoginRequest */
         LoginRequest: {
@@ -3823,6 +3942,29 @@ export interface components {
              */
             vehicle_entries: components["schemas"]["backend__schemas__response__application__VehicleEntryResponse"][];
         };
+        /** TokenListResponse */
+        TokenListResponse: {
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["backend__schemas__response__application__TokenResponse"][];
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            /**
+             * Limit
+             * @default 10
+             */
+            limit: number;
+        };
         /**
          * TokenMaterialResponse
          * @description Per-material summary within a token (phase).
@@ -4037,6 +4179,29 @@ export interface components {
              */
             dumping_photos: components["schemas"]["DumpingPhotoResponse"][];
         };
+        /** VehicleEntryListResponse */
+        VehicleEntryListResponse: {
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["AuthorityVehicleEntryResponse"][];
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /**
+             * Offset
+             * @default 0
+             */
+            offset: number;
+            /**
+             * Limit
+             * @default 50
+             */
+            limit: number;
+        };
         /**
          * VehicleEntryMaterialItem
          * @description Single material item within a vehicle entry.
@@ -4096,6 +4261,15 @@ export interface components {
             material: components["schemas"]["MaterialResponse"];
             /** Quantity */
             quantity: number;
+        };
+        /** VerifyLoginOTPRequest */
+        VerifyLoginOTPRequest: {
+            /** Username */
+            username: string;
+            /** Otp */
+            otp: string;
+            /** Nonce */
+            nonce?: string | null;
         };
         /**
          * Visibility
@@ -4220,33 +4394,32 @@ export interface components {
              * @description Materials per phase (required for GENERATE_TOKENS)
              */
             phase_materials?: components["schemas"]["PhaseMaterialEntry"][] | null;
+            /** @description Specific role to redirect the objection to */
+            objection_to_role?: components["schemas"]["UserRole"] | null;
+            /**
+             * Objection To Roles
+             * @description List of roles to direct objections to
+             */
+            objection_to_roles?: components["schemas"]["UserRole"][] | null;
+            /**
+             * Role Remarks
+             * @description Per-role objection remarks mapping (role -> remark string)
+             */
+            role_remarks?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Reverted Document Url
+             * @description URL of uploaded Objection Reverted Data PDF
+             */
+            reverted_document_url?: string | null;
+            /** @description Specific objection role being cleared by Nodal/Commissioner/Superadmin */
+            clear_objection_role?: components["schemas"]["UserRole"] | null;
         };
         /** MessageResponse */
         backend__controllers__auth__MessageResponse: {
             /** Message */
             message: string;
-        };
-        /**
-         * CommentResponse
-         * @description Response schema for application comments.
-         */
-        backend__schemas__response__application__CommentResponse: {
-            /** Id */
-            id: number;
-            /** Application Id */
-            application_id: number;
-            /** Comment */
-            comment: string;
-            /** Comment By */
-            comment_by: number;
-            /** Commenter Name */
-            commenter_name?: string | null;
-            /** @default GENERAL */
-            comment_type: components["schemas"]["CommentType"] | null;
-            /** Media Paths */
-            media_paths?: unknown[] | null;
-            /** Created At */
-            created_at?: string | null;
         };
         /**
          * TokenResponse
@@ -4307,6 +4480,21 @@ export interface components {
             access_urls?: {
                 [key: string]: unknown;
             } | null;
+        };
+        /** CommentResponse */
+        backend__schemas__response__complaint__CommentResponse: {
+            /** Id */
+            id: number;
+            /** Comment */
+            comment: string;
+            /** Created At */
+            created_at?: string | null;
+            /** Comment By */
+            comment_by?: number | null;
+            /** Media Path */
+            media_path?: string | null;
+            /** Access Url */
+            access_url?: string | null;
         };
     };
     responses: never;
@@ -4393,6 +4581,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["PasswordLoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginPasswordResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    verify_login_otp_auth_verify_login_otp_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyLoginOTPRequest"];
             };
         };
         responses: {
@@ -4696,21 +4917,37 @@ export interface operations {
     };
     get_applications_api_applications_get: {
         parameters: {
-            query: {
+            query?: {
                 /** @description Filter applications by workflow flag */
-                flag: components["schemas"]["ApplicationFlags"];
+                flag?: components["schemas"]["ApplicationFlags"] | null;
                 offset?: number;
                 limit?: number;
                 /** @description Search by applicant name, mobile, or application number */
                 search?: string | null;
                 /** @description Filter by ward/zone */
                 ward_id?: number | null;
+                /** @description Comma-separated list of ward IDs for multi-select */
+                ward_ids?: string | null;
                 /** @description Filter by property usage */
                 property_usage?: components["schemas"]["PropertyUsageType"] | null;
                 /** @description Filter by jurisdiction zone (ALL / ULB / UIT) */
                 jurisdiction_zone?: string | null;
                 /** @description Citizen user ID (required when flag=CITIZEN) */
                 citizen_user_id?: number | null;
+                /** @description Primary tab mode: PENDING, COMPLETED, SUBMISSION_DAYS */
+                primary_tab?: string | null;
+                /** @description Target authority role for PENDING/COMPLETED tabs */
+                authority_role?: components["schemas"]["UserRole"] | null;
+                /** @description Specific action name for PENDING/COMPLETED tabs */
+                action_name?: string | null;
+                /** @description Days pending filter (N days) */
+                pending_days?: number | null;
+                /** @description Days since submission filter (N days) */
+                submitted_days?: number | null;
+                /** @description Application type: NEW or RENOVATION */
+                type?: components["schemas"]["ApplicationType"] | null;
+                /** @description Application status */
+                status?: components["schemas"]["ApplicationStatus"] | null;
             };
             header?: never;
             path?: never;
@@ -4724,7 +4961,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApplicationResponse"][];
+                    "application/json": components["schemas"]["ApplicationPaginatedResponse"];
                 };
             };
             /** @description Validation Error */
@@ -4832,7 +5069,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AuthorityVehicleEntryResponse"][];
+                    "application/json": components["schemas"]["VehicleEntryListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -5432,7 +5669,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__application__CommentResponse"][];
+                    "application/json": components["schemas"]["CommentResponse"][];
                 };
             };
             /** @description Validation Error */
@@ -5468,7 +5705,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["backend__schemas__response__application__TokenResponse"][];
+                    "application/json": components["schemas"]["TokenListResponse"];
                 };
             };
             /** @description Validation Error */
@@ -7440,6 +7677,8 @@ export interface operations {
                 department_id?: number | null;
                 /** @description Filter by ward */
                 ward_id?: number | null;
+                /** @description Filter by application type: NEW, RENOVATION */
+                application_type?: components["schemas"]["ApplicationType"] | null;
             };
             header?: never;
             path?: never;

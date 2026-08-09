@@ -135,7 +135,9 @@ export default function AuthorityVehicleEntriesPage() {
     return params;
   }, [debouncedSearch, filters, page, limit]);
 
-  const { data: entries = [], isLoading } = useVehicleEntries(requestParams);
+  const { data, isLoading } = useVehicleEntries(requestParams);
+  const entries = data?.items || [];
+  const total = data?.total || 0;
 
   const handleEntryClick = (id: number) => {
     setSelectedEntryId(id);
@@ -151,11 +153,7 @@ export default function AuthorityVehicleEntriesPage() {
     }, 0);
   }, [filters]);
 
-  // Since API doesn't return total count, we estimate total pages
-  const totalPages = useMemo(() => {
-    if (entries.length < limit) return page;
-    return page + 1;
-  }, [entries.length, page, limit]);
+  const totalPages = Math.ceil(total / limit);
 
   const handleExportExcel = () => {
     setIsExportingExcel(true);
@@ -291,7 +289,14 @@ export default function AuthorityVehicleEntriesPage() {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-[#D6D9DE] bg-white px-8 py-3">
         <div className="flex flex-col gap-1">
-          <h1 className="text-lg font-medium text-[#343434]">Vehicle Entry Records</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-medium text-[#343434]">Vehicle Entry Records</h1>
+            {total !== undefined && (
+              <span className="text-[11px] font-semibold text-[#0C83FF] bg-[#E7F3FF] border border-[#72B7FF] px-2.5 py-0.5 rounded-md">
+                Total: {total}
+              </span>
+            )}
+          </div>
           <p className="text-xs font-normal text-[#343434] opacity-80">
             View and monitor vehicle-wise material entry details recorded at naka points against approved construction tokens.
           </p>

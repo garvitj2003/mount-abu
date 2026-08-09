@@ -8,7 +8,7 @@ export function useTokenSuggestions(search: string, options?: { enabled?: boolea
     queryKey: ["token-suggestions", search],
     queryFn: async () => {
       const tokens = await TokenService.getTokens({ search, limit: 20 });
-      return Array.from(new Set(tokens.map((t: any) => t.token_number)));
+      return Array.from(new Set((tokens?.items || []).map((t: any) => t.token_number)));
     },
     enabled: options?.enabled !== false && search.length > 0,
     staleTime: 60 * 1000,
@@ -20,7 +20,7 @@ export function useVehicleSuggestions(search: string, options?: { enabled?: bool
     queryKey: ["vehicle-suggestions", search],
     queryFn: async () => {
       const entries = await VehicleEntryService.getAllVehicleEntries({ search, limit: 50 });
-      return Array.from(new Set(entries.map((e) => e.vehicle_number)));
+      return Array.from(new Set((entries?.items || []).map((e: any) => e.vehicle_number)));
     },
     enabled: options?.enabled !== false && search.length > 0,
     staleTime: 60 * 1000,

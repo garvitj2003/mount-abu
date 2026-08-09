@@ -141,9 +141,18 @@ export default function AuthorityApplicationsPage() {
 
   // Set default jurisdiction zone from user profile on mount / refresh
   useEffect(() => {
-    if (user?.jurisdiction_zone && !hasInitializedDefaultZone.current && !searchParams.get("jurisdiction_zone")) {
-      setSelectedJurisdictionZone(user.jurisdiction_zone);
-      hasInitializedDefaultZone.current = true;
+    if (user?.role) {
+      const allowed =
+        user.role === "NODAL_OFFICER" ||
+        user.role === "SUPERADMIN" ||
+        user.role === "COLLECTOR";
+
+      if (!allowed && user.jurisdiction_zone) {
+        setSelectedJurisdictionZone(user.jurisdiction_zone);
+      } else if (allowed && user.jurisdiction_zone && !hasInitializedDefaultZone.current && !searchParams.get("jurisdiction_zone")) {
+        setSelectedJurisdictionZone(user.jurisdiction_zone);
+        hasInitializedDefaultZone.current = true;
+      }
     }
   }, [user, searchParams]);
 
@@ -500,7 +509,14 @@ export default function AuthorityApplicationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-[#D6D9DE] bg-white px-8 py-3">
         <div className="flex flex-col gap-1">
-          <h1 className="text-lg font-medium text-[#343434]">Applications</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-medium text-[#343434]">Applications</h1>
+            {totalCount !== undefined && (
+              <span className="text-[11px] font-semibold text-[#0C83FF] bg-[#E7F3FF] border border-[#72B7FF] px-2.5 py-0.5 rounded-md">
+                Total: {totalCount}
+              </span>
+            )}
+          </div>
           <p className="text-xs font-normal text-[#343434] opacity-80">
             View, verify, and take action on construction and renovation applications submitted by citizens within municipal limits.
           </p>
@@ -578,21 +594,25 @@ export default function AuthorityApplicationsPage() {
               </div>
 
               {/* Jurisdiction Dropdown */}
-              <CustomDropdown
-                label="Jurisdiction"
-                options={[
-                  { label: "All", value: "" },
-                  { label: "ULB", value: "ULB" },
-                  { label: "UIT", value: "UIT" }
-                ]}
-                value={selectedJurisdictionZone}
-                onSelect={(val) => {
-                  setSelectedJurisdictionZone(val);
-                  setPage(1);
-                }}
-                placeholder="All"
-                width="125px"
-              />
+              {(user?.role === "NODAL_OFFICER" ||
+                user?.role === "SUPERADMIN" ||
+                user?.role === "COLLECTOR") && (
+                <CustomDropdown
+                  label="Jurisdiction"
+                  options={[
+                    { label: "All", value: "" },
+                    { label: "ULB", value: "ULB" },
+                    { label: "UIT", value: "UIT" }
+                  ]}
+                  value={selectedJurisdictionZone}
+                  onSelect={(val) => {
+                    setSelectedJurisdictionZone(val);
+                    setPage(1);
+                  }}
+                  placeholder="All"
+                  width="125px"
+                />
+              )}
 
               {/* Pending with me button */}
               {user?.role && user.role !== "SUPERADMIN" && user.role !== "COLLECTOR" && (
@@ -1144,7 +1164,6 @@ export default function AuthorityApplicationsPage() {
             currentPage={page}
             totalPages={totalPages}
             limit={limit}
-            totalItems={totalCount}
             onPageChange={setPage}
             onLimitChange={setLimit}
           />

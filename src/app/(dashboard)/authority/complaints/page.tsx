@@ -248,7 +248,14 @@ export default function AuthorityComplaintsPage() {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-[#D6D9DE] bg-white px-8 py-3">
         <div className="flex flex-col gap-1">
-          <h1 className="text-lg font-medium text-[#343434]">Complains</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-medium text-[#343434]">Complains</h1>
+            {total !== undefined && (
+              <span className="text-[11px] font-semibold text-[#0C83FF] bg-[#E7F3FF] border border-[#72B7FF] px-2.5 py-0.5 rounded-md">
+                Total: {total}
+              </span>
+            )}
+          </div>
           <p className="text-xs font-normal text-[#343434] opacity-80">
             View, manage, and resolve citizen complaints while tracking status and ensuring timely action.
           </p>

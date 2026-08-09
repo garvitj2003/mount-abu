@@ -102,13 +102,13 @@ export default function NewApplicationPage() {
 
         // 1. Populate Form Data
         updateFormData({
-          applicant_name: app.applicant_name,
-          father_name: app.father_name,
+          applicant_name: app.applicant_name || "",
+          father_name: app.father_name || "",
           email: app.email || "",
-          current_address: app.current_address,
-          property_address: app.property_address,
+          current_address: app.current_address || "",
+          property_address: app.property_address || "",
           type: app.type as any, // Cast to enum
-          work_description: app.work_description,
+          work_description: app.work_description || "",
           contractor_name: app.contractor_name || "",
           is_agriculture_land: app.is_agriculture_land,
           property_usage: app.property_usage as any,

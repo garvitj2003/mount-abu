@@ -74,14 +74,16 @@ export default function TokensTable() {
   const [search, setSearch] = useState("");
   const { page, limit, setPage, setLimit } = usePagination();
 
-  const { data: tokens = [], isLoading, error } = useTokens({
+  const { data, isLoading, error } = useTokens({
     offset: (page - 1) * limit,
     limit: limit,
     search: search || undefined,
     citizen_user_id: user?.user_id
   });
 
-  const totalPages = tokens.length === limit ? page + 1 : page;
+  const tokens = data?.items || [];
+  const total = data?.total || 0;
+  const totalPages = Math.ceil(total / limit);
 
   const getExportInfo = () => {
   return [

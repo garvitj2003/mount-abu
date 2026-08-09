@@ -106,22 +106,25 @@ export default function DashboardAuthorityPage() {
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [isExportingCSV, setIsExportingCSV] = useState(false);
 
-  const [filters, setFilters] = useState<{ days: number; department_id: number | null; ward_id: number | null }>({
+  const role = user?.role;
+  const showTypeFilter = role === "SUPERADMIN" || role === "NODAL_OFFICER" || role === "COLLECTOR";
+
+  const [filters, setFilters] = useState<{ days: number; department_id: number | null; ward_id: number | null; application_type: string | null }>({
     days: 7,
     department_id: null,
-    ward_id: null
+    ward_id: null,
+    application_type: null
   });
 
   const { data: dashboard, isLoading, error } = useAuthorityDashboard({
     days: filters.days,
     department_id: filters.department_id || undefined,
-    ward_id: filters.ward_id || undefined
+    ward_id: filters.ward_id || undefined,
+    application_type: showTypeFilter && filters.application_type ? filters.application_type : undefined
   });
 
   const { data: departments } = useDepartments();
   const { data: wards } = useWards();
-
-  const role = user?.role;
 
   const kpiData = useMemo(() => {
     if (!dashboard?.kpis) return [];
@@ -785,6 +788,24 @@ export default function DashboardAuthorityPage() {
                 triggerClassName="bg-white px-3 py-2 border-[#D6D9DE] h-auto"
                 className="w-[160px]"
               />
+
+              {showTypeFilter && (
+                <>
+                  <div className="h-6 w-px bg-[#C6CAD1]" />
+                  <DropdownSelect
+                    options={[
+                      { label: "All Construction Types", value: "null" },
+                      { label: "New Construction", value: "NEW" },
+                      { label: "Renovation", value: "RENOVATION" }
+                    ]}
+                    value={filters.application_type === null ? "null" : filters.application_type}
+                    onChange={(val) => setFilters(prev => ({ ...prev, application_type: val === "null" ? null : val as string }))}
+                    placeholder="All Construction Types"
+                    triggerClassName="bg-white px-3 py-2 border-[#D6D9DE] h-auto"
+                    className="w-[200px]"
+                  />
+                </>
+              )}
             </div>
           </div>
 

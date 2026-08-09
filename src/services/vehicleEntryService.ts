@@ -14,8 +14,8 @@ export const VehicleEntryService = {
     end_date?: string;
     offset?: number;
     limit?: number;
-  }): Promise<AuthorityVehicleEntryResponse[]> {
-    const response = await api.get<AuthorityVehicleEntryResponse[]>("/api/authority/vehicle-entries", {
+  }): Promise<components["schemas"]["VehicleEntryListResponse"]> {
+    const response = await api.get<components["schemas"]["VehicleEntryListResponse"]>("/api/authority/vehicle-entries", {
       params,
     });
     return response.data;

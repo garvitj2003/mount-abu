@@ -403,7 +403,14 @@ const DocumentCard = ({
   );
 };
 
-const MainContent = ({ app }: { app: ApplicationResponse }) => {
+const MainContent = ({ app, userRole }: { app: ApplicationResponse; userRole?: string }) => {
+  const isTokenSectionHidden =
+    userRole === "COMMISSIONER" ||
+    userRole === "JEN" ||
+    userRole === "DEPT_LAND" ||
+    userRole === "DEPT_LEGAL" ||
+    userRole === "DEPT_ATP";
+
   const [selectedPhaseFilter, setSelectedPhaseFilter] = useState<number | "all">("all");
   const [viewerConfig, setViewerConfig] = useState<{
     isOpen: boolean;
@@ -552,20 +559,22 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
           Inspection
         </button>
 
-        <button
-          type="button"
-          onClick={() => hasTokens && setActiveTab("tokens")}
-          disabled={!hasTokens}
-          className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
-            !hasTokens
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-60"
-              : activeTab === "tokens"
-              ? "bg-[#0C83FF] text-white shadow-xs cursor-pointer font-bold"
-              : "bg-[#F3F4F6] text-[#343434] hover:bg-[#E5E7EB] hover:text-black cursor-pointer"
-          }`}
-        >
-          Tokens
-        </button>
+        {!isTokenSectionHidden && (
+          <button
+            type="button"
+            onClick={() => hasTokens && setActiveTab("tokens")}
+            disabled={!hasTokens}
+            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
+              !hasTokens
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed opacity-60"
+                : activeTab === "tokens"
+                ? "bg-[#0C83FF] text-white shadow-xs cursor-pointer font-bold"
+                : "bg-[#F3F4F6] text-[#343434] hover:bg-[#E5E7EB] hover:text-black cursor-pointer"
+            }`}
+          >
+            Tokens
+          </button>
+        )}
       </div>
 
       {/* Tab 1: Work Description */}
@@ -899,7 +908,7 @@ const MainContent = ({ app }: { app: ApplicationResponse }) => {
       )}
 
       {/* Tab 3: Tokens */}
-      {activeTab === "tokens" && (
+      {!isTokenSectionHidden && activeTab === "tokens" && (
         <div className="flex flex-col gap-5">
           <h3 className="text-[12px] font-bold text-[#343434] uppercase tracking-wider">Application Tokens & Phases</h3>
 
@@ -1086,7 +1095,7 @@ export default function ApplicationDetailsPage() {
           {/* Placeholder for "Extra Material" logic */}
           {false && <NotificationBanner />}
 
-          <MainContent app={app} />
+          <MainContent app={app} userRole={user?.role} />
         </div>
       </div>
 
