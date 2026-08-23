@@ -1242,7 +1242,7 @@ export default function NewApplicationPage() {
     </div>
   );
 
-  if (!idParam && process.env.NEXT_PUBLIC_ALLOW_NEW_APPLICATIONS === "false") {
+  if (process.env.NEXT_PUBLIC_ALLOW_NEW_APPLICATIONS === "false") {
     return (
       <div className="flex h-full min-h-[60vh] w-full flex-col items-center justify-center p-6 text-center bg-[#F5F6F7] font-onest">
         <div className="max-w-md rounded-2xl bg-white p-8 shadow-sm border border-[#D6D9DE]">
