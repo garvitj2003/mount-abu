@@ -4,22 +4,15 @@ import { step1Schema } from "@/lib/validations/application";
 
 export type ApplicationFormData = z.infer<typeof step1Schema>;
 
-interface MaterialItem {
-  material_id: number;
-  material_qty: number;
-}
-
 interface ApplicationState {
   applicationId: number | null;
   currentStep: number;
   formData: ApplicationFormData;
-  materials: MaterialItem[];
   
   // Actions
   setApplicationId: (id: number | null) => void;
   setCurrentStep: (step: number) => void;
   updateFormData: (data: Partial<ApplicationFormData>) => void;
-  setMaterials: (materials: MaterialItem[]) => void;
   resetApplication: () => void;
 }
 
@@ -46,7 +39,6 @@ export const useApplicationStore = create<ApplicationState>((set) => ({
   applicationId: null,
   currentStep: 1,
   formData: initialFormData,
-  materials: [],
 
   setApplicationId: (id) => set({ applicationId: id }),
   setCurrentStep: (step) => set({ currentStep: step }),
@@ -54,11 +46,9 @@ export const useApplicationStore = create<ApplicationState>((set) => ({
     set((state) => ({ 
       formData: { ...state.formData, ...data } 
     })),
-  setMaterials: (materials) => set({ materials }),
   resetApplication: () => set({ 
     applicationId: null, 
     currentStep: 1, 
     formData: initialFormData,
-    materials: []
   }),
 }));

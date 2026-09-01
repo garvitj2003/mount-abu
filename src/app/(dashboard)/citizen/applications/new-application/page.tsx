@@ -7,9 +7,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@/hooks/useUser";
 import { useApplicationStore } from "@/store/useApplicationStore";
 import { ApplicationService } from "@/services/applicationService";
-import { useWards, useMaterials } from "@/hooks/useMasterData";
+import { useWards } from "@/hooks/useMasterData";
 import { useOrganizationSuggestions } from "@/hooks/useApplications";
-import { step1Schema, extraMaterialSchema, dbMaterialsSchema } from "@/lib/validations/application";
+import { step1Schema } from "@/lib/validations/application";
 import { type components } from "@/types/api";
 import WardMapModal from "@/components/dashboard/WardMapModal";
 
@@ -48,9 +48,8 @@ export default function NewApplicationPage() {
   const queryClient = useQueryClient();
   const { data: user, isPending: isUserLoading } = useUser();
   const { data: wards = [], isPending: isWardsLoading } = useWards();
-  const { data: dbMaterials = [], isPending: isMaterialsLoading } = useMaterials();
 
-  const isMasterDataLoading = isUserLoading || isWardsLoading || isMaterialsLoading;
+  const isMasterDataLoading = isUserLoading || isWardsLoading;
 
   const {
     formData,
@@ -119,42 +118,15 @@ export default function NewApplicationPage() {
           organization_name: app.organization_name || "",
         });
 
-        // 2. Populate Materials (Local State)
-        if (dbMaterials.length > 0) {
-          const mergedMaterials = dbMaterials.map((dm) => {
-            const existing = app.materials?.find((am) => am.material_id === dm.id);
-            return {
-              id: dm.id,
-              name: dm.name,
-              unit: dm.unit,
-              qty: existing ? existing.quantity.toString() : "",
-            };
-          });
-          setMaterials(mergedMaterials);
-
-          // Populate extra materials
-          const extra = app.materials?.filter(am => am.material_id === null).map(am => ({
-            id: am.id,
-            name: am.custom_name || "",
-            unit: am.custom_unit || "",
-            qty: am.quantity.toString()
-          })) || [];
-          setExtraMaterials(extra);
-        }
-
-        // 3. Determine Step
+        // 2. Determine Step
         const requiredDocs = ["AADHAAR", "OWNERSHIP_DOCUMENTS", "PROPERTY_PHOTOS", "PERMISSION_DOCUMENTS", "DETAILED_DESIGN_ESTIMATE"];
         const uploadedDocTypes = app.documents?.map(d => d.document_type) || [];
         const allDocsUploaded = requiredDocs.every(type => uploadedDocTypes.includes(type as any));
 
-        const hasMaterials = app.materials && app.materials.length > 0;
-
         if (!allDocsUploaded) {
           setCurrentStep(2);
-        } else if (!hasMaterials) {
-          setCurrentStep(3);
         } else {
-          setCurrentStep(4);
+          setCurrentStep(3);
         }
 
       } catch (error) {
@@ -162,10 +134,10 @@ export default function NewApplicationPage() {
       }
     };
 
-    if (applicationId && dbMaterials.length > 0) { // Wait for dbMaterials to be loaded to map correctly
+    if (applicationId) {
       resumeApplication();
     }
-  }, [applicationId, updateFormData, setCurrentStep, dbMaterials]);
+  }, [applicationId, updateFormData, setCurrentStep]);
 
   // Sync Mobile
   useEffect(() => {
@@ -243,32 +215,12 @@ export default function NewApplicationPage() {
     detailedDesignEstimate: null,
   });
 
-  // Form State Step 3 (Materials)
-  const [materials, setMaterials] = useState<{ id: number, name: string, unit: string, qty: string }[]>([]);
-
-  useEffect(() => {
-    if (dbMaterials.length > 0 && materials.length === 0) {
-      setMaterials(dbMaterials.map(m => ({
-        id: m.id,
-        name: m.name,
-        unit: m.unit,
-        qty: ""
-      })));
-    }
-  }, [dbMaterials, materials.length]);
-
-  const [extraMaterials, setExtraMaterials] = useState<
-    { id: number; name: string; unit: string; qty: string }[]
-  >([]);
-
-  const [pendingExtra, setPendingExtra] = useState({ name: "", unit: "Kg", qty: "", customUnit: "" });
   const [agreed, setAgreed] = useState(false);
 
   const steps = [
     { id: 1, name: "Applicant name", icon: "/dashboard/icons/applications/step-applicant.svg" },
     { id: 2, name: "Upload Documents", icon: "/dashboard/icons/applications/step-upload.svg" },
-    { id: 3, name: "Material Details", icon: "/dashboard/icons/applications/step-material.svg" },
-    { id: 4, name: "Agree terms & make payment", icon: "/dashboard/icons/applications/step-payment.svg" },
+    { id: 3, name: "Agree terms & make payment", icon: "/dashboard/icons/applications/step-payment.svg" },
   ];
 
   const handleSameAsCurrent = (checked: boolean) => {
@@ -402,51 +354,6 @@ export default function NewApplicationPage() {
     }));
   };
 
-  const handleMaterialQtyChange = (id: number, qty: string) => {
-    setMaterials(materials.map((m) => (m.id === id ? { ...m, qty } : m)));
-  };
-
-  const addExtraMaterial = () => {
-    setErrors({});
-    const validation = extraMaterialSchema.safeParse(pendingExtra);
-
-    if (!validation.success) {
-      const fieldErrors = validation.error.flatten().fieldErrors;
-      const newErrors: Record<string, string> = {};
-
-      Object.entries(fieldErrors).forEach(([key, messages]) => {
-        if (messages && messages.length > 0) {
-          newErrors[key] = messages[0];
-        }
-      });
-
-      validation.error.issues.forEach((err) => {
-        if (err.path.includes("customUnit")) {
-          newErrors["customUnit"] = err.message;
-        }
-      });
-
-      setErrors(newErrors);
-      return;
-    }
-
-    const finalUnit = pendingExtra.unit === "other" ? (pendingExtra.customUnit || "") : pendingExtra.unit;
-    setExtraMaterials([
-      ...extraMaterials,
-      {
-        id: Date.now(),
-        name: pendingExtra.name,
-        qty: pendingExtra.qty,
-        unit: finalUnit
-      }
-    ]);
-    setPendingExtra({ name: "", unit: "Kg", qty: "", customUnit: "" });
-  };
-
-  const removeExtraMaterial = (id: number) => {
-    setExtraMaterials(extraMaterials.filter((m) => m.id !== id));
-  };
-
   const onNextStep1 = async () => {
     setErrors({});
     const validation = step1Schema.safeParse(formData);
@@ -471,26 +378,9 @@ export default function NewApplicationPage() {
         return;
       }
 
-      const initialRequirements: any[] = [];
-      materials.forEach(m => {
-        if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
-          initialRequirements.push({ material_id: m.id, material_qty: Number(m.qty) });
-        }
-      });
-      extraMaterials.forEach(m => {
-        if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
-          initialRequirements.push({
-            material_id: null,
-            custom_name: m.name,
-            custom_unit: m.unit,
-            material_qty: Number(m.qty)
-          });
-        }
-      });
-
       const response = await ApplicationService.createApplication({
         ...formData,
-        material_requirements: initialRequirements
+        material_requirements: []
       });
       setApplicationId(response.id);
 
@@ -557,58 +447,6 @@ export default function NewApplicationPage() {
     } finally {
       setUploading(false);
       setUploadProgress(0);
-    }
-  };
-
-  const onNextStep3 = async () => {
-    if (!applicationId) return;
-    setErrors({});
-    const validation = dbMaterialsSchema.safeParse(materials);
-
-    if (!validation.success) {
-      const newErrors: Record<string, string> = {};
-      validation.error.issues.forEach((issue) => {
-        const index = issue.path[0] as number;
-        const material = materials[index];
-        if (material) {
-          newErrors[`material_${material.id}`] = issue.message;
-        }
-      });
-      setErrors(newErrors);
-      return;
-    }
-
-    try {
-      const requirements: any[] = [];
-
-      // Standard materials from master data
-      materials.forEach(m => {
-        if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
-          requirements.push({ material_id: m.id, material_qty: Number(m.qty) });
-        }
-      });
-
-      // Additional (Extra) materials
-      extraMaterials.forEach(m => {
-        if (m.qty && !isNaN(Number(m.qty)) && Number(m.qty) > 0) {
-          requirements.push({
-            material_id: null,
-            custom_name: m.name,
-            custom_unit: m.unit,
-            material_qty: Number(m.qty)
-          });
-        }
-      });
-
-      if (requirements.length === 0) {
-        alert("Please enter at least one material quantity.");
-        return;
-      }
-      await ApplicationService.addMaterials(applicationId, requirements);
-      setCurrentStep(4);
-    } catch (error) {
-      console.error("Material submission failed", error);
-      alert("Failed to save materials.");
     }
   };
 
@@ -1147,73 +985,7 @@ export default function NewApplicationPage() {
     );
   };
 
-  const renderStep3 = () => {
-    const group1 = materials.slice(0, 5);
-    const group2 = materials.slice(5);
-    const MaterialTable = (items: typeof materials) => (
-      <div className="flex flex-1 flex-row">
-        <div className="flex flex-col flex-1">
-          <div className="flex h-10 items-center justify-between border-b border-[#D6D9DE] pl-2 pr-0"><span className="text-[12px] font-semibold uppercase text-[#333333] opacity-70 font-onest">Material Name</span><div className="h-4 w-[1px] bg-black/10" /></div>
-          {items.map((m) => (<div key={m.id} className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><span className="text-sm font-medium text-[#343434] font-onest">{m.name} ({m.unit})</span></div>))}
-        </div>
-        <div className="flex flex-col flex-1">
-          <div className="flex h-10 items-center justify-between border-b border-[#D6D9DE] pl-2 pr-0"><span className="text-[12px] font-semibold uppercase text-[#333333] opacity-70 font-onest">Estimated Material</span><div className="h-4 w-[1px] bg-black/10" /></div>
-          {items.map((m) => (<div key={m.id} className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><div className={`h-[34px] w-full rounded-lg border ${errors[`material_${m.id}`] ? "border-red-500" : "border-[#D6D9DE]"} bg-white px-3 flex items-center`}><input type="text" className="w-full text-sm text-[#343434] outline-none font-onest" value={m.qty} onChange={(e) => handleMaterialQtyChange(m.id, e.target.value)} /></div></div>))}
-        </div>
-      </div>
-    );
-    return (
-      <div className="space-y-10">
-        <div>
-          <div className="flex w-full max-w-[805px] gap-5">{MaterialTable(group1)}{MaterialTable(group2)}</div>
-          {materials.some(m => errors[`material_${m.id}`]) && (
-            <div className="text-[11px] text-red-500 flex flex-col gap-1 mt-2 font-onest max-w-[805px]">
-              {materials.map(m => {
-                if (errors[`material_${m.id}`]) {
-                  return <span key={m.id}>* {m.name}: {errors[`material_${m.id}`]}</span>;
-                }
-                return null;
-              })}
-            </div>
-          )}
-        </div>
-        <div className="flex w-full max-w-[805px] flex-col gap-5">
-          <div className="flex items-center justify-center gap-2.5 py-[7px]"><span className="text-sm font-medium text-[#343434] font-onest">Add Extra Materials</span><div className="h-px flex-1 bg-[#D6D9DE]" /></div>
-          <div className="flex gap-2">
-            <div className="flex-1 flex flex-row">
-              <div className="flex flex-col flex-1">
-                <div className="flex h-10 items-center justify-between border-b border-[#D6D9DE] pl-2 pr-0"><span className="text-[12px] font-semibold uppercase text-[#333333] opacity-70 font-onest">Material Name</span><div className="h-4 w-[1px] bg-black/10" /></div>
-                <div className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><div className="h-[34px] w-full rounded-lg border border-[#D6D9DE] bg-white px-3 flex items-center"><input type="text" placeholder="Material name" className="w-full text-sm text-[#343434] outline-none placeholder:opacity-60 font-onest" value={pendingExtra.name} onChange={(e) => setPendingExtra({ ...pendingExtra, name: e.target.value })} /></div></div>
-                {extraMaterials.map(m => (<div key={m.id} className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><span className="text-sm font-medium text-[#343434] font-onest pl-3">{m.name}</span></div>))}
-              </div>
-              <div className="flex flex-col flex-1">
-                <div className="flex h-10 items-center justify-between border-b border-[#D6D9DE] pl-2 pr-0"><span className="text-[12px] font-semibold uppercase text-[#333333] opacity-70 font-onest">Estimated Material</span><div className="h-4 w-[1px] bg-black/10" /></div>
-                <div className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><div className="flex h-[34px] w-full items-center justify-between rounded-lg border border-[#D6D9DE] bg-white px-3"><input type="text" placeholder="Enter Qty" className="w-full text-sm text-[#343434] outline-none placeholder:opacity-60 font-onest" value={pendingExtra.qty} onChange={(e) => setPendingExtra({ ...pendingExtra, qty: e.target.value })} /><div className="flex items-center gap-1 border-l border-[#D6D9DE] pl-2 ml-2"><select className="bg-transparent text-sm text-[#343434] outline-none font-onest" value={pendingExtra.unit} onChange={(e) => setPendingExtra({ ...pendingExtra, unit: e.target.value, customUnit: e.target.value === "other" ? "" : pendingExtra.customUnit })}><option value="Kg">Kg</option><option value="Nos">Nos</option><option value="Bags">Bags</option><option value="other">Other</option></select>{pendingExtra.unit === "other" && (<input type="text" placeholder="Specify unit" className="w-20 border-l border-[#D6D9DE] pl-2 ml-2 text-sm text-[#343434] outline-none placeholder:opacity-60 font-onest" value={pendingExtra.customUnit} onChange={(e) => setPendingExtra({ ...pendingExtra, customUnit: e.target.value })} />)}</div></div></div>
-                {extraMaterials.map(m => (<div key={m.id} className="flex h-12 items-center border-b border-[#D6D9DE] px-2 bg-white"><span className="text-sm font-medium text-[#343434] font-onest pl-3">{m.qty} {m.unit}</span></div>))}
-              </div>
-            </div>
-            <div className="w-10 flex flex-col pt-10">
-              <button onClick={addExtraMaterial} className="h-12 flex items-center justify-center text-[#0C83FF] hover:opacity-80 transition-opacity"><Image src="/dashboard/icons/applications/add-material.svg" alt="add" width={22} height={22} /></button>
-              {extraMaterials.map(m => (<button key={m.id} onClick={() => removeExtraMaterial(m.id)} className="h-12 flex items-center justify-center text-[#EF4444] hover:opacity-80 transition-opacity"><Image src="/dashboard/icons/applications/remove-material.svg" alt="remove" width={22} height={22} /></button>))}
-            </div>
-          </div>
-          {(errors.name || errors.qty || errors.customUnit) && (
-            <div className="text-[11px] text-red-500 flex flex-col gap-1 mt-1 font-onest">
-              {errors.name && <span>* Material Name: {errors.name}</span>}
-              {errors.qty && <span>* Estimated Material: {errors.qty}</span>}
-              {errors.customUnit && <span>* Unit: {errors.customUnit}</span>}
-            </div>
-          )}
-        </div>
-        <div className="flex items-center gap-5 pt-5"><div className="flex w-full max-w-[805px] justify-end gap-5">
-          <button onClick={() => setCurrentStep(2)} className="flex items-center justify-center gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-6 py-3 text-sm font-medium text-[#343434] hover:bg-gray-200 transition-colors font-onest font-medium"><Image src="/dashboard/icons/applications/arrow-back.svg" alt="back" width={14} height={14} /> Back</button>
-          <button onClick={onNextStep3} className="flex items-center justify-center gap-2 rounded-lg bg-[#0C83FF] px-6 py-3 text-sm font-medium text-white hover:bg-blue-600 transition-colors font-onest font-medium">Next <Image src="/dashboard/icons/applications/step-arrow.svg" alt="next" width={14} height={14} className="invert brightness-0" /></button>
-        </div></div>
-      </div>
-    );
-  };
-
-  const renderStep4 = () => (
+  const renderStep3 = () => (
     <div className="space-y-8 max-w-[805px]">
       <div className="flex flex-col gap-6">
         <label className="flex cursor-pointer items-center gap-2 group">
@@ -1236,7 +1008,7 @@ export default function NewApplicationPage() {
         </div>
       </div>
       <div className="flex items-center gap-5 pt-5 border-t border-[#D6D9DE]"><div className="flex w-full justify-end gap-5">
-        <button onClick={() => setCurrentStep(3)} className="flex items-center justify-center gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-6 py-3 text-sm font-medium text-[#343434] hover:bg-gray-200 transition-colors font-onest"><Image src="/dashboard/icons/applications/arrow-back.svg" alt="back" width={14} height={14} /> Back</button>
+        <button onClick={() => setCurrentStep(2)} className="flex items-center justify-center gap-2 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-6 py-3 text-sm font-medium text-[#343434] hover:bg-gray-200 transition-colors font-onest"><Image src="/dashboard/icons/applications/arrow-back.svg" alt="back" width={14} height={14} /> Back</button>
         <button disabled={!agreed} onClick={onSubmitFinal} className="flex items-center justify-center gap-2 rounded-lg bg-[#0C83FF] px-10 py-3 text-sm font-medium text-white hover:bg-blue-600 transition-colors font-onest disabled:opacity-50 disabled:cursor-not-allowed">Submit</button>
       </div></div>
     </div>
@@ -1301,7 +1073,6 @@ export default function NewApplicationPage() {
           {currentStep === 1 && renderStep1()}
           {currentStep === 2 && renderStep2()}
           {currentStep === 3 && renderStep3()}
-          {currentStep === 4 && renderStep4()}
         </div>
       </div>
     </div>
