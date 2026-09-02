@@ -160,8 +160,49 @@ export default function VehicleDetailDrawer({
                     </div>
                   </InfoSection>
 
+                  {/* Scheduling & Compliance */}
+                  <InfoSection title="Scheduling & Compliance">
+                    <DetailCard>
+                      <div className="grid grid-cols-2 gap-y-4">
+                        <div className="space-y-0.5">
+                          <p className="text-[11px] font-medium text-[#343434] opacity-50 uppercase">Compliance Status</p>
+                          <div className="pt-0.5">
+                            {(data as any).schedule_compliance_status === "ON_TIME" ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                                ● On Time
+                              </span>
+                            ) : (data as any).schedule_compliance_status === "SLOT_MISMATCH" ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                                ● Slot Mismatch / Delayed
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200 px-2.5 py-0.5 text-xs font-semibold text-rose-700">
+                                ● Unscheduled Walk-in
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="text-right space-y-0.5">
+                          <p className="text-[14px] font-semibold text-[#343434] font-mono">
+                            {(data as any).schedule_time_slot || "No Slot Scheduled"}
+                          </p>
+                          <p className="text-[11px] font-medium text-[#343434] opacity-50 uppercase">Scheduled Time Slot</p>
+                        </div>
+
+                        <div className="col-span-2 space-y-1 border-t border-[#D6D9DE] pt-3">
+                          <p className="text-[11px] font-medium text-[#343434] opacity-50 uppercase">Naka Incharge Remarks</p>
+                          <p className="text-xs font-medium text-[#343434] bg-gray-50 rounded-lg p-2.5 border border-[#D6D9DE]">
+                            {(data as any).remarks || "No remarks provided"}
+                          </p>
+                        </div>
+                      </div>
+                    </DetailCard>
+                  </InfoSection>
+
                   {/* Material Entry Details */}
                   <InfoSection title="Material Entry Details">
+
                     <DetailCard>
                       <div className="space-y-6">
                         {data.material_entry_details.map((material, idx) => (

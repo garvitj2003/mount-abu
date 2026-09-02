@@ -148,3 +148,122 @@ export function useUpdateMaterial() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["materials"] }),
   });
 }
+
+// Vehicle Slots
+export function useSlots(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["slots"],
+    queryFn: () => MasterDataService.getSlots(),
+    staleTime: 60 * 60 * 1000,
+    ...options,
+  });
+}
+
+export function useCreateSlot() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => MasterDataService.createSlot(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["slots"] }),
+  });
+}
+
+export function useUpdateSlot() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) => 
+      MasterDataService.updateSlot(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["slots"] }),
+  });
+}
+
+export function useDeleteSlot() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => MasterDataService.deleteSlot(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["slots"] }),
+  });
+}
+
+// Vehicle Types
+export function useVehicleTypes(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["vehicle-types"],
+    queryFn: () => MasterDataService.getVehicleTypes(),
+    staleTime: 60 * 60 * 1000,
+    ...options,
+  });
+}
+
+export function useCreateVehicleType() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => MasterDataService.createVehicleType(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["vehicle-types"] }),
+  });
+}
+
+export function useUpdateVehicleType() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) => 
+      MasterDataService.updateVehicleType(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["vehicle-types"] }),
+  });
+}
+
+export function useDeleteVehicleType() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => MasterDataService.deleteVehicleType(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["vehicle-types"] }),
+  });
+}
+
+// Schedule Blackouts
+export function useBlackouts(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["blackouts"],
+    queryFn: () => MasterDataService.getBlackouts(),
+    staleTime: 60 * 60 * 1000,
+    ...options,
+  });
+}
+
+export function useCreateBlackout() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => MasterDataService.createBlackout(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["blackouts"] });
+      queryClient.invalidateQueries({ queryKey: ["capacity-heatmap"] });
+      queryClient.invalidateQueries({ queryKey: ["available-slots"] });
+    },
+  });
+}
+
+export function useUpdateBlackout() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) => 
+      MasterDataService.updateBlackout(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["blackouts"] });
+      queryClient.invalidateQueries({ queryKey: ["capacity-heatmap"] });
+      queryClient.invalidateQueries({ queryKey: ["available-slots"] });
+    },
+  });
+}
+
+export function useDeleteBlackout() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => MasterDataService.deleteBlackout(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["blackouts"] });
+      queryClient.invalidateQueries({ queryKey: ["capacity-heatmap"] });
+      queryClient.invalidateQueries({ queryKey: ["available-slots"] });
+    },
+  });
+}
+
+

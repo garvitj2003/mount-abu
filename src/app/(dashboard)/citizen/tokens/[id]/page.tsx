@@ -6,11 +6,15 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import VehicleFilterDrawer from "@/components/dashboard/authority/vehicle-entries/VehicleFilterDrawer";
 import VehicleDetailDrawer from "@/components/dashboard/authority/vehicle-entries/VehicleDetailDrawer";
 import { useTokenDetail } from "@/hooks/useTokens";
+import { useTokenScheduleStatus } from "@/hooks/useSchedule";
+import ScheduleVehicleModal from "@/components/dashboard/citizen/tokens/ScheduleVehicleModal";
 import { type components } from "@/types/api";
 import { QRCodeSVG } from "qrcode.react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import TokenPDF from "@/components/dashboard/citizen/tokens/TokenPDF";
+import { format } from "date-fns";
+
 
 type TokenDetailResponse = components["schemas"]["TokenDetailResponse"];
 
@@ -47,17 +51,23 @@ const Header = ({
   onBack,
   onDownload,
   onShare,
+  onSchedule,
+  activeSchedule,
   isDownloading
 }: {
   token: TokenDetailResponse;
   onBack: () => void;
   onDownload: () => void;
   onShare: () => void;
+  onSchedule: () => void;
+  activeSchedule?: any;
   isDownloading: boolean;
 }) => {
   const validity = token.valid_from && token.valid_till
     ? `${new Date(token.valid_from).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} - ${new Date(token.valid_till).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`
     : "—";
+
+  const isTokenActive = token.status === "ACTIVE";
 
   return (
     <div className="sticky top-0 z-50 flex w-full items-center justify-between border-b border-[#D6D9DE] bg-white px-5 py-3 shadow-[0px_1px_3px_0px_rgba(0,0,0,0.13)]">
@@ -75,6 +85,21 @@ const Header = ({
       </div>
 
       <div className="flex items-center gap-2">
+        {isTokenActive && (
+          <button
+            onClick={onSchedule}
+            className="flex items-center gap-2 rounded-lg bg-[#0C83FF] px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-600 transition-colors cursor-pointer shadow-sm"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            {activeSchedule ? "View Active Schedule" : "Schedule Vehicle"}
+          </button>
+        )}
+
         <button onClick={onShare} className="flex items-center gap-2.5 rounded-lg border border-[#498AA9] bg-[#E9F1F5] px-4 py-2.5 text-sm font-medium text-[#247297] hover:opacity-90 transition-opacity cursor-pointer">
           <Image src="/dashboard/icons/applications/share.svg" alt="" width={18} height={18} />
           Share
@@ -96,38 +121,92 @@ const Header = ({
   );
 };
 
-const Sidebar = ({ token, sidebarRef }: { token: TokenDetailResponse; sidebarRef: React.RefObject<HTMLDivElement | null> }) => (
-  <div ref={sidebarRef} className="flex w-[238px] flex-col gap-5 rounded-lg border border-[#D6D9DE] bg-white p-4 h-fit sticky top-[80px]">
-    {/* QR Code */}
-    <div className="relative aspect-square w-full rounded border border-[#D6D9DE] p-4 bg-white flex items-center justify-center">
-      <QRCodeSVG
-        value={token.transport_code}
-        size={180}
-        level="H"
-        includeMargin={false}
-      />
-    </div>
+const Sidebar = ({
+  token,
+  sidebarRef,
+  onSchedule,
+  activeSchedule
+}: {
+  token: TokenDetailResponse;
+  sidebarRef: React.RefObject<HTMLDivElement | null>;
+  onSchedule: () => void;
+  activeSchedule?: any;
+}) => {
+  const isTokenActive = token.status === "ACTIVE";
 
-    <div className="flex flex-col gap-4">
-      <DetailItem label="Application Number" value={token.application_number} />
-      <DetailItem label="Applicant Name" value={token.applicant_name} />
-      <DetailItem label="Property Address" value={token.property_address} />
-
-      <div className="flex gap-4">
-        <DetailItem label="Property Usage" value={token.property_usage} />
-        <DetailItem label="Type of Work" value={token.application_type.toLowerCase() === "new" ? 'New Construction' : token.application_type.toLowerCase() === "renovation" ? 'Repair & Renovation' : ''} />
+  return (
+    <div ref={sidebarRef} className="flex w-[250px] flex-col gap-4 rounded-lg border border-[#D6D9DE] bg-white p-4 h-fit sticky top-[80px]">
+      {/* QR Code */}
+      <div className="relative aspect-square w-full rounded border border-[#D6D9DE] p-4 bg-white flex items-center justify-center">
+        <QRCodeSVG
+          value={token.transport_code}
+          size={180}
+          level="H"
+          includeMargin={false}
+        />
       </div>
 
-      <div className="h-px w-full bg-[#D6D9DE] my-1" />
+      {/* Active Schedule Card in Sidebar */}
+      {isTokenActive && (
+        activeSchedule ? (
+          <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-3 flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-semibold text-blue-900 uppercase">Upcoming Slot</span>
+              <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold text-blue-700">SCHEDULED</span>
+            </div>
+            <div className="text-xs text-gray-800 flex flex-col gap-0.5">
+              <p className="font-semibold">{format(new Date(activeSchedule.schedule_date), "dd MMM yyyy")}</p>
+              <p className="text-[11px] text-gray-600 font-mono">
+                {activeSchedule.start_time && activeSchedule.end_time
+                  ? `${activeSchedule.start_time} - ${activeSchedule.end_time}`
+                  : activeSchedule.slot_name || "Slot Assigned"}
+              </p>
+              <p className="font-mono font-semibold text-blue-800 text-[11px] mt-0.5">{activeSchedule.vehicle_number}</p>
+            </div>
+            <button
+              onClick={onSchedule}
+              className="w-full rounded-lg bg-white border border-blue-300 py-1.5 text-xs font-semibold text-[#0C83FF] hover:bg-blue-50 transition-colors mt-0.5 cursor-pointer"
+            >
+              Manage / Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={onSchedule}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#0C83FF] py-2.5 text-xs font-semibold text-white hover:bg-blue-600 transition-colors cursor-pointer shadow-sm"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            Schedule Vehicle Entry
+          </button>
+        )
+      )}
 
-      <p className="text-[12px] font-medium text-[#498AA9]">Authority & System Information</p>
+      <div className="flex flex-col gap-4 pt-1">
+        <DetailItem label="Application Number" value={token.application_number} />
+        <DetailItem label="Applicant Name" value={token.applicant_name} />
+        <DetailItem label="Property Address" value={token.property_address} />
 
-      <DetailItem label="Issued By" value={token.authority.issued_by?.split("(")[0].trim()} />
-      <DetailItem label="Issued On" value={token.authority.issued_on ? new Date(token.authority.issued_on).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "—"} />
-      <DetailItem label="Token Generated From" value={token.authority.token_generated_from} />
+        <div className="flex gap-4">
+          <DetailItem label="Property Usage" value={token.property_usage} />
+          <DetailItem label="Type of Work" value={token.application_type.toLowerCase() === "new" ? 'New Construction' : token.application_type.toLowerCase() === "renovation" ? 'Repair & Renovation' : ''} />
+        </div>
+
+        <div className="h-px w-full bg-[#D6D9DE] my-1" />
+
+        <p className="text-[12px] font-medium text-[#498AA9]">Authority & System Information</p>
+
+        <DetailItem label="Issued By" value={token.authority.issued_by?.split("(")[0].trim()} />
+        <DetailItem label="Issued On" value={token.authority.issued_on ? new Date(token.authority.issued_on).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "—"} />
+        <DetailItem label="Token Generated From" value={token.authority.token_generated_from} />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const TableRow = ({
   entry, onClick
@@ -166,6 +245,7 @@ export default function CitizenTokenDetailsPage() {
   const [activeTab, setActiveTab] = useState<"Vehicle Entries" | "Material Summary">("Vehicle Entries");
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<{
@@ -180,6 +260,10 @@ export default function CitizenTokenDetailsPage() {
   const pdfRef = useRef<HTMLDivElement>(null);
 
   const { data: token, isLoading, error } = useTokenDetail(transportCode);
+  const tokenId = (token as any)?.token_id ?? (token as any)?.id;
+  const { data: scheduleStatus, refetch: refetchScheduleStatus } = useTokenScheduleStatus(tokenId);
+
+
 
   const filteredEntries = useMemo(() => {
     if (!token?.vehicle_entries) return [];
@@ -322,11 +406,19 @@ Status: ${token.status}
         onBack={handleBack}
         onDownload={handleDownload}
         onShare={handleShare}
+        onSchedule={() => setIsScheduleModalOpen(true)}
+        activeSchedule={scheduleStatus?.active_schedule}
         isDownloading={isDownloading}
       />
 
       <div className="flex flex-1 gap-5 p-5">
-        <Sidebar token={token} sidebarRef={sidebarRef} />
+        <Sidebar
+          token={token}
+          sidebarRef={sidebarRef}
+          onSchedule={() => setIsScheduleModalOpen(true)}
+          activeSchedule={scheduleStatus?.active_schedule}
+        />
+
 
         <div className="flex flex-1 flex-col gap-5 rounded-lg border border-[#D6D9DE] bg-white overflow-hidden h-fit">
           {/* Tabs */}
@@ -489,7 +581,20 @@ Status: ${token.status}
         entryId={selectedEntryId}
       />
 
+      {token && (
+        <ScheduleVehicleModal
+          isOpen={isScheduleModalOpen}
+          onClose={() => setIsScheduleModalOpen(false)}
+          tokenId={tokenId}
+          tokenNumber={token.token_number}
+          existingSchedule={scheduleStatus?.active_schedule}
+          onSuccess={() => refetchScheduleStatus()}
+        />
+      )}
+
+
       {token && <TokenPDF token={token} componentRef={pdfRef} />}
     </div>
   );
 }
+

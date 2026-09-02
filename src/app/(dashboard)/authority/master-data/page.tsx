@@ -8,24 +8,36 @@ import {
   useDepartments, 
   useRoles, 
   useMaterials,
+  useSlots,
+  useVehicleTypes,
+  useBlackouts,
   useUpdateWard,
   useUpdateDepartment,
   useUpdateRole,
   useUpdateComplaintCategory,
-  useUpdateMaterial
+  useUpdateMaterial,
+  useUpdateSlot,
+  useUpdateVehicleType,
+  useUpdateBlackout,
 } from "@/hooks/useMasterData";
+import { useCapacityHeatmap } from "@/hooks/useSchedule";
 import NewCategoryDrawer from "@/components/dashboard/authority/master-data/NewCategoryDrawer";
 import NewWardDrawer from "@/components/dashboard/authority/master-data/NewWardDrawer";
 import NewDepartmentDrawer from "@/components/dashboard/authority/master-data/NewDepartmentDrawer";
 import NewRoleDrawer from "@/components/dashboard/authority/master-data/NewRoleDrawer";
 import NewMaterialDrawer from "@/components/dashboard/authority/master-data/NewMaterialDrawer";
+import NewSlotDrawer from "@/components/dashboard/authority/master-data/NewSlotDrawer";
+import NewVehicleTypeDrawer from "@/components/dashboard/authority/master-data/NewVehicleTypeDrawer";
+import NewBlackoutDrawer from "@/components/dashboard/authority/master-data/NewBlackoutDrawer";
 import MasterDataMenu from "@/components/dashboard/authority/master-data/MasterDataMenu";
 import TablePagination from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
 
-type TabType = "Complaint Categories" | "Wards/Zones" | "Departments" | "Roles" | "Materials";
+type TabType = "Complaint Categories" | "Wards/Zones" | "Departments" | "Roles" | "Materials" | "Vehicle Slots" | "Vehicle Types" | "Blackout Calendar" | "Capacity Heatmap";
 
-const TABS: TabType[] = ["Complaint Categories", "Wards/Zones", "Departments", "Roles", "Materials"];
+const TABS: TabType[] = ["Complaint Categories", "Wards/Zones", "Departments", "Roles", "Materials", "Vehicle Slots", "Vehicle Types", "Blackout Calendar", "Capacity Heatmap"];
+
+
 
 interface TableColumn {
   header: string;
@@ -49,13 +61,15 @@ export default function AuthorityMasterDataPage() {
   
   // Pagination State
   const { page, limit, setPage, setLimit } = usePagination();
-  
-  // Drawer States
+   // Drawer States
   const [isCategoryDrawerOpen, setIsCategoryDrawerOpen] = useState(false);
   const [isWardDrawerOpen, setIsWardDrawerOpen] = useState(false);
   const [isDepartmentDrawerOpen, setIsDepartmentDrawerOpen] = useState(false);
   const [isRoleDrawerOpen, setIsRoleDrawerOpen] = useState(false);
   const [isMaterialDrawerOpen, setIsMaterialDrawerOpen] = useState(false);
+  const [isSlotDrawerOpen, setIsSlotDrawerOpen] = useState(false);
+  const [isVehicleTypeDrawerOpen, setIsVehicleTypeDrawerOpen] = useState(false);
+  const [isBlackoutDrawerOpen, setIsBlackoutDrawerOpen] = useState(false);
   
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
@@ -71,6 +85,10 @@ export default function AuthorityMasterDataPage() {
   const { data: departments = [], isLoading: isLoadingDepts } = useDepartments();
   const { data: roles = [], isLoading: isLoadingRoles } = useRoles();
   const { data: materials = [], isLoading: isLoadingMaterials } = useMaterials();
+  const { data: slots = [], isLoading: isLoadingSlots } = useSlots();
+  const { data: vehicleTypes = [], isLoading: isLoadingVehicleTypes } = useVehicleTypes();
+  const { data: blackouts = [], isLoading: isLoadingBlackouts } = useBlackouts();
+  const { data: heatmapData, isLoading: isLoadingHeatmap } = useCapacityHeatmap();
 
   // Mutations
   const { mutateAsync: updateWard } = useUpdateWard();
@@ -78,6 +96,9 @@ export default function AuthorityMasterDataPage() {
   const { mutateAsync: updateRole } = useUpdateRole();
   const { mutateAsync: updateCategory } = useUpdateComplaintCategory();
   const { mutateAsync: updateMaterial } = useUpdateMaterial();
+  const { mutateAsync: updateSlot } = useUpdateSlot();
+  const { mutateAsync: updateVehicleType } = useUpdateVehicleType();
+  const { mutateAsync: updateBlackout } = useUpdateBlackout();
 
   const handleActionClick = (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
@@ -95,25 +116,33 @@ export default function AuthorityMasterDataPage() {
 
   const handleToggleStatus = async (item: any) => {
     try {
-      const newStatus = !item.status;
       if (activeTab === "Wards/Zones") {
-        await updateWard({ id: item.id, data: { status: newStatus } });
+        await updateWard({ id: item.id, data: { status: !item.status } });
       } else if (activeTab === "Departments") {
-        await updateDept({ id: item.id, data: { status: newStatus } });
+        await updateDept({ id: item.id, data: { status: !item.status } });
       } else if (activeTab === "Roles") {
-        await updateRole({ id: item.id, data: { status: newStatus } });
+        await updateRole({ id: item.id, data: { status: !item.status } });
       } else if (activeTab === "Complaint Categories") {
-        await updateCategory({ id: item.id, data: { status: newStatus } });
+        await updateCategory({ id: item.id, data: { status: !item.status } });
       } else if (activeTab === "Materials") {
-        await updateMaterial({ id: item.id, data: { status: newStatus } });
+        await updateMaterial({ id: item.id, data: { status: !item.status } });
+      } else if (activeTab === "Vehicle Slots") {
+        await updateSlot({ id: item.id, data: { is_active: !item.is_active } });
+      } else if (activeTab === "Vehicle Types") {
+        await updateVehicleType({ id: item.id, data: { is_active: !item.is_active } });
+      } else if (activeTab === "Blackout Calendar") {
+        await updateBlackout({ id: item.id, data: { is_active: !item.is_active } });
       }
       alert("Status updated successfully!");
     } catch (error) {
       console.error("Failed to update status", error);
       alert("Failed to update status.");
+    } finally {
+      setOpenDropdownId(null);
     }
-    setOpenDropdownId(null);
   };
+
+
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -258,6 +287,131 @@ export default function AuthorityMasterDataPage() {
     ACTION_COLUMN
   ];
 
+  const SLOT_COLUMNS: TableColumn[] = [
+    { 
+      header: "Code", 
+      key: "code",
+      render: (row: any) => <span className="text-sm font-medium text-[#343434]">SLOT-{row.id.toString().padStart(3, '0')}</span>
+    },
+    { header: "Slot Name", key: "name" },
+    { 
+      header: "Window Timing", 
+      key: "timing",
+      render: (row: any) => (
+        <span className="inline-flex items-center gap-1 rounded bg-[#EBF3FC] px-2 py-0.5 text-xs font-semibold text-[#0C83FF]">
+          {row.start_time} - {row.end_time}
+        </span>
+      )
+    },
+    { 
+      header: "Operational Days", 
+      key: "applicable_days",
+      render: (row: any) => (
+        <div className="flex flex-wrap gap-1 max-w-[160px]">
+          {(row.applicable_days || "MON,TUE,WED,THU,FRI,SAT,SUN").split(",").map((d: string) => (
+            <span key={d} className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-gray-700">
+              {d.trim()}
+            </span>
+          ))}
+        </div>
+      )
+    },
+    { 
+      header: "Grace Window", 
+      key: "grace_period_minutes",
+      render: (row: any) => <span className="text-xs font-medium text-gray-700">±{row.grace_period_minutes ?? 30} mins</span>
+    },
+    { 
+      header: "Daily Capacity", 
+      key: "max_capacity",
+      render: (row: any) => <span className="text-sm font-semibold text-[#343434]">{row.max_capacity} Vehicles</span>
+    },
+    { 
+      header: "Status", 
+      key: "is_active",
+      render: (row: any) => (
+        <div className="flex items-center gap-1.5">
+          <Image src={row.is_active ? "/dashboard/icons/tick-round-green.svg" : "/dashboard/icons/cross-round-red.svg"} alt="" width={14} height={14} />
+          <span className={`text-sm font-normal ${row.is_active ? "text-[#059669]" : "text-[#EF4444]"}`}>
+            {row.is_active ? "Active" : "Inactive"}
+          </span>
+        </div>
+      )
+    },
+    { 
+      header: "Created On", 
+      key: "created_at",
+      render: (row: any) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatDate(row.created_at)}</span>
+    },
+    ACTION_COLUMN
+  ];
+
+  const VEHICLE_TYPE_COLUMNS: TableColumn[] = [
+    { 
+      header: "Code", 
+      key: "code",
+      render: (row: any) => <span className="text-xs font-semibold font-mono text-[#343434] bg-gray-100 px-2 py-0.5 rounded">{row.code}</span>
+    },
+    { header: "Vehicle Type Name", key: "name" },
+    { 
+      header: "Status", 
+      key: "is_active",
+      render: (row: any) => (
+        <div className="flex items-center gap-1.5">
+          <Image src={row.is_active ? "/dashboard/icons/tick-round-green.svg" : "/dashboard/icons/cross-round-red.svg"} alt="" width={14} height={14} />
+          <span className={`text-sm font-normal ${row.is_active ? "text-[#059669]" : "text-[#EF4444]"}`}>
+            {row.is_active ? "Active" : "Inactive"}
+          </span>
+        </div>
+      )
+    },
+    { 
+      header: "Created On", 
+      key: "created_at",
+      render: (row: any) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatDate(row.created_at)}</span>
+    },
+    ACTION_COLUMN
+  ];
+
+  const BLACKOUT_COLUMNS: TableColumn[] = [
+    { 
+      header: "Blackout Date", 
+      key: "blackout_date",
+      render: (row: any) => <span className="text-sm font-semibold text-[#343434] font-mono">{formatDate(row.blackout_date)}</span>
+    },
+    { header: "Reason / Event", key: "reason" },
+    { 
+      header: "Scope", 
+      key: "is_full_day",
+      render: (row: any) => (
+        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+          row.is_full_day ? "bg-red-50 text-red-700 border border-red-200" : "bg-amber-50 text-amber-700 border border-amber-200"
+        }`}>
+          {row.is_full_day ? "Full Day Closed" : `Slot Only: ${row.slot_name || "Specific"}`}
+        </span>
+      )
+    },
+    { 
+      header: "Status", 
+      key: "is_active",
+      render: (row: any) => (
+        <div className="flex items-center gap-1.5">
+          <Image src={row.is_active ? "/dashboard/icons/tick-round-green.svg" : "/dashboard/icons/cross-round-red.svg"} alt="" width={14} height={14} />
+          <span className={`text-sm font-normal ${row.is_active ? "text-[#059669]" : "text-[#EF4444]"}`}>
+            {row.is_active ? "Active" : "Inactive"}
+          </span>
+        </div>
+      )
+    },
+    { 
+      header: "Created On", 
+      key: "created_at",
+      render: (row: any) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatDate(row.created_at)}</span>
+    },
+    ACTION_COLUMN
+  ];
+
+
   useEffect(() => {
     const activeTabIdx = TABS.indexOf(activeTab);
     const activeTabElement = tabsRef.current[activeTabIdx];
@@ -326,10 +480,53 @@ export default function AuthorityMasterDataPage() {
             setIsMaterialDrawerOpen(true);
           }
         };
+      case "Vehicle Slots":
+        return {
+          columns: SLOT_COLUMNS,
+          data: slots,
+          buttonText: "New Vehicle Slot",
+          isLoading: isLoadingSlots,
+          onAdd: () => {
+            setSelectedItem(null);
+            setIsSlotDrawerOpen(true);
+          }
+        };
+      case "Vehicle Types":
+        return {
+          columns: VEHICLE_TYPE_COLUMNS,
+          data: vehicleTypes,
+          buttonText: "New Vehicle Type",
+          isLoading: isLoadingVehicleTypes,
+          onAdd: () => {
+            setSelectedItem(null);
+            setIsVehicleTypeDrawerOpen(true);
+          }
+        };
+      case "Blackout Calendar":
+        return {
+          columns: BLACKOUT_COLUMNS,
+          data: blackouts,
+          buttonText: "Add Blackout / Holiday",
+          isLoading: isLoadingBlackouts,
+          onAdd: () => {
+            setSelectedItem(null);
+            setIsBlackoutDrawerOpen(true);
+          }
+        };
+      case "Capacity Heatmap":
+        return {
+          columns: [],
+          data: heatmapData?.days || [],
+          buttonText: "",
+          isLoading: isLoadingHeatmap,
+          onAdd: () => {}
+        };
       default:
         return { columns: [], data: [], buttonText: "", isLoading: false, onAdd: () => {} };
     }
   };
+
+
 
   const { columns, data: allData, buttonText, onAdd, isLoading } = getTabData();
 
@@ -346,12 +543,14 @@ export default function AuthorityMasterDataPage() {
             Manage complaint categories, wards/zones, departments, and roles.
           </p>
         </div>
-        <button 
-          onClick={onAdd}
-          className="flex items-center justify-center gap-2.5 rounded-lg bg-[#0C83FF] px-4 py-3 text-sm font-medium text-white hover:bg-blue-600 transition-colors"
-        >
-          {buttonText}
-        </button>
+        {buttonText && (
+          <button 
+            onClick={onAdd}
+            className="flex items-center justify-center gap-2.5 rounded-lg bg-[#0C83FF] px-4 py-3 text-sm font-medium text-white hover:bg-blue-600 transition-colors"
+          >
+            {buttonText}
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -385,109 +584,245 @@ export default function AuthorityMasterDataPage() {
       {/* Main Content */}
       <div className="flex-1 p-5">
         <div className="flex flex-col gap-4 rounded-lg border border-[#D6D9DE] bg-white p-4 min-h-[400px]">
-          {/* Search Bar */}
-          <div className="flex w-[209px] items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-white px-3 py-2">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-60">
-              <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M14 14L11.1 11.1" stroke="#343434" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <input type="text" placeholder="Search" className="w-full border-none bg-transparent p-0 text-sm text-[#343434] outline-none" />
-          </div>
-
-          {/* Table */}
-          <div className="w-full overflow-x-auto">
-            {isLoading ? (
-              <div className="flex h-64 w-full items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0C83FF] border-t-transparent"></div>
+          {activeTab === "Capacity Heatmap" ? (
+            <div className="flex flex-col gap-6">
+              <div className="flex items-center justify-between border-b border-[#D6D9DE] pb-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-[#343434]">14-Day Live Slot Utilization Gauge & Heatmap</h3>
+                  <p className="text-xs text-[#343434] opacity-70">
+                    Real-time tracking of booked vehicle transit slots vs total daily throughput capacity across all operational time windows.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 text-xs">
+                  <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-emerald-500"></span> Low Load (&lt;40%)</span>
+                  <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-amber-500"></span> Moderate (40-75%)</span>
+                  <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-rose-500"></span> High / Full (&gt;75%)</span>
+                  <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-gray-400"></span> Blackout</span>
+                </div>
               </div>
-            ) : (
-              <table className="w-full min-w-[900px] border-collapse">
-                <thead>
-                  <tr className="border-b border-[#D6D9DE]">
-                    {columns.map((col, idx) => (
-                      <th key={idx} className="px-2 py-3 text-left whitespace-nowrap">
-                        <div className={`flex items-center gap-2 ${idx < columns.length - 1 ? "border-r border-[rgba(0,0,0,0.1)]" : ""} pr-2`}>
-                          <span className="text-xs font-semibold text-[#333333] opacity-70 uppercase">{col.header}</span>
+
+
+              {isLoadingHeatmap ? (
+                <div className="flex h-72 w-full flex-col items-center justify-center gap-3">
+                  <div className="size-8 animate-spin rounded-full border-3 border-[#0C83FF] border-t-transparent"></div>
+                  <span className="text-xs font-medium text-[#86868B]">Calculating live capacity projections...</span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {heatmapData?.days.map((day) => {
+                    const isBlackout = day.is_full_blackout;
+                    const isHigh = day.overall_load_percentage >= 75;
+                    const isMed = day.overall_load_percentage >= 40;
+
+                    const cardBg = isBlackout
+                      ? "bg-neutral-50/80 border-neutral-200/80"
+                      : isHigh
+                      ? "bg-gradient-to-b from-rose-50/50 to-white border-rose-200/80"
+                      : isMed
+                      ? "bg-gradient-to-b from-amber-50/40 to-white border-amber-200/80"
+                      : "bg-gradient-to-b from-emerald-50/30 to-white border-emerald-200/70";
+
+                    const badgeStyle = isBlackout
+                      ? "bg-neutral-200 text-neutral-700"
+                      : isHigh
+                      ? "bg-rose-100 text-rose-700 border border-rose-200"
+                      : isMed
+                      ? "bg-amber-100 text-amber-800 border border-amber-200"
+                      : "bg-emerald-100 text-emerald-800 border border-emerald-200";
+
+                    const progressColor = isHigh
+                      ? "bg-rose-500"
+                      : isMed
+                      ? "bg-amber-500"
+                      : "bg-emerald-500";
+
+                    return (
+                      <div
+                        key={day.date}
+                        className={`rounded-2xl border p-4.5 flex flex-col justify-between gap-4 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 ${cardBg}`}
+                      >
+                        {/* Day & Date Header */}
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-[#86868B]">{day.day_name}</p>
+                            <p className="text-base font-bold tracking-tight text-[#1D1D1F] mt-0.5">
+                              {formatDate(day.date)}
+                            </p>
+                          </div>
+                          <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold tracking-tight ${badgeStyle}`}>
+                            {isBlackout ? "CLOSED" : `${day.overall_load_percentage}% LOAD`}
+                          </span>
                         </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.length > 0 ? (
-                    data.map((row: any, idx: number) => (
-                      <tr key={idx} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
-                        {columns.map((col, colIdx) => (
-                          <td key={colIdx} className="px-2 py-3 whitespace-nowrap">
-                            {col.render ? (
-                              col.render(row)
-                            ) : col.key === "status" ? (
-                              <div className="flex items-center gap-1.5">
-                                <Image src={row.status ? "/dashboard/icons/tick-round-green.svg" : "/dashboard/icons/cross-round-red.svg"} alt="" width={14} height={14} />
-                                <span className={`text-sm font-normal ${row.status ? "text-[#059669]" : "text-[#EF4444]"}`}>
-                                  {row.status ? "Active" : "Inactive"}
+
+                        {isBlackout ? (
+                          <div className="rounded-xl bg-red-100/60 border border-red-200/80 p-3 text-xs text-red-800 flex items-start gap-2">
+                            <span className="text-sm">🚫</span>
+                            <div>
+                              <p className="font-semibold">Transit Suspended</p>
+                              <p className="text-[11px] opacity-90 mt-0.5">{day.blackout_reason || "Scheduled maintenance/holiday"}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            {/* Capacity Bar */}
+                            <div className="flex flex-col gap-1.5">
+                              <div className="flex justify-between text-xs font-medium">
+                                <span className="text-[#515154]">
+                                  Booked: <strong className="text-[#1D1D1F]">{day.total_booked}</strong> / {day.total_capacity}
+                                </span>
+                                <span className="font-semibold text-emerald-700">
+                                  {day.total_available} Available
                                 </span>
                               </div>
-                            ) : (
-                              <span className={`text-sm ${colIdx === 0 ? "font-medium" : "font-normal text-[#343434] ${colIdx > 0 ? 'opacity-70' : ''}"}`}>
-                                {row[col.key] || "—"}
-                              </span>
-                            )}
-                          </td>
+                              <div className="h-2 w-full rounded-full bg-black/[0.06] overflow-hidden p-0.5">
+                                <div
+                                  className={`h-full rounded-full transition-all duration-500 ${progressColor}`}
+                                  style={{ width: `${Math.min(100, day.overall_load_percentage)}%` }}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Slot List */}
+                            <div className="rounded-xl bg-white/80 border border-black/[0.04] p-2 flex flex-col gap-1 shadow-sm">
+                              {day.slots.map((s) => (
+                                <div key={s.slot_id} className="flex items-center justify-between text-[11px] py-0.5 px-1">
+                                  <span className="font-medium text-[#1D1D1F] truncate max-w-[130px]">{s.name}</span>
+                                  <span className="font-mono text-[#86868B] font-semibold">{s.booked_count}/{s.max_capacity}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* Apple-style Search & Action Bar */}
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex w-full max-w-xs items-center gap-2.5 rounded-full border border-black/[0.08] bg-neutral-100/70 px-3.5 py-2 transition-all focus-within:border-[#0C83FF] focus-within:bg-white focus-within:shadow-sm">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="opacity-50">
+                    <path d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z" stroke="#1D1D1F" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M14 14L11.1 11.1" stroke="#1D1D1F" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder={`Search ${activeTab.toLowerCase()}...`}
+                    className="w-full border-none bg-transparent p-0 text-xs text-[#1D1D1F] placeholder:text-[#86868B] outline-none"
+                  />
+                </div>
+                <div className="text-xs text-[#86868B] font-medium">
+                  Showing <strong className="text-[#1D1D1F]">{allData.length}</strong> total records
+                </div>
+              </div>
+
+              {/* Table Container */}
+              <div className="w-full overflow-x-auto rounded-2xl border border-black/[0.05]">
+                {isLoading ? (
+                  <div className="flex h-64 w-full flex-col items-center justify-center gap-3">
+                    <div className="size-8 animate-spin rounded-full border-3 border-[#0C83FF] border-t-transparent"></div>
+                    <span className="text-xs font-medium text-[#86868B]">Loading data...</span>
+                  </div>
+                ) : (
+                  <table className="w-full min-w-[900px] border-collapse text-left">
+                    <thead>
+                      <tr className="border-b border-black/[0.06] bg-neutral-50/70">
+                        {columns.map((col, idx) => (
+                          <th key={idx} className="px-4 py-3.5 text-left whitespace-nowrap">
+                            <span className="text-[11px] font-semibold text-[#86868B] uppercase tracking-wider">
+                              {col.header}
+                            </span>
+                          </th>
                         ))}
                       </tr>
-                    ))
-                  ) : (
-                    <tr><td colSpan={columns.length} className="px-2 py-10 text-center text-gray-400 font-medium font-onest whitespace-nowrap">No data found.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            )}
-          </div>
-          
-            {openDropdownId && (
-              <div 
-                ref={dropdownRef}
-                style={{ 
-                  position: 'fixed', 
-                  top: dropdownPos.top, 
-                  left: dropdownPos.left,
-                  zIndex: 9999 
-                }}
-                className="animate-in fade-in zoom-in duration-200"
-              >
-                {(() => {
-                  const item = allData.find(i => i.id === openDropdownId);
-                  if (!item) return null;
-                  return (
-                    <MasterDataMenu 
-                      is_active={(item as any).status ?? true}
-                      onDeactivate={() => handleToggleStatus(item)}
-                      onEdit={() => {
-                        setSelectedItem(item);
-                        if (activeTab === "Wards/Zones") setIsWardDrawerOpen(true);
-                        else if (activeTab === "Departments") setIsDepartmentDrawerOpen(true);
-                        else if (activeTab === "Roles") setIsRoleDrawerOpen(true);
-                        else if (activeTab === "Complaint Categories") setIsCategoryDrawerOpen(true);
-                        else if (activeTab === "Materials") setIsMaterialDrawerOpen(true);
-                        setOpenDropdownId(null);
-                      }}
-                    />
-                  );
-                })()}
+                    </thead>
+                    <tbody className="divide-y divide-black/[0.04]">
+                      {data.length > 0 ? (
+                        data.map((row: any, idx: number) => (
+                          <tr key={idx} className="hover:bg-neutral-50/60 transition-colors">
+                            {columns.map((col, colIdx) => (
+                              <td key={colIdx} className="px-4 py-3.5 whitespace-nowrap">
+                                {col.render ? (
+                                  col.render(row)
+                                ) : col.key === "status" ? (
+                                  <div className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span className="size-1.5 rounded-full bg-emerald-500"></span>
+                                    {row.status ? "Active" : "Inactive"}
+                                  </div>
+                                ) : (
+                                  <span className={`text-xs ${colIdx === 0 ? "font-semibold text-[#1D1D1F]" : "text-[#515154]"}`}>
+                                    {row[col.key] || "—"}
+                                  </span>
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={columns.length} className="px-4 py-12 text-center text-xs text-[#86868B] font-medium">
+                            No records found for {activeTab}.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                )}
               </div>
-            )}
 
-          {/* Pagination */}
-          <TablePagination
-            currentPage={page}
-            totalPages={totalPages}
-            limit={limit}
-            onPageChange={setPage}
-            onLimitChange={setLimit}
-          />
+              {openDropdownId && (
+                <div 
+                  ref={dropdownRef}
+                  style={{ 
+                    position: 'fixed', 
+                    top: dropdownPos.top, 
+                    left: dropdownPos.left,
+                    zIndex: 9999 
+                  }}
+                  className="animate-in fade-in zoom-in-95 duration-150"
+                >
+                  {(() => {
+                    const item = (allData as any[]).find((i: any) => i.id === openDropdownId);
+                    if (!item) return null;
+
+                    return (
+                      <MasterDataMenu 
+                        is_active={(item as any).is_active ?? (item as any).status ?? true}
+                        onDeactivate={() => handleToggleStatus(item)}
+                        onEdit={() => {
+                          setSelectedItem(item);
+                          if (activeTab === "Wards/Zones") setIsWardDrawerOpen(true);
+                          else if (activeTab === "Departments") setIsDepartmentDrawerOpen(true);
+                          else if (activeTab === "Roles") setIsRoleDrawerOpen(true);
+                          else if (activeTab === "Complaint Categories") setIsCategoryDrawerOpen(true);
+                          else if (activeTab === "Materials") setIsMaterialDrawerOpen(true);
+                          else if (activeTab === "Vehicle Slots") setIsSlotDrawerOpen(true);
+                          else if (activeTab === "Vehicle Types") setIsVehicleTypeDrawerOpen(true);
+                          else if (activeTab === "Blackout Calendar") setIsBlackoutDrawerOpen(true);
+                          setOpenDropdownId(null);
+                        }}
+                      />
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* Pagination */}
+              <TablePagination
+                currentPage={page}
+                totalPages={totalPages}
+                limit={limit}
+                onPageChange={setPage}
+                onLimitChange={setLimit}
+              />
+            </>
+          )}
         </div>
       </div>
+
 
       <NewCategoryDrawer 
         isOpen={isCategoryDrawerOpen} 
@@ -529,6 +864,32 @@ export default function AuthorityMasterDataPage() {
         }} 
         data={selectedItem}
       />
+      <NewSlotDrawer 
+        isOpen={isSlotDrawerOpen} 
+        onClose={() => {
+          setIsSlotDrawerOpen(false);
+          setSelectedItem(null);
+        }} 
+        data={selectedItem}
+      />
+      <NewVehicleTypeDrawer 
+        isOpen={isVehicleTypeDrawerOpen} 
+        onClose={() => {
+          setIsVehicleTypeDrawerOpen(false);
+          setSelectedItem(null);
+        }} 
+        data={selectedItem}
+      />
+      <NewBlackoutDrawer
+        isOpen={isBlackoutDrawerOpen}
+        onClose={() => {
+          setIsBlackoutDrawerOpen(false);
+          setSelectedItem(null);
+        }}
+        data={selectedItem}
+      />
+
     </div>
   );
 }
+

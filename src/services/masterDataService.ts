@@ -95,4 +95,139 @@ export const MasterDataService = {
     const response = await api.put<MaterialResponse>(`/api/master/materials/${materialId}`, data);
     return response.data;
   },
+
+  // Vehicle Slots
+  async getSlots(): Promise<SlotDefinitionResponse[]> {
+    const response = await api.get<SlotDefinitionResponse[]>("/api/master/slots");
+    return response.data;
+  },
+  async createSlot(data: SlotDefinitionCreate): Promise<SlotDefinitionResponse> {
+    const response = await api.post<SlotDefinitionResponse>("/api/master/slots", data);
+    return response.data;
+  },
+  async updateSlot(slotId: number, data: SlotDefinitionUpdate): Promise<SlotDefinitionResponse> {
+    const response = await api.put<SlotDefinitionResponse>(`/api/master/slots/${slotId}`, data);
+    return response.data;
+  },
+  async deleteSlot(slotId: number): Promise<{ message: string }> {
+    const response = await api.delete<{ message: string }>(`/api/master/slots/${slotId}`);
+    return response.data;
+  },
+
+  // Vehicle Types
+  async getVehicleTypes(): Promise<VehicleTypeResponse[]> {
+    const response = await api.get<VehicleTypeResponse[]>("/api/master/vehicle-types");
+    return response.data;
+  },
+  async createVehicleType(data: VehicleTypeCreate): Promise<VehicleTypeResponse> {
+    const response = await api.post<VehicleTypeResponse>("/api/master/vehicle-types", data);
+    return response.data;
+  },
+  async updateVehicleType(typeId: number, data: VehicleTypeUpdate): Promise<VehicleTypeResponse> {
+    const response = await api.put<VehicleTypeResponse>(`/api/master/vehicle-types/${typeId}`, data);
+    return response.data;
+  },
+  async deleteVehicleType(typeId: number): Promise<{ message: string }> {
+    const response = await api.delete<{ message: string }>(`/api/master/vehicle-types/${typeId}`);
+    return response.data;
+  },
+
+  // Schedule Blackouts
+  async getBlackouts(): Promise<ScheduleBlackoutResponse[]> {
+    const response = await api.get<ScheduleBlackoutResponse[]>("/api/master/blackouts");
+    return response.data;
+  },
+  async createBlackout(data: ScheduleBlackoutCreate): Promise<ScheduleBlackoutResponse> {
+    const response = await api.post<ScheduleBlackoutResponse>("/api/master/blackouts", data);
+    return response.data;
+  },
+  async updateBlackout(blackoutId: number, data: ScheduleBlackoutUpdate): Promise<ScheduleBlackoutResponse> {
+    const response = await api.put<ScheduleBlackoutResponse>(`/api/master/blackouts/${blackoutId}`, data);
+    return response.data;
+  },
+  async deleteBlackout(blackoutId: number): Promise<{ message: string }> {
+    const response = await api.delete<{ message: string }>(`/api/master/blackouts/${blackoutId}`);
+    return response.data;
+  },
 };
+
+export interface SlotDefinitionResponse {
+  id: number;
+  name: string;
+  start_time: string;
+  end_time: string;
+  max_capacity: number;
+  applicable_days: string;
+  grace_period_minutes: number;
+  is_active: boolean;
+  created_at?: string;
+}
+
+export interface SlotDefinitionCreate {
+  name: string;
+  start_time: string;
+  end_time: string;
+  max_capacity: number;
+  applicable_days?: string;
+  grace_period_minutes?: number;
+  is_active?: boolean;
+}
+
+export interface SlotDefinitionUpdate {
+  name?: string;
+  start_time?: string;
+  end_time?: string;
+  max_capacity?: number;
+  applicable_days?: string;
+  grace_period_minutes?: number;
+  is_active?: boolean;
+}
+
+export interface VehicleTypeResponse {
+  id: number;
+  name: string;
+  code: string;
+  is_active: boolean;
+  created_at?: string;
+}
+
+export interface VehicleTypeCreate {
+  name: string;
+  code: string;
+  is_active?: boolean;
+}
+
+export interface VehicleTypeUpdate {
+  name?: string;
+  code?: string;
+  is_active?: boolean;
+}
+
+export interface ScheduleBlackoutResponse {
+  id: number;
+  blackout_date: string;
+  reason: string;
+  is_full_day: boolean;
+  slot_id?: number | null;
+  slot_name?: string | null;
+  is_active: boolean;
+  created_at?: string;
+}
+
+export interface ScheduleBlackoutCreate {
+  blackout_date: string;
+  reason: string;
+  is_full_day?: boolean;
+  slot_id?: number | null;
+  is_active?: boolean;
+}
+
+export interface ScheduleBlackoutUpdate {
+  blackout_date?: string;
+  reason?: string;
+  is_full_day?: boolean;
+  slot_id?: number | null;
+  is_active?: boolean;
+}
+
+

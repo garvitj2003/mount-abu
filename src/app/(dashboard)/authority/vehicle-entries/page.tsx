@@ -377,18 +377,20 @@ export default function AuthorityVehicleEntriesPage() {
 
           {/* Table */}
           <div className="w-full overflow-x-auto">
-            <table className="w-full min-w-[1000px] border-collapse">
+            <table className="w-full min-w-[1100px] border-collapse">
               <thead>
                 <tr className="border-b border-[#D6D9DE]">
                   {[
                     "Token Number",
                     "Vehicle Number",
+                    "Schedule Compliance",
                     "Naaka Incharge",
                     "Materials",
                     "Entry Date & Time",
+                    "Remarks",
                   ].map((header, idx) => (
                     <th key={header} className="px-2 py-3 text-left">
-                      <div className={`flex items-center gap-2 ${idx < 4 ? "border-r border-[rgba(0,0,0,0.1)]" : ""} pr-2`}>
+                      <div className={`flex items-center gap-2 ${idx < 6 ? "border-r border-[rgba(0,0,0,0.1)]" : ""} pr-2`}>
                         <span className="text-xs font-semibold text-[#333333] opacity-70 uppercase">{header}</span>
                       </div>
                     </th>
@@ -398,7 +400,7 @@ export default function AuthorityVehicleEntriesPage() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={5} className="px-2 py-8 text-center text-sm text-[#343434]/60">
+                    <td colSpan={7} className="px-2 py-8 text-center text-sm text-[#343434]/60">
                       <div className="flex justify-center items-center gap-2">
                         <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#0C83FF] border-t-transparent"></div>
                         <span>Loading vehicle entries...</span>
@@ -407,12 +409,12 @@ export default function AuthorityVehicleEntriesPage() {
                   </tr>
                 ) : entries.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-2 py-8 text-center text-sm text-[#343434]/60">
+                    <td colSpan={7} className="px-2 py-8 text-center text-sm text-[#343434]/60">
                       No vehicle entries found.
                     </td>
                   </tr>
                 ) : (
-                  entries.map((item, index) => (
+                  entries.map((item: any, index: number) => (
                     <tr key={item.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                       <td className="px-2 py-3">
                         <div className="flex items-center gap-2">
@@ -445,7 +447,22 @@ export default function AuthorityVehicleEntriesPage() {
                         </div>
                       </td>
                       <td className="px-2 py-3 font-inter">
-                        <span className="text-sm font-normal text-[#343434] opacity-70">{item.vehicle_number}</span>
+                        <span className="text-sm font-normal text-[#343434] opacity-70 font-mono">{item.vehicle_number}</span>
+                      </td>
+                      <td className="px-2 py-3">
+                        {item.schedule_compliance_status === "ON_TIME" ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                            ● On Time
+                          </span>
+                        ) : item.schedule_compliance_status === "SLOT_MISMATCH" ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                            ● Slot Mismatch
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200 px-2.5 py-0.5 text-xs font-semibold text-rose-700">
+                            ● Unscheduled Walk-in
+                          </span>
+                        )}
                       </td>
                       <td className="px-2 py-3">
                         <span className="text-sm font-normal text-[#343434] opacity-70">{item.naka_incharge_name}</span>
@@ -471,11 +488,17 @@ export default function AuthorityVehicleEntriesPage() {
                           {format(new Date(item.entry_at), "dd MMM yyyy hh:mm a")}
                         </span>
                       </td>
+                      <td className="px-2 py-3 max-w-[200px] truncate">
+                        <span className="text-xs text-[#343434] opacity-80" title={item.remarks}>
+                          {item.remarks || "—"}
+                        </span>
+                      </td>
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
+
           </div>
 
           {/* Pagination */}
