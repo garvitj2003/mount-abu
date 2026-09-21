@@ -33,11 +33,17 @@ import MasterDataMenu from "@/components/dashboard/authority/master-data/MasterD
 import TablePagination from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
 
-type TabType = "Complaint Categories" | "Wards/Zones" | "Departments" | "Roles" | "Materials" | "Vehicle Slots" | "Vehicle Types" | "Blackout Calendar" | "Capacity Heatmap";
+type TabType = "Complaint Categories" | "Wards/Zones" | "Departments" | "Roles" | "Materials" | "Vehicle Scheduling";
+type VehicleSchedulingSubTab = "Slots" | "Vehicle Types" | "Blackout Calendar" | "Capacity Heatmap";
 
-const TABS: TabType[] = ["Complaint Categories", "Wards/Zones", "Departments", "Roles", "Materials", "Vehicle Slots", "Vehicle Types", "Blackout Calendar", "Capacity Heatmap"];
+const TABS: TabType[] = ["Complaint Categories", "Wards/Zones", "Departments", "Roles", "Materials", "Vehicle Scheduling"];
 
-
+const VEHICLE_SCHEDULING_SUB_TABS: { key: VehicleSchedulingSubTab; label: string }[] = [
+  { key: "Slots", label: "Vehicle Slots" },
+  { key: "Vehicle Types", label: "Vehicle Types" },
+  { key: "Blackout Calendar", label: "Blackout Calendar" },
+  { key: "Capacity Heatmap", label: "Capacity Heatmap" },
+];
 
 interface TableColumn {
   header: string;
@@ -57,10 +63,12 @@ const formatDate = (dateStr: string) => {
 
 export default function AuthorityMasterDataPage() {
   const [activeTab, setActiveTab] = useState<TabType>("Complaint Categories");
+  const [vehicleSubTab, setVehicleSubTab] = useState<VehicleSchedulingSubTab>("Slots");
   const [indicatorStyle, setIndicatorStyle] = useState({ width: 0, left: 0 });
   
   // Pagination State
   const { page, limit, setPage, setLimit } = usePagination();
+
    // Drawer States
   const [isCategoryDrawerOpen, setIsCategoryDrawerOpen] = useState(false);
   const [isWardDrawerOpen, setIsWardDrawerOpen] = useState(false);
@@ -126,14 +134,17 @@ export default function AuthorityMasterDataPage() {
         await updateCategory({ id: item.id, data: { status: !item.status } });
       } else if (activeTab === "Materials") {
         await updateMaterial({ id: item.id, data: { status: !item.status } });
-      } else if (activeTab === "Vehicle Slots") {
-        await updateSlot({ id: item.id, data: { is_active: !item.is_active } });
-      } else if (activeTab === "Vehicle Types") {
-        await updateVehicleType({ id: item.id, data: { is_active: !item.is_active } });
-      } else if (activeTab === "Blackout Calendar") {
-        await updateBlackout({ id: item.id, data: { is_active: !item.is_active } });
+      } else if (activeTab === "Vehicle Scheduling") {
+        if (vehicleSubTab === "Slots") {
+          await updateSlot({ id: item.id, data: { is_active: !item.is_active } });
+        } else if (vehicleSubTab === "Vehicle Types") {
+          await updateVehicleType({ id: item.id, data: { is_active: !item.is_active } });
+        } else if (vehicleSubTab === "Blackout Calendar") {
+          await updateBlackout({ id: item.id, data: { is_active: !item.is_active } });
+        }
       }
       alert("Status updated successfully!");
+
     } catch (error) {
       console.error("Failed to update status", error);
       alert("Failed to update status.");
@@ -480,47 +491,50 @@ export default function AuthorityMasterDataPage() {
             setIsMaterialDrawerOpen(true);
           }
         };
-      case "Vehicle Slots":
-        return {
-          columns: SLOT_COLUMNS,
-          data: slots,
-          buttonText: "New Vehicle Slot",
-          isLoading: isLoadingSlots,
-          onAdd: () => {
-            setSelectedItem(null);
-            setIsSlotDrawerOpen(true);
-          }
-        };
-      case "Vehicle Types":
-        return {
-          columns: VEHICLE_TYPE_COLUMNS,
-          data: vehicleTypes,
-          buttonText: "New Vehicle Type",
-          isLoading: isLoadingVehicleTypes,
-          onAdd: () => {
-            setSelectedItem(null);
-            setIsVehicleTypeDrawerOpen(true);
-          }
-        };
-      case "Blackout Calendar":
-        return {
-          columns: BLACKOUT_COLUMNS,
-          data: blackouts,
-          buttonText: "Add Blackout / Holiday",
-          isLoading: isLoadingBlackouts,
-          onAdd: () => {
-            setSelectedItem(null);
-            setIsBlackoutDrawerOpen(true);
-          }
-        };
-      case "Capacity Heatmap":
-        return {
-          columns: [],
-          data: heatmapData?.days || [],
-          buttonText: "",
-          isLoading: isLoadingHeatmap,
-          onAdd: () => {}
-        };
+      case "Vehicle Scheduling":
+        if (vehicleSubTab === "Slots") {
+          return {
+            columns: SLOT_COLUMNS,
+            data: slots,
+            buttonText: "New Vehicle Slot",
+            isLoading: isLoadingSlots,
+            onAdd: () => {
+              setSelectedItem(null);
+              setIsSlotDrawerOpen(true);
+            }
+          };
+        } else if (vehicleSubTab === "Vehicle Types") {
+          return {
+            columns: VEHICLE_TYPE_COLUMNS,
+            data: vehicleTypes,
+            buttonText: "New Vehicle Type",
+            isLoading: isLoadingVehicleTypes,
+            onAdd: () => {
+              setSelectedItem(null);
+              setIsVehicleTypeDrawerOpen(true);
+            }
+          };
+        } else if (vehicleSubTab === "Blackout Calendar") {
+          return {
+            columns: BLACKOUT_COLUMNS,
+            data: blackouts,
+            buttonText: "Add Blackout / Holiday",
+            isLoading: isLoadingBlackouts,
+            onAdd: () => {
+              setSelectedItem(null);
+              setIsBlackoutDrawerOpen(true);
+            }
+          };
+        } else {
+          // Capacity Heatmap
+          return {
+            columns: [],
+            data: heatmapData?.days || [],
+            buttonText: "",
+            isLoading: isLoadingHeatmap,
+            onAdd: () => {}
+          };
+        }
       default:
         return { columns: [], data: [], buttonText: "", isLoading: false, onAdd: () => {} };
     }
@@ -540,7 +554,7 @@ export default function AuthorityMasterDataPage() {
         <div className="flex flex-col gap-1">
           <h1 className="text-base font-medium text-[#343434]">Master Data Management</h1>
           <p className="text-xs font-normal text-[#343434]">
-            Manage complaint categories, wards/zones, departments, and roles.
+            Manage complaint categories, wards/zones, departments, vehicle scheduling, and roles.
           </p>
         </div>
         {buttonText && (
@@ -583,8 +597,35 @@ export default function AuthorityMasterDataPage() {
 
       {/* Main Content */}
       <div className="flex-1 p-5">
+        {/* Sub-tab Pill Switch for Vehicle Scheduling */}
+        {activeTab === "Vehicle Scheduling" && (
+          <div className="mb-4 flex items-center gap-1.5 p-1 bg-black/[0.04] rounded-2xl w-fit border border-black/[0.06] shadow-inner">
+            {VEHICLE_SCHEDULING_SUB_TABS.map((sub) => {
+              const isSelected = vehicleSubTab === sub.key;
+              return (
+                <button
+                  key={sub.key}
+                  type="button"
+                  onClick={() => {
+                    setVehicleSubTab(sub.key);
+                    setPage(1);
+                    setOpenDropdownId(null);
+                  }}
+                  className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                    isSelected
+                      ? "bg-white text-[#1D1D1F] shadow-sm border border-black/[0.06]"
+                      : "text-[#86868B] hover:text-[#1D1D1F]"
+                  }`}
+                >
+                  {sub.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         <div className="flex flex-col gap-4 rounded-lg border border-[#D6D9DE] bg-white p-4 min-h-[400px]">
-          {activeTab === "Capacity Heatmap" ? (
+          {activeTab === "Vehicle Scheduling" && vehicleSubTab === "Capacity Heatmap" ? (
             <div className="flex flex-col gap-6">
               <div className="flex items-center justify-between border-b border-[#D6D9DE] pb-4">
                 <div>
@@ -593,6 +634,7 @@ export default function AuthorityMasterDataPage() {
                     Real-time tracking of booked vehicle transit slots vs total daily throughput capacity across all operational time windows.
                   </p>
                 </div>
+
                 <div className="flex items-center gap-3 text-xs">
                   <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-emerald-500"></span> Low Load (&lt;40%)</span>
                   <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-full bg-amber-500"></span> Moderate (40-75%)</span>
@@ -799,11 +841,14 @@ export default function AuthorityMasterDataPage() {
                           else if (activeTab === "Roles") setIsRoleDrawerOpen(true);
                           else if (activeTab === "Complaint Categories") setIsCategoryDrawerOpen(true);
                           else if (activeTab === "Materials") setIsMaterialDrawerOpen(true);
-                          else if (activeTab === "Vehicle Slots") setIsSlotDrawerOpen(true);
-                          else if (activeTab === "Vehicle Types") setIsVehicleTypeDrawerOpen(true);
-                          else if (activeTab === "Blackout Calendar") setIsBlackoutDrawerOpen(true);
+                          else if (activeTab === "Vehicle Scheduling") {
+                            if (vehicleSubTab === "Slots") setIsSlotDrawerOpen(true);
+                            else if (vehicleSubTab === "Vehicle Types") setIsVehicleTypeDrawerOpen(true);
+                            else if (vehicleSubTab === "Blackout Calendar") setIsBlackoutDrawerOpen(true);
+                          }
                           setOpenDropdownId(null);
                         }}
+
                       />
                     );
                   })()}

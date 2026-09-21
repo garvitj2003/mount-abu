@@ -25,8 +25,9 @@ export default function ScheduleVehicleModal({
   existingSchedule,
   onSuccess,
 }: ScheduleVehicleModalProps) {
-  const todayStr = format(new Date(), "yyyy-MM-dd");
-  const [selectedDate, setSelectedDate] = useState<string>(todayStr);
+  const tomorrow = addDays(new Date(), 1);
+  const tomorrowStr = format(tomorrow, "yyyy-MM-dd");
+  const [selectedDate, setSelectedDate] = useState<string>(tomorrowStr);
   const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [vehicleTypeId, setVehicleTypeId] = useState<number | undefined>(undefined);
@@ -43,7 +44,7 @@ export default function ScheduleVehicleModal({
 
   useEffect(() => {
     if (isOpen) {
-      setSelectedDate(todayStr);
+      setSelectedDate(tomorrowStr);
       setSelectedSlotId(null);
       setVehicleNumber("");
       setVehicleTypeId(undefined);
@@ -51,15 +52,10 @@ export default function ScheduleVehicleModal({
       setDriverMobile("");
       setErrorMsg("");
     }
-  }, [isOpen, todayStr]);
+  }, [isOpen, tomorrowStr]);
 
   const activeVehicleTypes = vehicleTypes.filter((v: any) => v.is_active);
 
-  const quickDates = [
-    { label: "Today", date: todayStr },
-    { label: "Tomorrow", date: format(addDays(new Date(), 1), "yyyy-MM-dd") },
-    { label: "Day After", date: format(addDays(new Date(), 2), "yyyy-MM-dd") },
-  ];
 
   const handleVehicleNumberChange = (val: string) => {
     setVehicleNumber(val.toUpperCase());
@@ -115,16 +111,17 @@ export default function ScheduleVehicleModal({
     }
   };
 
-  // Generate next 7 days for Apple Calendar date strip
+  // Generate next 7 days for Apple Calendar date strip starting from Tomorrow (T+1 basis)
   const dateStrip = Array.from({ length: 7 }, (_, i) => {
-    const d = addDays(new Date(), i);
+    const d = addDays(new Date(), i + 1);
     return {
       dateStr: format(d, "yyyy-MM-dd"),
-      dayOfWeek: i === 0 ? "Today" : i === 1 ? "Tmrw" : format(d, "EEE"),
+      dayOfWeek: i === 0 ? "Tmrw" : format(d, "EEE"),
       dayNumber: format(d, "d"),
       monthStr: format(d, "MMM"),
     };
   });
+
 
   return (
     <AnimatePresence>
@@ -261,7 +258,8 @@ export default function ScheduleVehicleModal({
                     <label className="text-xs font-semibold text-[#1D1D1F]">
                       Select Transit Date <span className="text-red-500">*</span>
                     </label>
-                    <span className="text-[11px] font-medium text-[#86868B]">Daily allocation</span>
+                    <span className="text-[11px] font-medium text-[#86868B]">T+1 Advance Window</span>
+
                   </div>
 
                   {/* Horizontal Apple Date Strip */}
