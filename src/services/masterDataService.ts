@@ -149,7 +149,52 @@ export const MasterDataService = {
     const response = await api.delete<{ message: string }>(`/api/master/blackouts/${blackoutId}`);
     return response.data;
   },
+
+  // Announcements
+  async getAnnouncements(): Promise<AnnouncementResponse[]> {
+    const response = await api.get<AnnouncementResponse[]>("/api/master/announcements");
+    return response.data;
+  },
+  async getActiveAnnouncements(): Promise<AnnouncementResponse[]> {
+    const response = await api.get<AnnouncementResponse[]>("/api/master/announcements/active");
+    return response.data;
+  },
+  async createAnnouncement(data: AnnouncementCreate): Promise<AnnouncementResponse> {
+    const response = await api.post<AnnouncementResponse>("/api/master/announcements", data);
+    return response.data;
+  },
+  async updateAnnouncement(announcementId: number, data: AnnouncementUpdate): Promise<AnnouncementResponse> {
+    const response = await api.put<AnnouncementResponse>(`/api/master/announcements/${announcementId}`, data);
+    return response.data;
+  },
+  async deleteAnnouncement(announcementId: number): Promise<void> {
+    await api.delete(`/api/master/announcements/${announcementId}`);
+  },
 };
+
+export interface AnnouncementResponse {
+  id: number;
+  title: string;
+  message: string;
+  is_active: boolean;
+  valid_till?: string | null;
+  created_at?: string;
+  created_by_id?: number | null;
+}
+
+export interface AnnouncementCreate {
+  title: string;
+  message: string;
+  is_active?: boolean;
+  valid_till?: string | null;
+}
+
+export interface AnnouncementUpdate {
+  title?: string;
+  message?: string;
+  is_active?: boolean;
+  valid_till?: string | null;
+}
 
 export interface SlotDefinitionResponse {
   id: number;

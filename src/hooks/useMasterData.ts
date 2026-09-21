@@ -266,4 +266,57 @@ export function useDeleteBlackout() {
   });
 }
 
+// Announcements
+export function useAnnouncements(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["announcements"],
+    queryFn: () => MasterDataService.getAnnouncements(),
+    staleTime: 60 * 1000,
+    ...options,
+  });
+}
+
+export function useActiveAnnouncements(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["active-announcements"],
+    queryFn: () => MasterDataService.getActiveAnnouncements(),
+    staleTime: 60 * 1000,
+    ...options,
+  });
+}
+
+export function useCreateAnnouncement() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => MasterDataService.createAnnouncement(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["announcements"] });
+      queryClient.invalidateQueries({ queryKey: ["active-announcements"] });
+    },
+  });
+}
+
+export function useUpdateAnnouncement() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) =>
+      MasterDataService.updateAnnouncement(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["announcements"] });
+      queryClient.invalidateQueries({ queryKey: ["active-announcements"] });
+    },
+  });
+}
+
+export function useDeleteAnnouncement() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => MasterDataService.deleteAnnouncement(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["announcements"] });
+      queryClient.invalidateQueries({ queryKey: ["active-announcements"] });
+    },
+  });
+}
+
 

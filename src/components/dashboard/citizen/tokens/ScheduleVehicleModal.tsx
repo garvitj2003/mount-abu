@@ -31,8 +31,6 @@ export default function ScheduleVehicleModal({
   const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [vehicleTypeId, setVehicleTypeId] = useState<number | undefined>(undefined);
-  const [driverName, setDriverName] = useState("");
-  const [driverMobile, setDriverMobile] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
   const { data: slotsData, isLoading: isLoadingSlots } = useAvailableSlots(selectedDate, {
@@ -48,14 +46,11 @@ export default function ScheduleVehicleModal({
       setSelectedSlotId(null);
       setVehicleNumber("");
       setVehicleTypeId(undefined);
-      setDriverName("");
-      setDriverMobile("");
       setErrorMsg("");
     }
   }, [isOpen, tomorrowStr]);
 
   const activeVehicleTypes = vehicleTypes.filter((v: any) => v.is_active);
-
 
   const handleVehicleNumberChange = (val: string) => {
     setVehicleNumber(val.toUpperCase());
@@ -79,8 +74,6 @@ export default function ScheduleVehicleModal({
         schedule_date: selectedDate,
         vehicle_number: vehicleNumber.trim().toUpperCase(),
         vehicle_type_id: vehicleTypeId,
-        driver_name: driverName.trim() || undefined,
-        driver_mobile: driverMobile.trim() || undefined,
       },
       {
         onSuccess: () => {
@@ -122,7 +115,6 @@ export default function ScheduleVehicleModal({
     };
   });
 
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -142,8 +134,9 @@ export default function ScheduleVehicleModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 20 }}
             transition={{ type: "spring", damping: 26, stiffness: 280 }}
-            className="relative z-10 w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-3xl bg-white shadow-2xl flex flex-col border border-black/[0.08]"
+            className="relative z-10 w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-3xl bg-white shadow-2xl flex flex-col border border-black/[0.08]"
           >
+
             {/* Header */}
             <div className="flex items-center justify-between border-b border-black/[0.06] bg-white/90 backdrop-blur-md px-6 py-4.5">
               <div className="flex items-center gap-3">
@@ -391,9 +384,9 @@ export default function ScheduleVehicleModal({
 
                 {/* 3. Grouped Vehicle Details */}
                 <div className="rounded-2xl border border-black/[0.06] bg-white p-4.5 shadow-sm flex flex-col gap-3.5">
-                  <span className="text-xs font-semibold text-[#1D1D1F]">Vehicle & Driver Information</span>
+                  <span className="text-xs font-semibold text-[#1D1D1F]">Vehicle Details</span>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[11px] font-semibold text-[#515154]">
                         Vehicle Registration Number <span className="text-red-500">*</span>
@@ -424,35 +417,9 @@ export default function ScheduleVehicleModal({
                         ))}
                       </select>
                     </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[11px] font-semibold text-[#515154]">
-                        Driver Name <span className="text-[#86868B] font-normal">(Optional)</span>
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Driver full name"
-                        value={driverName}
-                        onChange={(e) => setDriverName(e.target.value)}
-                        className="rounded-xl border border-black/[0.08] bg-neutral-50 px-3.5 py-2.5 text-xs text-[#1D1D1F] outline-none focus:border-[#0C83FF] focus:bg-white transition-all"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[11px] font-semibold text-[#515154]">
-                        Driver Contact <span className="text-[#86868B] font-normal">(Optional)</span>
-                      </label>
-                      <input
-                        type="tel"
-                        maxLength={10}
-                        placeholder="10-digit mobile number"
-                        value={driverMobile}
-                        onChange={(e) => setDriverMobile(e.target.value.replace(/\D/g, ""))}
-                        className="rounded-xl border border-black/[0.08] bg-neutral-50 px-3.5 py-2.5 text-xs text-[#1D1D1F] outline-none focus:border-[#0C83FF] focus:bg-white transition-all"
-                      />
-                    </div>
                   </div>
                 </div>
+
 
                 {/* Footer Buttons */}
                 <div className="border-t border-black/[0.06] pt-3 flex items-center justify-end gap-3">

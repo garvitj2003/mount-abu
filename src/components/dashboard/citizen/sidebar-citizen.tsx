@@ -29,7 +29,15 @@ const MENU_ITEMS = [
     icon: "/dashboard/icons/tokens.svg",
     activeIcon: "/dashboard/icons/token-active.svg",
   },
+  {
+    name: "Vehicle Schedules",
+    href: "/citizen/schedules",
+    icon: "/dashboard/icons/vehicle.svg",
+    activeIcon: "/dashboard/icons/vehicle-active.svg",
+  },
 ];
+
+
 
 export default function SidebarCitizen() {
   const pathname = usePathname();

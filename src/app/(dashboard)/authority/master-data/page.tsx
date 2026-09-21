@@ -11,6 +11,7 @@ import {
   useSlots,
   useVehicleTypes,
   useBlackouts,
+  useAnnouncements,
   useUpdateWard,
   useUpdateDepartment,
   useUpdateRole,
@@ -19,6 +20,8 @@ import {
   useUpdateSlot,
   useUpdateVehicleType,
   useUpdateBlackout,
+  useUpdateAnnouncement,
+  useDeleteAnnouncement,
 } from "@/hooks/useMasterData";
 import { useCapacityHeatmap } from "@/hooks/useSchedule";
 import NewCategoryDrawer from "@/components/dashboard/authority/master-data/NewCategoryDrawer";
@@ -29,14 +32,15 @@ import NewMaterialDrawer from "@/components/dashboard/authority/master-data/NewM
 import NewSlotDrawer from "@/components/dashboard/authority/master-data/NewSlotDrawer";
 import NewVehicleTypeDrawer from "@/components/dashboard/authority/master-data/NewVehicleTypeDrawer";
 import NewBlackoutDrawer from "@/components/dashboard/authority/master-data/NewBlackoutDrawer";
+import NewAnnouncementDrawer from "@/components/dashboard/authority/master-data/NewAnnouncementDrawer";
 import MasterDataMenu from "@/components/dashboard/authority/master-data/MasterDataMenu";
 import TablePagination from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
 
-type TabType = "Complaint Categories" | "Wards/Zones" | "Departments" | "Roles" | "Materials" | "Vehicle Scheduling";
+type TabType = "Complaint Categories" | "Wards/Zones" | "Departments" | "Roles" | "Materials" | "Vehicle Scheduling" | "Announcements";
 type VehicleSchedulingSubTab = "Slots" | "Vehicle Types" | "Blackout Calendar" | "Capacity Heatmap";
 
-const TABS: TabType[] = ["Complaint Categories", "Wards/Zones", "Departments", "Roles", "Materials", "Vehicle Scheduling"];
+const TABS: TabType[] = ["Complaint Categories", "Wards/Zones", "Departments", "Roles", "Materials", "Vehicle Scheduling", "Announcements"];
 
 const VEHICLE_SCHEDULING_SUB_TABS: { key: VehicleSchedulingSubTab; label: string }[] = [
   { key: "Slots", label: "Vehicle Slots" },
@@ -78,6 +82,7 @@ export default function AuthorityMasterDataPage() {
   const [isSlotDrawerOpen, setIsSlotDrawerOpen] = useState(false);
   const [isVehicleTypeDrawerOpen, setIsVehicleTypeDrawerOpen] = useState(false);
   const [isBlackoutDrawerOpen, setIsBlackoutDrawerOpen] = useState(false);
+  const [isAnnouncementDrawerOpen, setIsAnnouncementDrawerOpen] = useState(false);
   
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
@@ -96,6 +101,7 @@ export default function AuthorityMasterDataPage() {
   const { data: slots = [], isLoading: isLoadingSlots } = useSlots();
   const { data: vehicleTypes = [], isLoading: isLoadingVehicleTypes } = useVehicleTypes();
   const { data: blackouts = [], isLoading: isLoadingBlackouts } = useBlackouts();
+  const { data: announcements = [], isLoading: isLoadingAnnouncements } = useAnnouncements();
   const { data: heatmapData, isLoading: isLoadingHeatmap } = useCapacityHeatmap();
 
   // Mutations
@@ -107,6 +113,8 @@ export default function AuthorityMasterDataPage() {
   const { mutateAsync: updateSlot } = useUpdateSlot();
   const { mutateAsync: updateVehicleType } = useUpdateVehicleType();
   const { mutateAsync: updateBlackout } = useUpdateBlackout();
+  const { mutateAsync: updateAnnouncement } = useUpdateAnnouncement();
+  const { mutateAsync: deleteAnnouncement } = useDeleteAnnouncement();
 
   const handleActionClick = (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
@@ -142,12 +150,29 @@ export default function AuthorityMasterDataPage() {
         } else if (vehicleSubTab === "Blackout Calendar") {
           await updateBlackout({ id: item.id, data: { is_active: !item.is_active } });
         }
+      } else if (activeTab === "Announcements") {
+        await updateAnnouncement({ id: item.id, data: { is_active: !item.is_active } });
       }
       alert("Status updated successfully!");
 
     } catch (error) {
       console.error("Failed to update status", error);
       alert("Failed to update status.");
+    } finally {
+      setOpenDropdownId(null);
+    }
+  };
+
+  const handleDelete = async (item: any) => {
+    if (!confirm("Are you sure you want to delete this item?")) return;
+    try {
+      if (activeTab === "Announcements") {
+        await deleteAnnouncement(item.id);
+        alert("Announcement deleted successfully!");
+      }
+    } catch (error) {
+      console.error("Failed to delete item", error);
+      alert("Failed to delete item.");
     } finally {
       setOpenDropdownId(null);
     }
@@ -422,6 +447,50 @@ export default function AuthorityMasterDataPage() {
     ACTION_COLUMN
   ];
 
+  const ANNOUNCEMENT_COLUMNS: TableColumn[] = [
+    { 
+      header: "Title", 
+      key: "title",
+      render: (row: any) => <span className="text-sm font-semibold text-[#343434]">{row.title}</span>
+    },
+    { 
+      header: "Message", 
+      key: "message",
+      render: (row: any) => (
+        <span className="text-sm text-[#343434] max-w-md block truncate" title={row.message}>
+          {row.message}
+        </span>
+      )
+    },
+    { 
+      header: "Valid Till", 
+      key: "valid_till",
+      render: (row: any) => (
+        <span className="text-sm text-[#343434]">
+          {row.valid_till ? formatDate(row.valid_till) : "Ongoing (No Expiry)"}
+        </span>
+      )
+    },
+    { 
+      header: "Status", 
+      key: "is_active",
+      render: (row: any) => (
+        <div className="flex items-center gap-1.5">
+          <Image src={row.is_active ? "/dashboard/icons/tick-round-green.svg" : "/dashboard/icons/cross-round-red.svg"} alt="" width={14} height={14} />
+          <span className={`text-sm font-normal ${row.is_active ? "text-[#059669]" : "text-[#EF4444]"}`}>
+            {row.is_active ? "Active" : "Inactive"}
+          </span>
+        </div>
+      )
+    },
+    { 
+      header: "Created On", 
+      key: "created_at",
+      render: (row: any) => <span className="text-sm font-normal text-[#343434] opacity-70">{formatDate(row.created_at)}</span>
+    },
+    ACTION_COLUMN
+  ];
+
 
   useEffect(() => {
     const activeTabIdx = TABS.indexOf(activeTab);
@@ -535,6 +604,17 @@ export default function AuthorityMasterDataPage() {
             onAdd: () => {}
           };
         }
+      case "Announcements":
+        return {
+          columns: ANNOUNCEMENT_COLUMNS,
+          data: announcements,
+          buttonText: "Create Announcement",
+          isLoading: isLoadingAnnouncements,
+          onAdd: () => {
+            setSelectedItem(null);
+            setIsAnnouncementDrawerOpen(true);
+          }
+        };
       default:
         return { columns: [], data: [], buttonText: "", isLoading: false, onAdd: () => {} };
     }
@@ -834,6 +914,7 @@ export default function AuthorityMasterDataPage() {
                       <MasterDataMenu 
                         is_active={(item as any).is_active ?? (item as any).status ?? true}
                         onDeactivate={() => handleToggleStatus(item)}
+                        onDelete={activeTab === "Announcements" ? () => handleDelete(item) : undefined}
                         onEdit={() => {
                           setSelectedItem(item);
                           if (activeTab === "Wards/Zones") setIsWardDrawerOpen(true);
@@ -846,6 +927,7 @@ export default function AuthorityMasterDataPage() {
                             else if (vehicleSubTab === "Vehicle Types") setIsVehicleTypeDrawerOpen(true);
                             else if (vehicleSubTab === "Blackout Calendar") setIsBlackoutDrawerOpen(true);
                           }
+                          else if (activeTab === "Announcements") setIsAnnouncementDrawerOpen(true);
                           setOpenDropdownId(null);
                         }}
 
@@ -929,6 +1011,14 @@ export default function AuthorityMasterDataPage() {
         isOpen={isBlackoutDrawerOpen}
         onClose={() => {
           setIsBlackoutDrawerOpen(false);
+          setSelectedItem(null);
+        }}
+        data={selectedItem}
+      />
+      <NewAnnouncementDrawer
+        isOpen={isAnnouncementDrawerOpen}
+        onClose={() => {
+          setIsAnnouncementDrawerOpen(false);
           setSelectedItem(null);
         }}
         data={selectedItem}

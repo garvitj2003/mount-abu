@@ -1,6 +1,7 @@
 import Navbar from "@/components/dashboard/Navbar";
 import SidebarCitizen from "@/components/dashboard/citizen/sidebar-citizen";
 import DashboardGuard from "@/components/dashboard/DashboardGuard";
+import CitizenAnnouncementModal from "@/components/dashboard/citizen/CitizenAnnouncementModal";
 import { Suspense } from "react";
 
 export default function CitizenLayout({
@@ -12,6 +13,7 @@ export default function CitizenLayout({
     <DashboardGuard>
       <div className="flex h-screen w-full flex-col bg-[#F5F6F7]">
         <Navbar />
+        <CitizenAnnouncementModal />
         <div className="flex flex-1 overflow-hidden">
           <SidebarCitizen />
           <main className="flex-1 overflow-y-auto">

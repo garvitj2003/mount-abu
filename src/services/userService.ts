@@ -33,5 +33,20 @@ export const UserService = {
   async changePassword(data: ChangePasswordRequest): Promise<any> {
     const response = await api.post("/superadmin/change-password", data);
     return response.data;
+  },
+
+  async checkMobile(mobile: string): Promise<any> {
+    const response = await api.get(`/superadmin/users/check-mobile/${mobile}`);
+    return response.data;
+  },
+
+  async sendClearOTP(mobile: string): Promise<any> {
+    const response = await api.post("/superadmin/users/send-clear-otp", { mobile });
+    return response.data;
+  },
+
+  async verifyAndDeleteUser(mobile: string, otp: string): Promise<any> {
+    const response = await api.post("/superadmin/users/verify-and-delete", { mobile, otp });
+    return response.data;
   }
 };

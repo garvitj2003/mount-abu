@@ -16,6 +16,7 @@ interface NewUserDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   user?: UserResponse | null;
+  initialMobile?: string;
 }
 
 const ROLE_OPTIONS: { label: string; value: UserRole }[] = [
@@ -33,7 +34,7 @@ const ROLE_OPTIONS: { label: string; value: UserRole }[] = [
   { label: "Collector", value: "COLLECTOR" },
 ];
 
-export default function NewUserDrawer({ isOpen, onClose, user }: NewUserDrawerProps) {
+export default function NewUserDrawer({ isOpen, onClose, user, initialMobile }: NewUserDrawerProps) {
   const { mutateAsync: createUser, isPending: isCreating } = useCreateUser();
   const { mutateAsync: updateUser, isPending: isUpdating } = useUpdateUser();
   const [showPassword, setShowPassword] = useState(false);
@@ -44,7 +45,7 @@ export default function NewUserDrawer({ isOpen, onClose, user }: NewUserDrawerPr
 
   const [formData, setFormData] = useState<CreateUserRequest>({
     name: "",
-    mobile: "",
+    mobile: initialMobile || "",
     role: "JEN", // Default role
     username: "",
     password: "",
@@ -64,14 +65,14 @@ export default function NewUserDrawer({ isOpen, onClose, user }: NewUserDrawerPr
     } else {
       setFormData({
         name: "",
-        mobile: "",
+        mobile: initialMobile || "",
         role: "JEN",
         username: "",
         password: "",
         jurisdiction_zone: "ULB",
       });
     }
-  }, [user, isOpen]);
+  }, [user, isOpen, initialMobile]);
 
   const [errors, setErrors] = useState<Partial<Record<keyof CreateUserRequest, string>>>({});
 
