@@ -537,48 +537,66 @@ export default function CitizenSchedulesPage() {
                       const isResolvingThis = resolvingTransportCode === item.transport_code;
                       const remainingPct = Math.round(item.remaining_quantity_pct ?? 100);
 
+                      const isItemExpired =
+                        item.status === "EXPIRED" ||
+                        (item.valid_till ? new Date(item.valid_till).getTime() < Date.now() : false);
+
                       return (
                         <div
                           key={item.transport_code}
-                          onClick={() => !resolvingTransportCode && handleSelectToken(item)}
-                          className={`group relative rounded-2xl border border-black/[0.07] bg-white p-4.5 shadow-sm transition-all duration-200 hover:border-[#0C83FF] hover:shadow-md cursor-pointer ${
-                            isResolvingThis ? "opacity-75 ring-2 ring-[#0C83FF]" : ""
-                          }`}
+                          onClick={() => !resolvingTransportCode && !isItemExpired && handleSelectToken(item)}
+                          className={`group relative rounded-2xl border p-4.5 shadow-sm transition-all duration-200 ${
+                            isItemExpired
+                              ? "border-rose-200 bg-rose-50/30 opacity-75 cursor-not-allowed"
+                              : "border-black/[0.07] bg-white hover:border-[#0C83FF] hover:shadow-md cursor-pointer"
+                          } ${isResolvingThis ? "opacity-75 ring-2 ring-[#0C83FF]" : ""}`}
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex flex-col gap-0.5">
                               <div className="flex items-center gap-2">
-                                <span className="text-base font-bold text-[#0C83FF] group-hover:underline">
+                                <span className={`text-base font-bold ${isItemExpired ? "text-rose-700" : "text-[#0C83FF] group-hover:underline"}`}>
                                   {item.token_number}
                                 </span>
                                 <span className="rounded-full bg-neutral-100 border border-black/[0.06] px-2.5 py-0.5 text-[10px] font-bold text-neutral-700">
                                   Phase {item.phase}
                                 </span>
-                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                                  <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" /> ACTIVE
-                                </span>
+                                {isItemExpired ? (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 border border-rose-300 px-2 py-0.5 text-[10px] font-bold text-rose-700">
+                                    EXPIRED
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                                    <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" /> ACTIVE
+                                  </span>
+                                )}
                               </div>
                               <span className="text-xs text-[#86868B] mt-0.5">
                                 App No: <strong className="text-[#1D1D1F] font-medium">{item.application_number}</strong>
                               </span>
                             </div>
 
-                            <button
-                              type="button"
-                              disabled={!!resolvingTransportCode}
-                              className="rounded-xl bg-[#0C83FF] text-white px-3.5 py-2 text-xs font-semibold shadow-sm group-hover:bg-blue-600 transition-colors flex items-center gap-1.5 cursor-pointer"
-                            >
-                              {isResolvingThis ? (
-                                <div className="size-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                              ) : (
-                                <>
-                                  <span>Schedule Slot</span>
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                    <polyline points="9 18 15 12 9 6"></polyline>
-                                  </svg>
-                                </>
-                              )}
-                            </button>
+                            {isItemExpired ? (
+                              <span className="rounded-xl bg-rose-100 border border-rose-200 text-rose-700 px-3 py-1.5 text-xs font-semibold">
+                                Validity Expired
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={!!resolvingTransportCode}
+                                className="rounded-xl bg-[#0C83FF] text-white px-3.5 py-2 text-xs font-semibold shadow-sm group-hover:bg-blue-600 transition-colors flex items-center gap-1.5 cursor-pointer"
+                              >
+                                {isResolvingThis ? (
+                                  <div className="size-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                ) : (
+                                  <>
+                                    <span>Schedule Slot</span>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                      <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                  </>
+                                )}
+                              </button>
+                            )}
                           </div>
 
                           <div className="mt-3.5 pt-3 border-t border-black/[0.05] grid grid-cols-2 gap-4 text-xs">
@@ -589,7 +607,7 @@ export default function CitizenSchedulesPage() {
                               </div>
                               <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-200">
                                 <div
-                                  className="h-full rounded-full bg-[#0C83FF]"
+                                  className={`h-full rounded-full ${isItemExpired ? "bg-rose-400" : "bg-[#0C83FF]"}`}
                                   style={{ width: `${remainingPct}%` }}
                                 />
                               </div>
@@ -597,7 +615,7 @@ export default function CitizenSchedulesPage() {
 
                             <div className="flex flex-col justify-center items-end text-right">
                               <span className="text-[11px] text-[#86868B]">Valid Till</span>
-                              <span className="text-xs font-bold text-[#1D1D1F]">
+                              <span className={`text-xs font-bold ${isItemExpired ? "text-rose-600" : "text-[#1D1D1F]"}`}>
                                 {item.valid_till ? format(parseISO(item.valid_till), "dd MMM yyyy") : "—"}
                               </span>
                             </div>

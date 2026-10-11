@@ -1808,7 +1808,7 @@ export interface components {
          * ApplicationPhaseStatus
          * @enum {string}
          */
-        ApplicationPhaseStatus: "PENDING" | "ACTIVE" | "APPROVED" | "WITHHELD" | "REJECTED" | "TERMINATED" | "IN_PROGRESS" | "COMPLETED";
+        ApplicationPhaseStatus: "PENDING" | "ACTIVE" | "APPROVED" | "WITHHELD" | "REJECTED" | "TERMINATED" | "IN_PROGRESS" | "COMPLETED" | "EXPIRED";
         /** ApplicationResponse */
         ApplicationResponse: {
             /** Id */

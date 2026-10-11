@@ -21,6 +21,7 @@ const StatusBadge = ({ status }: { status: string }) => {
     TERMINATED: "text-red-500",
     WITHHELD: "text-orange-500",
     PENDING: "text-[#B39632]",
+    EXPIRED: "text-rose-600 font-semibold",
   };
 
   return (

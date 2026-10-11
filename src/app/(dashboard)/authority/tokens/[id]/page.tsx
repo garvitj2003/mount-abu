@@ -7,8 +7,9 @@ import VehicleFilterDrawer from "@/components/dashboard/authority/vehicle-entrie
 import VehicleDetailDrawer from "@/components/dashboard/authority/vehicle-entries/VehicleDetailDrawer";
 import TokenActionModal from "@/components/dashboard/authority/tokens/TokenActionModal";
 import CompleteTokenModal from "@/components/dashboard/authority/tokens/CompleteTokenModal";
+import ExtendTokenModal from "@/components/dashboard/authority/tokens/ExtendTokenModal";
 import { useTokenDetail } from "@/hooks/useTokens";
-import { useUpdatePhaseStatus, useCompletePhase } from "@/hooks/useApplications";
+import { useUpdatePhaseStatus, useCompletePhase, useExtendTokenValidity } from "@/hooks/useApplications";
 import { useUser } from "@/hooks/useUser";
 import { type components } from "@/types/api";
 import { QRCodeSVG } from "qrcode.react";
@@ -24,6 +25,7 @@ const StatusBadge = ({ status }: { status: string }) => {
     TERMINATED: "bg-red-500",
     WITHHELD: "bg-orange-500",
     PENDING: "bg-blue-500",
+    EXPIRED: "bg-[#DC2626]",
   };
 
   return (
@@ -50,6 +52,7 @@ const Header = ({
   onResume,
   onTerminate,
   onComplete,
+  onExtendValidity,
   userRole,
 }: {
   token: TokenDetailResponse;
@@ -58,6 +61,7 @@ const Header = ({
   onResume: () => void;
   onTerminate: () => void;
   onComplete: () => void;
+  onExtendValidity: () => void;
   userRole?: string;
 }) => {
   const dateRange = token.valid_from && token.valid_till
@@ -67,7 +71,22 @@ const Header = ({
   const isWithheld = token.status === "WITHHELD";
   const isTerminated = token.status === "TERMINATED";
   const isCompleted = token.status === "COMPLETED";
-  const canComplete = (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN") && !isTerminated && !isCompleted;
+  const isExpired = token.status === "EXPIRED";
+  const canComplete = (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN") && !isTerminated && !isCompleted && !isExpired;
+
+  // Provision to extend token validity by 30 days if expiring within 15 days or already EXPIRED
+  const daysUntilExpiry = token.valid_till
+    ? Math.ceil((new Date(token.valid_till).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null;
+  const isExpiringSoon =
+    token.status === "ACTIVE" &&
+    daysUntilExpiry !== null &&
+    daysUntilExpiry >= 0 &&
+    daysUntilExpiry <= 15;
+
+  const canExtendValidity =
+    (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN") &&
+    (isExpiringSoon || isExpired);
 
   return (
     <div className="sticky top-0 z-50 flex w-full items-center justify-between border-b border-[#D6D9DE] bg-white px-5 py-3 shadow-[0px_1px_3px_0px_rgba(0,0,0,0.13)]">
@@ -85,6 +104,19 @@ const Header = ({
       </div>
 
       <div className="flex items-center gap-2">
+        {canExtendValidity && (
+          <button
+            onClick={onExtendValidity}
+            className="flex items-center gap-2 rounded-lg border border-[#0C83FF] bg-[#0C83FF] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#0070E0] transition-colors cursor-pointer shadow-sm"
+            title={`Expiring in ${daysUntilExpiry} days. Extend validity by +30 days.`}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            Extend Expiry (+30 Days)
+          </button>
+        )}
         {canComplete && (
           <button
             onClick={onComplete}
@@ -220,11 +252,13 @@ export default function TokenDetailsPage() {
     type: "HOLD",
   });
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
+  const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
 
   const { data: user } = useUser();
   const { data: token, isLoading, error } = useTokenDetail(transportCode);
   const { mutate: updateStatus } = useUpdatePhaseStatus();
   const { mutate: completePhaseMutation, isPending: isCompletingPhase } = useCompletePhase();
+  const { mutate: extendValidityMutation, isPending: isExtendingValidity } = useExtendTokenValidity();
 
   const filteredEntries = useMemo(() => {
     if (!token?.vehicle_entries) return [];
@@ -287,6 +321,27 @@ export default function TokenDetailsPage() {
     );
   };
 
+  const handleExtendTokenValidity = (remarks: string) => {
+    if (!token) return;
+    extendValidityMutation(
+      {
+        applicationId: token.application_id,
+        phase: token.phase,
+        remarks: remarks || undefined,
+      },
+      {
+        onSuccess: () => {
+          alert(`Phase ${token.phase} token validity extended by 30 days successfully!`);
+          setIsExtendModalOpen(false);
+        },
+        onError: (err: any) => {
+          console.error("Failed to extend token validity", err);
+          alert(err?.response?.data?.detail || "Failed to extend token validity. Please try again.");
+        },
+      }
+    );
+  };
+
   const handleTokenAction = (remarks: string) => {
     if (!token) return;
 
@@ -334,6 +389,7 @@ export default function TokenDetailsPage() {
         onResume={() => setModalConfig({ isOpen: true, type: "RESUME" })}
         onTerminate={() => setModalConfig({ isOpen: true, type: "TERMINATE" })}
         onComplete={() => setIsCompleteModalOpen(true)}
+        onExtendValidity={() => setIsExtendModalOpen(true)}
         userRole={user?.role}
       />
 
@@ -529,6 +585,14 @@ export default function TokenDetailsPage() {
         isPending={isCompletingPhase}
         onClose={() => setIsCompleteModalOpen(false)}
         onConfirm={handleCompleteToken}
+      />
+
+      <ExtendTokenModal
+        isOpen={isExtendModalOpen}
+        token={token}
+        isPending={isExtendingValidity}
+        onClose={() => setIsExtendModalOpen(false)}
+        onConfirm={handleExtendTokenValidity}
       />
     </div>
   );
