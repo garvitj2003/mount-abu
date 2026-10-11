@@ -164,7 +164,9 @@ export default function AuthorityApplicationsPage() {
   const [selectedAuthorityRole, setSelectedAuthorityRole] = useState<string>(
     () => searchParams.get("authority_role") || ""
   );
-  const [selectedActionName, setSelectedActionName] = useState<string>("");
+  const [selectedActionName, setSelectedActionName] = useState<string>(
+    () => searchParams.get("action_name") || ""
+  );
   const [pendingDays, setPendingDays] = useState<string>(
     () => searchParams.get("pending_days") || ""
   );
@@ -200,6 +202,7 @@ export default function AuthorityApplicationsPage() {
     if (debouncedSearch) params.set("search", debouncedSearch);
     if (activePrimaryTab !== "NONE") params.set("primary_tab", activePrimaryTab);
     if (selectedAuthorityRole) params.set("authority_role", selectedAuthorityRole);
+    if (selectedActionName) params.set("action_name", selectedActionName);
     if (pendingDays) params.set("pending_days", pendingDays);
     if (submittedDays) params.set("submitted_days", submittedDays);
     if (selectedCategory !== "All") params.set("category", selectedCategory);
@@ -219,6 +222,7 @@ export default function AuthorityApplicationsPage() {
     debouncedSearch,
     activePrimaryTab,
     selectedAuthorityRole,
+    selectedActionName,
     pendingDays,
     submittedDays,
     selectedCategory,
@@ -737,6 +741,23 @@ export default function AuthorityApplicationsPage() {
                 }}
                 width="210px"
               />
+
+              {activePrimaryTab === "PENDING" && selectedAuthorityRole === "NODAL_OFFICER" && (
+                <CustomDropdown
+                  label="Pending Action"
+                  options={[
+                    { label: "All Pending Actions", value: "" },
+                    { label: "Pending Approval", value: "PENDING_APPROVAL" },
+                    { label: "Pending Token Generation", value: "PENDING_TOKEN_GENERATION" },
+                  ]}
+                  value={selectedActionName}
+                  onSelect={(val) => {
+                    setSelectedActionName(val);
+                    setPage(1);
+                  }}
+                  width="220px"
+                />
+              )}
 
               {activePrimaryTab === "PENDING" && (
                 <div className="flex items-center gap-2">
