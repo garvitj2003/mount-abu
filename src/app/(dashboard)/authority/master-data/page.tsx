@@ -25,6 +25,7 @@ import NewMaterialDrawer from "@/components/dashboard/authority/master-data/NewM
 import NewAnnouncementDrawer from "@/components/dashboard/authority/master-data/NewAnnouncementDrawer";
 import MasterDataMenu from "@/components/dashboard/authority/master-data/MasterDataMenu";
 import TablePagination from "@/components/ui/TablePagination";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { usePagination } from "@/hooks/usePagination";
 
 type TabType = "Complaint Categories" | "Wards/Zones" | "Departments" | "Roles" | "Materials" | "Announcements";
@@ -126,18 +127,27 @@ export default function AuthorityMasterDataPage() {
     }
   };
 
-  const handleDelete = async (item: any) => {
-    if (!confirm("Are you sure you want to delete this item?")) return;
+  const [deleteItemTarget, setDeleteItemTarget] = useState<any | null>(null);
+  const [isDeletingItem, setIsDeletingItem] = useState(false);
+
+  const handleDelete = (item: any) => {
+    setDeleteItemTarget(item);
+    setOpenDropdownId(null);
+  };
+
+  const executeDeleteItem = async () => {
+    if (!deleteItemTarget) return;
     try {
+      setIsDeletingItem(true);
       if (activeTab === "Announcements") {
-        await deleteAnnouncement(item.id);
-        alert("Announcement deleted successfully!");
+        await deleteAnnouncement(deleteItemTarget.id);
       }
+      setDeleteItemTarget(null);
     } catch (error) {
       console.error("Failed to delete item", error);
       alert("Failed to delete item.");
     } finally {
-      setOpenDropdownId(null);
+      setIsDeletingItem(false);
     }
   };
 
@@ -640,6 +650,16 @@ export default function AuthorityMasterDataPage() {
         data={selectedItem}
       />
 
+      <ConfirmModal
+        isOpen={deleteItemTarget !== null}
+        title="Delete Item"
+        description="Are you sure you want to delete this item? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="danger"
+        isLoading={isDeletingItem}
+        onConfirm={executeDeleteItem}
+        onClose={() => setDeleteItemTarget(null)}
+      />
     </div>
   );
 }

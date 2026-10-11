@@ -10,6 +10,7 @@ import { useApplicationStore } from "@/store/useApplicationStore";
 import { ApplicationService } from "@/services/applicationService";
 import { type components } from "@/types/api";
 import TablePagination from "@/components/ui/TablePagination";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { usePagination } from "@/hooks/usePagination";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -80,6 +81,8 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
   const [search, setSearch] = useState("");
   const { page, limit, setPage, setLimit } = usePagination();
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
+  const [withdrawAppId, setWithdrawAppId] = useState<number | null>(null);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [dropdownPos, setDropdownPosition] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
   const triggerRefs = useRef<Record<number, HTMLButtonElement | null>>({});
@@ -151,16 +154,23 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
     handleViewApplication(app);
   };
 
-  const handleWithdraw = async (id: number) => {
-    if (!confirm("Are you sure you want to withdraw this application? This action cannot be undone.")) return;
+  const handleWithdraw = (id: number) => {
+    setWithdrawAppId(id);
+    setOpenDropdownId(null);
+  };
 
+  const executeWithdraw = async () => {
+    if (!withdrawAppId) return;
+    setIsWithdrawing(true);
     try {
-      await ApplicationService.deleteApplication(id);
+      await ApplicationService.deleteApplication(withdrawAppId);
       queryClient.invalidateQueries({ queryKey: ["applications"] });
-      setOpenDropdownId(null);
+      setWithdrawAppId(null);
     } catch (error) {
       console.error("Withdrawal failed", error);
       alert("Failed to withdraw application.");
+    } finally {
+      setIsWithdrawing(false);
     }
   };
 
@@ -557,6 +567,18 @@ export default function ApplicationsTable({ onComplaintClick }: ApplicationsTabl
         limit={limit}
         onPageChange={setPage}
         onLimitChange={setLimit}
+      />
+
+      <ConfirmModal
+        isOpen={withdrawAppId !== null}
+        title="Withdraw Application"
+        message="Are you sure you want to withdraw this application? This action cannot be undone."
+        confirmText="Withdraw Application"
+        cancelText="Keep Application"
+        variant="danger"
+        isLoading={isWithdrawing}
+        onConfirm={executeWithdraw}
+        onClose={() => setWithdrawAppId(null)}
       />
     </div>
   );

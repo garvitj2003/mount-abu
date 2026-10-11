@@ -6,6 +6,7 @@ import { useMyComplaints, useWithdrawComplaint } from "@/hooks/useComplaints";
 import { useUser } from "@/hooks/useUser";
 import { type components } from "@/types/api";
 import TablePagination from "@/components/ui/TablePagination";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { usePagination } from "@/hooks/usePagination";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -73,6 +74,8 @@ export default function ComplaintsTable({ onComplaintClick }: ComplaintsTablePro
   const [search, setSearch] = useState("");
   const { page, limit, setPage, setLimit } = usePagination();
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
+  const [withdrawComplaintId, setWithdrawComplaintId] = useState<number | null>(null);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [dropdownPos, setDropdownPosition] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
   const triggerRefs = useRef<Record<number, HTMLButtonElement | null>>({});
@@ -86,15 +89,23 @@ export default function ComplaintsTable({ onComplaintClick }: ComplaintsTablePro
 
   const { mutateAsync: withdrawComplaint } = useWithdrawComplaint();
 
-  const handleWithdraw = async (id: number) => {
-    if (!confirm("Are you sure you want to withdraw this complaint?")) return;
+  const handleWithdraw = (id: number) => {
+    setWithdrawComplaintId(id);
+    setOpenDropdownId(null);
+  };
+
+  const executeWithdrawComplaint = async () => {
+    if (!withdrawComplaintId) return;
+    setIsWithdrawing(true);
     try {
-      await withdrawComplaint(id);
+      await withdrawComplaint(withdrawComplaintId);
       alert("Complaint withdrawn successfully!");
-      setOpenDropdownId(null);
+      setWithdrawComplaintId(null);
     } catch (err) {
       console.error(err);
       alert("Failed to withdraw complaint.");
+    } finally {
+      setIsWithdrawing(false);
     }
   };
 
@@ -526,6 +537,18 @@ export default function ComplaintsTable({ onComplaintClick }: ComplaintsTablePro
         limit={limit}
         onPageChange={setPage}
         onLimitChange={setLimit}
+      />
+
+      <ConfirmModal
+        isOpen={withdrawComplaintId !== null}
+        title="Withdraw Complaint"
+        message="Are you sure you want to withdraw this complaint? This action cannot be undone."
+        confirmText="Withdraw Complaint"
+        cancelText="Keep Complaint"
+        variant="danger"
+        isLoading={isWithdrawing}
+        onConfirm={executeWithdrawComplaint}
+        onClose={() => setWithdrawComplaintId(null)}
       />
     </div>
   );

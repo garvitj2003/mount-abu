@@ -11,6 +11,7 @@ import { useTokens } from "@/hooks/useTokens";
 import { useUser } from "@/hooks/useUser";
 import { TokenService } from "@/services/tokenService";
 import ScheduleVehicleModal from "@/components/dashboard/citizen/tokens/ScheduleVehicleModal";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { type VehicleScheduleResponse } from "@/services/scheduleService";
 
 type FilterStatus = "ALL" | "SCHEDULED" | "COMPLETED" | "CANCELLED";
@@ -19,6 +20,7 @@ export default function CitizenSchedulesPage() {
   const [selectedStatus, setSelectedStatus] = useState<FilterStatus>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewPassSchedule, setViewPassSchedule] = useState<VehicleScheduleResponse | null>(null);
+  const [cancelScheduleTarget, setCancelScheduleTarget] = useState<VehicleScheduleResponse | null>(null);
 
   // Direct Token Picker Modal & Scheduling Modal States
   const [isTokenPickerOpen, setIsTokenPickerOpen] = useState(false);
@@ -103,21 +105,26 @@ export default function CitizenSchedulesPage() {
   };
 
   const handleCancelBooking = (schedule: VehicleScheduleResponse) => {
-    if (confirm(`Are you sure you want to cancel the scheduled transit for vehicle ${schedule.vehicle_number} on ${formatDate(schedule.schedule_date)}?`)) {
-      cancelSchedule(schedule.id, {
-        onSuccess: () => {
-          alert("Scheduled vehicle slot cancelled successfully.");
-          if (viewPassSchedule?.id === schedule.id) {
-            setViewPassSchedule(null);
-          }
-          refetch();
-          refetchTokens();
-        },
-        onError: (err: any) => {
-          alert(err.response?.data?.detail || "Failed to cancel vehicle schedule.");
-        },
-      });
-    }
+    setCancelScheduleTarget(schedule);
+  };
+
+  const executeCancelBooking = () => {
+    if (!cancelScheduleTarget) return;
+    const scheduleId = cancelScheduleTarget.id;
+    cancelSchedule(scheduleId, {
+      onSuccess: () => {
+        alert("Scheduled vehicle slot cancelled successfully.");
+        if (viewPassSchedule?.id === scheduleId) {
+          setViewPassSchedule(null);
+        }
+        setCancelScheduleTarget(null);
+        refetch();
+        refetchTokens();
+      },
+      onError: (err: any) => {
+        alert(err.response?.data?.detail || "Failed to cancel vehicle schedule.");
+      },
+    });
   };
 
   const formatDate = (dateStr: string) => {
@@ -796,6 +803,18 @@ export default function CitizenSchedulesPage() {
           </div>
         )}
       </AnimatePresence>
+
+      <ConfirmModal
+        isOpen={!!cancelScheduleTarget}
+        title="Cancel Scheduled Transit"
+        message={`Are you sure you want to cancel the scheduled transit for vehicle ${cancelScheduleTarget?.vehicle_number} on ${cancelScheduleTarget ? formatDate(cancelScheduleTarget.schedule_date) : ""}?`}
+        confirmText="Cancel Booking"
+        cancelText="Keep Booking"
+        variant="warning"
+        isLoading={isCancelling}
+        onConfirm={executeCancelBooking}
+        onClose={() => setCancelScheduleTarget(null)}
+      />
     </div>
   );
 }

@@ -31,6 +31,7 @@ import AddLeaderDrawer from "@/components/dashboard/authority/website-content/Ad
 import AddContactDrawer from "@/components/dashboard/authority/website-content/AddContactDrawer";
 import AddDownloadDrawer from "@/components/dashboard/authority/website-content/AddDownloadDrawer";
 import MasterDataMenu from "@/components/dashboard/authority/master-data/MasterDataMenu";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { type components } from "@/types/api";
 import { usePagination } from "@/hooks/usePagination";
 
@@ -106,6 +107,8 @@ export default function AuthorityWebsiteContentPage() {
   const [isDownloadDrawerOpen, setIsDownloadDrawerOpen] = useState(false);
 
   const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [deleteItemTarget, setDeleteItemTarget] = useState<any | null>(null);
+  const [isDeletingItem, setIsDeletingItem] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
   const [dropdownPos, setDropdownPosition] = useState({ top: 0, left: 0 });
 
@@ -181,23 +184,28 @@ export default function AuthorityWebsiteContentPage() {
     setOpenDropdownId(null);
   };
 
-  const handleDelete = async (item: any) => {
-    const itemName = item.title || item.name || item.document_title || item.contact_person || "this item";
-    if (!confirm(`Are you sure you want to delete "${itemName}"?`)) return;
+  const handleDelete = (item: any) => {
+    setDeleteItemTarget(item);
+    setOpenDropdownId(null);
+  };
 
+  const executeDeleteItem = async () => {
+    if (!deleteItemTarget) return;
+    setIsDeletingItem(true);
     try {
-      if (activeTab === "Notices") await deleteNotice(item.id);
-      else if (activeTab === "Tenders") await deleteTender(item.id);
-      else if (activeTab === "Events") await deleteEvent(item.id);
-      else if (activeTab === "Leaders Board") await deleteLeader(item.id);
-      else if (activeTab === "Downloads") await deleteDownload(item.id);
-      else if (activeTab === "Contact Diary") await deleteContact(item.id);
-      alert("Deleted successfully!");
+      if (activeTab === "Notices") await deleteNotice(deleteItemTarget.id);
+      else if (activeTab === "Tenders") await deleteTender(deleteItemTarget.id);
+      else if (activeTab === "Events") await deleteEvent(deleteItemTarget.id);
+      else if (activeTab === "Leaders Board") await deleteLeader(deleteItemTarget.id);
+      else if (activeTab === "Downloads") await deleteDownload(deleteItemTarget.id);
+      else if (activeTab === "Contact Diary") await deleteContact(deleteItemTarget.id);
+      setDeleteItemTarget(null);
     } catch (error) {
       console.error("Failed to delete", error);
       alert("Failed to delete.");
+    } finally {
+      setIsDeletingItem(false);
     }
-    setOpenDropdownId(null);
   };
 
   useEffect(() => {
@@ -786,6 +794,18 @@ export default function AuthorityWebsiteContentPage() {
           setSelectedItem(null);
         }} 
         data={selectedItem}
+      />
+
+      <ConfirmModal
+        isOpen={!!deleteItemTarget}
+        title="Delete Item"
+        message={`Are you sure you want to delete "${deleteItemTarget?.title || deleteItemTarget?.name || deleteItemTarget?.document_title || deleteItemTarget?.contact_person || "this item"}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        isLoading={isDeletingItem}
+        onConfirm={executeDeleteItem}
+        onClose={() => setDeleteItemTarget(null)}
       />
     </div>
   );

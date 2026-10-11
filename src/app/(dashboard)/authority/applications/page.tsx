@@ -10,6 +10,7 @@ import { ROLE_FILTERS, type ApplicationFlag } from "@/constants/filters";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useWards } from "@/hooks/useMasterData";
 import CustomDropdown from "@/components/ui/CustomDropdown";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { usePagination } from "@/hooks/usePagination";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -346,21 +347,31 @@ export default function AuthorityApplicationsPage() {
     }
   };
 
-  const handleQuickApprove = async (id: number) => {
-    if (!confirm("Are you sure you want to approve this application?")) return;
+  const [confirmApproveId, setConfirmApproveId] = useState<number | null>(null);
+  const [isApproving, setIsApproving] = useState(false);
+
+  const handleQuickApprove = (id: number) => {
+    setConfirmApproveId(id);
+    setOpenDropdownId(null);
+  };
+
+  const executeQuickApprove = async () => {
+    if (!confirmApproveId) return;
     try {
+      setIsApproving(true);
       await performAction({
-        id,
+        id: confirmApproveId,
         data: {
           action: "APPROVE",
           remarks: "Quick Approved from management list"
         }
       });
-      alert("Application approved successfully!");
-      setOpenDropdownId(null);
+      setConfirmApproveId(null);
     } catch (err) {
       console.error(err);
       alert("Failed to approve application.");
+    } finally {
+      setIsApproving(false);
     }
   };
 
@@ -1169,6 +1180,17 @@ export default function AuthorityApplicationsPage() {
           />
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmApproveId !== null}
+        title="Approve Application"
+        description="Are you sure you want to approve this application? This action will advance the application workflow."
+        confirmLabel="Approve"
+        variant="success"
+        isLoading={isApproving}
+        onConfirm={executeQuickApprove}
+        onClose={() => setConfirmApproveId(null)}
+      />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { format, addDays } from "date-fns";
 import { useAvailableSlots, useBookSchedule, useCancelSchedule } from "@/hooks/useSchedule";
 import { useVehicleTypes } from "@/hooks/useMasterData";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { type VehicleScheduleResponse } from "@/services/scheduleService";
 
 interface ScheduleVehicleModalProps {
@@ -32,6 +33,7 @@ export default function ScheduleVehicleModal({
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [vehicleTypeId, setVehicleTypeId] = useState<number | undefined>(undefined);
   const [errorMsg, setErrorMsg] = useState("");
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const { data: slotsData, isLoading: isLoadingSlots } = useAvailableSlots(selectedDate, {
     enabled: isOpen && !existingSchedule,
@@ -47,6 +49,7 @@ export default function ScheduleVehicleModal({
       setVehicleNumber("");
       setVehicleTypeId(undefined);
       setErrorMsg("");
+      setShowCancelConfirm(false);
     }
   }, [isOpen, tomorrowStr]);
 
@@ -90,18 +93,22 @@ export default function ScheduleVehicleModal({
 
   const handleCancel = () => {
     if (!existingSchedule) return;
-    if (confirm("Are you sure you want to cancel this scheduled vehicle slot?")) {
-      cancelSchedule(existingSchedule.id, {
-        onSuccess: () => {
-          alert("Vehicle schedule cancelled successfully.");
-          onSuccess?.();
-          onClose();
-        },
-        onError: (err: any) => {
-          alert(err.response?.data?.detail || "Failed to cancel schedule.");
-        },
-      });
-    }
+    setShowCancelConfirm(true);
+  };
+
+  const executeCancel = () => {
+    if (!existingSchedule) return;
+    cancelSchedule(existingSchedule.id, {
+      onSuccess: () => {
+        alert("Vehicle schedule cancelled successfully.");
+        setShowCancelConfirm(false);
+        onSuccess?.();
+        onClose();
+      },
+      onError: (err: any) => {
+        alert(err.response?.data?.detail || "Failed to cancel schedule.");
+      },
+    });
   };
 
   // Generate next 7 days for Apple Calendar date strip starting from Tomorrow (T+1 basis)
@@ -445,6 +452,18 @@ export default function ScheduleVehicleModal({
           </motion.div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={showCancelConfirm}
+        title="Cancel Scheduled Slot"
+        message="Are you sure you want to cancel this scheduled vehicle slot? You will need to select a new slot to transit."
+        confirmText="Cancel Slot"
+        cancelText="Keep Slot"
+        variant="warning"
+        isLoading={isCancelling}
+        onConfirm={executeCancel}
+        onClose={() => setShowCancelConfirm(false)}
+      />
     </AnimatePresence>
   );
 }

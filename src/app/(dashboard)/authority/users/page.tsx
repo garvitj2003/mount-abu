@@ -11,6 +11,7 @@ import ClearMobileModal from "@/components/dashboard/authority/users/ClearMobile
 import UserMenu from "@/components/dashboard/authority/users/UserMenu";
 import DropdownSelect from "@/components/ui/DropdownSelect";
 import TablePagination from "@/components/ui/TablePagination";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { usePagination } from "@/hooks/usePagination";
 
 type UserRole = components["schemas"]["UserRole"];
@@ -127,16 +128,26 @@ export default function AuthorityUserManagementPage() {
     setOpenDropdownId(null);
   };
 
-  const handleDeleteUser = async (user: UserResponse) => {
-    if (!confirm(`Are you sure you want to delete user "${user.name}"?`)) return;
+  const [deleteUserTarget, setDeleteUserTarget] = useState<UserResponse | null>(null);
+  const [isDeletingUser, setIsDeletingUser] = useState(false);
+
+  const handleDeleteUser = (user: UserResponse) => {
+    setDeleteUserTarget(user);
+    setOpenDropdownId(null);
+  };
+
+  const executeDeleteUser = async () => {
+    if (!deleteUserTarget) return;
     try {
-      await deleteUser(user.id);
-      alert("User deleted successfully!");
+      setIsDeletingUser(true);
+      await deleteUser(deleteUserTarget.id);
+      setDeleteUserTarget(null);
     } catch (error) {
       console.error("Failed to delete user", error);
       alert("Failed to delete user.");
+    } finally {
+      setIsDeletingUser(false);
     }
-    setOpenDropdownId(null);
   };
 
   // Prepare Options
@@ -445,6 +456,17 @@ export default function AuthorityUserManagementPage() {
           setInitialNewUserMobile(clearedMobile);
           setIsDrawerOpen(true);
         }}
+      />
+
+      <ConfirmModal
+        isOpen={deleteUserTarget !== null}
+        title="Delete User"
+        description={`Are you sure you want to delete user "${deleteUserTarget?.name || "this user"}"? This action will revoke their access completely.`}
+        confirmLabel="Delete User"
+        variant="danger"
+        isLoading={isDeletingUser}
+        onConfirm={executeDeleteUser}
+        onClose={() => setDeleteUserTarget(null)}
       />
     </div>
   );
