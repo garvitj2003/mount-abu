@@ -82,6 +82,26 @@ export function useUpdatePhaseStatus() {
   });
 }
 
+export function useCompletePhase() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ 
+      applicationId, 
+      phase, 
+      remarks 
+    }: { 
+      applicationId: number; 
+      phase: number; 
+      remarks?: string; 
+    }) => ApplicationService.completePhase(applicationId, phase, remarks),
+    onSuccess: (_, { applicationId }) => {
+      queryClient.invalidateQueries({ queryKey: ["token"] });
+      queryClient.invalidateQueries({ queryKey: ["application", applicationId] });
+      queryClient.invalidateQueries({ queryKey: ["tokens"] });
+    },
+  });
+}
+
 export function useApplicationComments(applicationId: number, options?: { enabled?: boolean }) {
   return useQuery<components["schemas"]["CommentResponse"][]>({
     queryKey: ["application-comments", applicationId],

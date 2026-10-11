@@ -110,6 +110,7 @@ export default function Testimonials() {
                 <Image
                   src={currentTestimonial.image}
                   fill
+                  unoptimized
                   alt={currentTestimonial.name}
                   className="object-cover object-center"
                 />

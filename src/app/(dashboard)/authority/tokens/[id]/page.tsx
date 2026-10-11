@@ -6,8 +6,9 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import VehicleFilterDrawer from "@/components/dashboard/authority/vehicle-entries/VehicleFilterDrawer";
 import VehicleDetailDrawer from "@/components/dashboard/authority/vehicle-entries/VehicleDetailDrawer";
 import TokenActionModal from "@/components/dashboard/authority/tokens/TokenActionModal";
+import CompleteTokenModal from "@/components/dashboard/authority/tokens/CompleteTokenModal";
 import { useTokenDetail } from "@/hooks/useTokens";
-import { useUpdatePhaseStatus } from "@/hooks/useApplications";
+import { useUpdatePhaseStatus, useCompletePhase } from "@/hooks/useApplications";
 import { useUser } from "@/hooks/useUser";
 import { type components } from "@/types/api";
 import { QRCodeSVG } from "qrcode.react";
@@ -48,6 +49,7 @@ const Header = ({
   onHold,
   onResume,
   onTerminate,
+  onComplete,
   userRole,
 }: {
   token: TokenDetailResponse;
@@ -55,6 +57,7 @@ const Header = ({
   onHold: () => void;
   onResume: () => void;
   onTerminate: () => void;
+  onComplete: () => void;
   userRole?: string;
 }) => {
   const dateRange = token.valid_from && token.valid_till
@@ -63,6 +66,8 @@ const Header = ({
 
   const isWithheld = token.status === "WITHHELD";
   const isTerminated = token.status === "TERMINATED";
+  const isCompleted = token.status === "COMPLETED";
+  const canComplete = (userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN") && !isTerminated && !isCompleted;
 
   return (
     <div className="sticky top-0 z-50 flex w-full items-center justify-between border-b border-[#D6D9DE] bg-white px-5 py-3 shadow-[0px_1px_3px_0px_rgba(0,0,0,0.13)]">
@@ -80,7 +85,16 @@ const Header = ({
       </div>
 
       <div className="flex items-center gap-2">
-        {userRole !== "COLLECTOR" && !isTerminated && (
+        {canComplete && (
+          <button
+            onClick={onComplete}
+            className="flex items-center gap-2 rounded-lg border border-[#059669] bg-[#059669] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#047857] transition-colors cursor-pointer shadow-sm"
+          >
+            <Image src="/dashboard/icons/tick-round-green.svg" alt="" width={16} height={16} className="invert brightness-0" />
+            Complete Token
+          </button>
+        )}
+        {userRole !== "COLLECTOR" && !isTerminated && !isCompleted && (
           <>
             {isWithheld ? (
               <button
@@ -201,9 +215,16 @@ export default function TokenDetailsPage() {
     end_date?: string;
   }>({});
 
+  const [modalConfig, setModalConfig] = useState<{ isOpen: boolean; type: "HOLD" | "TERMINATE" | "RESUME" }>({
+    isOpen: false,
+    type: "HOLD",
+  });
+  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
+
   const { data: user } = useUser();
   const { data: token, isLoading, error } = useTokenDetail(transportCode);
   const { mutate: updateStatus } = useUpdatePhaseStatus();
+  const { mutate: completePhaseMutation, isPending: isCompletingPhase } = useCompletePhase();
 
   const filteredEntries = useMemo(() => {
     if (!token?.vehicle_entries) return [];
@@ -240,14 +261,30 @@ export default function TokenDetailsPage() {
     });
   }, [token?.vehicle_entries, search, filters]);
 
-  const [modalConfig, setModalConfig] = useState<{ isOpen: boolean; type: "HOLD" | "TERMINATE" | "RESUME" }>({
-    isOpen: false,
-    type: "HOLD",
-  });
-
   const handleEntryClick = (id: number) => {
     setSelectedEntryId(id);
     setIsDetailDrawerOpen(true);
+  };
+
+  const handleCompleteToken = (remarks: string) => {
+    if (!token) return;
+    completePhaseMutation(
+      {
+        applicationId: token.application_id,
+        phase: token.phase,
+        remarks: remarks || undefined,
+      },
+      {
+        onSuccess: () => {
+          alert(`Phase ${token.phase} token completed successfully! Any remaining materials have rolled over to the next phase.`);
+          setIsCompleteModalOpen(false);
+        },
+        onError: (err: any) => {
+          console.error("Failed to complete token phase", err);
+          alert(err?.response?.data?.detail || "Failed to complete token phase. Please try again.");
+        },
+      }
+    );
   };
 
   const handleTokenAction = (remarks: string) => {
@@ -296,6 +333,7 @@ export default function TokenDetailsPage() {
         onHold={() => setModalConfig({ isOpen: true, type: "HOLD" })}
         onResume={() => setModalConfig({ isOpen: true, type: "RESUME" })}
         onTerminate={() => setModalConfig({ isOpen: true, type: "TERMINATE" })}
+        onComplete={() => setIsCompleteModalOpen(true)}
         userRole={user?.role}
       />
 
@@ -483,6 +521,14 @@ export default function TokenDetailsPage() {
         type={modalConfig.type}
         onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
         onConfirm={handleTokenAction}
+      />
+
+      <CompleteTokenModal
+        isOpen={isCompleteModalOpen}
+        token={token}
+        isPending={isCompletingPhase}
+        onClose={() => setIsCompleteModalOpen(false)}
+        onConfirm={handleCompleteToken}
       />
     </div>
   );

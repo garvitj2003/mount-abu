@@ -41,6 +41,12 @@ const MENU_ITEMS = [
     activeIcon: "/dashboard/icons/vehicle-active.svg",
   },
   {
+    name: "Vehicle Scheduling",
+    href: "/authority/vehicle-scheduling",
+    icon: "/dashboard/icons/vehicle.svg",
+    activeIcon: "/dashboard/icons/vehicle-active.svg",
+  },
+  {
     name: "Website Content",
     href: "/authority/website-content",
     icon: "/dashboard/icons/website.svg",

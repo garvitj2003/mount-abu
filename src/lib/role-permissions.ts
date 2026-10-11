@@ -8,6 +8,7 @@ export const ROLE_PERMISSIONS: Partial<Record<UserRole, string[]>> = {
     "/authority/complaints",
     "/authority/token-management",
     "/authority/vehicle-entries",
+    "/authority/vehicle-scheduling",
     "/authority/website-content",
     "/authority/users",
     "/authority/master-data",
@@ -24,6 +25,7 @@ export const ROLE_PERMISSIONS: Partial<Record<UserRole, string[]>> = {
     "/authority/applications",
     "/authority/token",
     "/authority/vehicle-entries",
+    "/authority/vehicle-scheduling",
     "/authority/audit-logs",
   ],
   COMMISSIONER: [

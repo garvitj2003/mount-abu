@@ -3928,6 +3928,8 @@ export interface components {
             property_address: string;
             property_usage: components["schemas"]["PropertyUsageType"];
             application_type: components["schemas"]["ApplicationType"];
+            /** Total Phases */
+            total_phases?: number;
             authority: components["schemas"]["TokenAuthorityInfo"];
             /**
              * Materials
