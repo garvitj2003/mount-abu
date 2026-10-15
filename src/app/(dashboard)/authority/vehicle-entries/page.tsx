@@ -13,6 +13,8 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useUser } from "@/hooks/useUser";
+import { VehicleEntryService } from "@/services/vehicleEntryService";
+import { fetchAllPages, buildExportFileName } from "@/utils/exportFetchAll";
 
 
 const WarningTooltip = ({ text, index }: { text: string; index: number }) => {
@@ -155,10 +157,60 @@ export default function AuthorityVehicleEntriesPage() {
 
   const totalPages = Math.ceil(total / limit);
 
-  const handleExportExcel = () => {
-    setIsExportingExcel(true);
+  const fetchAllVehicleEntriesForExport = async () => {
+    if (total <= 0) return [];
+    return await fetchAllPages(
+      async (offset, limit) => {
+        const res = await VehicleEntryService.getAllVehicleEntries({
+          ...requestParams,
+          offset,
+          limit,
+        });
+        return { items: res.items || [], total: res.total };
+      },
+      total,
+      500 // Backend max limit is 500
+    );
+  };
 
+  const getActiveFilterMetadata = () => {
+    const entries: [string, string][] = [];
+    const fileTags: string[] = [];
+
+    if (filters.token_number && filters.token_number.length > 0) {
+      entries.push(["Token Numbers", filters.token_number.join(", ")]);
+      fileTags.push(`Tokens_${filters.token_number.slice(0, 3).join("_")}`);
+    }
+    if (filters.vehicle_number && filters.vehicle_number.length > 0) {
+      entries.push(["Vehicle Numbers", filters.vehicle_number.join(", ")]);
+      fileTags.push(`Vehicles_${filters.vehicle_number.slice(0, 3).join("_")}`);
+    }
+    if (filters.material_name && filters.material_name.length > 0) {
+      entries.push(["Materials", filters.material_name.join(", ")]);
+      fileTags.push(`Materials_${filters.material_name.slice(0, 3).join("_")}`);
+    }
+    if (filters.start_date) {
+      entries.push(["Start Date", filters.start_date]);
+      fileTags.push(`From_${filters.start_date}`);
+    }
+    if (filters.end_date) {
+      entries.push(["End Date", filters.end_date]);
+      fileTags.push(`To_${filters.end_date}`);
+    }
+    if (debouncedSearch) {
+      entries.push(["Search Query", debouncedSearch]);
+      fileTags.push(`Search_${debouncedSearch}`);
+    }
+
+    return { entries, fileTags };
+  };
+
+  const handleExportExcel = async () => {
     try {
+      setIsExportingExcel(true);
+      const allEntries = await fetchAllVehicleEntriesForExport();
+      const { entries, fileTags } = getActiveFilterMetadata();
+
       const wb = XLSX.utils.book_new();
       const wsData: any[][] = [];
 
@@ -173,6 +225,15 @@ export default function AuthorityVehicleEntriesPage() {
         "Generated On",
         new Date().toLocaleString("en-IN"),
       ]);
+      wsData.push(["Total Records", allEntries.length]);
+
+      if (entries.length > 0) {
+        wsData.push([]);
+        wsData.push(["Filters Applied:"]);
+        entries.forEach(([key, val]) => {
+          wsData.push([`  ${key}:`, val]);
+        });
+      }
 
       wsData.push([]);
 
@@ -186,7 +247,7 @@ export default function AuthorityVehicleEntriesPage() {
         "Entry Date & Time",
       ]);
 
-      entries.forEach((item) => {
+      allEntries.forEach((item) => {
         wsData.push([
           item.token_number || "-",
           item.vehicle_number || "-",
@@ -204,20 +265,22 @@ export default function AuthorityVehicleEntriesPage() {
 
       XLSX.utils.book_append_sheet(wb, ws, "Vehicle Entries");
 
-      XLSX.writeFile(
-        wb,
-        `vehicle-entries-${new Date().toISOString().slice(0, 10)}.xlsx`
-      );
+      const fileName = buildExportFileName("Vehicle_Entries", fileTags, "xlsx");
+      XLSX.writeFile(wb, fileName);
+    } catch (err) {
+      console.error("Export Excel error", err);
     } finally {
       setIsExportingExcel(false);
     }
   };
 
 
-  const handleExportPDF = () => {
-    setIsExportingPDF(true);
-
+  const handleExportPDF = async () => {
     try {
+      setIsExportingPDF(true);
+      const allEntries = await fetchAllVehicleEntriesForExport();
+      const { entries, fileTags } = getActiveFilterMetadata();
+
       const doc = new jsPDF("landscape");
 
       doc.setFontSize(18);
@@ -232,9 +295,20 @@ export default function AuthorityVehicleEntriesPage() {
         14,
         42
       );
+      doc.setFont("helvetica", "bold");
+      doc.text(`Total Records: ${allEntries.length}`, 14, 48);
+      doc.setFont("helvetica", "normal");
+
+      let startY = 54;
+      if (entries.length > 0) {
+        doc.setFontSize(9);
+        const filterStr = entries.map(([k, v]) => `${k}: ${v}`).join(", ");
+        doc.text(`Filters: ${filterStr}`, 14, startY);
+        startY = 60;
+      }
 
       autoTable(doc, {
-        startY: 48,
+        startY,
         head: [[
           "Token Number",
           "Vehicle Number",
@@ -243,7 +317,7 @@ export default function AuthorityVehicleEntriesPage() {
           "Entry Date & Time",
         ]],
 
-        body: entries.map((item) => [
+        body: allEntries.map((item) => [
           item.token_number || "-",
           item.vehicle_number || "-",
           item.naka_incharge_name || "-",
@@ -276,9 +350,10 @@ export default function AuthorityVehicleEntriesPage() {
         },
       });
 
-      doc.save(
-        `vehicle-entries-${new Date().toISOString().slice(0, 10)}.pdf`
-      );
+      const pdfFileName = buildExportFileName("Vehicle_Entries", fileTags, "pdf");
+      doc.save(pdfFileName);
+    } catch (err) {
+      console.error("Export PDF error", err);
     } finally {
       setIsExportingPDF(false);
     }

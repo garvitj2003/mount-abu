@@ -13,6 +13,8 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useUser } from "@/hooks/useUser";
+import { ComplaintService } from "@/services/complaintService";
+import { fetchAllPages, buildExportFileName } from "@/utils/exportFetchAll";
 
 type ComplaintStatus = components["schemas"]["ComplaintStatus"];
 
@@ -113,10 +115,69 @@ export default function AuthorityComplaintsPage() {
     setIsViewDrawerOpen(true);
   };
 
-  const handleExportExcel = () => {
-    setIsExportingExcel(true);
+  const fetchAllComplaintsForExport = async () => {
+    if (total <= 0) return [];
+    const all = await fetchAllPages(
+      async (offset, limit) => {
+        const res = await ComplaintService.getAllComplaints({
+          status: filter === "All" ? undefined : filter,
+          category_id: categoryId || undefined,
+          ward_id: selectedWardId || undefined,
+          offset,
+          limit,
+        });
+        return { items: res.items || [], total: res.total };
+      },
+      total,
+      100 // Backend max limit is 100
+    );
 
+    if (!search) return all;
+    const lowerSearch = search.toLowerCase();
+    return all.filter((c) =>
+      c.title?.toLowerCase().includes(lowerSearch) ||
+      c.id.toString().includes(search) ||
+      c.applicant_name?.toLowerCase().includes(lowerSearch) ||
+      c.location_address?.toLowerCase().includes(lowerSearch)
+    );
+  };
+
+  const getActiveFilterMetadata = () => {
+    const entries: [string, string][] = [];
+    const fileTags: string[] = [];
+
+    if (categoryId) {
+      const catName = categories.find((c) => c.id === categoryId)?.name;
+      if (catName) {
+        entries.push(["Category", catName]);
+        fileTags.push(`Category_${catName}`);
+      }
+    }
+    if (filter !== "All") {
+      entries.push(["Status", filter]);
+      fileTags.push(`Status_${filter}`);
+    }
+    if (selectedWardId) {
+      const wardName = wards.find((w) => w.id === selectedWardId)?.name;
+      if (wardName) {
+        entries.push(["Ward", wardName]);
+        fileTags.push(`Ward_${wardName}`);
+      }
+    }
+    if (search) {
+      entries.push(["Search Query", search]);
+      fileTags.push(`Search_${search}`);
+    }
+
+    return { entries, fileTags };
+  };
+
+  const handleExportExcel = async () => {
     try {
+      setIsExportingExcel(true);
+      const allComplaints = await fetchAllComplaintsForExport();
+      const { entries, fileTags } = getActiveFilterMetadata();
+
       const wb = XLSX.utils.book_new();
       const wsData: any[][] = [];
 
@@ -131,6 +192,15 @@ export default function AuthorityComplaintsPage() {
         "Generated On",
         new Date().toLocaleString("en-IN"),
       ]);
+      wsData.push(["Total Records", allComplaints.length]);
+
+      if (entries.length > 0) {
+        wsData.push([]);
+        wsData.push(["Filters Applied:"]);
+        entries.forEach(([key, val]) => {
+          wsData.push([`  ${key}:`, val]);
+        });
+      }
 
       wsData.push([]);
 
@@ -146,7 +216,7 @@ export default function AuthorityComplaintsPage() {
         "Status",
       ]);
 
-      filteredComplaints.forEach((item) => {
+      allComplaints.forEach((item) => {
         wsData.push([
           `CMP-${item.id.toString().padStart(4, "0")}`,
           (item as any).category_name ||
@@ -166,19 +236,21 @@ export default function AuthorityComplaintsPage() {
 
       XLSX.utils.book_append_sheet(wb, ws, "Complaints");
 
-      XLSX.writeFile(
-        wb,
-        `complaints-${new Date().toISOString().slice(0, 10)}.xlsx`
-      );
+      const fileName = buildExportFileName("Complaints", fileTags, "xlsx");
+      XLSX.writeFile(wb, fileName);
+    } catch (err) {
+      console.error("Export Excel error", err);
     } finally {
       setIsExportingExcel(false);
     }
   };
 
-  const handleExportPDF = () => {
-    setIsExportingPDF(true);
-
+  const handleExportPDF = async () => {
     try {
+      setIsExportingPDF(true);
+      const allComplaints = await fetchAllComplaintsForExport();
+      const { entries, fileTags } = getActiveFilterMetadata();
+
       const pdf = new jsPDF("landscape");
 
       pdf.setFontSize(18);
@@ -193,9 +265,20 @@ export default function AuthorityComplaintsPage() {
         14,
         42
       );
+      pdf.setFont("helvetica", "bold");
+      pdf.text(`Total Records: ${allComplaints.length}`, 14, 48);
+      pdf.setFont("helvetica", "normal");
+
+      let startY = 54;
+      if (entries.length > 0) {
+        pdf.setFontSize(9);
+        const filterStr = entries.map(([k, v]) => `${k}: ${v}`).join(", ");
+        pdf.text(`Filters: ${filterStr}`, 14, startY);
+        startY = 60;
+      }
 
       autoTable(pdf, {
-        startY: 48,
+        startY,
         head: [[
           "Complaint ID",
           "Category",
@@ -206,7 +289,7 @@ export default function AuthorityComplaintsPage() {
           "Status",
         ]],
 
-        body: filteredComplaints.map((item) => [
+        body: allComplaints.map((item) => [
           `CMP-${item.id.toString().padStart(4, "0")}`,
           (item as any).category_name ||
           categories.find((c) => c.id === item.category_id)?.name ||
@@ -235,9 +318,10 @@ export default function AuthorityComplaintsPage() {
         },
       });
 
-      pdf.save(
-        `complaints-${new Date().toISOString().slice(0, 10)}.pdf`
-      );
+      const pdfFileName = buildExportFileName("Complaints", fileTags, "pdf");
+      pdf.save(pdfFileName);
+    } catch (err) {
+      console.error("Export PDF error", err);
     } finally {
       setIsExportingPDF(false);
     }

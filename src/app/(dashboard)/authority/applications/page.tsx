@@ -15,6 +15,8 @@ import { usePagination } from "@/hooks/usePagination";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import { ApplicationService } from "@/services/applicationService";
+import { fetchAllPages, buildExportFileName } from "@/utils/exportFetchAll";
 
 type ApplicationStatus =
   | "PENDING"
@@ -385,9 +387,121 @@ export default function AuthorityApplicationsPage() {
   ], [wards]);
 
 
-  const handleExportExcel = () => {
+  const fetchAllApplicationsForExport = async () => {
+    const total = totalCount || 0;
+    if (total <= 0) return [];
+    return await fetchAllPages(
+      async (offset, limit) => {
+        const res = await ApplicationService.getApplications({
+          flag: isPendingWithMe ? "PENDING_WITH_ME" : selectedFlag,
+          search: debouncedSearch || undefined,
+          ward_id: selectedWardId || undefined,
+          ward_ids: selectedWardIds.length > 0 ? selectedWardIds.join(",") : undefined,
+          property_usage: selectedPropertyUsage || undefined,
+          jurisdiction_zone: selectedJurisdictionZone || undefined,
+          primary_tab: activePrimaryTab !== "NONE" ? activePrimaryTab : undefined,
+          authority_role: selectedAuthorityRole || undefined,
+          action_name: selectedActionName || undefined,
+          pending_days: pendingDays ? Number(pendingDays) : undefined,
+          submitted_days: submittedDays ? Number(submittedDays) : undefined,
+          type: selectedCategory === "New" ? "NEW" : selectedCategory === "Renovation" ? "RENOVATION" : undefined,
+          status: selectedTableStatus || undefined,
+          offset,
+          limit,
+        });
+        return { items: res.applications || [], total: res.total };
+      },
+      total,
+      100 // Backend max limit is 100
+    );
+  };
+
+  const getActiveFilterMetadata = () => {
+    const entries: [string, string][] = [];
+    const fileTags: string[] = [];
+
+    // Primary workflow tab
+    if (activePrimaryTab === "PENDING") {
+      let actionLabel = "";
+      if (selectedActionName) {
+        if (selectedActionName === "PENDING_APPROVAL") actionLabel = "Application Approval";
+        else if (selectedActionName === "PENDING_TOKEN_GENERATION") actionLabel = "Token Generation";
+        else actionLabel = selectedActionName.replace(/_/g, " ");
+      }
+
+      entries.push(["Pending", actionLabel || "Review & Verification"]);
+      fileTags.push(actionLabel ? `Pending_${actionLabel}` : "Pending");
+
+      if (selectedAuthorityRole) {
+        const roleLabel =
+          selectedAuthorityRole === "NODAL_OFFICER" ? "Nodal Officer" :
+          selectedAuthorityRole === "COMMISSIONER" ? "Commissioner" :
+          selectedAuthorityRole === "JEN" ? "Junior Engineer (JEN)" :
+          selectedAuthorityRole === "DEPT_LAND" ? "Land Department" :
+          selectedAuthorityRole === "DEPT_LEGAL" ? "Legal Department" :
+          selectedAuthorityRole === "DEPT_ATP" ? "ATP Department" :
+          selectedAuthorityRole.replace(/_/g, " ");
+        entries.push(["By", roleLabel]);
+        fileTags.push(`By_${roleLabel}`);
+      }
+
+      if (pendingDays) {
+        entries.push(["Pending Over", `${pendingDays} Days`]);
+        fileTags.push(`Over_${pendingDays}_Days`);
+      }
+    } else if (activePrimaryTab === "COMPLETED") {
+      entries.push(["Status", "Completed by Authority"]);
+      fileTags.push("Completed");
+      if (selectedAuthorityRole) {
+        entries.push(["By", selectedAuthorityRole.replace(/_/g, " ")]);
+        fileTags.push(`By_${selectedAuthorityRole}`);
+      }
+    } else if (activePrimaryTab === "SUBMISSION_DAYS") {
+      entries.push(["Submission Days", `> ${submittedDays || ""} Days`]);
+      fileTags.push(`Submitted_Over_${submittedDays}_Days`);
+    }
+
+    if (selectedCategory !== "All") {
+      entries.push(["Category", selectedCategory === "New" ? "New Construction" : "Repair & Renovation"]);
+      fileTags.push(selectedCategory);
+    }
+    if (selectedTableStatus) {
+      entries.push(["Table Status", selectedTableStatus.replace(/_/g, " ")]);
+      fileTags.push(selectedTableStatus);
+    }
+    if (selectedWardIds.length > 0) {
+      const selectedWardNames = wards
+        .filter((w) => selectedWardIds.includes(w.id))
+        .map((w) => w.name)
+        .join(", ");
+      entries.push(["Wards", selectedWardNames || selectedWardIds.join(", ")]);
+      fileTags.push(`Wards_${selectedWardIds.join("_")}`);
+    }
+    if (selectedPropertyUsage) {
+      entries.push(["Property Usage", selectedPropertyUsage]);
+      fileTags.push(selectedPropertyUsage);
+    }
+    if (selectedJurisdictionZone) {
+      entries.push(["Jurisdiction", selectedJurisdictionZone]);
+      fileTags.push(selectedJurisdictionZone);
+    }
+    if (isPendingWithMe) {
+      entries.push(["Assigned", "Pending with me"]);
+      fileTags.push("Pending_With_Me");
+    }
+    if (debouncedSearch) {
+      entries.push(["Search Query", debouncedSearch]);
+      fileTags.push(`Search_${debouncedSearch}`);
+    }
+
+    return { entries, fileTags };
+  };
+
+  const handleExportExcel = async () => {
     try {
       setIsExportingExcel(true);
+      const allApps = await fetchAllApplicationsForExport();
+      const { entries, fileTags } = getActiveFilterMetadata();
 
       const wb = XLSX.utils.book_new();
       const wsData: any[][] = [];
@@ -403,6 +517,16 @@ export default function AuthorityApplicationsPage() {
         "Generated On",
         new Date().toLocaleString("en-IN"),
       ]);
+      wsData.push(["Total Records", allApps.length]);
+
+      // Active Filters listing
+      if (entries.length > 0) {
+        wsData.push([]);
+        wsData.push(["Filters Applied:"]);
+        entries.forEach(([key, val]) => {
+          wsData.push([`  ${key}:`, val]);
+        });
+      }
 
       wsData.push([]);
 
@@ -418,11 +542,11 @@ export default function AuthorityApplicationsPage() {
         "Current Status",
       ]);
 
-      applications.forEach((app) => {
+      allApps.forEach((app) => {
         wsData.push([
           app.id.toString().padStart(5, "0"),
           app.applicant_name,
-          app.type.toLowerCase() === "new"
+          app.type?.toLowerCase() === "new"
             ? "New Construction"
             : "Repair & Renovation",
           app.ward_zone || "-",
@@ -442,19 +566,21 @@ export default function AuthorityApplicationsPage() {
         "Applications"
       );
 
-      XLSX.writeFile(
-        wb,
-        `Applications_${Date.now()}.xlsx`
-      );
+      const fileName = buildExportFileName("Applications", fileTags, "xlsx");
+      XLSX.writeFile(wb, fileName);
+    } catch (err) {
+      console.error("Export Excel error", err);
     } finally {
       setIsExportingExcel(false);
     }
   };
 
-  const handleExportPDF = () => {
-    setIsExportingPDF(true);
-
+  const handleExportPDF = async () => {
     try {
+      setIsExportingPDF(true);
+      const allApps = await fetchAllApplicationsForExport();
+      const { entries, fileTags } = getActiveFilterMetadata();
+
       const pdf = new jsPDF("landscape");
 
       // ================= Title =================
@@ -463,7 +589,6 @@ export default function AuthorityApplicationsPage() {
 
       // ================= User Information =================
       pdf.setFontSize(10);
-
       pdf.text(`Name: ${user?.name ?? "-"}`, 14, 24);
       pdf.text(`Role: ${user?.role ?? "-"}`, 14, 30);
       pdf.text(`Mobile: ${user?.mobile ?? "-"}`, 14, 36);
@@ -472,10 +597,21 @@ export default function AuthorityApplicationsPage() {
         14,
         42
       );
+      pdf.setFont("helvetica", "bold");
+      pdf.text(`Total Records: ${allApps.length}`, 14, 48);
+      pdf.setFont("helvetica", "normal");
+
+      let startY = 54;
+      if (entries.length > 0) {
+        pdf.setFontSize(9);
+        const filterStr = entries.map(([k, v]) => `${k}: ${v}`).join(", ");
+        pdf.text(`Filters: ${filterStr}`, 14, startY);
+        startY = 60;
+      }
 
       // ================= Table =================
       autoTable(pdf, {
-        startY: 48,
+        startY,
         head: [[
           "Application No",
           "Applicant",
@@ -485,7 +621,7 @@ export default function AuthorityApplicationsPage() {
           "Submitted On",
           "Status",
         ]],
-        body: applications.map((app) => [
+        body: allApps.map((app) => [
           app.id.toString().padStart(5, "0"),
           app.applicant_name,
           app.type === "NEW"
@@ -511,7 +647,10 @@ export default function AuthorityApplicationsPage() {
         },
       });
 
-      pdf.save("Applications_Report.pdf");
+      const pdfFileName = buildExportFileName("Applications", fileTags, "pdf");
+      pdf.save(pdfFileName);
+    } catch (err) {
+      console.error("Export PDF error", err);
     } finally {
       setIsExportingPDF(false);
     }

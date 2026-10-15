@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import TablePagination from "@/components/ui/TablePagination";
 import { useAuditLogs } from "@/hooks/useAudit";
@@ -10,6 +10,8 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useUser } from "@/hooks/useUser";
+import { AuditService } from "@/services/auditService";
+import { fetchAllPages, buildExportFileName } from "@/utils/exportFetchAll";
 
 type AuditAction = components["schemas"]["AuditAction"];
 
@@ -24,6 +26,8 @@ const FILTERS = [
 export default function AuthorityAuditLogsPage() {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveTab] = useState("ALL");
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
   const { page, limit, setPage, setLimit } = usePagination();
   const { data: user } = useUser();
 
@@ -67,111 +71,202 @@ export default function AuthorityAuditLogsPage() {
     }
   };
 
-  const handleExportExcel = () => {
-    const wb = XLSX.utils.book_new();
+  const filteredLogs = useMemo(() => {
+    if (!search) return logs;
+    const lowerSearch = search.toLowerCase();
+    return logs.filter((l) =>
+      l.entity_type?.toLowerCase().includes(lowerSearch) ||
+      l.action?.toLowerCase().includes(lowerSearch) ||
+      l.id?.toString().includes(search) ||
+      l.user_id?.toString().includes(search)
+    );
+  }, [logs, search]);
 
-    const wsData: any[][] = [];
+  const fetchAllLogsForExport = async () => {
+    if (total <= 0) return [];
+    const all = await fetchAllPages(
+      async (offset, limit) => {
+        const res = await AuditService.getLogs({
+          offset,
+          limit,
+          entity_type: activeFilter === "ALL" ? undefined : activeFilter,
+        });
+        return { items: res.logs || [], total: res.total };
+      },
+      total,
+      1000 // Backend max limit is 1000
+    );
 
-    // ================= User Information =================
-    wsData.push(["Audit Logs Report"]);
-    wsData.push([]);
-
-    wsData.push(["Name", user?.name ?? "-"]);
-    wsData.push(["Role", user?.role ?? "-"]);
-    wsData.push(["Mobile", user?.mobile ?? "-"]);
-    wsData.push([
-      "Generated On",
-      new Date().toLocaleString("en-IN"),
-    ]);
-
-    wsData.push([]);
-
-    // ================= Audit Logs =================
-    wsData.push(["Audit Logs"]);
-    wsData.push([
-      "Date & Time",
-      "Record Reference",
-      "User ID",
-      "Module",
-      "Action",
-      "Status",
-    ]);
-
-    logs.forEach((log) => {
-      wsData.push([
-        formatDate(log.created_at),
-        `${log.entity_type.substring(0, 3).toUpperCase()}-${log.id
-          .toString()
-          .padStart(5, "0")}`,
-        `User #${log.user_id}`,
-        log.entity_type,
-        log.action,
-        "Success",
-      ]);
-    });
-
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-    XLSX.utils.book_append_sheet(wb, ws, "Audit Logs");
-
-    XLSX.writeFile(
-      wb,
-      `Audit_Logs_${Date.now()}.xlsx`
+    if (!search) return all;
+    const lowerSearch = search.toLowerCase();
+    return all.filter((l) =>
+      l.entity_type?.toLowerCase().includes(lowerSearch) ||
+      l.action?.toLowerCase().includes(lowerSearch) ||
+      l.id?.toString().includes(search) ||
+      l.user_id?.toString().includes(search)
     );
   };
 
-  const handleExportPDF = () => {
-    const doc = new jsPDF("landscape");
+  const getActiveFilterMetadata = () => {
+    const entries: [string, string][] = [];
+    const fileTags: string[] = [];
 
-    doc.setFontSize(18);
-    doc.text("Audit Logs Report", 14, 15);
+    if (activeFilter !== "ALL") {
+      const label = FILTERS.find((f) => f.value === activeFilter)?.label || activeFilter;
+      entries.push(["Module", label]);
+      fileTags.push(`Module_${label}`);
+    }
+    if (search) {
+      entries.push(["Search Query", search]);
+      fileTags.push(`Search_${search}`);
+    }
 
-    doc.setFontSize(10);
-    doc.text(`Name: ${user?.name ?? "-"}`, 14, 24);
-    doc.text(`Role: ${user?.role ?? "-"}`, 14, 30);
-    doc.text(`Mobile: ${user?.mobile ?? "-"}`, 14, 36);
-    doc.text(
-      `Generated On: ${new Date().toLocaleString("en-IN")}`,
-      14,
-      42
-    );
+    return { entries, fileTags };
+  };
 
-    autoTable(doc, {
-      startY: 48,
-      head: [[
+  const handleExportExcel = async () => {
+    try {
+      setIsExportingExcel(true);
+      const allLogs = await fetchAllLogsForExport();
+      const { entries, fileTags } = getActiveFilterMetadata();
+
+      const wb = XLSX.utils.book_new();
+      const wsData: any[][] = [];
+
+      // ================= User Information =================
+      wsData.push(["Audit Logs Report"]);
+      wsData.push([]);
+
+      wsData.push(["Name", user?.name ?? "-"]);
+      wsData.push(["Role", user?.role ?? "-"]);
+      wsData.push(["Mobile", user?.mobile ?? "-"]);
+      wsData.push([
+        "Generated On",
+        new Date().toLocaleString("en-IN"),
+      ]);
+      wsData.push(["Total Records", allLogs.length]);
+
+      if (entries.length > 0) {
+        wsData.push([]);
+        wsData.push(["Filters Applied:"]);
+        entries.forEach(([key, val]) => {
+          wsData.push([`  ${key}:`, val]);
+        });
+      }
+
+      wsData.push([]);
+
+      // ================= Audit Logs =================
+      wsData.push(["Audit Logs"]);
+      wsData.push([
         "Date & Time",
         "Record Reference",
         "User ID",
         "Module",
         "Action",
         "Status",
-      ]],
-      body: logs.map((log) => [
-        formatDate(log.created_at),
-        `${log.entity_type.substring(0, 3).toUpperCase()}-${log.id
-          .toString()
-          .padStart(5, "0")}`,
-        `User #${log.user_id}`,
-        log.entity_type,
-        log.action,
-        "Success",
-      ]),
-      styles: {
-        fontSize: 8,
-        cellPadding: 3,
-        overflow: "linebreak",
-      },
-      headStyles: {
-        fillColor: [12, 131, 255],
-        textColor: 255,
-        fontStyle: "bold",
-      },
-      alternateRowStyles: {
-        fillColor: [245, 245, 245],
-      },
-    });
+      ]);
 
-    doc.save("Audit_Logs.pdf");
+      allLogs.forEach((log) => {
+        wsData.push([
+          formatDate(log.created_at),
+          `${log.entity_type.substring(0, 3).toUpperCase()}-${log.id
+            .toString()
+            .padStart(5, "0")}`,
+          `User #${log.user_id}`,
+          log.entity_type,
+          log.action,
+          "Success",
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      XLSX.utils.book_append_sheet(wb, ws, "Audit Logs");
+
+      const fileName = buildExportFileName("Audit_Logs", fileTags, "xlsx");
+      XLSX.writeFile(wb, fileName);
+    } catch (err) {
+      console.error("Export Excel error", err);
+    } finally {
+      setIsExportingExcel(false);
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      setIsExportingPDF(true);
+      const allLogs = await fetchAllLogsForExport();
+      const { entries, fileTags } = getActiveFilterMetadata();
+
+      const doc = new jsPDF("landscape");
+
+      doc.setFontSize(18);
+      doc.text("Audit Logs Report", 14, 15);
+
+      doc.setFontSize(10);
+      doc.text(`Name: ${user?.name ?? "-"}`, 14, 24);
+      doc.text(`Role: ${user?.role ?? "-"}`, 14, 30);
+      doc.text(`Mobile: ${user?.mobile ?? "-"}`, 14, 36);
+      doc.text(
+        `Generated On: ${new Date().toLocaleString("en-IN")}`,
+        14,
+        42
+      );
+      doc.setFont("helvetica", "bold");
+      doc.text(`Total Records: ${allLogs.length}`, 14, 48);
+      doc.setFont("helvetica", "normal");
+
+      let startY = 54;
+      if (entries.length > 0) {
+        doc.setFontSize(9);
+        const filterStr = entries.map(([k, v]) => `${k}: ${v}`).join(", ");
+        doc.text(`Filters: ${filterStr}`, 14, startY);
+        startY = 60;
+      }
+
+      autoTable(doc, {
+        startY,
+        head: [[
+          "Date & Time",
+          "Record Reference",
+          "User ID",
+          "Module",
+          "Action",
+          "Status",
+        ]],
+        body: allLogs.map((log) => [
+          formatDate(log.created_at),
+          `${log.entity_type.substring(0, 3).toUpperCase()}-${log.id
+            .toString()
+            .padStart(5, "0")}`,
+          `User #${log.user_id}`,
+          log.entity_type,
+          log.action,
+          "Success",
+        ]),
+        styles: {
+          fontSize: 8,
+          cellPadding: 3,
+          overflow: "linebreak",
+        },
+        headStyles: {
+          fillColor: [12, 131, 255],
+          textColor: 255,
+          fontStyle: "bold",
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245],
+        },
+      });
+
+      const pdfFileName = buildExportFileName("Audit_Logs", fileTags, "pdf");
+      doc.save(pdfFileName);
+    } catch (err) {
+      console.error("Export PDF error", err);
+    } finally {
+      setIsExportingPDF(false);
+    }
   };
 
   return (
@@ -186,14 +281,30 @@ export default function AuthorityAuditLogsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button onClick={handleExportPDF} className="flex items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-2 text-sm font-medium text-[#343434] hover:bg-gray-100 transition-colors cursor-pointer">
-            <Image src="/dashboard/icons/applications/pdficon.svg" alt="" width={14} height={14} className="opacity-70" />
-            Export PDF
+          <button
+            onClick={handleExportPDF}
+            disabled={isExportingPDF}
+            className="flex items-center gap-2.5 rounded-lg border border-[#D6D9DE] bg-[#F5F6F7] px-4 py-2 text-sm font-medium text-[#343434] hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {isExportingPDF ? (
+              <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#343434] border-t-transparent" />
+            ) : (
+              <Image src="/dashboard/icons/applications/pdficon.svg" alt="" width={14} height={14} className="opacity-70" />
+            )}
+            {isExportingPDF ? "Exporting..." : "Export PDF"}
           </button>
           <div className="h-6 w-px bg-[#D6D9DE] mx-1" />
-          <button onClick={handleExportExcel} className="flex items-center gap-2.5 rounded-lg bg-[#0C83FF] px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 transition-colors cursor-pointer shadow-sm">
-            <Image src="/dashboard/icons/applications/csvicon.svg" alt="" width={14} height={14} className="invert brightness-0" />
-            Export Excel
+          <button
+            onClick={handleExportExcel}
+            disabled={isExportingExcel}
+            className="flex items-center gap-2.5 rounded-lg bg-[#0C83FF] px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 transition-colors cursor-pointer shadow-sm disabled:opacity-50"
+          >
+            {isExportingExcel ? (
+              <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            ) : (
+              <Image src="/dashboard/icons/applications/csvicon.svg" alt="" width={14} height={14} className="invert brightness-0" />
+            )}
+            {isExportingExcel ? "Exporting..." : "Export Excel"}
           </button>
         </div>
       </div>
@@ -284,7 +395,7 @@ export default function AuthorityAuditLogsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {logs.map((log) => (
+                  {filteredLogs.map((log) => (
                     <tr key={log.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
                       <td className="px-2 py-3">
                         <span className="text-sm font-normal text-[#343434] opacity-80">{formatDate(log.created_at)}</span>
@@ -314,7 +425,7 @@ export default function AuthorityAuditLogsPage() {
                       </td>
                     </tr>
                   ))}
-                  {logs.length === 0 && (
+                  {filteredLogs.length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-2 py-10 text-center text-sm text-[#343434] opacity-60">
                         No audit logs found.

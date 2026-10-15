@@ -11,6 +11,8 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useUser } from "@/hooks/useUser";
+import { TokenService } from "@/services/tokenService";
+import { fetchAllPages, buildExportFileName } from "@/utils/exportFetchAll";
 
 
 const ProgressBar = ({ progress }: { progress: number }) => (
@@ -75,10 +77,45 @@ export default function AuthorityTokensPage() {
 
   const totalPages = Math.ceil(total / limit);
 
-  const handleExportExcel = () => {
-    setIsExportingExcel(true);
+  const fetchAllTokensForExport = async () => {
+    if (total <= 0) return [];
+    return await fetchAllPages(
+      async (offset, limit) => {
+        const res = await TokenService.getTokens({
+          offset,
+          limit,
+          search: debouncedSearch || undefined,
+          status: selectedStatus || undefined,
+        });
+        return { items: res.items || [], total: res.total };
+      },
+      total,
+      100 // Backend max limit is 100
+    );
+  };
 
+  const getActiveFilterMetadata = () => {
+    const entries: [string, string][] = [];
+    const fileTags: string[] = [];
+
+    if (selectedStatus) {
+      entries.push(["Status", selectedStatus]);
+      fileTags.push(`Status_${selectedStatus}`);
+    }
+    if (debouncedSearch) {
+      entries.push(["Search Query", debouncedSearch]);
+      fileTags.push(`Search_${debouncedSearch}`);
+    }
+
+    return { entries, fileTags };
+  };
+
+  const handleExportExcel = async () => {
     try {
+      setIsExportingExcel(true);
+      const allTokens = await fetchAllTokensForExport();
+      const { entries, fileTags } = getActiveFilterMetadata();
+
       const wb = XLSX.utils.book_new();
       const wsData: any[][] = [];
 
@@ -93,6 +130,15 @@ export default function AuthorityTokensPage() {
         "Generated On",
         new Date().toLocaleString("en-IN"),
       ]);
+      wsData.push(["Total Records", allTokens.length]);
+
+      if (entries.length > 0) {
+        wsData.push([]);
+        wsData.push(["Filters Applied:"]);
+        entries.forEach(([key, val]) => {
+          wsData.push([`  ${key}:`, val]);
+        });
+      }
 
       wsData.push([]);
 
@@ -106,7 +152,7 @@ export default function AuthorityTokensPage() {
         "Status",
       ]);
 
-      tokens.forEach((token) => {
+      allTokens.forEach((token) => {
         wsData.push([
           token.token_number,
           token.application_number
@@ -124,19 +170,21 @@ export default function AuthorityTokensPage() {
 
       XLSX.utils.book_append_sheet(wb, ws, "Tokens");
 
-      XLSX.writeFile(
-        wb,
-        `tokens-${new Date().toISOString().slice(0, 10)}.xlsx`
-      );
+      const fileName = buildExportFileName("Tokens", fileTags, "xlsx");
+      XLSX.writeFile(wb, fileName);
+    } catch (err) {
+      console.error("Export Excel error", err);
     } finally {
       setIsExportingExcel(false);
     }
   };
 
-  const handleExportPDF = () => {
-    setIsExportingPDF(true);
-
+  const handleExportPDF = async () => {
     try {
+      setIsExportingPDF(true);
+      const allTokens = await fetchAllTokensForExport();
+      const { entries, fileTags } = getActiveFilterMetadata();
+
       const pdf = new jsPDF("landscape");
 
       pdf.setFontSize(18);
@@ -151,9 +199,20 @@ export default function AuthorityTokensPage() {
         14,
         42
       );
+      pdf.setFont("helvetica", "bold");
+      pdf.text(`Total Records: ${allTokens.length}`, 14, 48);
+      pdf.setFont("helvetica", "normal");
+
+      let startY = 54;
+      if (entries.length > 0) {
+        pdf.setFontSize(9);
+        const filterStr = entries.map(([k, v]) => `${k}: ${v}`).join(", ");
+        pdf.text(`Filters: ${filterStr}`, 14, startY);
+        startY = 60;
+      }
 
       autoTable(pdf, {
-        startY: 48,
+        startY,
 
         head: [[
           "Token Number",
@@ -163,7 +222,7 @@ export default function AuthorityTokensPage() {
           "Status",
         ]],
 
-        body: tokens.map((token) => [
+        body: allTokens.map((token) => [
           token.token_number,
           token.application_number
             ? `${token.application_number.toString().padStart(5, "0")}`
@@ -190,9 +249,10 @@ export default function AuthorityTokensPage() {
         },
       });
 
-      pdf.save(
-        `tokens-${new Date().toISOString().slice(0, 10)}.pdf`
-      );
+      const pdfFileName = buildExportFileName("Tokens", fileTags, "pdf");
+      pdf.save(pdfFileName);
+    } catch (err) {
+      console.error("Export PDF error", err);
     } finally {
       setIsExportingPDF(false);
     }
