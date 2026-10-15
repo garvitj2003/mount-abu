@@ -1984,6 +1984,19 @@ export interface components {
             material_approved_vs_used?: components["schemas"]["MaterialBar"][] | null;
             /** Token Utilization List */
             token_utilization_list?: components["schemas"]["TokenUtilizationRow"][] | null;
+            /** Authority Pendency */
+            authority_pendency?: components["schemas"]["AuthorityPendencyItem"][] | null;
+        };
+        /**
+         * AuthorityPendencyItem
+         */
+        AuthorityPendencyItem: {
+            role: string;
+            name: string;
+            pending_count: number;
+            objected_count: number;
+            over_15_days_count: number;
+            total_count: number;
         };
         /**
          * AuthorityVehicleEntryResponse

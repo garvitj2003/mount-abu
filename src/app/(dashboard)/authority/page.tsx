@@ -5,6 +5,7 @@ import { ComplaintsByCategoryChart } from "@/components/common/charts/Complaints
 import { WardSummaryTable } from "@/components/common/charts/WardSummaryTable";
 import { WardWiseActivityChart } from "@/components/common/charts/WardWiseActivityChart";
 import { StatCard } from "@/components/common/stats/StatCard";
+import { AuthorityPendencyGrid } from "@/components/dashboard/AuthorityPendencyGrid";
 import DropdownSelect from "@/components/ui/DropdownSelect";
 import { useAuthorityDashboard } from "@/hooks/useDashboard";
 import { useDepartments, useWards } from "@/hooks/useMasterData";
@@ -353,6 +354,25 @@ export default function DashboardAuthorityPage() {
       });
 
       wsData.push([]);
+
+      // ================= Authority Pendency =================
+      if (dashboard.authority_pendency?.length) {
+        wsData.push(["Authority Pendency Breakdown"]);
+        wsData.push(["Authority", "Total Pending", "Under Review", "Objected", "> 15 Days Overdue"]);
+        const pendencyToExport = role === "COMMISSIONER"
+          ? dashboard.authority_pendency.filter((p) => p.role !== "NODAL_OFFICER")
+          : dashboard.authority_pendency;
+        pendencyToExport.forEach((item) => {
+          wsData.push([
+            item.name,
+            item.total_count,
+            item.pending_count,
+            item.objected_count,
+            item.over_15_days_count,
+          ]);
+        });
+        wsData.push([]);
+      }
 
 
 
@@ -818,6 +838,14 @@ export default function DashboardAuthorityPage() {
               />
             ))}
           </div>
+
+          {/* Authority Pendency Grid (Superadmin, Collector, Nodal Officer, Commissioner) */}
+          {(role === "SUPERADMIN" || role === "ADMIN" || role === "COLLECTOR" || role === "NODAL_OFFICER" || role === "COMMISSIONER") && (
+            <AuthorityPendencyGrid
+              items={dashboard?.authority_pendency}
+              userRole={role}
+            />
+          )}
 
           {/* Role-Specific Views */}
 

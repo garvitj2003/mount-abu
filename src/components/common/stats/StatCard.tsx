@@ -5,7 +5,7 @@ import Image from "next/image";
 
 export type StatIconType = "applications" | "complaints" | "token";
 
-const DashboardIcon = ({
+export const DashboardIcon = ({
   type,
   color = "#343434",
 }: {
