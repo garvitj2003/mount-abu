@@ -113,6 +113,10 @@ export default function ApplicationActionPanel({
     app.inspections && app.inspections.length > 0, 
   [app.inspections]);
 
+  const isEligibleToSkipJen = useMemo(() => 
+    app.property_usage === "GOVERNMENT" || (app.type === "RENOVATION" && Boolean((app as any).is_emergency_repair)),
+  [app.property_usage, app.type, (app as any).is_emergency_repair]);
+
   const workflowActions = useMemo(() => {
     if (!userRole || userRole === "COLLECTOR") return [];
 
@@ -246,8 +250,8 @@ export default function ApplicationActionPanel({
               icon="/dashboard/icons/applications/calendar.svg" 
               variant="primary" 
               onClick={onAddPhaseClick} 
-              disabled={!hasGeoPhotos}
-              title={!hasGeoPhotos ? "Geo tagged photos and estimate material is not available" : ""}
+              disabled={!hasGeoPhotos && !isEligibleToSkipJen}
+              title={!hasGeoPhotos && !isEligibleToSkipJen ? "Geo tagged photos and estimate material is not available" : ""}
             />
           );
         }
@@ -265,9 +269,17 @@ export default function ApplicationActionPanel({
             <ActionButton key="rej" label="Reject" icon="/dashboard/icons/cross-round-red.svg" variant="danger" onClick={onRejectClick} />
           );
         } else if (userRole === "NODAL_OFFICER") {
-          actionList.push(
-            <ActionButton key="pending-comm" label="Pending Commissioner Approval" disabled variant="secondary" />
-          );
+          if (isEligibleToSkipJen) {
+            actionList.push(
+              <ActionButton key="obj-btn" label="Raise Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={() => onObjectionClick?.("")} />,
+              <ActionButton key="rej" label="Reject" icon="/dashboard/icons/cross-round-red.svg" variant="danger" onClick={onRejectClick} />,
+              <ActionButton key="app" label="Approve Application" variant="success" onClick={() => setShowApproveConfirm(true)} />
+            );
+          } else {
+            actionList.push(
+              <ActionButton key="pending-comm" label="Pending Commissioner Approval" disabled variant="secondary" />
+            );
+          }
         }
       }
       if (status === "FORWARDED") {
@@ -276,7 +288,7 @@ export default function ApplicationActionPanel({
             <ActionButton key="obj-btn" label="Raise Objection" icon="/dashboard/icons/warning.svg" variant="warning" onClick={() => onObjectionClick?.("")} />
           );
         }
-        if (hasGeoPhotos && (userRole === "JEN" || userRole === "SUPERADMIN")) {
+        if ((hasGeoPhotos || isEligibleToSkipJen) && (userRole === "JEN" || userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN")) {
           actionList.push(
             <ActionButton 
               key="add-phase" 
@@ -287,7 +299,7 @@ export default function ApplicationActionPanel({
             />
           );
         }
-        if (userRole === "COMMISSIONER" || userRole === "SUPERADMIN") {
+        if (userRole === "COMMISSIONER" || userRole === "SUPERADMIN" || (isEligibleToSkipJen && userRole === "NODAL_OFFICER")) {
           actionList.push(
             <ActionButton key="rej" label="Reject" icon="/dashboard/icons/cross-round-red.svg" variant="danger" onClick={onRejectClick} />,
             <ActionButton key="app" label="Approve Application" variant="success" onClick={() => setShowApproveConfirm(true)} />
@@ -309,7 +321,7 @@ export default function ApplicationActionPanel({
             <ActionButton key="clear-app" label="Clear Objection" variant="success" onClick={() => setShowClearConfirm(true)} />
           );
         }
-        if (userRole === "JEN" || userRole === "SUPERADMIN") {
+        if (userRole === "JEN" || userRole === "SUPERADMIN" || (isEligibleToSkipJen && userRole === "NODAL_OFFICER")) {
           actionList.push(
             <ActionButton 
               key="add-phase" 
@@ -328,7 +340,7 @@ export default function ApplicationActionPanel({
             <ActionButton key="rej" label="Reject" icon="/dashboard/icons/cross-round-red.svg" variant="danger" onClick={onRejectClick} />
           );
         }
-        if (hasGeoPhotos && (userRole === "JEN" || userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN")) {
+        if ((hasGeoPhotos || isEligibleToSkipJen) && (userRole === "JEN" || userRole === "NODAL_OFFICER" || userRole === "SUPERADMIN")) {
           actionList.push(
             <ActionButton 
               key="add-phase" 
@@ -344,7 +356,7 @@ export default function ApplicationActionPanel({
     }
 
     return actionList;
-  }, [userRole, app.status, app.type, app.num_stages, app.inspections, app.phase_materials, app.tokens, onAction, onRejectClick, onObjectionClick, hasGeoPhotos, totalPhases, setShowGenerateConfirm, setPendingGeneratePhase, setShowClearConfirm]);
+  }, [userRole, app.status, app.type, app.num_stages, app.inspections, app.phase_materials, app.tokens, onAction, onRejectClick, onObjectionClick, hasGeoPhotos, isEligibleToSkipJen, totalPhases, setShowGenerateConfirm, setPendingGeneratePhase, setShowClearConfirm]);
 
   return (
     <>

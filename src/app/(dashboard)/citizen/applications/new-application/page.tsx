@@ -116,6 +116,7 @@ export default function NewApplicationPage() {
           existing_structure: (app.existing_structure || "NONE") as any,
           construction_floor: (app.construction_floor || "NONE") as any,
           organization_name: app.organization_name || "",
+          is_emergency_repair: (app as any).is_emergency_repair || false,
         });
 
         // 2. Determine Step
@@ -543,6 +544,23 @@ export default function NewApplicationPage() {
         <label className="w-[228px] text-[12px] font-normal text-[#343434] font-onest">Contractor name</label>
         <input type="text" placeholder="Enter contractor name" className="h-[34px] w-[313px] rounded-lg border border-[#D6D9DE] px-3 text-sm text-[#343434] outline-none placeholder:opacity-60 focus:border-[#0C83FF] font-onest" value={formData.contractor_name || ""} onChange={(e) => updateFormData({ contractor_name: e.target.value })} />
       </div>
+
+      {formData.type === "RENOVATION" && (
+        <div className="flex items-center gap-5">
+          <label className="w-[228px] text-[12px] font-normal text-[#343434] font-onest">Emergency repair</label>
+          <div className="flex w-[315px] items-center gap-10 py-1">
+            {[true, false].map((option) => (
+              <label key={option ? "yes" : "no"} className="flex cursor-pointer items-center gap-1">
+                <input type="radio" className="hidden" checked={formData.is_emergency_repair === option} onChange={() => updateFormData({ is_emergency_repair: option })} />
+                <div className="flex h-5 w-5 items-center justify-center">
+                  <Image src={formData.is_emergency_repair === option ? "/dashboard/icons/applications/radio-selected.svg" : "/dashboard/icons/applications/radio-unselected.svg"} alt="radio" width={20} height={20} />
+                </div>
+                <span className="text-sm text-black font-onest font-normal uppercase">{option ? "YES" : "NO"}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center gap-5">
         <label className="w-[228px] text-[12px] font-normal text-[#343434] font-onest">Is this property on agriculture land?</label>

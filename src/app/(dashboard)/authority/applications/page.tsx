@@ -1237,7 +1237,14 @@ export default function AuthorityApplicationsPage() {
                         <span className="text-sm font-normal text-[#343434]">{app.applicant_name}</span>
                       </td>
                       <td className="px-2 py-3">
-                        <span className="text-sm font-normal text-[#343434] capitalize">{app.type.toLowerCase() === "new" ? 'New Construction' : app.type.toLowerCase() === "renovation" ? 'Repair & Renovation' : ''}</span>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm font-normal text-[#343434] capitalize">{app.type.toLowerCase() === "new" ? 'New Construction' : app.type.toLowerCase() === "renovation" ? 'Repair & Renovation' : ''}</span>
+                          {(app as any).is_emergency_repair && (
+                            <span className="w-fit rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">
+                              Emergency
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-2 py-3">
                         <span className="text-sm font-normal text-[#343434]">{app.ward_zone || "—"}</span>

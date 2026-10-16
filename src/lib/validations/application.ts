@@ -8,6 +8,7 @@ export const step1Schema = z.object({
   current_address: z.string().min(5, "Current address is required"),
   property_address: z.string().min(5, "Property address is required"),
   type: z.enum(["NEW", "RENOVATION"] as const),
+  is_emergency_repair: z.boolean().default(false),
   work_description: z.string().min(10, "Please provide a more detailed description"),
   contractor_name: z.string().optional().nullable(),
   is_agriculture_land: z.boolean(),

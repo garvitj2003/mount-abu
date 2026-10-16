@@ -23,6 +23,7 @@ const initialFormData: ApplicationFormData = {
   current_address: "",
   property_address: "",
   type: "RENOVATION",
+  is_emergency_repair: false,
   work_description: "",
   contractor_name: "",
   is_agriculture_land: false,

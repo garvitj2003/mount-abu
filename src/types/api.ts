@@ -1675,6 +1675,11 @@ export interface components {
             /** @description Application Type */
             type: components["schemas"]["ApplicationType"];
             /**
+             * Is Emergency Repair
+             * @default false
+             */
+            is_emergency_repair?: boolean;
+            /**
              * Description
              * @description Application Description
              */
@@ -1855,6 +1860,11 @@ export interface components {
             work_description?: string | null;
             status: components["schemas"]["ApplicationStatus"];
             type: components["schemas"]["ApplicationType"];
+            /**
+             * Is Emergency Repair
+             * @default false
+             */
+            is_emergency_repair?: boolean;
             /** Num Stages */
             num_stages: number | null;
             /** Created At */

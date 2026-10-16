@@ -74,6 +74,8 @@ const Header = ({
 }) => {
   const warning = useMemo(() => {
     if (userRole !== 'SUPERADMIN' && userRole !== 'JEN') return null;
+    const isEligibleToSkipJen = app.property_usage === 'GOVERNMENT' || (app.type === 'RENOVATION' && Boolean((app as any).is_emergency_repair));
+    if (isEligibleToSkipJen) return null;
 
     const noInspection = app.inspections.length == 0;
     const noEstimates = app.phase_materials.length == 0;
@@ -90,14 +92,26 @@ const Header = ({
           <Image src="/dashboard/icons/applications/arrow-back.svg" alt="Back" width={24} height={24} />
         </button>
         <div className="flex flex-col">
-          <h1 className="text-base font-medium text-[#343434]">
-            #{app.id.toString().padStart(5, '0')} (
-            {warning ? (
-              <span className="text-[#EF4444] font-semibold animate-pulse">{warning}</span>
-            ) : (
-              userRole?.replace('_', ' ').toLowerCase()
-            )})
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-base font-medium text-[#343434]">
+              #{app.id.toString().padStart(5, '0')} (
+              {warning ? (
+                <span className="text-[#EF4444] font-semibold animate-pulse">{warning}</span>
+              ) : (
+                userRole?.replace('_', ' ').toLowerCase()
+              )})
+            </h1>
+            {(app as any).is_emergency_repair && (
+              <span className="rounded bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700 font-onest">
+                Emergency Repair
+              </span>
+            )}
+            {app.property_usage === 'GOVERNMENT' && (
+              <span className="rounded bg-blue-100 px-2 py-0.5 text-[11px] font-semibold text-blue-700 font-onest">
+                Government
+              </span>
+            )}
+          </div>
           <p className="text-[12px] font-normal text-[#343434] opacity-80">
             Review, verify, and approve citizen construction and renovation applications.
           </p>
@@ -201,6 +215,9 @@ const Sidebar = ({ app }: { app: ApplicationResponse }) => {
         <DetailItem label="Property Usage" value={app.property_usage} />
         {app.organization_name && <DetailItem label="Organization Name" value={app.organization_name} />}
         <DetailItem label="Type of Work" value={app.type.toLowerCase() === "new" ? 'New Construction' : app.type.toLowerCase() === "renovation" ? 'Repair & Renovation' : ''} />
+        {app.type.toUpperCase() === "RENOVATION" && (
+          <DetailItem label="Emergency Repair" value={(app as any).is_emergency_repair ? "Yes" : "No"} />
+        )}
         <DetailItem label="Jurisdiction" value={app.jurisdiction_zone === "ULB" ? "Urban" : app.jurisdiction_zone === "UIT" ? "Rural" : "—"} />
         <DetailItem label="Contractor Name" value={app.contractor_name} />
         <DetailItem label="Existing Structure" value={app.existing_structure} />

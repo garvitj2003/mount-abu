@@ -26,7 +26,24 @@ export default function AddPhaseDrawer({
   isPending = false,
 }: AddPhaseDrawerProps) {
   const { data: dbMaterials = [] } = useMaterials();
-  const totalPhases = app.inspections[0]?.recommended_phases || 1;
+  const maxExistingPhase = useMemo(() => {
+    const fromMats = app.phase_materials && app.phase_materials.length > 0
+      ? Math.max(...app.phase_materials.map(pm => pm.phase))
+      : 0;
+    const fromInsp = app.inspections?.[0]?.recommended_phases || 0;
+    const fromStages = app.num_stages || 0;
+    return Math.max(fromMats, fromInsp, fromStages, 1);
+  }, [app.phase_materials, app.inspections, app.num_stages]);
+
+  const [localTotalPhases, setLocalTotalPhases] = useState(maxExistingPhase);
+
+  useEffect(() => {
+    if (isOpen) {
+      setLocalTotalPhases(maxExistingPhase);
+    }
+  }, [isOpen, maxExistingPhase]);
+
+  const totalPhases = Math.max(localTotalPhases, maxExistingPhase);
   const [activeStage, setActiveStage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -40,23 +57,23 @@ export default function AddPhaseDrawer({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAddNewPhase = async () => {
-    if (!app.inspections || app.inspections.length === 0) {
-      alert("No inspection report found to update recommended phases.");
-      return;
-    }
     const newPhases = totalPhases + 1;
     setIsAddingPhase(true);
     try {
-      await updateInspectionMutation.mutateAsync({
-        id: app.id,
-        data: {
-          latitude: app.inspections[0].latitude,
-          longitude: app.inspections[0].longitude,
-          remarks: app.inspections[0].remarks || "Adding new phase",
-          media_paths: (app.inspections[0].media_paths as string[]) || [],
-          recommended_phases: newPhases,
-        },
-      });
+      if (app.inspections && app.inspections.length > 0) {
+        await updateInspectionMutation.mutateAsync({
+          id: app.id,
+          data: {
+            latitude: app.inspections[0].latitude,
+            longitude: app.inspections[0].longitude,
+            remarks: app.inspections[0].remarks || "Adding new phase",
+            media_paths: (app.inspections[0].media_paths as string[]) || [],
+            recommended_phases: newPhases,
+          },
+        });
+      }
+
+      setLocalTotalPhases(newPhases);
 
       // Initialize the new phase in local state
       const applicantCustomMaterials = app.materials?.filter(m => !m.material_id) || [];
