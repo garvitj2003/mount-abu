@@ -213,6 +213,7 @@ export default function NewApplicationPage() {
     propertyPhotos: [],
     permissionDocuments: null,
     detailedDesignEstimate: null,
+    estimateOfMaterials: null,
   });
 
   const [agreed, setAgreed] = useState(false);
@@ -407,6 +408,9 @@ export default function NewApplicationPage() {
         { key: "propertyPhotos", type: "PROPERTY_PHOTOS" },
         { key: "permissionDocuments", type: "PERMISSION_DOCUMENTS" },
         { key: "detailedDesignEstimate", type: "DETAILED_DESIGN_ESTIMATE" },
+        ...(formData.property_usage === "GOVERNMENT"
+          ? [{ key: "estimateOfMaterials", type: "ESTIMATE_OF_MATERIALS" }]
+          : []),
       ];
 
       let completed = 0;
@@ -772,6 +776,16 @@ export default function NewApplicationPage() {
         hint: "PDF Only",
         accept: ".pdf",
       },
+      ...(formData.property_usage === "GOVERNMENT"
+        ? [
+            {
+              key: "estimateOfMaterials",
+              label: "Estimate of materials required",
+              hint: "PDF Only (Optional)",
+              accept: ".pdf",
+            },
+          ]
+        : []),
     ];
 
     return (

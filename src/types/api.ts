@@ -1702,7 +1702,7 @@ export interface components {
          * @description ...
          * @enum {string}
          */
-        ApplicationDocumentType: "APPLICATION" | "INSPECTION" | "OTHER" | "AADHAAR" | "APPLICANT_PHOTO" | "OWNERSHIP_DOCUMENTS" | "PERMISSION_DOCUMENTS" | "PROPERTY_PHOTOS" | "SUPPORTING_DOCUMENTS" | "SITE_INSPECTION" | "GEO_TAGGED_PHOTO" | "DETAILED_DESIGN_ESTIMATE";
+        ApplicationDocumentType: "APPLICATION" | "INSPECTION" | "OTHER" | "AADHAAR" | "APPLICANT_PHOTO" | "OWNERSHIP_DOCUMENTS" | "PERMISSION_DOCUMENTS" | "PROPERTY_PHOTOS" | "SUPPORTING_DOCUMENTS" | "SITE_INSPECTION" | "GEO_TAGGED_PHOTO" | "DETAILED_DESIGN_ESTIMATE" | "ESTIMATE_OF_MATERIALS";
         /**
          * ApplicationFlags
          * @enum {string}
