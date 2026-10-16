@@ -307,9 +307,12 @@ export default function AuthorityVehicleSchedulingPage() {
         }
       };
     } else if (vehicleSubTab === "Blackout Calendar") {
+      const sortedBlackouts = [...blackouts].sort(
+        (a, b) => new Date(b.blackout_date).getTime() - new Date(a.blackout_date).getTime()
+      );
       return {
         columns: BLACKOUT_COLUMNS,
-        data: blackouts,
+        data: sortedBlackouts,
         buttonText: "Add Blackout / Holiday",
         isLoading: isLoadingBlackouts,
         onAdd: () => {
