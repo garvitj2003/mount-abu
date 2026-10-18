@@ -1631,6 +1631,10 @@ export interface components {
              * @description Property Address
              */
             property_address: string;
+            /** Latitude */
+            latitude?: number | null;
+            /** Longitude */
+            longitude?: number | null;
             /**
              * Title
              * @description Application Title
@@ -1838,6 +1842,10 @@ export interface components {
             property_address: string;
             /** Current Address */
             current_address?: string | null;
+            /** Latitude */
+            latitude?: number | null;
+            /** Longitude */
+            longitude?: number | null;
             /** Is Agriculture Land */
             is_agriculture_land: boolean;
             property_usage: components["schemas"]["PropertyUsageType"];
@@ -1904,6 +1912,11 @@ export interface components {
              * @default []
              */
             objections: components["schemas"]["ApplicationObjectionResponse"][];
+            /**
+             * Utilization Proofs
+             * @default []
+             */
+            utilization_proofs?: components["schemas"]["PhaseUtilizationProofResponse"][];
             /** Rejection Remarks */
             rejection_remarks?: string | null;
             /** Objection To Role */
@@ -3646,6 +3659,36 @@ export interface components {
             unit?: string | null;
         };
         /**
+         * PhaseUtilizationProofResponse
+         * @description Response schema for citizen utilization proof (photos & self-assessment) for a phase.
+         */
+        PhaseUtilizationProofResponse: {
+            /** Id */
+            id: number;
+            /** Application Id */
+            application_id: number;
+            /** Phase */
+            phase: number;
+            /** Work Completion Details */
+            work_completion_details: string;
+            /** Completion Percentage */
+            completion_percentage?: number | null;
+            /** Declaration Accepted */
+            declaration_accepted: boolean;
+            /** Remarks */
+            remarks?: string | null;
+            /** Photos */
+            photos: string[];
+            /** Access Urls */
+            access_urls?: string[];
+            /** Submitted By Id */
+            submitted_by_id: number;
+            /** Submitted By Name */
+            submitted_by_name?: string | null;
+            /** Submitted At */
+            submitted_at: string;
+        };
+        /**
          * PhaseResponse
          * @description Response schema for application phases.
          */
@@ -3665,6 +3708,10 @@ export interface components {
             completed_at?: string | null;
             /** Transport Code */
             transport_code?: string | null;
+            /** Has Utilization Proof */
+            has_utilization_proof?: boolean;
+            /** Utilization Proof */
+            utilization_proof?: components["schemas"]["PhaseUtilizationProofResponse"] | null;
         };
         /**
          * PhaseStatusUpdateRequest
@@ -4468,6 +4515,8 @@ export interface components {
             /** Valid Till */
             valid_till?: string | null;
             status: components["schemas"]["ApplicationPhaseStatus"];
+            /** Has Utilization Proof */
+            has_utilization_proof?: boolean;
         };
         /**
          * VehicleEntryResponse

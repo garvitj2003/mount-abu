@@ -11,7 +11,9 @@ import { useTokens } from "@/hooks/useTokens";
 import { useUser } from "@/hooks/useUser";
 import { TokenService } from "@/services/tokenService";
 import ScheduleVehicleModal from "@/components/dashboard/citizen/tokens/ScheduleVehicleModal";
+import DumpingWarningModal from "@/components/dashboard/citizen/tokens/DumpingWarningModal";
 import ConfirmModal from "@/components/ui/ConfirmModal";
+import { VehicleEntryService } from "@/services/vehicleEntryService";
 import { type VehicleScheduleResponse } from "@/services/scheduleService";
 
 type FilterStatus = "ALL" | "SCHEDULED" | "COMPLETED" | "CANCELLED";
@@ -28,6 +30,13 @@ export default function CitizenSchedulesPage() {
   const [selectedTokenForSchedule, setSelectedTokenForSchedule] = useState<{
     tokenId: number;
     tokenNumber: string;
+  } | null>(null);
+  const [showDumpingWarning, setShowDumpingWarning] = useState(false);
+  const [pendingWarningToken, setPendingWarningToken] = useState<{
+    tokenId: number;
+    tokenNumber: string;
+    vehicleNumber?: string | null;
+    entryDate?: string | Date | null;
   } | null>(null);
 
   const { data: user } = useUser();
@@ -83,11 +92,34 @@ export default function CitizenSchedulesPage() {
     try {
       setResolvingTransportCode(item.transport_code);
       let tokenId = item.token_id || item.id;
-      if (!tokenId) {
-        const detail = await TokenService.getTokenByCode(item.transport_code);
-        tokenId = (detail as any)?.token_id ?? (detail as any)?.id;
+      let detail: any = null;
+      if (item.transport_code) {
+        detail = await TokenService.getTokenByCode(item.transport_code);
+        if (!tokenId) {
+          tokenId = (detail as any)?.token_id ?? (detail as any)?.id;
+        }
       }
       if (tokenId) {
+        const latestEntry = detail?.vehicle_entries?.[0] || item.vehicle_entries?.[0];
+        if (latestEntry) {
+          try {
+            const entryDetail = await VehicleEntryService.getVehicleEntryDetail(latestEntry.id);
+            if (!entryDetail.dumping_photos || entryDetail.dumping_photos.length === 0) {
+              setPendingWarningToken({
+                tokenId: Number(tokenId),
+                tokenNumber: item.token_number,
+                vehicleNumber: latestEntry.vehicle_number || entryDetail.vehicle_number,
+                entryDate: latestEntry.entry_at,
+              });
+              setIsTokenPickerOpen(false);
+              setShowDumpingWarning(true);
+              return;
+            }
+          } catch (e) {
+            console.warn("Could not check dumping photo status:", e);
+          }
+        }
+
         setSelectedTokenForSchedule({
           tokenId: Number(tokenId),
           tokenNumber: item.token_number,
@@ -684,6 +716,26 @@ export default function CitizenSchedulesPage() {
           }}
         />
       )}
+
+      <DumpingWarningModal
+        isOpen={showDumpingWarning}
+        onClose={() => {
+          setShowDumpingWarning(false);
+          setPendingWarningToken(null);
+        }}
+        onProceed={() => {
+          if (pendingWarningToken) {
+            setSelectedTokenForSchedule({
+              tokenId: pendingWarningToken.tokenId,
+              tokenNumber: pendingWarningToken.tokenNumber,
+            });
+          }
+          setShowDumpingWarning(false);
+          setPendingWarningToken(null);
+        }}
+        vehicleNumber={pendingWarningToken?.vehicleNumber}
+        entryDate={pendingWarningToken?.entryDate}
+      />
 
       {/* Digital Pass / QR Modal */}
       <AnimatePresence>

@@ -10,6 +10,7 @@ import ApplicationActionPanel from "@/components/dashboard/authority/application
 import CommentsDrawer from "@/components/dashboard/authority/applications/CommentsDrawer";
 import ActionRemarksModal from "@/components/dashboard/authority/applications/ActionRemarksModal";
 import AddPhaseDrawer from "@/components/dashboard/authority/applications/AddPhaseDrawer";
+import GoogleMapView from "@/components/common/GoogleMapView";
 
 type ApplicationResponse = components["schemas"]["ApplicationResponse"];
 type UserRole = components["schemas"]["UserRole"];
@@ -208,6 +209,24 @@ const Sidebar = ({ app }: { app: ApplicationResponse }) => {
 
         <DetailItem label="Current Address" value={app.current_address} />
         <DetailItem label="Construction Address" value={app.property_address} />
+        {typeof app.latitude === "number" && typeof app.longitude === "number" && (
+          <div className="flex flex-col gap-1 w-full">
+            <p className="text-[10px] font-normal text-[#343434] opacity-60 uppercase">GPS Pin Coordinates</p>
+            <div className="flex flex-col gap-1">
+              <span className="text-[12px] font-mono font-medium text-[#343434]">
+                {app.latitude.toFixed(5)}, {app.longitude.toFixed(5)}
+              </span>
+              <a
+                href={`https://www.google.com/maps?q=${app.latitude},${app.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] font-semibold text-[#0C83FF] hover:underline flex items-center gap-1 font-onest"
+              >
+                <span>Open in Google Maps ↗</span>
+              </a>
+            </div>
+          </div>
+        )}
 
         <div className="h-px w-full bg-[#D6D9DE] my-1" />
 
@@ -495,7 +514,25 @@ const MainContent = ({ app, userRole }: { app: ApplicationResponse; userRole?: s
     return (app.tokens && app.tokens.length > 0) || (app.phase_materials && app.phase_materials.length > 0);
   }, [app.tokens, app.phase_materials]);
 
-  const [activeTab, setActiveTab] = useState<"work" | "inspection" | "tokens">("work");
+  const [activeTab, setActiveTab] = useState<"work" | "inspection" | "tokens" | "proofs">("work");
+
+  const canViewProofs =
+    userRole === "NODAL_OFFICER" ||
+    userRole === "SUPERADMIN" ||
+    !isTokenSectionHidden;
+
+  const pendingProofPhases = useMemo(() => {
+    const pending: number[] = [];
+    const maxPhase = numStagesToDisplay || (app.tokens?.length || 0);
+    for (let p = 1; p <= maxPhase; p++) {
+      const token = app.tokens?.find((t) => t.phase === p);
+      const hasProof = app.utilization_proofs?.some((up) => up.phase === p);
+      if (token?.status === "COMPLETED" && !hasProof) {
+        pending.push(p);
+      }
+    }
+    return pending;
+  }, [app.tokens, app.utilization_proofs, numStagesToDisplay]);
 
   const mergedMaterialsToDisplay = useMemo(() => {
     const list: {
@@ -592,6 +629,29 @@ const MainContent = ({ app, userRole }: { app: ApplicationResponse; userRole?: s
             Tokens
           </button>
         )}
+
+        {canViewProofs && (
+          <button
+            type="button"
+            onClick={() => setActiveTab("proofs")}
+            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeTab === "proofs"
+                ? "bg-[#0C83FF] text-white shadow-xs font-bold"
+                : "bg-[#F3F4F6] text-[#343434] hover:bg-[#E5E7EB] hover:text-black"
+            }`}
+          >
+            <span>Utilization Proofs</span>
+            {pendingProofPhases.length > 0 ? (
+              <span className="rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white leading-none">
+                {pendingProofPhases.length} Pending
+              </span>
+            ) : (app.utilization_proofs && app.utilization_proofs.length > 0) ? (
+              <span className="rounded-full bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white leading-none">
+                {app.utilization_proofs.length}
+              </span>
+            ) : null}
+          </button>
+        )}
       </div>
 
       {/* Tab 1: Work Description */}
@@ -682,6 +742,19 @@ const MainContent = ({ app, userRole }: { app: ApplicationResponse; userRole?: s
             <p className="text-[12px] font-normal text-[#343434] leading-relaxed">
               {app.work_description || "No description provided."}
             </p>
+          </div>
+
+          {/* Property Geo-Location Map for Land, Legal, ATP, JEN */}
+          <div className="flex flex-col gap-2">
+            <h3 className="text-[12px] font-bold text-[#343434] uppercase tracking-wider">
+              Property Location Map
+            </h3>
+            <GoogleMapView
+              latitude={app.latitude}
+              longitude={app.longitude}
+              address={app.property_address}
+              height="280px"
+            />
           </div>
 
           <div className="flex flex-col gap-3">
@@ -971,6 +1044,252 @@ const MainContent = ({ app, userRole }: { app: ApplicationResponse; userRole?: s
           ) : (
             <div className="rounded-lg border border-[#D6D9DE] bg-gray-50 p-6 text-center text-xs text-gray-500 italic">
               Phase materials estimates are registered, but tokens have not been generated yet.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab 4: Utilization Proofs */}
+      {canViewProofs && activeTab === "proofs" && (
+        <div className="flex flex-col gap-5">
+          <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+            <div>
+              <h3 className="text-[12px] font-bold text-[#343434] uppercase tracking-wider">
+                Phase Utilization Proofs & Self-Assessments
+              </h3>
+              <p className="text-[11px] text-gray-500 mt-0.5">
+                Citizen-submitted site photos, work completion percentages, and self-assessment declarations required after each token phase.
+              </p>
+            </div>
+            {pendingProofPhases.length > 0 && (
+              <div className="flex items-center gap-1.5 rounded-md bg-amber-50 border border-amber-200 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                <span>⚠️</span>
+                <span>{pendingProofPhases.length} Phase{pendingProofPhases.length > 1 ? "s" : ""} Awaiting Proof</span>
+              </div>
+            )}
+          </div>
+
+          {numStagesToDisplay > 0 || (app.utilization_proofs && app.utilization_proofs.length > 0) ? (
+            <div className="flex flex-col gap-4">
+              {Array.from(
+                { length: Math.max(numStagesToDisplay, ...(app.utilization_proofs?.map((u) => u.phase) || [0])) },
+                (_, i) => i + 1
+              ).map((phaseNum) => {
+                const proof = app.utilization_proofs?.find((p) => p.phase === phaseNum);
+                const token = app.tokens?.find((t) => t.phase === phaseNum);
+                const isCompleted = token?.status === "COMPLETED";
+                const isActive = token?.status === "ACTIVE";
+
+                // Build photos list for lightbox viewer
+                const proofPhotos = (proof?.access_urls?.length ? proof.access_urls : proof?.photos || []).map((url, idx) => ({
+                  url,
+                  title: `Phase ${phaseNum} Proof Photo #${idx + 1}`,
+                  subtitle: `Submitted: ${proof?.submitted_at ? new Date(proof.submitted_at).toLocaleDateString() : ""}`,
+                }));
+
+                if (proof) {
+                  return (
+                    <div
+                      key={phaseNum}
+                      className="flex flex-col gap-4 rounded-xl border border-emerald-200 bg-white p-5 shadow-xs"
+                    >
+                      <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-800">
+                            P{phaseNum}
+                          </span>
+                          <div>
+                            <h4 className="text-sm font-bold text-[#343434]">Phase {phaseNum} Utilization Proof</h4>
+                            <p className="text-[11px] text-gray-500">
+                              Submitted on{" "}
+                              {new Date(proof.submitted_at).toLocaleDateString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                          ✓ Submitted &amp; Verified
+                        </span>
+                      </div>
+
+                      {/* Details & Progress */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-2 rounded-lg bg-gray-50 p-3.5 border border-gray-200">
+                          <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                            Work Completion Self-Assessment
+                          </span>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-[#343434]">Reported Progress</span>
+                            <span className="text-sm font-bold text-emerald-700">{proof.completion_percentage ?? 0}%</span>
+                          </div>
+                          <div className="h-2 w-full rounded-full bg-gray-200 overflow-hidden">
+                            <div
+                              className="h-full bg-emerald-600 rounded-full transition-all"
+                              style={{ width: `${Math.min(100, Math.max(0, proof.completion_percentage ?? 0))}%` }}
+                            />
+                          </div>
+
+                          <div className="mt-2 pt-2 border-t border-gray-200">
+                            <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block mb-1">
+                              Citizen Undertaking
+                            </span>
+                            <div className="flex items-center gap-1.5 text-xs text-emerald-800 font-medium">
+                              <span>✓</span>
+                              <span>{proof.declaration_accepted ? "Declaration Accepted by Citizen" : "Declaration Acknowledged"}</span>
+                            </div>
+                            <p className="text-[10px] text-gray-500 mt-0.5">
+                              Applicant confirmed all materials allocated under Phase {phaseNum} were utilized strictly as per sanctioned permits.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2 rounded-lg bg-gray-50 p-3.5 border border-gray-200">
+                          <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+                            Work Description &amp; Notes
+                          </span>
+                          <p className="text-xs text-[#343434] leading-relaxed whitespace-pre-wrap">
+                            {proof.work_completion_details || "No detailed description provided."}
+                          </p>
+                          {proof.remarks && (
+                            <div className="mt-2 pt-2 border-t border-gray-200">
+                              <span className="text-[10px] font-semibold text-gray-500 uppercase block">Remarks</span>
+                              <p className="text-xs text-gray-700 italic">{proof.remarks}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Photos */}
+                      <div className="flex flex-col gap-2">
+                        <span className="text-xs font-bold text-[#343434] flex items-center gap-1.5">
+                          <span>📷 Site Photos Uploaded</span>
+                          <span className="text-[11px] font-normal text-gray-500">
+                            ({proofPhotos.length} photo{proofPhotos.length === 1 ? "" : "s"})
+                          </span>
+                        </span>
+
+                        {proofPhotos.length > 0 ? (
+                          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                            {proofPhotos.map((photo, pIdx) => (
+                              <button
+                                type="button"
+                                key={pIdx}
+                                onClick={() =>
+                                  setViewerConfig({
+                                    isOpen: true,
+                                    index: pIdx,
+                                    list: proofPhotos,
+                                  })
+                                }
+                                className="group relative aspect-square overflow-hidden rounded-lg border border-gray-200 bg-gray-100 hover:border-[#0C83FF] transition-all cursor-pointer shadow-2xs"
+                              >
+                                <img
+                                  src={photo.url}
+                                  alt={`Proof photo ${pIdx + 1}`}
+                                  className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                  <span className="opacity-0 group-hover:opacity-100 text-[10px] font-bold text-white bg-black/60 px-2 py-0.5 rounded">
+                                    🔍 View
+                                  </span>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-400 italic">No photos submitted with this proof.</p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (isCompleted) {
+                  return (
+                    <div
+                      key={phaseNum}
+                      className="flex flex-col gap-3 rounded-xl border border-amber-300 bg-amber-50/50 p-5 shadow-xs"
+                    >
+                      <div className="flex items-center justify-between border-b border-amber-200 pb-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-200 text-xs font-bold text-amber-900">
+                            P{phaseNum}
+                          </span>
+                          <div>
+                            <h4 className="text-sm font-bold text-amber-900">Phase {phaseNum} Utilization Proof</h4>
+                            <p className="text-[11px] text-amber-700">Token completed • Awaiting citizen upload via mobile app</p>
+                          </div>
+                        </div>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 border border-amber-300">
+                          ⚠️ Proof Pending
+                        </span>
+                      </div>
+
+                      <div className="flex items-start gap-3 rounded-lg bg-white p-4 border border-amber-200">
+                        <span className="text-xl">⚠️</span>
+                        <div className="flex flex-col gap-1 text-xs text-amber-900">
+                          <p className="font-bold">Next Token Generation Locked</p>
+                          <p className="text-gray-600">
+                            Phase {phaseNum} token has been completed, but the citizen has not yet submitted the utilization proof &amp; site photos.
+                            Generation of Phase {phaseNum + 1} token is strictly locked until the citizen submits the proof from their mobile device.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (isActive) {
+                  return (
+                    <div
+                      key={phaseNum}
+                      className="flex flex-col gap-2 rounded-xl border border-blue-200 bg-blue-50/30 p-4"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-[#0C83FF]">
+                            P{phaseNum}
+                          </span>
+                          <div>
+                            <h4 className="text-xs font-bold text-[#343434]">Phase {phaseNum} - Token Active</h4>
+                            <p className="text-[10px] text-gray-500">Materials currently being transported &amp; utilized</p>
+                          </div>
+                        </div>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-[10px] font-semibold text-[#0C83FF]">
+                          Active In Progress
+                        </span>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div
+                    key={phaseNum}
+                    className="flex items-center justify-between rounded-xl border border-dashed border-gray-200 bg-gray-50/50 p-4 opacity-75"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-xs font-bold text-gray-600">
+                        P{phaseNum}
+                      </span>
+                      <div>
+                        <h4 className="text-xs font-semibold text-gray-600">Phase {phaseNum} - Upcoming Phase</h4>
+                        <p className="text-[10px] text-gray-400">Locked until previous phase utilization proof is submitted</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-medium text-gray-400">Locked</span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-[#D6D9DE] bg-gray-50 p-6 text-center text-xs text-gray-500 italic">
+              No phase schedule configured for this application yet.
             </div>
           )}
         </div>

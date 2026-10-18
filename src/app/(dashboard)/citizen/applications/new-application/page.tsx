@@ -12,6 +12,7 @@ import { useOrganizationSuggestions } from "@/hooks/useApplications";
 import { step1Schema } from "@/lib/validations/application";
 import { type components } from "@/types/api";
 import WardMapModal from "@/components/dashboard/WardMapModal";
+import GoogleMapLocationPicker from "@/components/common/GoogleMapLocationPicker";
 
 type WardResponse = components["schemas"]["WardResponse"];
 type DepartmentResponse = components["schemas"]["DepartmentResponse"];
@@ -117,6 +118,8 @@ export default function NewApplicationPage() {
           construction_floor: (app.construction_floor || "NONE") as any,
           organization_name: app.organization_name || "",
           is_emergency_repair: (app as any).is_emergency_repair || false,
+          latitude: app.latitude ?? null,
+          longitude: app.longitude ?? null,
         });
 
         // 2. Determine Step
@@ -528,6 +531,27 @@ export default function NewApplicationPage() {
           </div>
         </div>
         {errors.property_address && <p className="ml-[248px] text-[10px] text-red-500">{errors.property_address}</p>}
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <div className="flex gap-5">
+          <div className="flex w-[228px] flex-col gap-1">
+            <label className="mt-1 text-[12px] font-normal text-[#343434] font-onest">Pin location on Map</label>
+            <span className="text-[10px] text-gray-500 leading-tight font-onest">
+              Drop a pin on the property or use current GPS location
+            </span>
+          </div>
+          <div className="w-[420px] max-w-full">
+            <GoogleMapLocationPicker
+              latitude={formData.latitude}
+              longitude={formData.longitude}
+              onChange={({ latitude, longitude }) =>
+                updateFormData({ latitude, longitude })
+              }
+              error={errors.latitude || errors.longitude}
+            />
+          </div>
+        </div>
       </div>
 
 

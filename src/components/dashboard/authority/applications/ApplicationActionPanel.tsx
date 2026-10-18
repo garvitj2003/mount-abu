@@ -136,13 +136,18 @@ export default function ApplicationActionPanel({
       const isAlreadyGenerated = app.tokens?.some(t => t.phase === p);
       const prevToken = app.tokens?.find(t => t.phase === p - 1);
       const isPrevCompleted = prevToken?.status === "COMPLETED" || prevToken?.status === "TERMINATED";
-      const isBlocked = !isAlreadyGenerated && p > 1 && !isPrevCompleted;
+      const prevProof = app.utilization_proofs?.find(up => up.phase === p - 1);
+      const isProofMissing = p > 1 && prevToken?.status === "COMPLETED" && !prevProof;
+      const isBlocked = !isAlreadyGenerated && ((p > 1 && !isPrevCompleted) || isProofMissing);
       
       let statusText = "";
       let statusColor = "text-[#343434]/60";
       if (isAlreadyGenerated) {
         statusText = " (Generated)";
         statusColor = "text-[#059669] font-medium";
+      } else if (isProofMissing) {
+        statusText = " (Proof Pending)";
+        statusColor = "text-[#EF4444] font-semibold";
       } else if (isBlocked) {
         statusText = " (Blocked)";
         statusColor = "text-[#EF4444]";
@@ -172,6 +177,11 @@ export default function ApplicationActionPanel({
         }
         if (prevToken.status !== "COMPLETED" && prevToken.status !== "TERMINATED") {
           alert(`Token for Phase ${p - 1} must be completed or terminated (currently ${prevToken.status.toLowerCase()})`);
+          return;
+        }
+        const prevProof = app.utilization_proofs?.find(up => up.phase === p - 1);
+        if (prevToken.status === "COMPLETED" && !prevProof) {
+          alert(`Cannot generate Phase ${p} token: Utilization proof (photos & self-assessment) for Phase ${p - 1} has not been submitted by citizen yet.`);
           return;
         }
       }

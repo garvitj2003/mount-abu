@@ -123,9 +123,10 @@ export default function ScheduleVehicleModal({
   });
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 font-onest">
+    <>
+      <AnimatePresence>
+        {isOpen && (
+          <div key="schedule-modal-container" className="fixed inset-0 z-50 flex items-center justify-center p-4 font-onest">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -452,6 +453,7 @@ export default function ScheduleVehicleModal({
           </motion.div>
         </div>
       )}
+      </AnimatePresence>
 
       <ConfirmModal
         isOpen={showCancelConfirm}
@@ -464,7 +466,7 @@ export default function ScheduleVehicleModal({
         onConfirm={executeCancel}
         onClose={() => setShowCancelConfirm(false)}
       />
-    </AnimatePresence>
+    </>
   );
 }
 

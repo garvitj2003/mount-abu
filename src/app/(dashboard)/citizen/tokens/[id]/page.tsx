@@ -8,6 +8,8 @@ import VehicleDetailDrawer from "@/components/dashboard/authority/vehicle-entrie
 import { useTokenDetail } from "@/hooks/useTokens";
 import { useTokenScheduleStatus } from "@/hooks/useSchedule";
 import ScheduleVehicleModal from "@/components/dashboard/citizen/tokens/ScheduleVehicleModal";
+import DumpingWarningModal from "@/components/dashboard/citizen/tokens/DumpingWarningModal";
+import { VehicleEntryService } from "@/services/vehicleEntryService";
 import { type components } from "@/types/api";
 import { QRCodeSVG } from "qrcode.react";
 import html2canvas from "html2canvas";
@@ -280,6 +282,44 @@ export default function CitizenTokenDetailsPage() {
   const tokenId = (token as any)?.token_id ?? (token as any)?.id;
   const { data: scheduleStatus, refetch: refetchScheduleStatus } = useTokenScheduleStatus(tokenId);
 
+  const [isDumpingWarningOpen, setIsDumpingWarningOpen] = useState(false);
+  const [lastEntryForWarning, setLastEntryForWarning] = useState<{
+    vehicleNumber?: string | null;
+    entryDate?: string | Date | null;
+  } | null>(null);
+  const [isCheckingDumping, setIsCheckingDumping] = useState(false);
+
+  const handleScheduleClick = async () => {
+    // If citizen already has an active schedule, open manage/view modal directly
+    if (scheduleStatus?.active_schedule) {
+      setIsScheduleModalOpen(true);
+      return;
+    }
+
+    // Check last vehicle entry of this token
+    const latestEntry = token?.vehicle_entries?.[0];
+    if (latestEntry) {
+      try {
+        setIsCheckingDumping(true);
+        const detail = await VehicleEntryService.getVehicleEntryDetail(latestEntry.id);
+        if (!detail.dumping_photos || detail.dumping_photos.length === 0) {
+          setLastEntryForWarning({
+            vehicleNumber: latestEntry.vehicle_number || detail.vehicle_number,
+            entryDate: latestEntry.entry_at,
+          });
+          setIsDumpingWarningOpen(true);
+          return;
+        }
+      } catch (err) {
+        console.warn("Could not check dumping photo status:", err);
+      } finally {
+        setIsCheckingDumping(false);
+      }
+    }
+
+    setIsScheduleModalOpen(true);
+  };
+
 
 
   const filteredEntries = useMemo(() => {
@@ -423,7 +463,7 @@ Status: ${token.status}
         onBack={handleBack}
         onDownload={handleDownload}
         onShare={handleShare}
-        onSchedule={() => setIsScheduleModalOpen(true)}
+        onSchedule={handleScheduleClick}
         activeSchedule={scheduleStatus?.active_schedule}
         isDownloading={isDownloading}
       />
@@ -432,7 +472,7 @@ Status: ${token.status}
         <Sidebar
           token={token}
           sidebarRef={sidebarRef}
-          onSchedule={() => setIsScheduleModalOpen(true)}
+          onSchedule={handleScheduleClick}
           activeSchedule={scheduleStatus?.active_schedule}
         />
 
@@ -609,6 +649,16 @@ Status: ${token.status}
         />
       )}
 
+      <DumpingWarningModal
+        isOpen={isDumpingWarningOpen}
+        onClose={() => setIsDumpingWarningOpen(false)}
+        onProceed={() => {
+          setIsDumpingWarningOpen(false);
+          setIsScheduleModalOpen(true);
+        }}
+        vehicleNumber={lastEntryForWarning?.vehicleNumber}
+        entryDate={lastEntryForWarning?.entryDate}
+      />
 
       {token && <TokenPDF token={token} componentRef={pdfRef} />}
     </div>

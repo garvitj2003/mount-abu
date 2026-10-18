@@ -22,6 +22,8 @@ const initialFormData: ApplicationFormData = {
   email: "",
   current_address: "",
   property_address: "",
+  latitude: null,
+  longitude: null,
   type: "RENOVATION",
   is_emergency_repair: false,
   work_description: "",
