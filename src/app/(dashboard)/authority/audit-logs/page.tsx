@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { motion, AnimatePresence } from "motion/react";
 import TablePagination from "@/components/ui/TablePagination";
 import { useAuditLogs } from "@/hooks/useAudit";
 import { type components } from "@/types/api";
@@ -14,6 +16,7 @@ import { AuditService } from "@/services/auditService";
 import { fetchAllPages, buildExportFileName } from "@/utils/exportFetchAll";
 
 type AuditAction = components["schemas"]["AuditAction"];
+type AuditLogResponse = components["schemas"]["AuditLogResponse"];
 
 const FILTERS = [
   { label: "All", value: "ALL" },
@@ -23,9 +26,133 @@ const FILTERS = [
   { label: "User Management", value: "USER" },
 ];
 
+const formatRole = (role?: string | null) => {
+  if (!role) return "—";
+  switch (role) {
+    case "SUPERADMIN": return "Superadmin";
+    case "ADMIN": return "Admin";
+    case "NODAL_OFFICER": return "Nodal Officer";
+    case "COMMISSIONER": return "Commissioner";
+    case "COLLECTOR": return "Collector";
+    case "JEN": return "Junior Engineer (JEN)";
+    case "AEN": return "Assistant Engineer (AEN)";
+    case "DEPT_LAND": return "Land Department";
+    case "DEPT_LEGAL": return "Legal Department";
+    case "DEPT_ATP": return "Town Planning (ATP)";
+    case "CITIZEN": return "Citizen";
+    case "NAKA_INCHARGE": return "Naka Incharge";
+    case "RIN": return "Revenue Inspector (RIN)";
+    case "SIN": return "Sanitary Inspector (SIN)";
+    default:
+      return role
+        .replace(/_/g, " ")
+        .toLowerCase()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+};
+
+const getRecordReference = (log: AuditLogResponse) => {
+  const entityType = log.entity_type?.toUpperCase() || "";
+  const prefix = entityType.substring(0, 3).toUpperCase();
+  const recId = log.record_id;
+  if (recId) {
+    return `${prefix}-${recId.toString().padStart(5, "0")}`;
+  }
+  return `${prefix}-${log.id.toString().padStart(5, "0")}`;
+};
+
+const getRecordUrl = (log: AuditLogResponse) => {
+  const entityType = log.entity_type?.toUpperCase() || "";
+  const recId = log.record_id;
+
+  if (entityType.startsWith("APPLICATION")) {
+    return recId ? `/authority/applications/${recId}` : `/authority/applications`;
+  }
+  if (entityType.startsWith("TOKEN")) {
+    return recId ? `/authority/tokens/${recId}` : `/authority/tokens`;
+  }
+  if (entityType.startsWith("COMPLAINT")) {
+    return recId ? `/authority/complaints?search=${recId}` : `/authority/complaints`;
+  }
+  if (entityType.startsWith("USER")) {
+    return recId ? `/authority/users?search=${recId}` : `/authority/users`;
+  }
+  if (entityType.startsWith("SLOT")) {
+    return `/authority/vehicle-scheduling?tab=slots`;
+  }
+  if (entityType.startsWith("BLACKOUT") || entityType === "SCHEDULE_BLACKOUT") {
+    return `/authority/vehicle-scheduling?tab=blackouts`;
+  }
+  if (entityType === "VEHICLE_TYPE") {
+    return `/authority/vehicle-scheduling?tab=vehicle-types`;
+  }
+  if (entityType.startsWith("VEHICLE")) {
+    return `/authority/vehicle-entries`;
+  }
+  if (
+    entityType.startsWith("MASTER") ||
+    ["WARD", "DEPARTMENT", "ROLE", "MATERIAL", "COMPLAINT_CATEGORY"].includes(entityType)
+  ) {
+    return `/authority/master-data`;
+  }
+  if (["DOWNLOAD", "EVENT", "LEADER", "ANNOUNCEMENT", "NOTICE", "TENDER"].includes(entityType)) {
+    return `/authority/website-content`;
+  }
+  return null;
+};
+
+const UserTooltip = ({
+  name,
+  role,
+  userId,
+  index,
+}: {
+  name?: string | null;
+  role?: string | null;
+  userId: number;
+  index: number;
+}) => {
+  const isFirstFewRows = index < 3;
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: isFirstFewRows ? -10 : 10, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: isFirstFewRows ? -10 : 10, scale: 0.95 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className={`absolute left-1/2 z-[100] -translate-x-1/2 pointer-events-none ${
+        isFirstFewRows ? "top-full mt-2" : "bottom-full mb-2"
+      }`}
+    >
+      <div className="relative rounded-lg bg-[#343434] px-3.5 py-2.5 shadow-xl w-max max-w-[260px]">
+        <div className="flex flex-col gap-1 text-left">
+          <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wider border-b border-white/10 pb-1">
+            Performed By
+          </p>
+          <p className="text-xs font-semibold text-white">
+            {name || "User #" + userId}
+          </p>
+          <div className="flex items-center justify-between gap-3 text-[11px] text-white/70">
+            <span>{formatRole(role)}</span>
+            <span className="font-mono text-white/40">ID: #{userId}</span>
+          </div>
+        </div>
+        {/* Triangle Arrow */}
+        <div
+          className={`absolute left-1/2 -translate-x-1/2 border-x-8 border-x-transparent ${
+            isFirstFewRows
+              ? "bottom-full border-b-8 border-b-[#343434]"
+              : "top-full border-t-8 border-t-[#343434]"
+          }`}
+        />
+      </div>
+    </motion.div>
+  );
+};
+
 export default function AuthorityAuditLogsPage() {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveTab] = useState("ALL");
+  const [hoveredUserLogId, setHoveredUserLogId] = useState<number | null>(null);
   const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const { page, limit, setPage, setLimit } = usePagination();
@@ -78,7 +205,10 @@ export default function AuthorityAuditLogsPage() {
       l.entity_type?.toLowerCase().includes(lowerSearch) ||
       l.action?.toLowerCase().includes(lowerSearch) ||
       l.id?.toString().includes(search) ||
-      l.user_id?.toString().includes(search)
+      l.user_id?.toString().includes(search) ||
+      l.user_name?.toLowerCase().includes(lowerSearch) ||
+      l.user_role?.toLowerCase().includes(lowerSearch) ||
+      getRecordReference(l).toLowerCase().includes(lowerSearch)
     );
   }, [logs, search]);
 
@@ -103,7 +233,10 @@ export default function AuthorityAuditLogsPage() {
       l.entity_type?.toLowerCase().includes(lowerSearch) ||
       l.action?.toLowerCase().includes(lowerSearch) ||
       l.id?.toString().includes(search) ||
-      l.user_id?.toString().includes(search)
+      l.user_id?.toString().includes(search) ||
+      l.user_name?.toLowerCase().includes(lowerSearch) ||
+      l.user_role?.toLowerCase().includes(lowerSearch) ||
+      getRecordReference(l).toLowerCase().includes(lowerSearch)
     );
   };
 
@@ -161,7 +294,8 @@ export default function AuthorityAuditLogsPage() {
       wsData.push([
         "Date & Time",
         "Record Reference",
-        "User ID",
+        "User Role",
+        "Performed By",
         "Module",
         "Action",
         "Status",
@@ -170,10 +304,9 @@ export default function AuthorityAuditLogsPage() {
       allLogs.forEach((log) => {
         wsData.push([
           formatDate(log.created_at),
-          `${log.entity_type.substring(0, 3).toUpperCase()}-${log.id
-            .toString()
-            .padStart(5, "0")}`,
-          `User #${log.user_id}`,
+          getRecordReference(log),
+          formatRole(log.user_role) || (log.user_id ? `User #${log.user_id}` : "—"),
+          log.user_name || "—",
           log.entity_type,
           log.action,
           "Success",
@@ -230,17 +363,17 @@ export default function AuthorityAuditLogsPage() {
         head: [[
           "Date & Time",
           "Record Reference",
-          "User ID",
+          "User Role",
+          "Performed By",
           "Module",
           "Action",
           "Status",
         ]],
         body: allLogs.map((log) => [
           formatDate(log.created_at),
-          `${log.entity_type.substring(0, 3).toUpperCase()}-${log.id
-            .toString()
-            .padStart(5, "0")}`,
-          `User #${log.user_id}`,
+          getRecordReference(log),
+          formatRole(log.user_role) || (log.user_id ? `User #${log.user_id}` : "—"),
+          log.user_name || "—",
           log.entity_type,
           log.action,
           "Success",
@@ -374,7 +507,7 @@ export default function AuthorityAuditLogsPage() {
                     </th>
                     <th className="px-2 py-3 text-left">
                       <div className="flex items-center gap-2 border-r border-[rgba(0,0,0,0.1)] pr-2">
-                        <span className="text-[11px] font-semibold text-[#333333] opacity-70 uppercase whitespace-nowrap">User ID</span>
+                        <span className="text-[11px] font-semibold text-[#333333] opacity-70 uppercase whitespace-nowrap">User Role</span>
                       </div>
                     </th>
                     <th className="px-2 py-3 text-left">
@@ -395,36 +528,82 @@ export default function AuthorityAuditLogsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredLogs.map((log) => (
-                    <tr key={log.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
-                      <td className="px-2 py-3">
-                        <span className="text-sm font-normal text-[#343434] opacity-80">{formatDate(log.created_at)}</span>
-                      </td>
-                      <td className="px-2 py-3">
-                        <span className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer">
-                          {/* We don't have direct reference code in AuditLogResponse, using ID or entity type + log ID as placeholder */}
-                          {log.entity_type.substring(0, 3).toUpperCase()}-{log.id.toString().padStart(5, '0')}
-                        </span>
-                      </td>
-                      <td className="px-2 py-3">
-                        <span className="text-sm font-normal text-[#343434]">User #{log.user_id}</span>
-                      </td>
-                      <td className="px-2 py-3">
-                        <span className="text-sm font-normal text-[#343434] capitalize">{log.entity_type.toLowerCase()}</span>
-                      </td>
-                      <td className="px-2 py-3">
-                        <span className={`text-sm font-medium ${getActionColor(log.action)}`}>
-                          {log.action}
-                        </span>
-                      </td>
-                      <td className="px-2 py-3">
-                        <div className="flex items-center gap-1.5">
-                          <Image src="/dashboard/icons/tick-round-green.svg" alt="" width={14} height={14} />
-                          <span className="text-sm font-normal text-[#059669]">Success</span>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredLogs.map((log, index) => {
+                    const recordUrl = getRecordUrl(log);
+                    const recordRef = getRecordReference(log);
+                    return (
+                      <tr key={log.id} className="border-b border-[#D6D9DE] hover:bg-gray-50 transition-colors">
+                        <td className="px-2 py-3">
+                          <span className="text-sm font-normal text-[#343434] opacity-80">{formatDate(log.created_at)}</span>
+                        </td>
+                        <td className="px-2 py-3">
+                          {recordUrl ? (
+                            <Link
+                              href={recordUrl}
+                              className="text-sm font-medium text-[#0C83FF] hover:underline cursor-pointer inline-flex items-center gap-1 group/ref"
+                              title={`View ${log.entity_type.toLowerCase()} details`}
+                            >
+                              <span>{recordRef}</span>
+                              <svg
+                                width="10"
+                                height="10"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="opacity-40 group-hover/ref:opacity-100 transition-opacity"
+                              >
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                <polyline points="15 3 21 3 21 9" />
+                                <line x1="10" y1="14" x2="21" y2="3" />
+                              </svg>
+                            </Link>
+                          ) : (
+                            <span className="text-sm font-medium text-[#343434]">
+                              {recordRef}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-2 py-3">
+                          <div
+                            className="relative inline-flex items-center"
+                            onMouseEnter={() => setHoveredUserLogId(log.id)}
+                            onMouseLeave={() => setHoveredUserLogId(null)}
+                          >
+                            <span className="text-sm font-medium text-[#343434] cursor-pointer hover:text-[#0C83FF] transition-colors border-b border-dotted border-gray-400">
+                              {formatRole(log.user_role) || (log.user_id ? `User #${log.user_id}` : "System")}
+                            </span>
+                            <AnimatePresence>
+                              {hoveredUserLogId === log.id && (
+                                <UserTooltip
+                                  name={log.user_name}
+                                  role={log.user_role}
+                                  userId={log.user_id}
+                                  index={index}
+                                />
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        </td>
+                        <td className="px-2 py-3">
+                          <span className="text-sm font-normal text-[#343434] capitalize">{log.entity_type.toLowerCase().replace(/_/g, " ")}</span>
+                        </td>
+                        <td className="px-2 py-3">
+                          <span className={`text-sm font-medium ${getActionColor(log.action)}`}>
+                            {log.action}
+                          </span>
+                        </td>
+                        <td className="px-2 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <Image src="/dashboard/icons/tick-round-green.svg" alt="" width={14} height={14} />
+                            <span className="text-sm font-normal text-[#059669]">Success</span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                   {filteredLogs.length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-2 py-10 text-center text-sm text-[#343434] opacity-60">
@@ -442,6 +621,7 @@ export default function AuthorityAuditLogsPage() {
             currentPage={page}
             totalPages={totalPages}
             limit={limit}
+            totalItems={total}
             onPageChange={setPage}
             onLimitChange={setLimit}
           />

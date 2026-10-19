@@ -4,6 +4,7 @@ import { type components } from "@/types/api";
 
 export function useAuditLogs(params: { 
   offset?: number; 
+  skip?: number;
   limit?: number; 
   entity_type?: string; 
   action?: components["schemas"]["AuditAction"] 

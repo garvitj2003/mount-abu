@@ -1966,6 +1966,9 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            user_name?: string | null;
+            user_role?: string | null;
+            record_id?: number | null;
         };
         /**
          * AuthorityDashboardResponse

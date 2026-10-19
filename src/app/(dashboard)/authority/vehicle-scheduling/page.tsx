@@ -17,6 +17,7 @@ import NewBlackoutDrawer from "@/components/dashboard/authority/master-data/NewB
 import MasterDataMenu from "@/components/dashboard/authority/master-data/MasterDataMenu";
 import TablePagination from "@/components/ui/TablePagination";
 import { usePagination } from "@/hooks/usePagination";
+import { useSearchParams } from "next/navigation";
 
 type VehicleSchedulingSubTab = "Slots" | "Vehicle Types" | "Blackout Calendar" | "Capacity Heatmap";
 
@@ -44,8 +45,36 @@ const formatDate = (dateStr: string) => {
 };
 
 export default function AuthorityVehicleSchedulingPage() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+
   const [vehicleSubTab, setVehicleSubTab] = useState<VehicleSchedulingSubTab>("Slots");
   const [indicatorStyle, setIndicatorStyle] = useState({ width: 0, left: 0 });
+
+  useEffect(() => {
+    if (!tabParam) return;
+    const lower = tabParam.toLowerCase();
+    if (lower === "slots" || lower === "slot") {
+      setVehicleSubTab("Slots");
+    } else if (
+      lower === "vehicle-types" ||
+      lower === "vehicle_types" ||
+      lower === "vehicles" ||
+      lower === "vehicle_type" ||
+      lower === "vehicletype"
+    ) {
+      setVehicleSubTab("Vehicle Types");
+    } else if (
+      lower === "blackouts" ||
+      lower === "blackout" ||
+      lower === "schedule_blackout" ||
+      lower === "blackout-calendar"
+    ) {
+      setVehicleSubTab("Blackout Calendar");
+    } else if (lower === "heatmap" || lower === "capacity") {
+      setVehicleSubTab("Capacity Heatmap");
+    }
+  }, [tabParam]);
   
   // Pagination State
   const { page, limit, setPage, setLimit } = usePagination();
