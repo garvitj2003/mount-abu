@@ -160,7 +160,7 @@ export default function AuthorityApplicationsPage() {
   }, [user, searchParams]);
 
   // Primary Tab Filters State
-  const [activePrimaryTab, setActivePrimaryTab] = useState<"NONE" | "PENDING" | "COMPLETED" | "SUBMISSION_DAYS">(
+  const [activePrimaryTab, setActivePrimaryTab] = useState<"NONE" | "PENDING" | "COMPLETED" | "SUBMISSION_DAYS" | "OVERDUE">(
     () => (searchParams.get("primary_tab") as any) || "NONE"
   );
   const [selectedAuthorityRole, setSelectedAuthorityRole] = useState<string>(
@@ -280,6 +280,11 @@ export default function AuthorityApplicationsPage() {
   const canViewAll = useMemo(() => {
     if (!user?.role) return false;
     return ["SUPERADMIN", "COMMISSIONER", "NODAL_OFFICER", "COLLECTOR"].includes(user.role);
+  }, [user?.role]);
+
+  const isHigherAuthority = useMemo(() => {
+    if (!user?.role) return false;
+    return ["SUPERADMIN", "ADMIN", "COMMISSIONER", "NODAL_OFFICER", "COLLECTOR"].includes(user.role);
   }, [user?.role]);
 
   const canViewAllDept = useMemo(() => {
@@ -459,6 +464,19 @@ export default function AuthorityApplicationsPage() {
     } else if (activePrimaryTab === "SUBMISSION_DAYS") {
       entries.push(["Submission Days", `> ${submittedDays || ""} Days`]);
       fileTags.push(`Submitted_Over_${submittedDays}_Days`);
+    } else if (activePrimaryTab === "OVERDUE") {
+      entries.push(["Status", "Overdue (>21 Days)"]);
+      fileTags.push("Overdue_21Days");
+      if (selectedAuthorityRole) {
+        const roleLabel =
+          selectedAuthorityRole === "JEN" ? "Junior Engineer (JEN)" :
+          selectedAuthorityRole === "DEPT_LAND" ? "Land Department" :
+          selectedAuthorityRole === "DEPT_LEGAL" ? "Legal Department" :
+          selectedAuthorityRole === "DEPT_ATP" ? "Town Planning (ATP)" :
+          selectedAuthorityRole.replace(/_/g, " ");
+        entries.push(["Department", roleLabel]);
+        fileTags.push(`Dept_${roleLabel}`);
+      }
     }
 
     if (selectedCategory !== "All") {
@@ -836,6 +854,27 @@ export default function AuthorityApplicationsPage() {
                 >
                   <span>Pending by Submission Days</span>
                 </button>
+
+                {isHigherAuthority && (
+                  <button
+                    onClick={() => {
+                      setActivePrimaryTab(activePrimaryTab === "OVERDUE" ? "NONE" : "OVERDUE");
+                      setSelectedAuthorityRole("");
+                      setSelectedActionName("");
+                      setPendingDays("");
+                      setSubmittedDays("");
+                      setPage(1);
+                    }}
+                    className={`px-3.5 py-2 rounded-lg text-xs font-medium border transition-all cursor-pointer flex items-center gap-1.5 ${
+                      activePrimaryTab === "OVERDUE"
+                        ? "bg-[#D92D20] text-white border-[#D92D20] shadow-sm font-semibold"
+                        : "bg-white text-[#D92D20] border-[#FDA29B] hover:bg-red-50"
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${activePrimaryTab === "OVERDUE" ? "bg-white" : "bg-[#D92D20]"} animate-pulse inline-block`} />
+                    <span>Overdue (&gt;21 Days)</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -987,6 +1026,31 @@ export default function AuthorityApplicationsPage() {
                   <span className="text-xs font-medium text-gray-500">Days</span>
                 </div>
               )}
+            </div>
+          )}
+
+          {activePrimaryTab === "OVERDUE" && (
+            <div className="flex flex-wrap items-center gap-3 bg-[#FEF3F2] border border-[#FECDCA] p-2.5 rounded-lg transition-all">
+              <span className="text-xs font-semibold text-[#B42318] flex items-center gap-1.5">
+                <span className="inline-block w-2 h-2 rounded-full bg-[#D92D20]" />
+                Filter by Overdue Department:
+              </span>
+              <CustomDropdown
+                label="Overdue Department"
+                options={[
+                  { label: "All Overdue Departments", value: "" },
+                  { label: "Land Department", value: "DEPT_LAND" },
+                  { label: "Legal Department", value: "DEPT_LEGAL" },
+                  { label: "Town Planning (ATP)", value: "DEPT_ATP" },
+                  { label: "Junior Engineer (JEN)", value: "JEN" },
+                ]}
+                value={selectedAuthorityRole}
+                onSelect={(val) => {
+                  setSelectedAuthorityRole(val);
+                  setPage(1);
+                }}
+                width="220px"
+              />
             </div>
           )}
 
@@ -1242,6 +1306,15 @@ export default function AuthorityApplicationsPage() {
                           {(app as any).is_emergency_repair && (
                             <span className="w-fit rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">
                               Emergency
+                            </span>
+                          )}
+                          {app.is_overdue && (
+                            <span
+                              className="inline-flex items-center gap-1 w-fit rounded bg-[#FEF3F2] border border-[#FECDCA] px-1.5 py-0.5 text-[10px] font-semibold text-[#D92D20] font-onest"
+                              title={`Pending > 21 days with: ${app.overdue_departments?.join(", ")} (${app.max_overdue_days} days)`}
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#D92D20] animate-pulse" />
+                              Overdue ({app.max_overdue_days}d - {app.overdue_departments?.join(", ")})
                             </span>
                           )}
                         </div>

@@ -1921,6 +1921,10 @@ export interface components {
             rejection_remarks?: string | null;
             /** Objection To Role */
             objection_to_role?: string | null;
+            /** Overdue Flags */
+            is_overdue?: boolean;
+            overdue_departments?: string[];
+            max_overdue_days?: number | null;
         };
         /**
          * ApplicationStatus

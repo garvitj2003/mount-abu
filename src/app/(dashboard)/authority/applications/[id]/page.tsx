@@ -107,6 +107,12 @@ const Header = ({
                 Emergency Repair
               </span>
             )}
+            {(app as any).is_overdue && (
+              <span className="inline-flex items-center gap-1.5 rounded bg-[#FEF3F2] border border-[#FECDCA] px-2 py-0.5 text-[11px] font-semibold text-[#D92D20] font-onest">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#D92D20] animate-pulse" />
+                Overdue ({(app as any).max_overdue_days}d - {(app as any).overdue_departments?.join(", ")})
+              </span>
+            )}
             {app.property_usage === 'GOVERNMENT' && (
               <span className="rounded bg-blue-100 px-2 py-0.5 text-[11px] font-semibold text-blue-700 font-onest">
                 Government
