@@ -8,6 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { logoutAction } from "@/app/actions/auth";
 import ProfileDrawer from "./ProfileDrawer";
 import Link from "next/link";
+import { useNotifications } from "@/hooks/useNotifications";
 
 export default function Navbar() {
   const router = useRouter();
@@ -19,6 +20,21 @@ export default function Navbar() {
   const [dropdownPos, setDropdownPosition] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
+
+  // Notifications state
+  const isEligibleForNotifications =
+    user?.role === "NODAL_OFFICER" ||
+    user?.role === "COMMISSIONER" ||
+    user?.role === "SUPERADMIN";
+
+  const { data: notificationsData, markAllAsRead } = useNotifications(Boolean(isEligibleForNotifications));
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifPos, setNotifPosition] = useState({ top: 0, left: 0 });
+  const notifDropdownRef = useRef<HTMLDivElement>(null);
+  const notifTriggerRef = useRef<HTMLButtonElement>(null);
+
+  const unreadCount = notificationsData?.unread_count || 0;
+  const notificationsList = notificationsData?.items || [];
 
   const isAuthority = pathname?.startsWith("/authority");
   const displayName = isAuthority ? user?.name : user?.mobile;
@@ -32,8 +48,18 @@ export default function Navbar() {
       ) {
         setIsDropdownOpen(false);
       }
+
+      if (
+        notifDropdownRef.current && !notifDropdownRef.current.contains(event.target as Node) &&
+        notifTriggerRef.current && !notifTriggerRef.current.contains(event.target as Node)
+      ) {
+        setIsNotifOpen(false);
+      }
     };
-    const handleScroll = () => setIsDropdownOpen(false);
+    const handleScroll = () => {
+      setIsDropdownOpen(false);
+      setIsNotifOpen(false);
+    };
 
     document.addEventListener("mousedown", handleClickOutside);
     window.addEventListener("scroll", handleScroll, true);
@@ -43,6 +69,26 @@ export default function Navbar() {
       window.removeEventListener("scroll", handleScroll, true);
     };
   }, []);
+
+  const handleNotificationClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isEligibleForNotifications) return;
+
+    if (isNotifOpen) {
+      setIsNotifOpen(false);
+    } else {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setNotifPosition({
+        top: rect.bottom + 12,
+        left: Math.max(10, rect.right - 340),
+      });
+      setIsNotifOpen(true);
+      // Automatically mark all unread as read upon opening banner
+      if (unreadCount > 0) {
+        markAllAsRead();
+      }
+    }
+  };
 
   const handleProfileClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -126,14 +172,35 @@ export default function Navbar() {
           <div className="h-6 w-[1px] bg-[#C6CAD1]" />
 
           {/* Notifications */}
-          <button className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100">
-            <Image
-              src="/dashboard/icons/bell.svg"
-              alt="Notifications"
-              width={24}
-              height={24}
-            />
-          </button>
+          {isEligibleForNotifications ? (
+            <button
+              ref={notifTriggerRef}
+              onClick={handleNotificationClick}
+              className="relative flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100 cursor-pointer transition-colors"
+              title="Notifications"
+            >
+              <Image
+                src="/dashboard/icons/bell.svg"
+                alt="Notifications"
+                width={24}
+                height={24}
+              />
+              {unreadCount > 0 && (
+                <span className="absolute 1 top-1.5 right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#EF4444] px-1 text-[10px] font-bold text-white shadow-xs">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </button>
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full opacity-40 cursor-not-allowed">
+              <Image
+                src="/dashboard/icons/bell.svg"
+                alt="Notifications"
+                width={24}
+                height={24}
+              />
+            </div>
+          )}
 
           {/* Divider */}
           <div className="h-6 w-[1px] bg-[#C6CAD1]" />
@@ -185,6 +252,100 @@ export default function Navbar() {
           </div>
         </div>
       </div>
+
+      {/* Notification Dropdown */}
+      {isNotifOpen && (
+        <div
+          ref={notifDropdownRef}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: 'fixed',
+            top: notifPos.top,
+            left: notifPos.left,
+            width: '360px',
+            maxHeight: '480px',
+          }}
+          className="z-[9999] flex flex-col rounded-xl border border-[#D6D9DE] bg-white shadow-[0px_10px_25px_rgba(0,0,0,0.12)] overflow-hidden animate-in fade-in zoom-in duration-150"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-[#F0F2F5] px-4 py-3 bg-[#F8FAFC]">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm text-[#1E293B]">Notifications</span>
+              {unreadCount > 0 ? (
+                <span className="rounded-full bg-[#EF4444] px-2 py-0.5 text-[10px] font-bold text-white">
+                  {unreadCount} new
+                </span>
+              ) : (
+                <span className="rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-medium text-gray-600">
+                  Inbox
+                </span>
+              )}
+            </div>
+            <button
+              onClick={() => setIsNotifOpen(false)}
+              className="text-gray-400 hover:text-gray-600 text-sm font-bold cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Notifications List */}
+          <div className="flex flex-col divide-y divide-gray-100 overflow-y-auto max-h-[380px]">
+            {notificationsList.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-8 text-center text-gray-400">
+                <Image src="/dashboard/icons/bell.svg" alt="" width={32} height={32} className="opacity-30 mb-2" />
+                <p className="text-xs font-medium text-gray-500">No notifications yet</p>
+                <p className="text-[11px] text-gray-400 mt-0.5">When respondent takes action on your objection, alerts appear here.</p>
+              </div>
+            ) : (
+              notificationsList.map((notif) => {
+                const formattedTime = new Date(notif.created_at).toLocaleString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                });
+                return (
+                  <div
+                    key={notif.id}
+                    onClick={() => {
+                      setIsNotifOpen(false);
+                      if (notif.application_id) {
+                        router.push(`/authority/applications/${notif.application_id}`);
+                      }
+                    }}
+                    className={`flex flex-col gap-1 p-3.5 transition-colors cursor-pointer hover:bg-blue-50/60 ${
+                      !notif.is_read ? "bg-[#F0F7FF]" : "bg-white"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {!notif.is_read && (
+                          <span className="h-2 w-2 rounded-full bg-[#0C83FF] shrink-0" />
+                        )}
+                        <h4 className="text-xs font-bold text-[#1E293B] truncate">
+                          {notif.title}
+                        </h4>
+                      </div>
+                      <span className="text-[10px] text-gray-400 shrink-0 font-medium">
+                        {formattedTime}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600 leading-relaxed pl-3.5">
+                      {notif.message}
+                    </p>
+                    {notif.application_id && (
+                      <span className="text-[11px] font-semibold text-[#0C83FF] pl-3.5 hover:underline mt-0.5 inline-block">
+                        View Application →
+                      </span>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Profile Dropdown */}
       {isDropdownOpen && (

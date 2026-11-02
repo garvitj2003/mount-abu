@@ -920,14 +920,22 @@ export default function AuthorityApplicationsPage() {
                 width="210px"
               />
 
-              {activePrimaryTab === "PENDING" && selectedAuthorityRole === "NODAL_OFFICER" && (
+              {activePrimaryTab === "PENDING" && (selectedAuthorityRole === "NODAL_OFFICER" || selectedAuthorityRole === "COMMISSIONER") && (
                 <CustomDropdown
                   label="Pending Action"
-                  options={[
-                    { label: "All Pending Actions", value: "" },
-                    { label: "Pending Approval", value: "PENDING_APPROVAL" },
-                    { label: "Pending Token Generation", value: "PENDING_TOKEN_GENERATION" },
-                  ]}
+                  options={
+                    selectedAuthorityRole === "NODAL_OFFICER"
+                      ? [
+                          { label: "All Pending Actions", value: "" },
+                          { label: "Pending Approval", value: "PENDING_APPROVAL" },
+                          { label: "Pending Token Generation", value: "PENDING_TOKEN_GENERATION" },
+                          { label: "Pending Objection Clear", value: "PENDING_OBJECTION_CLEAR" },
+                        ]
+                      : [
+                          { label: "All Pending Actions", value: "" },
+                          { label: "Pending Objection Clear", value: "PENDING_OBJECTION_CLEAR" },
+                        ]
+                  }
                   value={selectedActionName}
                   onSelect={(val) => {
                     setSelectedActionName(val);
