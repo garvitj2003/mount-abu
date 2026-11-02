@@ -27,10 +27,11 @@ import MasterDataMenu from "@/components/dashboard/authority/master-data/MasterD
 import TablePagination from "@/components/ui/TablePagination";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { usePagination } from "@/hooks/usePagination";
+import { useUser } from "@/hooks/useUser";
 
 type TabType = "Complaint Categories" | "Wards/Zones" | "Departments" | "Roles" | "Materials" | "Announcements";
 
-const TABS: TabType[] = ["Complaint Categories", "Wards/Zones", "Departments", "Roles", "Materials", "Announcements"];
+const ALL_TABS: TabType[] = ["Complaint Categories", "Wards/Zones", "Departments", "Roles", "Materials", "Announcements"];
 
 interface TableColumn {
   header: string;
@@ -49,7 +50,24 @@ const formatDate = (dateStr: string) => {
 };
 
 export default function AuthorityMasterDataPage() {
+  const { data: currentUser } = useUser();
+  const isNodalOnly = currentUser?.role === "NODAL_OFFICER";
+
+  const availableTabs = useMemo(() => {
+    if (isNodalOnly) {
+      return ["Announcements"] as TabType[];
+    }
+    return ALL_TABS;
+  }, [isNodalOnly]);
+
   const [activeTab, setActiveTab] = useState<TabType>("Complaint Categories");
+
+  useEffect(() => {
+    if (isNodalOnly) {
+      setActiveTab("Announcements");
+    }
+  }, [isNodalOnly]);
+
   const [indicatorStyle, setIndicatorStyle] = useState({ width: 0, left: 0 });
   
   // Pagination State
@@ -341,7 +359,7 @@ export default function AuthorityMasterDataPage() {
   ];
 
   useEffect(() => {
-    const activeTabIdx = TABS.indexOf(activeTab);
+    const activeTabIdx = availableTabs.indexOf(activeTab);
     const activeTabElement = tabsRef.current[activeTabIdx];
     if (activeTabElement) {
       setIndicatorStyle({
@@ -349,7 +367,7 @@ export default function AuthorityMasterDataPage() {
         left: activeTabElement.offsetLeft,
       });
     }
-  }, [activeTab]);
+  }, [activeTab, availableTabs]);
 
   const getTabData = () => {
     switch (activeTab) {
@@ -453,7 +471,7 @@ export default function AuthorityMasterDataPage() {
 
       {/* Tabs */}
       <div className="relative flex items-center gap-[6px] bg-white px-5 py-[6px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.13)]">
-        {TABS.map((tab, idx) => (
+        {availableTabs.map((tab, idx) => (
           <button
             key={tab}
             ref={(el) => { tabsRef.current[idx] = el; }}

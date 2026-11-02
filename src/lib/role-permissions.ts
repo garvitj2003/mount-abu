@@ -26,6 +26,7 @@ export const ROLE_PERMISSIONS: Partial<Record<UserRole, string[]>> = {
     "/authority/token",
     "/authority/vehicle-entries",
     "/authority/vehicle-scheduling",
+    "/authority/master-data",
     "/authority/audit-logs",
   ],
   COMMISSIONER: [
